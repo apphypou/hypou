@@ -1,9 +1,11 @@
 import { Diamond, ArrowRight, Globe } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HERO_IMAGE_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCX-F5mRp9yF5XL5xm8NDWAbCcse4MqlextTbPvBCQ1McUrOlmCutVVTUv8V2HB8uZv729Gx9b4_Ku-wp2AqOfiVSeu2dVr-VpyGPpKptDZOBTHmrPEsjTAUYZ8_FHbbXlWilZL6-vdhHPqJNx7VNxZHx7mgruGxuBf6AuUTv80qhp68E-IyBq-Llk84GUK1tWZk22yiXSjHbMDhrb-ttNP0r3jlF8qJYkozErryFurE8d052zzfddJEf8JiggMRhNvmU6bfvcD31o";
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <div className="relative min-h-screen flex flex-col justify-between">
       {/* Background Image with Overlay */}
@@ -55,7 +57,7 @@ const Index = () => {
 
         {/* Buttons */}
         <div className="flex flex-col gap-4 mt-4">
-          <button className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-primary h-14 px-8 text-primary-foreground transition-all duration-300 active:scale-[0.98] neon-glow-hover">
+          <button onClick={() => navigate("/feed")} className="group relative flex w-full items-center justify-center overflow-hidden rounded-full bg-primary h-14 px-8 text-primary-foreground transition-all duration-300 active:scale-[0.98] neon-glow-hover">
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <span className="relative text-base font-bold tracking-wide flex items-center gap-2">
               Criar conta
