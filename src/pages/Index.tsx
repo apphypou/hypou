@@ -47,8 +47,9 @@ const Index = () => {
           </h1>
 
           <p className="text-muted-foreground text-lg font-light leading-relaxed max-w-sm">
-            Conecte-se para permutar patrimônio. O match perfeito para o seu
-            próximo grande negócio.
+            Troque o que tá parado por algo que você quer.
+            <br /><br />
+            Dê match, negocie e faça rolo de forma segura e rápida.
           </p>
         </div>
 
