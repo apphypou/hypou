@@ -74,11 +74,25 @@
   }
 
   .text-glow {
-    text-shadow: 0 0 10px hsl(184 100% 50% / 0.2);
+    text-shadow: 0 0 10px hsl(184 100% 50% / 0.5);
   }
 
   .gradient-text {
     @apply text-transparent bg-clip-text;
     background-image: linear-gradient(to right, white, hsl(184 100% 50% / 0.8));
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float 7s ease-in-out infinite 1s;
   }
 }
