@@ -108,4 +108,45 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: linear-gradient(to right, hsl(184 100% 50%), hsl(184 100% 50%) var(--range-progress, 30%), rgba(255,255,255,0.1) var(--range-progress, 30%));
+    border-radius: 9999px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: #050a0a;
+    border: 2px solid #00eeff;
+    box-shadow: 0 0 12px rgba(0, 238, 255, 0.4);
+    margin-top: -10px;
+    cursor: pointer;
+  }
+  input[type=range]::-moz-range-track {
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 9999px;
+  }
+  input[type=range]::-moz-range-progress {
+    height: 4px;
+    background: hsl(184 100% 50%);
+    border-radius: 9999px;
+  }
+  input[type=range]::-moz-range-thumb {
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+    background: #050a0a;
+    border: 2px solid #00eeff;
+    box-shadow: 0 0 12px rgba(0, 238, 255, 0.4);
+    cursor: pointer;
+  }
 }

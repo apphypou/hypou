@@ -1,5 +1,6 @@
-import { ArrowLeft, ArrowRight, Camera, Pencil, User, MapPin, Check, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, Pencil, User, MapPin, Check, Plus, TrendingUp, TrendingDown, Info, Rocket } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   { emoji: "📱", label: "Celulares" },
@@ -17,6 +18,9 @@ const Perfil = () => {
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
   const [itemDesc, setItemDesc] = useState("");
+  const [valorization, setValorization] = useState(15);
+  const [devalorization, setDevalorization] = useState(10);
+  const navigate = useNavigate();
 
   const toggleCategory = (label: string) => {
     setSelected((prev) =>
@@ -271,10 +275,97 @@ const Perfil = () => {
 
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-black via-black to-transparent">
             <button
+              onClick={() => setStep(4)}
               className="w-full h-14 rounded-xl bg-primary text-black font-bold text-lg uppercase tracking-wider hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
               <span>CONTINUAR</span>
               <ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Step 4 - Margem de Troca */}
+      {step === 4 && (
+        <>
+          <main className="relative flex-1 flex flex-col w-full px-6 pt-6 pb-8 z-10 overflow-y-auto no-scrollbar">
+            <div className="flex flex-col mb-8">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest mb-2">Defina seu alcance</span>
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+                Qual sua margem
+              </h1>
+              <h2 className="text-3xl font-bold tracking-tight mb-3">
+                <span className="text-primary text-glow">de troca?</span>
+              </h2>
+              <p className="text-white/60 text-base leading-relaxed">
+                Defina a flexibilidade de valor aceitável para encontrar os matches perfeitos.
+              </p>
+            </div>
+
+            {/* Valorização */}
+            <div className="rounded-2xl bg-[#0f1718] border border-white/5 p-6 mb-4">
+              <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Acima do Valor</span>
+              <div className="flex items-center justify-between mt-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-white">Valorização</span>
+                </div>
+                <span className="text-3xl font-bold text-primary text-glow">+{valorization}<span className="text-lg">%</span></span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={50}
+                value={valorization}
+                onChange={(e) => setValorization(Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-xs text-white/30">0%</span>
+                <span className="text-xs text-white/30">+50%</span>
+              </div>
+            </div>
+
+            {/* Desvalorização */}
+            <div className="rounded-2xl bg-[#0f1718] border border-white/5 p-6 mb-6">
+              <span className="text-xs font-bold text-white/40 uppercase tracking-widest">Abaixo do Valor</span>
+              <div className="flex items-center justify-between mt-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-white">Desvalorização</span>
+                </div>
+                <span className="text-3xl font-bold text-primary text-glow">-{devalorization}<span className="text-lg">%</span></span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={50}
+                value={devalorization}
+                onChange={(e) => setDevalorization(Number(e.target.value))}
+                className="w-full accent-primary"
+              />
+              <div className="flex justify-between mt-1">
+                <span className="text-xs text-white/30">0%</span>
+                <span className="text-xs text-white/30">-50%</span>
+              </div>
+            </div>
+
+            {/* Info */}
+            <div className="flex items-start gap-3 rounded-xl bg-[#0f1718]/50 border border-white/5 p-4">
+              <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm text-white/40 leading-relaxed">
+                Isso ajuda nosso algoritmo a encontrar matches com valores compatíveis ao seu item.
+              </p>
+            </div>
+          </main>
+
+          <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-black via-black to-transparent">
+            <button
+              onClick={() => navigate("/explorar")}
+              className="w-full h-14 rounded-xl bg-primary text-black font-bold text-lg uppercase tracking-wider hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+            >
+              <span>FINALIZAR E DAR MATCH</span>
+              <Rocket className="h-5 w-5" />
             </button>
           </div>
         </>
