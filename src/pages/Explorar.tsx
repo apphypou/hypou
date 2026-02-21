@@ -1,16 +1,18 @@
 import { X, Zap, Heart, MapPin, SlidersHorizontal, Image, Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CARD_IMAGE_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCX-F5mRp9yF5XL5xm8NDWAbCcse4MqlextTbPvBCQ1McUrOlmCutVVTUv8V2HB8uZv729Gx9b4_Ku-wp2AqOfiVSeu2dVr-VpyGPpKptDZOBTHmrPEsjTAUYZ8_FHbbXlWilZL6-vdhHPqJNx7VNxZHx7mgruGxuBf6AuUTv80qhp68E-IyBq-Llk84GUK1tWZk22yiXSjHbMDhrb-ttNP0r3jlF8qJYkozErryFurE8d052zzfddJEf8JiggMRhNvmU6bfvcD31o";
 
 const navItems = [
-  { icon: Compass, label: "Explorar", active: true },
-  { icon: Handshake, label: "Matches", active: false },
-  { icon: MessageSquare, label: "Chat", active: false, badge: true },
-  { icon: UserCircle, label: "Perfil", active: false },
+  { icon: Compass, label: "Explorar", active: true, path: "/explorar" },
+  { icon: Handshake, label: "Matches", active: false, path: "/match" },
+  { icon: MessageSquare, label: "Chat", active: false, badge: true, path: "/explorar" },
+  { icon: UserCircle, label: "Perfil", active: false, path: "/meu-perfil" },
 ];
 
 const Explorar = () => {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col h-[100dvh] bg-black text-foreground overflow-hidden">
       {/* Header */}
@@ -99,6 +101,7 @@ const Explorar = () => {
           {navItems.map((item) => (
             <button
               key={item.label}
+              onClick={() => navigate(item.path)}
               className={`flex flex-col items-center gap-1 transition-colors relative ${
                 item.active ? "text-primary" : "text-foreground/40 hover:text-foreground/80"
               }`}
