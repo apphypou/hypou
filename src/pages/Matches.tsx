@@ -58,8 +58,8 @@ const matches = [
 
 const navItems = [
   { icon: Compass, label: "Explorar", active: false, path: "/explorar" },
-  { icon: Handshake, label: "Matches", active: true, path: "/matches" },
-  { icon: MessageSquare, label: "Chat", active: false, badge: true, path: "/matches" },
+  { icon: Handshake, label: "Matches", active: true, path: "/partidas" },
+  { icon: MessageSquare, label: "Chat", active: false, badge: true, path: "/partidas" },
   { icon: UserCircle, label: "Perfil", active: false, path: "/meu-perfil" },
 ];
 
