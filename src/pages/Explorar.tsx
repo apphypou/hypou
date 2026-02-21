@@ -93,30 +93,30 @@ const Explorar = () => {
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="glass-panel relative z-50 w-full pb-8 pt-4 px-10">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      {/* Bottom Navigation - Floating */}
+      <div className="relative z-50 w-full flex justify-center pb-6 px-5">
+        <nav className="glass-panel rounded-full px-8 py-3 flex justify-between items-center w-full max-w-md">
           {navItems.map((item) => (
             <button
               key={item.label}
-              className={`flex flex-col items-center gap-1.5 transition-colors relative ${
+              className={`flex flex-col items-center gap-1 transition-colors relative ${
                 item.active ? "text-primary" : "text-foreground/40 hover:text-foreground/80"
               }`}
             >
               <div className="relative flex items-center justify-center h-8 w-8">
-                <item.icon className={`h-7 w-7 ${item.active ? "text-glow" : ""}`} />
-                {item.active && (
-                  <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary neon-glow" />
+                <item.icon className={`h-6 w-6 ${item.active ? "text-glow" : ""}`} />
+                {item.badge && (
+                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary border border-background" />
                 )}
               </div>
-              <span className="text-[10px] font-bold tracking-wider uppercase">{item.label}</span>
-              {item.badge && (
-                <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-primary border border-background" />
+              <span className="text-[9px] font-bold tracking-wider uppercase">{item.label}</span>
+              {item.active && (
+                <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary neon-glow" />
               )}
             </button>
           ))}
-        </div>
-      </nav>
+        </nav>
+      </div>
     </div>
   );
 };
