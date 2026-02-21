@@ -14,6 +14,9 @@ const Perfil = () => {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
+  const [itemName, setItemName] = useState("");
+  const [itemValue, setItemValue] = useState("");
+  const [itemDesc, setItemDesc] = useState("");
 
   const toggleCategory = (label: string) => {
     setSelected((prev) =>
@@ -196,6 +199,81 @@ const Perfil = () => {
               className="w-full h-14 rounded-xl bg-primary text-black font-bold text-lg uppercase tracking-wider hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
               <span>PRÓXIMO</span>
+              <ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Step 3 - Cadastro de Item */}
+      {step === 3 && (
+        <>
+          <main className="relative flex-1 flex flex-col w-full px-6 pt-6 pb-8 z-10 overflow-y-auto no-scrollbar">
+            <div className="flex flex-col mb-8">
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-3">
+                O que você vai <br />
+                <span className="text-primary text-glow">desapegar?</span>
+              </h1>
+              <p className="text-white/60 text-base leading-relaxed">
+                Cadastre seu item para começar as trocas.
+              </p>
+            </div>
+
+            {/* Photo Upload Area */}
+            <div className="relative w-full aspect-[16/10] rounded-3xl bg-[#0f1718] flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-[#0f1718]/80 mb-8 dashed-border-glow">
+              <div className="h-14 w-14 rounded-full bg-[#1a2526] flex items-center justify-center">
+                <Camera className="h-7 w-7 text-primary/60" />
+              </div>
+              <span className="text-sm font-bold text-primary uppercase tracking-wider">Adicionar fotos</span>
+              <span className="text-xs text-white/30">Até 5 fotos de alta qualidade</span>
+            </div>
+
+            {/* Form Fields */}
+            <div className="flex flex-col gap-5 w-full">
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-2 pl-1">
+                  Nome do Item
+                </label>
+                <input
+                  type="text"
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  placeholder="Ex: iPhone 14 Pro Max 256GB"
+                  className="w-full bg-[#0f1718]/50 border border-white/10 text-white rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-white/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-2 pl-1">
+                  Valor Estimado (R$)
+                </label>
+                <input
+                  type="text"
+                  value={itemValue}
+                  onChange={(e) => setItemValue(e.target.value)}
+                  placeholder="0,00"
+                  className="w-full bg-[#0f1718]/50 border border-white/10 text-white rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-white/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-white/40 uppercase tracking-widest mb-2 pl-1">
+                  Descrição
+                </label>
+                <textarea
+                  value={itemDesc}
+                  onChange={(e) => setItemDesc(e.target.value)}
+                  placeholder="Detalhes sobre condição, tempo de uso, etc..."
+                  rows={3}
+                  className="w-full bg-[#0f1718]/50 border border-white/10 text-white rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-white/20 resize-none"
+                />
+              </div>
+            </div>
+          </main>
+
+          <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-black via-black to-transparent">
+            <button
+              className="w-full h-14 rounded-xl bg-primary text-black font-bold text-lg uppercase tracking-wider hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+            >
+              <span>CONTINUAR</span>
               <ArrowRight className="h-5 w-5" />
             </button>
           </div>
