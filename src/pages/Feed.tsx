@@ -38,8 +38,8 @@ const Feed = () => {
           <User className="h-5 w-5 text-muted-foreground" />
         </div>
         <h1 className="text-xl font-bold tracking-tight">
-          <span className="text-foreground">Like</span>
-          <span className="text-primary">fy</span>
+          <span className="text-foreground">Hyp</span>
+          <span className="text-primary">ou</span>
         </h1>
         <button className="h-11 w-11 rounded-full bg-secondary border border-border flex items-center justify-center hover:bg-secondary/80 transition-colors">
           <SlidersHorizontal className="h-5 w-5 text-muted-foreground" />
