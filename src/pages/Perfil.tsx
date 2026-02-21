@@ -195,7 +195,7 @@ const Perfil = () => {
               onClick={() => setStep(3)}
               className="w-full h-14 rounded-xl bg-primary text-black font-bold text-lg uppercase tracking-wider hover:bg-white hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
-              <span>COMEÇAR A DESLIZAR</span>
+              <span>PRÓXIMO</span>
               <ArrowRight className="h-5 w-5" />
             </button>
           </div>
