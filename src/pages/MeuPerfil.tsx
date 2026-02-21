@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const navItems = [
   { icon: Compass, label: "Explorar", active: false, path: "/explorar" },
-  { icon: Handshake, label: "Matches", active: false, path: "/match" },
+  { icon: Handshake, label: "Matches", active: false, path: "/partidas" },
   { icon: MessageSquare, label: "Chat", active: false, path: "/explorar", badge: true },
   { icon: UserCircle, label: "Perfil", active: true, path: "/meu-perfil" },
 ];

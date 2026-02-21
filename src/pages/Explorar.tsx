@@ -6,7 +6,7 @@ const CARD_IMAGE_URL =
 
 const navItems = [
   { icon: Compass, label: "Explorar", active: true, path: "/explorar" },
-  { icon: Handshake, label: "Matches", active: false, path: "/match" },
+  { icon: Handshake, label: "Matches", active: false, path: "/partidas" },
   { icon: MessageSquare, label: "Chat", active: false, badge: true, path: "/explorar" },
   { icon: UserCircle, label: "Perfil", active: false, path: "/meu-perfil" },
 ];
