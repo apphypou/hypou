@@ -67,7 +67,7 @@ const Matches = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background text-foreground overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-black text-foreground overflow-hidden">
       {/* Header */}
       <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4 shrink-0">
         <div className="flex flex-col">
