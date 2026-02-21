@@ -45,7 +45,7 @@ const Index = () => {
           {/* Headline */}
           <h1 className="text-foreground text-[40px] leading-[1.1] font-bold tracking-tight">
             Boas-Vindas à <br />
-            <span className="gradient-text">Likefy</span>
+            <span className="gradient-text">Hypou</span>
           </h1>
 
           <p className="text-muted-foreground text-lg font-light leading-relaxed max-w-sm">
