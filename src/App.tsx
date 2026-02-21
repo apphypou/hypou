@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Explorar from "./pages/Explorar";
 import Match from "./pages/Match";
 import Perfil from "./pages/Perfil";
+import MeuPerfil from "./pages/MeuPerfil";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/explorar" element={<Explorar />} />
           <Route path="/match" element={<Match />} />
           <Route path="/perfil" element={<Perfil />} />
+          <Route path="/meu-perfil" element={<MeuPerfil />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
