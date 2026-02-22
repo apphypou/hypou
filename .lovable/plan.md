@@ -1,102 +1,57 @@
 
-# Plano de Transformacao: Prototipo para Produto Real
+# Plano: Injetar 10 Usuarios Bot de Teste com Produtos
 
-## Resumo da Auditoria
+## Objetivo
 
-Apos analise completa de todas as telas e servicos, o codigo ja esta **bem conectado ao Supabase** com dados reais. Nao existe Zustand - o projeto usa React Query + services, que e a arquitetura correta. No entanto, existem pontos especificos que precisam ser corrigidos.
+Criar uma Edge Function que, ao ser chamada, cria 10 usuarios ficticios no Supabase Auth, cada um com perfil completo, categorias de interesse e 1-2 itens cadastrados com valores variados. Isso simula um ambiente real para testar swipes, matches e chat.
 
-## Problemas Encontrados
+## Dados dos Bots
 
-### 1. Botoes Inativos (sem onClick)
+| # | Nome | Cidade | Categorias | Item 1 | Valor | Item 2 | Valor |
+|---|------|--------|------------|--------|-------|--------|-------|
+| 1 | Ana Silva | Sao Paulo, SP | Celulares, Moda | iPhone 14 Pro Max | R$ 5.500 | Bolsa Louis Vuitton | R$ 8.000 |
+| 2 | Carlos Santos | Rio de Janeiro, RJ | Carros & Motos | Honda CB 500F 2022 | R$ 28.000 | -- | -- |
+| 3 | Juliana Costa | Belo Horizonte, MG | Casa, Moda | Sofa Retratil 3 Lugares | R$ 3.200 | Vestido Gucci | R$ 4.500 |
+| 4 | Pedro Oliveira | Curitiba, PR | Videogames | PlayStation 5 + 3 Jogos | R$ 3.800 | Nintendo Switch OLED | R$ 2.200 |
+| 5 | Mariana Lima | Brasilia, DF | Celulares | Samsung Galaxy S24 Ultra | R$ 6.000 | -- | -- |
+| 6 | Rafael Mendes | Porto Alegre, RS | Carros & Motos, Videogames | Xbox Series X | R$ 3.500 | Capacete AGV K3 | R$ 1.800 |
+| 7 | Fernanda Souza | Salvador, BA | Moda | Tenis Nike Air Jordan 1 | R$ 1.500 | Relogio Casio G-Shock | R$ 900 |
+| 8 | Lucas Rocha | Florianopolis, SC | Casa | Smart TV LG 55" 4K | R$ 2.800 | Aspirador Robo Xiaomi | R$ 1.600 |
+| 9 | Camila Alves | Recife, PE | Celulares, Casa | MacBook Air M2 | R$ 7.500 | Echo Dot 5a Geracao | R$ 350 |
+| 10 | Bruno Ferreira | Goiania, GO | Videogames, Moda | PC Gamer RTX 4060 | R$ 5.000 | Jaqueta North Face | R$ 1.200 |
 
-| Tela | Botao | Problema |
-|------|-------|----------|
-| MeuPerfil | Settings (engrenagem) | Sem `onClick`, nao faz nada |
-| Matches | SlidersHorizontal (filtro) | Sem `onClick`, nao faz nada |
-| Matches | Search (busca) | Sem `onClick`, nao faz nada |
-| Matches | MessageSquare (chat no card) | Sem `onClick`, nao navega para conversa |
-| Explorar | SlidersHorizontal (filtro) | Sem `onClick`, nao faz nada |
-| Index | Globe (idioma) | Sem `onClick`, nao faz nada |
-| Index | "Termos de Uso" / "Politica de Privacidade" | Links com `href="#"` |
+- Cada item tera margens de negociacao variadas (margin_up: 10-20%, margin_down: 5-15%)
+- Todos os bots terao `onboarding_completed = true`
+- Avatares serao gerados via `ui-avatars.com` (servico gratuito de avatar por iniciais)
 
-### 2. Placeholder de Rating
+## Implementacao Tecnica
 
-- Em `useProfile.ts`, o rating e hardcoded como `4.9` com comentario "placeholder until rating system is implemented"
+### 1. Criar Edge Function `seed-test-users`
 
-### 3. Telas Faltantes
+Uma unica Edge Function (`supabase/functions/seed-test-users/index.ts`) que:
 
-- **Configuracoes**: botao existe em MeuPerfil mas nao ha rota/tela
-- **Adicionar Item (standalone)**: o botao "Novo Item" navega para `/perfil` (onboarding inteiro), quando deveria abrir apenas o formulario de item
+1. Usa o `SUPABASE_SERVICE_ROLE_KEY` para criar usuarios no Auth via `admin.createUser()`
+2. Atualiza o perfil de cada usuario (display_name, location, avatar_url, onboarding_completed)
+3. Insere categorias de interesse na tabela `user_categories`
+4. Cria itens na tabela `items` com valores e margens variados
+5. Nao insere imagens reais (sem upload de storage), mas os itens ficam disponiveis para swipe
 
-### 4. Botao "Novo Item" redireciona para onboarding
+Todos os bots usarao emails no formato `bot1@hypou.test` ate `bot10@hypou.test` com senha `teste123`.
 
-- O botao em MeuPerfil navega para `/perfil` que e o fluxo de onboarding completo (4 steps). Deveria abrir um formulario dedicado de cadastro de item.
+### 2. Executar a Edge Function
 
-### 5. Matches - Botao de chat no card nao funciona
+Apos deploy, chamar a funcao uma unica vez para popular o banco.
 
-- O botao `MessageSquare` no card de match (linha 125 de Matches.tsx) nao tem `onClick` para navegar para a conversa.
+### 3. Limpar apos uso
 
-## Plano de Implementacao
+A funcao tambem aceitara um parametro `action=cleanup` para remover todos os bots quando nao forem mais necessarios.
 
-### Task 1: Criar tela de Configuracoes (/configuracoes)
+### 4. Deletar a Edge Function
 
-Criar uma tela simples seguindo o Design System com opcoes basicas:
-- Sair da conta (logout)
-- Sobre o app
-- Versao do app
-- Link para o botao de Settings em MeuPerfil
+Apos execucao bem-sucedida, a funcao sera removida do projeto para manter o codigo limpo.
 
-### Task 2: Criar tela dedicada de Cadastro de Item (/novo-item)
+## Arquivos
 
-Extrair a logica do Step 3 de Perfil.tsx para uma pagina standalone `/novo-item` que:
-- Permite cadastrar nome, descricao, categoria, valor, fotos
-- Permite definir margens de valorizacao/desvalorizacao
-- Salva no Supabase (items + item_images)
-- Redireciona para MeuPerfil ao concluir
-- O botao "Novo Item" em MeuPerfil navega para `/novo-item`
-
-### Task 3: Corrigir botoes inativos em Matches
-
-- Adicionar `onClick` no botao MessageSquare do card para navegar para a conversa do match
-- Remover ou implementar filtro/busca (filtro pode abrir um Sheet com opcoes de status)
-
-### Task 4: Remover/desativar botoes sem funcionalidade definida
-
-- Explorar: botao de filtro - pode ser removido ou implementar filtro por categoria
-- Index: botao Globe - remover (nao ha i18n)
-- Index: links "Termos de Uso" e "Politica de Privacidade" - apontar para paginas placeholder ou remover `href="#"`
-
-### Task 5: Substituir rating placeholder
-
-- Enquanto nao existe sistema de rating, exibir "--" ao inves de `4.9` para nao enganar o usuario
-- Remover o destaque visual do rating card ate que seja implementado
-
-### Task 6: Conectar botao Settings em MeuPerfil
-
-- Adicionar `onClick={() => navigate("/configuracoes")}` no IconButton de Settings
-
-### Task 7: Adicionar rota /novo-item e /configuracoes no App.tsx
-
-- Ambas protegidas com `ProtectedRoute`
-
----
-
-## Detalhes Tecnicos
-
-### Arquivos a criar:
-- `src/pages/Configuracoes.tsx` - tela de configuracoes
-- `src/pages/NovoItem.tsx` - formulario standalone de cadastro de item
-
-### Arquivos a editar:
-- `src/App.tsx` - adicionar rotas `/configuracoes` e `/novo-item`
-- `src/pages/MeuPerfil.tsx` - conectar botao Settings, mudar navegacao "Novo Item" para `/novo-item`
-- `src/pages/Matches.tsx` - adicionar onClick no botao de chat, remover botoes inativos ou implementar filtro basico
-- `src/pages/Explorar.tsx` - remover ou implementar botao de filtro
-- `src/pages/Index.tsx` - remover botao Globe, corrigir links do footer
-- `src/hooks/useProfile.ts` - substituir rating `4.9` por `null` ou `0`
-
-### Padrao de codigo:
-- Manter Clean Architecture (pages -> hooks -> services -> supabase)
-- Loading states com `Loader2` animado (cor primary)
-- Skeleton loading para conteudo de perfil
-- Tom de voz democratico: "Propor Troca", "Cadastrar Item", "Configuracoes"
+- **Criar**: `supabase/functions/seed-test-users/index.ts`
+- **Editar**: `supabase/config.toml` (adicionar `verify_jwt = false` para a funcao)
+- **Deletar apos uso**: a propria Edge Function
