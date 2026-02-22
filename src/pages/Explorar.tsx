@@ -86,13 +86,14 @@ const Explorar = () => {
   const thirdItem = items[currentIndex + 2];
 
   const advanceCard = useCallback(() => {
+    x.set(0);
     if (currentIndex + 1 >= items.length) {
       queryClient.invalidateQueries({ queryKey: ["explore-items"] });
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [currentIndex, items.length, queryClient]);
+  }, [currentIndex, items.length, queryClient, x]);
 
   // Streak logic
   const triggerStreak = useCallback((direction: string) => {
@@ -182,7 +183,7 @@ const Explorar = () => {
         });
         setTimeout(() => {
           handleSwipe(direction);
-        }, 200);
+        }, 250);
       }
     },
     [handleSwipe, swiping, x]
@@ -377,7 +378,6 @@ const Explorar = () => {
                   transformStyle: "preserve-3d",
                 }}
                 drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.9}
                 onDragEnd={handleDragEnd}
                 initial={{ scale: 0.92, opacity: 0, y: 30 }}
