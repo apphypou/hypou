@@ -2,11 +2,35 @@ import { X, Zap, MessageSquare, Star, Sparkles, Diamond, ArrowUpRight, Handshake
 import NeonButton from "@/components/NeonButton";
 import { useMatch } from "@/hooks/useMatches";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Match = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const { data: match, isLoading } = useMatch(matchId || null);
   const navigate = useNavigate();
+
+  // Get conversation ID for this match
+  const { data: convData } = useQuery({
+    queryKey: ["match-conversation", matchId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("match_id", matchId!)
+        .single();
+      return data;
+    },
+    enabled: !!matchId,
+  });
+
+  const handleStartChat = () => {
+    if (convData?.id) {
+      navigate(`/chat/${convData.id}`);
+    } else {
+      navigate("/chat");
+    }
+  };
 
   const formatValue = (cents: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -120,7 +144,7 @@ const Match = () => {
 
       {/* Footer Actions */}
       <div className="p-6 pb-8 w-full max-w-md mx-auto relative z-10 flex flex-col gap-4">
-        <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" className="shadow-[0_0_20px_hsl(184_100%_50%/0.4)] hover:shadow-[0_0_30px_hsl(184_100%_50%/0.6)]">
+        <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" onClick={handleStartChat} className="shadow-[0_0_20px_hsl(184_100%_50%/0.4)] hover:shadow-[0_0_30px_hsl(184_100%_50%/0.6)]">
           Iniciar conversa
         </NeonButton>
         <NeonButton variant="ghost" size="sm" onClick={() => navigate("/explorar")}>

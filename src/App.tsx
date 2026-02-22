@@ -10,6 +10,8 @@ import Cadastro from "./pages/Cadastro";
 import Explorar from "./pages/Explorar";
 import Matches from "./pages/Matches";
 import Match from "./pages/Match";
+import Chat from "./pages/Chat";
+import Conversa from "./pages/Conversa";
 import Perfil from "./pages/Perfil";
 import MeuPerfil from "./pages/MeuPerfil";
 import NotFound from "./pages/NotFound";
@@ -30,6 +32,8 @@ const App = () => (
             <Route path="/explorar" element={<Explorar />} />
             <Route path="/partidas" element={<Matches />} />
             <Route path="/match/:matchId" element={<Match />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/chat/:conversationId" element={<Conversa />} />
             <Route path="/onboarding" element={<Perfil />} />
             <Route path="/meu-perfil" element={<MeuPerfil />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
