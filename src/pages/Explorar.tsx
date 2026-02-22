@@ -103,7 +103,7 @@ const Explorar = () => {
               key={item.label}
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center gap-1 transition-colors relative ${
-                item.active ? "text-primary" : "text-foreground/40 hover:text-foreground/80"
+                item.active ? "text-primary" : "text-black/50 hover:text-black/80"
               }`}
             >
               <div className="relative flex items-center justify-center h-8 w-8">

@@ -59,9 +59,9 @@
 
 @layer utilities {
   .glass-panel {
-    background: transparent;
+    background: hsl(0 0% 100% / 0.95);
     border: none;
-    box-shadow: none;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
   }
 
   .glass-card {
