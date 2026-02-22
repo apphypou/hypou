@@ -22,7 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/explorar" element={<Explorar />} />
           <Route path="/partidas" element={<Matches />} />
-          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/onboarding" element={<Perfil />} />
           <Route path="/meu-perfil" element={<MeuPerfil />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
