@@ -10,7 +10,7 @@ interface BottomNavProps {
 const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; badge?: boolean }[] = [
   { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
   { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas" },
-  { icon: MessageSquare, label: "Chat", id: "chat", path: "/explorar", badge: true },
+  { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat" },
   { icon: UserCircle, label: "Perfil", id: "perfil", path: "/meu-perfil" },
 ];
 
