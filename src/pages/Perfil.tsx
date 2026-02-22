@@ -116,7 +116,7 @@ const Perfil = () => {
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
               onClick={() => setStep(2)}
-              className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
               <span>PRÓXIMO</span>
               <ArrowRight className="h-5 w-5" />
@@ -198,7 +198,7 @@ const Perfil = () => {
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
               onClick={() => setStep(3)}
-              className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
               <span>PRÓXIMO</span>
               <ArrowRight className="h-5 w-5" />
@@ -274,7 +274,7 @@ const Perfil = () => {
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
               onClick={() => setStep(4)}
-              className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
               <span>CONTINUAR</span>
               <ArrowRight className="h-5 w-5" />
@@ -360,7 +360,7 @@ const Perfil = () => {
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
               onClick={() => navigate("/explorar")}
-              className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
             >
               <span>COMEÇAR A TROCAR</span>
               <Rocket className="h-5 w-5" />
