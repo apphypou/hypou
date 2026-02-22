@@ -1,4 +1,4 @@
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, X, Zap, Heart } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,15 +28,18 @@ const generateParticles = () =>
     duration: 0.5 + Math.random() * 0.3,
   }));
 
+const formatValue = (cents: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+
 const Explorar = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [epoch, setEpoch] = useState(0); // Fix Bug 2: unique key per swipe
-  const [localItems, setLocalItems] = useState<any[]>([]); // Fix Bug 1: stable local list
-  const swipingRef = useRef(false); // Fix Bug 5: synchronous swiping flag
+  const [epoch, setEpoch] = useState(0);
+  const [localItems, setLocalItems] = useState<any[]>([]);
+  const swipingRef = useRef(false);
   const cardRef = useRef<SwipeCardHandle>(null);
 
   const [likeStreak, setLikeStreak] = useState(0);
@@ -45,7 +48,7 @@ const Explorar = () => {
   const [particles, setParticles] = useState<ReturnType<typeof generateParticles>>([]);
   const streakTimeout = useRef<NodeJS.Timeout>();
 
-  // Drag progress for stack animation (driven by SwipeCard callback)
+  // Drag progress for stack animation
   const dragProgressValue = useMotionValue(0);
   const nextScale = useTransform(dragProgressValue, [0, 1], [0.93, 0.97]);
   const nextOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 0.7]);
@@ -62,7 +65,6 @@ const Explorar = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Fix Bug 1: populate localItems once from query, never refetch automatically
   useEffect(() => {
     if (items.length > 0 && localItems.length === 0) {
       setLocalItems(items);
@@ -73,9 +75,8 @@ const Explorar = () => {
   const nextItem = localItems[(currentIndex + 1) % localItems.length] ?? null;
   const thirdItem = localItems[(currentIndex + 2) % localItems.length] ?? null;
 
-  // Fix Bug 3 & 4: advanceCard just increments — no x.set, no setTimeout
   const advanceCard = useCallback(() => {
-    setEpoch((e) => e + 1); // Fix Bug 2
+    setEpoch((e) => e + 1);
     dragProgressValue.set(0);
     if (currentIndex + 1 >= localItems.length) {
       setCurrentIndex(0);
@@ -101,49 +102,56 @@ const Explorar = () => {
     }
   }, []);
 
-  // Fix Bug 4 & 6: called by SwipeCard's onAnimationComplete — no setTimeout, no stale closure
+  // FASE 1: Fire-and-forget background API call
+  const recordSwipeInBackground = useCallback(
+    (direction: "like" | "dislike" | "superlike", itemId: string) => {
+      if (!user) return;
+      (async () => {
+        try {
+          await createSwipe(user.id, itemId, direction);
+          if (direction === "like" || direction === "superlike") {
+            const { supabase } = await import("@/integrations/supabase/client");
+            const { data: newMatches } = await supabase
+              .from("matches")
+              .select("id, created_at")
+              .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+              .order("created_at", { ascending: false })
+              .limit(1);
+            if (newMatches && newMatches.length > 0) {
+              const matchAge = Date.now() - new Date(newMatches[0].created_at).getTime();
+              if (matchAge < 5000) {
+                navigate(`/match/${newMatches[0].id}`);
+              }
+            }
+          }
+        } catch (err: any) {
+          if (!err.message?.includes("duplicate")) {
+            toast({ title: "Erro ao registrar swipe", description: err.message, variant: "destructive" });
+          }
+        }
+      })();
+    },
+    [user, navigate, toast]
+  );
+
+  // FASE 1: Optimistic transition — advance IMMEDIATELY, API in background
   const handleSwipeComplete = useCallback(
-    async (direction: "like" | "dislike" | "superlike") => {
-      // Fix Bug 5: synchronous check
+    (direction: "like" | "dislike" | "superlike") => {
       if (swipingRef.current || !user || !currentItem) return;
       swipingRef.current = true;
 
       triggerStreak(direction);
+      const itemId = currentItem.id;
 
-      try {
-        await createSwipe(user.id, currentItem.id, direction);
+      // Advance card FIRST (instant transition)
+      advanceCard();
 
-        // Fix Bug 7: only check matches for likes/superlikes
-        if (direction === "like" || direction === "superlike") {
-          const { supabase } = await import("@/integrations/supabase/client");
-          const { data: newMatches } = await supabase
-            .from("matches")
-            .select("id, created_at")
-            .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-            .order("created_at", { ascending: false })
-            .limit(1);
+      // Record swipe in background (fire-and-forget)
+      recordSwipeInBackground(direction, itemId);
 
-          if (newMatches && newMatches.length > 0) {
-            const matchAge = Date.now() - new Date(newMatches[0].created_at).getTime();
-            if (matchAge < 5000) {
-              advanceCard();
-              navigate(`/match/${newMatches[0].id}`);
-              return;
-            }
-          }
-        }
-
-        advanceCard();
-      } catch (err: any) {
-        if (!err.message?.includes("duplicate")) {
-          toast({ title: "Erro ao registrar swipe", description: err.message, variant: "destructive" });
-        }
-        advanceCard();
-      } finally {
-        swipingRef.current = false;
-      }
+      swipingRef.current = false;
     },
-    [user, currentItem, advanceCard, navigate, toast, triggerStreak]
+    [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
   );
 
   // Superlike wrapper: flash + particles, then complete
@@ -153,9 +161,9 @@ const Explorar = () => {
         setSuperlikeFlash(true);
         setParticles(generateParticles());
         setTimeout(() => setSuperlikeFlash(false), 400);
-        // Small delay for visual effect, then process
         setTimeout(() => {
-          handleSwipeComplete("superlike").finally(() => setParticles([]));
+          handleSwipeComplete("superlike");
+          setTimeout(() => setParticles([]), 600);
         }, 350);
       } else {
         handleSwipeComplete(direction);
@@ -171,16 +179,24 @@ const Explorar = () => {
     [dragProgressValue]
   );
 
-  const formatValue = (cents: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
-
+  // FASE 1: Preload next image
   const nextImage = nextItem?.item_images?.[0]?.image_url;
   const thirdImage = thirdItem?.item_images?.[0]?.image_url;
 
+  useEffect(() => {
+    if (nextImage) {
+      const img = new window.Image();
+      img.src = nextImage;
+    }
+  }, [nextImage]);
+
   return (
     <ScreenLayout>
-      {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
+      {/* Header — safe-area-inset-top */}
+      <header
+        className="relative z-40 flex w-full justify-between items-center px-6 pb-4"
+        style={{ paddingTop: "max(3rem, env(safe-area-inset-top))" }}
+      >
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
             Encontre Trocas
@@ -192,8 +208,8 @@ const Explorar = () => {
         <div />
       </header>
 
-      {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-5 pb-8 pt-2 z-10">
+      {/* Main Card Area — extra pb for action buttons + BottomNav */}
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-5 pb-40 pt-2 z-10">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -205,14 +221,15 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">Volte mais tarde para encontrar novas trocas!</p>
           </div>
         ) : currentItem ? (
-          <div className="relative w-full h-full max-h-[580px] flex flex-col" style={{ perspective: "1200px" }}>
-            {/* Streak indicator */}
+          <div className="relative w-full h-full max-h-[520px] flex flex-col" style={{ perspective: "1200px" }}>
+            {/* Streak indicator — smoother animation */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.5, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                   className="absolute -top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 backdrop-blur-xl"
                 >
                   <span className="text-lg">🔥</span>
@@ -272,8 +289,8 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Third card in stack */}
-            {localItems.length >= 3 && (
+            {/* Third card in stack — with text preview */}
+            {localItems.length >= 3 && thirdItem && (
               <motion.div
                 className="absolute inset-0 z-[-1] bg-muted rounded-[2.5rem] border border-foreground/5 overflow-hidden"
                 style={{
@@ -284,13 +301,18 @@ const Explorar = () => {
                 }}
               >
                 {thirdImage && (
-                  <img src={thirdImage} alt="" className="w-full h-full object-cover" />
+                  <img src={thirdImage} alt="" className="w-full h-full object-cover object-center" />
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                <div className="absolute bottom-4 left-5 right-5 z-10">
+                  <p className="text-foreground/80 text-lg font-bold truncate">{thirdItem.name}</p>
+                  <p className="text-primary/70 text-sm font-semibold">{formatValue(thirdItem.market_value)}</p>
+                </div>
               </motion.div>
             )}
 
-            {/* Second card (next item preview) */}
-            {localItems.length >= 2 && (
+            {/* Second card (next item preview) — with text preview */}
+            {localItems.length >= 2 && nextItem && (
               <motion.div
                 className="absolute inset-0 z-0 bg-muted rounded-[2.5rem] border border-foreground/5 overflow-hidden"
                 style={{
@@ -303,14 +325,19 @@ const Explorar = () => {
                   <motion.img
                     src={nextImage}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
                     style={{ filter: nextBlurFilter }}
                   />
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                <div className="absolute bottom-4 left-5 right-5 z-10">
+                  <p className="text-foreground/80 text-lg font-bold truncate">{nextItem.name}</p>
+                  <p className="text-primary/70 text-sm font-semibold">{formatValue(nextItem.market_value)}</p>
+                </div>
               </motion.div>
             )}
 
-            {/* Main draggable card — Fix Bug 2: epoch key, Fix Bug 3: own motion values */}
+            {/* Main draggable card */}
             <SwipeCard
               key={`${currentItem.id}-${epoch}`}
               ref={cardRef}
@@ -321,6 +348,39 @@ const Explorar = () => {
             />
           </div>
         ) : null}
+
+        {/* Action Buttons — extracted from SwipeCard, fixed between card and BottomNav */}
+        {currentItem && !isLoading && localItems.length > 0 && (
+          <div className="w-full flex justify-center items-center gap-6 pt-5">
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("dislike")}
+              className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl"
+              whileTap={{ scale: 0.85 }}
+              whileHover={{ scale: 1.08, borderColor: "hsl(0 84% 60% / 0.5)" }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            >
+              <X className="h-8 w-8" />
+            </motion.button>
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("superlike")}
+              className="flex items-center justify-center h-14 w-14 rounded-full bg-background border border-primary/40 text-primary neon-glow backdrop-blur-xl -translate-y-2"
+              whileTap={{ scale: 0.8, rotate: 15 }}
+              whileHover={{ scale: 1.15, boxShadow: "0 0 30px hsl(184 100% 50% / 0.5)" }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            >
+              <Zap className="h-7 w-7" />
+            </motion.button>
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("like")}
+              className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl"
+              whileTap={{ scale: 0.85 }}
+              whileHover={{ scale: 1.08, boxShadow: "0 0 25px hsl(142 71% 45% / 0.4)" }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            >
+              <Heart className="h-8 w-8" />
+            </motion.button>
+          </div>
+        )}
       </main>
 
       <BottomNav activeTab="explorar" />
