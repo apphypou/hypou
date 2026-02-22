@@ -79,6 +79,8 @@ const Explorar = () => {
     queryKey: ["explore-items", user?.id],
     queryFn: () => getExploreItems(user!.id),
     enabled: !!user,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
   const currentItem = items[currentIndex];
