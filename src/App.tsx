@@ -12,6 +12,8 @@ import RecuperarSenha from "./pages/RecuperarSenha";
 import ResetPassword from "./pages/ResetPassword";
 import Explorar from "./pages/Explorar";
 import Matches from "./pages/Matches";
+import Configuracoes from "./pages/Configuracoes";
+import NovoItem from "./pages/NovoItem";
 import Match from "./pages/Match";
 import Chat from "./pages/Chat";
 import Conversa from "./pages/Conversa";
@@ -61,6 +63,12 @@ const App = () => (
             } />
             <Route path="/meu-perfil" element={
               <ProtectedRoute><MeuPerfil /></ProtectedRoute>
+            } />
+            <Route path="/configuracoes" element={
+              <ProtectedRoute><Configuracoes /></ProtectedRoute>
+            } />
+            <Route path="/novo-item" element={
+              <ProtectedRoute><NovoItem /></ProtectedRoute>
             } />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
