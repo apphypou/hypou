@@ -44,7 +44,7 @@ const MeuPerfil = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-black text-foreground overflow-hidden font-display antialiased">
+    <div className="relative flex flex-col h-[100dvh] bg-black text-foreground overflow-hidden font-display antialiased">
       {/* Header */}
       <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
         <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ const MeuPerfil = () => {
       </main>
 
       {/* Bottom Navigation - Floating */}
-      <div className="relative z-50 w-full flex justify-center pb-6 px-5">
+      <div className="absolute bottom-0 left-0 right-0 z-50 w-full flex justify-center pb-6 px-5">
         <nav className="glass-panel rounded-full px-8 py-3 flex justify-between items-center w-full max-w-md">
           {navItems.map((item) => (
             <button
