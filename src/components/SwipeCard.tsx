@@ -118,15 +118,9 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         drag="x"
         dragElastic={0.9}
         onDragEnd={handleDragEnd}
-        initial={{ scale: 0.92, opacity: 0, y: 30 }}
+        initial={false}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: -50, transition: { duration: 0.2 } }}
-        transition={{
-          type: "spring",
-          stiffness: 400,
-          damping: 28,
-          mass: 0.8,
-        }}
+        exit={{ opacity: 0, scale: 0.9, y: -50, transition: { duration: 0.15 } }}
       >
         {/* Dynamic glow borders */}
         <motion.div
