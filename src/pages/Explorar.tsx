@@ -311,16 +311,14 @@ const Explorar = () => {
             )}
 
             {/* Main draggable card — Fix Bug 2: epoch key, Fix Bug 3: own motion values */}
-            <AnimatePresence mode="popLayout">
-              <SwipeCard
-                key={`${currentItem.id}-${epoch}`}
-                ref={cardRef}
-                item={currentItem}
-                onSwipeComplete={handleSwipeCompleteWithEffects}
-                onDragProgressChange={handleDragProgressChange}
-                disabled={swipingRef.current}
-              />
-            </AnimatePresence>
+            <SwipeCard
+              key={`${currentItem.id}-${epoch}`}
+              ref={cardRef}
+              item={currentItem}
+              onSwipeComplete={handleSwipeCompleteWithEffects}
+              onDragProgressChange={handleDragProgressChange}
+              disabled={swipingRef.current}
+            />
           </div>
         ) : null}
       </main>
