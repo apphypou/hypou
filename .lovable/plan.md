@@ -1,36 +1,81 @@
 
-# Fix: Swipe Card Transition Bug
 
-## Root Cause
+# Auditoria Completa do Swipe -- Todos os Bugs Encontrados e Plano de Correcao
 
-The `x` motion value (used for drag position) is **never reset to 0** after a swipe completes. Here's the sequence that causes the bug:
+## Bugs Identificados
 
-1. User swipes left -- `animate(x, -600)` fires
-2. After 200ms, `handleSwipe` runs which calls `advanceCard` -- `currentIndex` increments
-3. New card mounts via `AnimatePresence` with `key={newItem.id}`
-4. BUT `x` is still at `-600` -- the new card inherits this position
-5. The glow borders (`likeGlowOpacity`/`dislikeGlowOpacity`) are derived from `x`, so they show the green/red glow on the stuck card
+### Bug 1: Query refetch retorna lista vazia (CAUSA PRINCIPAL da tela vazia)
+O `getExploreItems` filtra items ja swipados no servidor. Apesar do `staleTime: Infinity`, se o componente remonta (ex: navegar e voltar), o React Query pode refazer a query e retornar 0 itens porque **todos 18 itens ja foram swipados no banco** (18 swipes existem agora). O cache so e preservado enquanto o componente nao desmonta.
 
-The screenshot shows exactly this: the next card is visible with the green "like" glow border because `x` never returned to 0.
+### Bug 2: AnimatePresence com key repetida no loop
+Quando o loop volta ao index 0, `key={currentItem.id}` e o mesmo ID de um card ja exibido. O `AnimatePresence` nao re-anima cards com a mesma key -- o card fica invisivel (opacity: 0 do `initial`).
 
-## Fix
+### Bug 3: Motion value `x` compartilhado entre cards
+O `useMotionValue(0)` e global. Quando o card antigo sai com `animate(x, 600)` e o novo entra, ambos usam o mesmo `x`. O `x.set(0)` em `advanceCard` interrompe a animacao de saida, causando "pulos" visuais.
 
-### 1. Reset `x` to 0 inside `advanceCard`
+### Bug 4: setTimeout fragil para coordenacao
+O `setTimeout(250ms)` entre animar e trocar o card e arbitrario. Se a animacao de mola leva mais tempo, o novo card aparece antes do antigo sair. Se leva menos, ha um gap vazio.
 
-Add `x.set(0)` at the beginning of `advanceCard` so the motion value is clean before the next card renders.
+### Bug 5: Race condition no flag `swiping`
+`performSwipe` verifica `if (swiping) return` no inicio, mas so seta `setSwiping(true)` dentro de `handleSwipe` (chamado 250ms depois). Nesse intervalo, outro swipe pode disparar -- causando swipe duplo no mesmo item.
 
-### 2. Increase exit delay slightly
+### Bug 6: Closure stale no setTimeout
+`handleSwipe` e capturado no `useCallback` de `performSwipe`. Quando o setTimeout executa 250ms depois, `handleSwipe` pode referenciar um `currentItem` desatualizado se o estado mudou.
 
-Change the `setTimeout` in `performSwipe` from 200ms to 250ms so the exit animation has time to complete before the state change triggers the new card mount.
+### Bug 7: Match detection ineficiente
+Apos cada swipe, faz 2 queries extras ao banco (`matches.select` + single match) independente da direcao. Dislikes nunca geram match, mas ainda fazem essas queries.
 
-### 3. Remove `dragConstraints` conflict
+---
 
-`dragConstraints={{ left: 0, right: 0 }}` fights with the drag behavior. Remove it entirely since `dragElastic` already handles the rubber-band feel.
+## Plano de Implementacao
 
-## Technical Changes
+### 1. Separar motion values por card (Fix Bug 3)
+Em vez de um `x` global, usar `useMotionValue` fresco para cada card. O approach: mover a logica do card para um componente filho `SwipeCard` que cria seu proprio `x`.
 
-**File: `src/pages/Explorar.tsx`**
+### 2. Usar `onAnimationComplete` em vez de setTimeout (Fix Bug 4 e 6)
+Eliminar todos os `setTimeout` para coordenacao. Usar uma ref `pendingSwipe` para guardar a direcao, animar o card, e processar o swipe quando a animacao de saida completar via callback.
 
-- In `advanceCard` callback (~line 88): add `x.set(0)` as the first line, and add `x` to the dependency array
-- In `performSwipe` (~line 183): change `setTimeout` delay from `200` to `250`
-- On the main `motion.div` (~line 380): remove `dragConstraints={{ left: 0, right: 0 }}`
+### 3. Controle de swiping com ref (Fix Bug 5)
+Trocar `useState(swiping)` por `useRef(swiping)` para verificacao sincrona imediata, sem esperar re-render.
+
+### 4. Adicionar epoch key para loop (Fix Bug 2)
+Manter um contador `epoch` que incrementa a cada swipe. Usar `key={currentItem.id + '-' + epoch}` para garantir que AnimatePresence sempre trate como card novo, mesmo no loop.
+
+### 5. Nao refiltrar items ja carregados (Fix Bug 1)
+Separar o cache de items exploraveis: ao carregar, guardar os items em um `useState` local. O loop roda sobre esse array fixo. Adicionar um botao "Recarregar" para buscar novos itens quando o usuario quiser. Isso evita que refetches apaguem a lista.
+
+### 6. Skip match check em dislikes (Fix Bug 7)
+So verificar matches quando `direction === "like" || direction === "superlike"`.
+
+---
+
+## Mudancas Tecnicas
+
+### Arquivo: `src/pages/Explorar.tsx`
+
+**Novo componente `SwipeCard` (extraido do card principal):**
+- Recebe `item`, `onSwipeComplete`, `onButtonSwipe` como props
+- Cria seu proprio `useMotionValue(0)` para `x`
+- Contem toda a logica visual (glow, stamps, parallax, image, content, buttons)
+- Expoe metodo `triggerSwipe(direction)` via `useImperativeHandle`
+
+**Mudancas no componente `Explorar`:**
+- Estado `localItems` (useState) inicializado a partir do resultado da query
+- Estado `epoch` (number) incrementado a cada swipe para key unica
+- Ref `swipingRef` (useRef boolean) em vez de `useState(swiping)`
+- `advanceCard` simplificado: so incrementa index (sem manipular x)
+- `handleSwipe` sem setTimeout -- chamado diretamente pelo `SwipeCard` apos animacao completar
+- Match check so para likes/superlikes
+- Remover `queryClient` da dep array de `advanceCard`
+
+**Fluxo novo do swipe:**
+1. Usuario arrasta ou clica botao
+2. `SwipeCard` anima seu `x` local para +/-600 (spring)
+3. Ao completar animacao, chama `onSwipeComplete(direction)`
+4. `Explorar` verifica `swipingRef`, registra swipe no banco, avanca card
+5. Novo `SwipeCard` monta com key unica e `x` fresco em 0
+
+**Stack de cards (next/third):**
+- Mantidas como estao, mas sem depender do `x` do card principal
+- Usam `dragProgress` derivado de um callback do `SwipeCard`
+
