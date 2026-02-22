@@ -1,10 +1,12 @@
 import { Diamond, ArrowRight, Globe } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import NeonButton from "@/components/NeonButton";
 
 const HERO_IMAGE_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCX-F5mRp9yF5XL5xm8NDWAbCcse4MqlextTbPvBCQ1McUrOlmCutVVTUv8V2HB8uZv729Gx9b4_Ku-wp2AqOfiVSeu2dVr-VpyGPpKptDZOBTHmrPEsjTAUYZ8_FHbbXlWilZL6-vdhHPqJNx7VNxZHx7mgruGxuBf6AuUTv80qhp68E-IyBq-Llk84GUK1tWZk22yiXSjHbMDhrb-ttNP0r3jlF8qJYkozErryFurE8d052zzfddJEf8JiggMRhNvmU6bfvcD31o";
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <div className="relative min-h-screen flex flex-col justify-between">
       {/* Background Image with Overlay */}
@@ -53,10 +55,10 @@ const Index = () => {
 
         {/* Buttons */}
         <div className="flex flex-col gap-4 mt-4">
-          <NeonButton variant="primary" icon={ArrowRight}>
+          <NeonButton variant="primary" icon={ArrowRight} onClick={() => navigate("/cadastro")}>
             Criar conta
           </NeonButton>
-          <NeonButton variant="outline">
+          <NeonButton variant="outline" onClick={() => navigate("/login")}>
             Entrar
           </NeonButton>
         </div>
