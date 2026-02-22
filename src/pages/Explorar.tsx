@@ -31,7 +31,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-center w-full px-5 pb-8 pt-2 z-10">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-5 pb-8 pt-2 z-10">
         <div className="relative w-full h-full max-h-[640px] flex flex-col">
           {/* Background stack card */}
           <div className="absolute inset-0 z-0 bg-muted rounded-[2.5rem] border border-foreground/5" style={{ transform: "scale(0.93) translateY(-15px)", opacity: 0.4 }} />
