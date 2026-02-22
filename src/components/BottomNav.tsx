@@ -18,8 +18,8 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-50 w-full flex justify-center pb-6 px-5">
-      <nav className="glass-panel rounded-full px-8 py-3 flex justify-between items-center w-full max-w-md">
+    <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
+      <nav className="bg-background border-t border-border px-8 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-between items-center w-full max-w-md mx-auto">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
