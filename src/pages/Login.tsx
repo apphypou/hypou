@@ -31,9 +31,9 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-background text-foreground font-display antialiased">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       {/* Header */}
-      <div className="flex flex-col items-center pt-16 pb-8 px-6">
+      <div className="flex flex-col items-center pb-8 w-full max-w-sm">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/30 backdrop-blur-md mb-6">
           <Diamond className="h-7 w-7 text-primary" />
         </div>
@@ -46,7 +46,7 @@ const Login = () => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 mt-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm mt-4">
         <div className="relative">
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input
@@ -92,7 +92,7 @@ const Login = () => {
       </form>
 
       {/* Footer */}
-      <div className="mt-auto pb-10 pt-8 text-center">
+      <div className="pt-8 text-center">
         <p className="text-muted-foreground text-sm">
           Ainda não tem conta?{" "}
           <Link to="/cadastro" className="text-primary font-semibold hover:underline">
