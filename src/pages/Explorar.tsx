@@ -8,7 +8,7 @@ import { createSwipe } from "@/services/swipeService";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate, PanInfo, AnimatePresence } from "framer-motion";
 
 const SWIPE_THRESHOLD = 100;
 
@@ -20,6 +20,7 @@ const Explorar = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swiping, setSwiping] = useState(false);
 
+  const [exitDirection, setExitDirection] = useState<number | null>(null);
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const likeOpacity = useTransform(x, [0, 100], [0, 1]);
@@ -86,33 +87,31 @@ const Explorar = () => {
     }
   }, [user, currentItem, swiping, advanceCard, navigate, toast]);
 
+  const performSwipe = useCallback((direction: "like" | "dislike" | "superlike", animateX: number) => {
+    if (swiping) return;
+    setExitDirection(animateX);
+    // Wait for exit animation, then process swipe and reset
+    setTimeout(() => {
+      handleSwipe(direction).finally(() => {
+        setExitDirection(null);
+      });
+    }, 250);
+  }, [handleSwipe, swiping]);
+
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
     if (info.offset.x > SWIPE_THRESHOLD) {
-      animate(x, 500, { duration: 0.3 });
-      handleSwipe("like").then(() => {
-        x.set(0);
-      });
+      performSwipe("like", 500);
     } else if (info.offset.x < -SWIPE_THRESHOLD) {
-      animate(x, -500, { duration: 0.3 });
-      handleSwipe("dislike").then(() => {
-        x.set(0);
-      });
+      performSwipe("dislike", -500);
     } else {
       animate(x, 0, { type: "spring", stiffness: 500, damping: 30 });
     }
-  }, [handleSwipe, x]);
+  }, [performSwipe, x]);
 
-  const handleButtonSwipe = useCallback(async (direction: "like" | "dislike" | "superlike") => {
-    const targetX = direction === "dislike" ? -500 : direction === "superlike" ? 0 : 500;
-    if (direction === "superlike") {
-      // Superlike: quick scale animation
-      await handleSwipe("superlike");
-    } else {
-      animate(x, targetX, { duration: 0.3 });
-      await handleSwipe(direction);
-      x.set(0);
-    }
-  }, [handleSwipe, x]);
+  const handleButtonSwipe = useCallback((direction: "like" | "dislike" | "superlike") => {
+    const animateX = direction === "dislike" ? -500 : 500;
+    performSwipe(direction, direction === "superlike" ? 0 : animateX);
+  }, [performSwipe]);
 
   const formatValue = (cents: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -157,100 +156,107 @@ const Explorar = () => {
             </div>
 
             {/* Main draggable card */}
-            <motion.div
-              className="relative z-10 flex-1 w-full bg-muted rounded-[2.5rem] overflow-hidden border border-foreground/10 flex flex-col swipe-card touch-none"
-              style={{ x, rotate }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.7}
-              onDragEnd={handleDragEnd}
-            >
-              {/* Like/Dislike overlay indicators */}
+            <AnimatePresence mode="popLayout">
               <motion.div
-                className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-success pointer-events-none flex items-center justify-center"
-                style={{ opacity: likeOpacity }}
+                key={currentItem.id}
+                className="relative z-10 flex-1 w-full bg-muted rounded-[2.5rem] overflow-hidden border border-foreground/10 flex flex-col swipe-card touch-none"
+                style={{ x, rotate }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.7}
+                onDragEnd={handleDragEnd}
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1, x: exitDirection ?? 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
               >
-                <span className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl">LIKE</span>
-              </motion.div>
-              <motion.div
-                className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-danger pointer-events-none flex items-center justify-center"
-                style={{ opacity: dislikeOpacity }}
-              >
-                <span className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl">NOPE</span>
-              </motion.div>
+                {/* Like/Dislike overlay indicators */}
+                <motion.div
+                  className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-success pointer-events-none flex items-center justify-center"
+                  style={{ opacity: likeOpacity }}
+                >
+                  <span className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl">LIKE</span>
+                </motion.div>
+                <motion.div
+                  className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-danger pointer-events-none flex items-center justify-center"
+                  style={{ opacity: dislikeOpacity }}
+                >
+                  <span className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl">NOPE</span>
+                </motion.div>
 
-              {/* Image */}
-              <div className="absolute inset-0">
-                {mainImage ? (
-                  <img alt={currentItem.name} className="w-full h-full object-cover" src={mainImage} draggable={false} />
-                ) : (
-                  <div className="w-full h-full bg-card flex items-center justify-center">
-                    <Image className="h-16 w-16 text-foreground/10" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
-              </div>
+                {/* Image */}
+                <div className="absolute inset-0">
+                  {mainImage ? (
+                    <img alt={currentItem.name} className="w-full h-full object-cover" src={mainImage} draggable={false} />
+                  ) : (
+                    <div className="w-full h-full bg-card flex items-center justify-center">
+                      <Image className="h-16 w-16 text-foreground/10" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+                </div>
 
-              {/* Card Content */}
-              <div className="relative mt-auto w-full p-7 pb-28 space-y-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
-                      {currentItem.category}
-                    </span>
-                    {imageCount > 0 && (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-foreground/5 text-foreground/80">
-                        <Image className="h-3.5 w-3.5" />
-                        <span className="text-[11px] font-semibold">{imageCount}</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-0.5">
-                    <h2 className="text-foreground text-3xl font-bold tracking-tight">{currentItem.name}</h2>
-                    <div className="flex items-center gap-1.5 text-foreground/60">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="text-sm font-medium">
-                        {currentItem.location || ownerProfile?.location || "Localização não informada"}
+                {/* Card Content */}
+                <div className="relative mt-auto w-full p-7 pb-28 space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
+                        {currentItem.category}
                       </span>
+                      {imageCount > 0 && (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-foreground/5 text-foreground/80">
+                          <Image className="h-3.5 w-3.5" />
+                          <span className="text-[11px] font-semibold">{imageCount}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-0.5">
+                      <h2 className="text-foreground text-3xl font-bold tracking-tight">{currentItem.name}</h2>
+                      <div className="flex items-center gap-1.5 text-foreground/60">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium">
+                          {currentItem.location || ownerProfile?.location || "Localização não informada"}
+                        </span>
+                      </div>
                     </div>
                   </div>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest">
+                      Valor de mercado
+                    </span>
+                    <span className="text-primary text-3xl font-extrabold tracking-tighter text-glow uppercase">
+                      {formatValue(currentItem.market_value)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest">
-                    Valor de mercado
-                  </span>
-                  <span className="text-primary text-3xl font-extrabold tracking-tighter text-glow uppercase">
-                    {formatValue(currentItem.market_value)}
-                  </span>
-                </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center items-center gap-6 px-4">
-                <button
-                  onClick={() => handleButtonSwipe("dislike")}
-                  disabled={swiping}
-                  className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl transition-all active:scale-90 hover:bg-foreground/5 disabled:opacity-50"
-                >
-                  <X className="h-8 w-8" />
-                </button>
-                <button
-                  onClick={() => handleButtonSwipe("superlike")}
-                  disabled={swiping}
-                  className="flex items-center justify-center h-14 w-14 rounded-full bg-background border border-primary/40 text-primary neon-glow backdrop-blur-xl transition-all active:scale-90 -translate-y-2 disabled:opacity-50"
-                >
-                  <Zap className="h-7 w-7" />
-                </button>
-                <button
-                  onClick={() => handleButtonSwipe("like")}
-                  disabled={swiping}
-                  className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl transition-all active:scale-90 disabled:opacity-50"
-                >
-                  <Heart className="h-8 w-8" />
-                </button>
-              </div>
-            </motion.div>
+                {/* Action Buttons */}
+                <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center items-center gap-6 px-4">
+                  <button
+                    onClick={() => handleButtonSwipe("dislike")}
+                    disabled={swiping}
+                    className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl transition-all active:scale-90 hover:bg-foreground/5 disabled:opacity-50"
+                  >
+                    <X className="h-8 w-8" />
+                  </button>
+                  <button
+                    onClick={() => handleButtonSwipe("superlike")}
+                    disabled={swiping}
+                    className="flex items-center justify-center h-14 w-14 rounded-full bg-background border border-primary/40 text-primary neon-glow backdrop-blur-xl transition-all active:scale-90 -translate-y-2 disabled:opacity-50"
+                  >
+                    <Zap className="h-7 w-7" />
+                  </button>
+                  <button
+                    onClick={() => handleButtonSwipe("like")}
+                    disabled={swiping}
+                    className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl transition-all active:scale-90 disabled:opacity-50"
+                  >
+                    <Heart className="h-8 w-8" />
+                  </button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         )}
       </main>
