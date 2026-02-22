@@ -47,6 +47,8 @@ Todas as cores são definidas em HSL no `src/index.css` e mapeadas no `tailwind.
 | `--muted` | `174 20% 16%` | `#212E2D` | Áreas neutras |
 | `--muted-foreground` | `200 10% 60%` | `#8F9A9C` | Texto secundário, labels |
 | `--destructive` | `0 84.2% 60.2%` | `#E5484D` | Erros e ações destrutivas |
+| `--success` | `142 71% 45%` | `#22C55E` | Confirmações, swipe like, status positivo |
+| `--danger` | `0 84% 60%` | `#E5484D` | Alertas, swipe nope, ações perigosas |
 | `--border` | `0 0% 100% / 0.12` | `rgba(255,255,255,0.12)` | Bordas padrão |
 | `--ring` | `184 100% 50%` | `#00EEFF` | Ring de foco |
 
