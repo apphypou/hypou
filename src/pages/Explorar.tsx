@@ -69,6 +69,7 @@ const Explorar = () => {
   const nextScale = useTransform(dragProgress, [0, 1], [0.93, 0.97]);
   const nextOpacity = useTransform(dragProgress, [0, 1], [0.4, 0.7]);
   const nextBlur = useTransform(dragProgress, [0, 1], [4, 1]);
+  const nextBlurFilter = useTransform(nextBlur, (v) => `blur(${v}px)`);
 
   // Third card in stack
   const thirdScale = useTransform(dragProgress, [0, 1], [0.88, 0.91]);
@@ -358,7 +359,7 @@ const Explorar = () => {
                     src={nextImage}
                     alt=""
                     className="w-full h-full object-cover"
-                    style={{ filter: useTransform(nextBlur, (v) => `blur(${v}px)`) }}
+                    style={{ filter: nextBlurFilter }}
                   />
                 )}
               </motion.div>
