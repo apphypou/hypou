@@ -1,38 +1,35 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const navItems = [
-  { icon: Compass, label: "Explorar", active: false, path: "/explorar" },
-  { icon: Handshake, label: "Matches", active: false, path: "/partidas" },
-  { icon: MessageSquare, label: "Chat", active: false, path: "/explorar", badge: true },
-  { icon: UserCircle, label: "Perfil", active: true, path: "/meu-perfil" },
-];
+import ScreenLayout from "@/components/ScreenLayout";
+import BottomNav from "@/components/BottomNav";
+import GlassCard from "@/components/GlassCard";
+import IconButton from "@/components/IconButton";
 
 const stats = [
-  { value: "12", label: "Permutas", highlight: false },
+  { value: "12", label: "Trocas", highlight: false },
   { value: "4.9", label: "Rating", highlight: true },
-  { value: "38", label: "Matches", highlight: false },
+  { value: "38", label: "Propostas", highlight: false },
 ];
 
 const assets = [
   {
-    category: "Imóvel",
-    name: "Mansão Morumbi",
-    value: "R$ 18.5M",
+    category: "Celular",
+    name: "iPhone 14 Pro",
+    value: "R$ 4.800",
     status: "green",
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC67zydhocrgUd5xqhXH4Mxobd8z80k7yuh9_GergtIfDj6-q472LYoJ-6Dcn7TVfZlMJ9j9ST0crzzKbiQtXo8S71d2OMx-UWO2wcPMbBAKpW0QfVfhvku8ENTes3ENOT8Hh0OfCG_CpuVusf5-AVJRmUqQCHxTh_Hq-bLv19SFXN5bfH0RHakp6TA8-jcMP9r7YU_rDRb5cye7bi-_D9WV4PUxjJHPfBEb-2xN0qZcBDcB8Xjn-MbzP2xeWhFRn3e6IcUu10y2w0",
   },
   {
-    category: "Veículo",
-    name: "Porsche 911 GT3",
-    value: "R$ 1.2M",
+    category: "Moto",
+    name: "Honda CG 160",
+    value: "R$ 12.000",
     status: "green",
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCMxRChPb6jRAaV1I8KHmpntN8-fTL4wt5QSGkyzfFJLeta2mDuw20KpxOhCjWhu0c4LpEWI1R4CK-6GvKZs7dP2toGGikRjfXYWiBzuKl9E6IvuwMbifLKr3S4pRgO0qoFUxlUSgSfz4VHbZypZTZZa1SPleW96EFwPKXhsGaaaKndoARVsTznajBF38kJScBNDOUqlDNWS1ScxFWlySEmGzBS5AXVtm1SbKc6HipQs9pGs9U6C5FKh6txjxTEo-OuAzujhRT0WyM",
   },
   {
-    category: "Jóia",
-    name: "Patek Philippe Nautilus",
-    value: "R$ 850K",
+    category: "Acessório",
+    name: "Apple Watch Series 9",
+    value: "R$ 2.500",
     status: "yellow",
     image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA7wHWGbe3HYbOOajln0l4uSsD-6tCiLN3lZxCribR1GTOhYhVoRpDBQ8LDJwE3ggMw_dVwg-Z9V792o7n5PrxUSkvRwEipW2RE8VO_wZBhHhHHlKCYx94Yjb4c1sC1DiPwAOwpoNA0MYhzrgu54BsJYovj91Bzoh7FuKXGfA-02W2BUqn_ACcSDV67OfgRwJsFPAgfcAji4P-WQ6vhENOBEeSXn01IYZL-rnTvQv8ftT_CtPsqKUkLryCtw1ApUT-sw_oFqWRKlO0",
   },
@@ -44,21 +41,14 @@ const MeuPerfil = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex flex-col h-[100dvh] bg-black text-foreground overflow-hidden font-display antialiased">
+    <ScreenLayout>
       {/* Header */}
       <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-muted/50 border border-foreground/10 text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
           <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Meu Perfil</span>
         </div>
-        <button className="h-10 w-10 flex items-center justify-center rounded-full bg-muted/50 border border-foreground/10 text-foreground/80 hover:bg-foreground/10 transition-all">
-          <Settings className="h-5 w-5" />
-        </button>
+        <IconButton icon={Settings} size="sm" />
       </header>
 
       {/* Main Content */}
@@ -67,7 +57,7 @@ const MeuPerfil = () => {
           {/* Profile Section */}
           <div className="relative mt-2 mb-6 flex flex-col items-center text-center">
             <div className="relative mb-4">
-              <div className="h-32 w-32 rounded-full p-1 border-2 border-primary neon-glow bg-black">
+              <div className="h-32 w-32 rounded-full p-1 border-2 border-primary neon-glow bg-background">
                 <img
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full opacity-90 hover:opacity-100 transition-opacity"
@@ -75,8 +65,8 @@ const MeuPerfil = () => {
                 />
               </div>
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gray-900 to-black border border-primary/30 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg w-max">
-                <span className="text-primary text-[14px]">✦</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Plano Elite</span>
+                <span className="text-primary text-[14px]">✓</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Conta Verificada</span>
               </div>
             </div>
 
@@ -97,9 +87,9 @@ const MeuPerfil = () => {
           {/* Stats */}
           <div className="w-full grid grid-cols-3 gap-3 mb-8">
             {stats.map((stat) => (
-              <div
+              <GlassCard
                 key={stat.label}
-                className={`glass-card rounded-2xl p-3 flex flex-col items-center justify-center text-center ${
+                className={`rounded-2xl p-3 flex flex-col items-center justify-center text-center ${
                   stat.highlight ? "border-primary/20 bg-primary/5" : ""
                 }`}
               >
@@ -113,14 +103,14 @@ const MeuPerfil = () => {
                 >
                   {stat.label}
                 </span>
-              </div>
+              </GlassCard>
             ))}
           </div>
 
-          {/* Meus Ativos */}
+          {/* Meus Itens */}
           <div className="w-full flex flex-col gap-4">
             <div className="flex items-center justify-between px-1">
-              <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Ativos</h2>
+              <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Itens</h2>
               <button className="text-primary text-xs font-bold tracking-wide uppercase hover:text-foreground transition-colors flex items-center gap-1">
                 <PlusCircle className="h-4 w-4" />
                 Novo Item
@@ -129,9 +119,10 @@ const MeuPerfil = () => {
 
             <div className="space-y-3 pb-24">
               {assets.map((asset) => (
-                <div
+                <GlassCard
                   key={asset.name}
-                  className="group relative overflow-hidden rounded-2xl glass-card p-3 flex gap-4 transition-all hover:bg-foreground/5 active:scale-[0.99]"
+                  hoverable
+                  className="p-3 flex gap-4 active:scale-[0.99]"
                 >
                   <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
                     <img
@@ -153,43 +144,19 @@ const MeuPerfil = () => {
                     </div>
                     <h3 className="text-base font-bold text-foreground leading-tight">{asset.name}</h3>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-foreground/40 text-xs font-medium">Avaliado em</span>
+                      <span className="text-foreground/40 text-xs font-medium">Valor de mercado</span>
                       <span className="text-foreground font-bold text-sm">{asset.value}</span>
                     </div>
                   </div>
-                </div>
+                </GlassCard>
               ))}
             </div>
           </div>
         </div>
       </main>
 
-      {/* Bottom Navigation - Floating */}
-      <div className="absolute bottom-0 left-0 right-0 z-50 w-full flex justify-center pb-6 px-5">
-        <nav className="glass-panel rounded-full px-8 py-3 flex justify-between items-center w-full max-w-md">
-          {navItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 transition-colors relative ${
-                item.active ? "text-primary" : "text-foreground/50 hover:text-foreground/80"
-              }`}
-            >
-              <div className="relative flex items-center justify-center h-8 w-8">
-                <item.icon className={`h-6 w-6 ${item.active ? "text-glow" : ""}`} />
-                {item.badge && (
-                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary border border-background" />
-                )}
-              </div>
-              <span className="text-[9px] font-bold tracking-wider uppercase">{item.label}</span>
-              {item.active && (
-                <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary neon-glow" />
-              )}
-            </button>
-          ))}
-        </nav>
-      </div>
-    </div>
+      <BottomNav activeTab="perfil" />
+    </ScreenLayout>
   );
 };
 
