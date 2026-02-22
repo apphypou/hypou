@@ -1,44 +1,124 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import GlassCard from "@/components/GlassCard";
 import IconButton from "@/components/IconButton";
-
-const stats = [
-  { value: "12", label: "Trocas", highlight: false },
-  { value: "4.9", label: "Rating", highlight: true },
-  { value: "38", label: "Propostas", highlight: false },
-];
-
-const assets = [
-  {
-    category: "Celular",
-    name: "iPhone 14 Pro",
-    value: "R$ 4.800",
-    status: "green",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC67zydhocrgUd5xqhXH4Mxobd8z80k7yuh9_GergtIfDj6-q472LYoJ-6Dcn7TVfZlMJ9j9ST0crzzKbiQtXo8S71d2OMx-UWO2wcPMbBAKpW0QfVfhvku8ENTes3ENOT8Hh0OfCG_CpuVusf5-AVJRmUqQCHxTh_Hq-bLv19SFXN5bfH0RHakp6TA8-jcMP9r7YU_rDRb5cye7bi-_D9WV4PUxjJHPfBEb-2xN0qZcBDcB8Xjn-MbzP2xeWhFRn3e6IcUu10y2w0",
-  },
-  {
-    category: "Moto",
-    name: "Honda CG 160",
-    value: "R$ 12.000",
-    status: "green",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCMxRChPb6jRAaV1I8KHmpntN8-fTL4wt5QSGkyzfFJLeta2mDuw20KpxOhCjWhu0c4LpEWI1R4CK-6GvKZs7dP2toGGikRjfXYWiBzuKl9E6IvuwMbifLKr3S4pRgO0qoFUxlUSgSfz4VHbZypZTZZa1SPleW96EFwPKXhsGaaaKndoARVsTznajBF38kJScBNDOUqlDNWS1ScxFWlySEmGzBS5AXVtm1SbKc6HipQs9pGs9U6C5FKh6txjxTEo-OuAzujhRT0WyM",
-  },
-  {
-    category: "Acessório",
-    name: "Apple Watch Series 9",
-    value: "R$ 2.500",
-    status: "yellow",
-    image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA7wHWGbe3HYbOOajln0l4uSsD-6tCiLN3lZxCribR1GTOhYhVoRpDBQ8LDJwE3ggMw_dVwg-Z9V792o7n5PrxUSkvRwEipW2RE8VO_wZBhHhHHlKCYx94Yjb4c1sC1DiPwAOwpoNA0MYhzrgu54BsJYovj91Bzoh7FuKXGfA-02W2BUqn_ACcSDV67OfgRwJsFPAgfcAji4P-WQ6vhENOBEeSXn01IYZL-rnTvQv8ftT_CtPsqKUkLryCtw1ApUT-sw_oFqWRKlO0",
-  },
-];
-
-const PROFILE_IMAGE = "https://lh3.googleusercontent.com/aida-public/AB6AXuCX-F5mRp9yF5XL5xm8NDWAbCcse4MqlextTbPvBCQ1McUrOlmCutVVTUv8V2HB8uZv729Gx9b4_Ku-wp2AqOfiVSeu2dVr-VpyGPpKptDZOBTHmrPEsjTAUYZ8_FHbbXlWilZL6-vdhHPqJNx7VNxZHx7mgruGxuBf6AuUTv80qhp68E-IyBq-Llk84GUK1tWZk22yiXSjHbMDhrb-ttNP0r3jlF8qJYkozErryFurE8d052zzfddJEf8JiggMRhNvmU6bfvcD31o";
+import { useProfile } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
+import { updateProfile, uploadAvatar } from "@/services/profileService";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { profile, items, stats, isLoading, refetchProfile, refetchItems } = useProfile();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Edit profile state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editBio, setEditBio] = useState("");
+  const [saving, setSaving] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const openEdit = () => {
+    setEditName(profile?.display_name ?? "");
+    setEditLocation(profile?.location ?? "");
+    setEditBio(profile?.bio ?? "");
+    setEditOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await updateProfile(user.id, {
+        display_name: editName,
+        location: editLocation,
+      });
+      // bio is not in updateProfile params, update directly
+      await supabase.from("profiles").update({ bio: editBio }).eq("user_id", user.id);
+      await refetchProfile();
+      setEditOpen(false);
+      toast({ title: "Perfil atualizado!" });
+    } catch {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setSaving(true);
+    try {
+      const url = await uploadAvatar(user.id, file);
+      await updateProfile(user.id, { avatar_url: url });
+      await refetchProfile();
+      toast({ title: "Foto atualizada!" });
+    } catch {
+      toast({ title: "Erro ao enviar foto", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteItem = async (itemId: string) => {
+    try {
+      await supabase.from("item_images").delete().eq("item_id", itemId);
+      await supabase.from("items").delete().eq("id", itemId);
+      await refetchItems();
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+      toast({ title: "Item removido!" });
+    } catch {
+      toast({ title: "Erro ao remover item", variant: "destructive" });
+    }
+  };
+
+  const formatValue = (cents: number) => {
+    return `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
+  };
+
+  const statsList = [
+    { value: String(stats?.totalTrades ?? 0), label: "Trocas", highlight: false },
+    { value: String(stats?.rating ?? "-"), label: "Rating", highlight: true },
+    { value: String(stats?.totalProposals ?? 0), label: "Propostas", highlight: false },
+  ];
+
+  if (isLoading) {
+    return (
+      <ScreenLayout>
+        <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
+          <div className="flex items-center gap-3">
+            <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
+            <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Meu Perfil</span>
+          </div>
+        </header>
+        <main className="flex-1 w-full px-5 flex flex-col items-center gap-4 pt-8">
+          <Skeleton className="h-32 w-32 rounded-full" />
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-32" />
+          <div className="w-full grid grid-cols-3 gap-3 mt-4">
+            <Skeleton className="h-20 rounded-2xl" />
+            <Skeleton className="h-20 rounded-2xl" />
+            <Skeleton className="h-20 rounded-2xl" />
+          </div>
+        </main>
+        <BottomNav activeTab="perfil" />
+      </ScreenLayout>
+    );
+  }
 
   return (
     <ScreenLayout>
@@ -61,22 +141,41 @@ const MeuPerfil = () => {
                 <img
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full opacity-90 hover:opacity-100 transition-opacity"
-                  src={PROFILE_IMAGE}
+                  src={profile?.avatar_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile?.display_name || "U")}
                 />
               </div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gray-900 to-black border border-primary/30 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg w-max">
-                <span className="text-primary text-[14px]">✓</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Conta Verificada</span>
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center border-2 border-background"
+              >
+                <Camera className="h-4 w-4 text-primary-foreground" />
+              </button>
+              <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              {profile?.onboarding_completed && (
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gray-900 to-black border border-primary/30 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg w-max">
+                  <span className="text-primary text-[14px]">✓</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Conta Verificada</span>
+                </div>
+              )}
+            </div>
+
+            <h1 className="text-2xl font-bold text-foreground tracking-tight mb-1">
+              {profile?.display_name || "Sem nome"}
+            </h1>
+            {profile?.location && (
+              <div className="flex items-center gap-1.5 text-foreground/50 text-sm mb-2">
+                <MapPin className="h-4 w-4" />
+                <span>{profile.location}</span>
               </div>
-            </div>
+            )}
+            {profile?.bio && (
+              <p className="text-foreground/40 text-sm mb-4 max-w-xs">{profile.bio}</p>
+            )}
 
-            <h1 className="text-2xl font-bold text-foreground tracking-tight mb-1">Roberto Vasconcelos</h1>
-            <div className="flex items-center gap-1.5 text-foreground/50 text-sm mb-5">
-              <MapPin className="h-4 w-4" />
-              <span>São Paulo, SP</span>
-            </div>
-
-            <button className="group relative px-6 py-2.5 rounded-full border border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all active:scale-95 flex items-center gap-2">
+            <button
+              onClick={openEdit}
+              className="group relative px-6 py-2.5 rounded-full border border-primary/50 bg-primary/5 hover:bg-primary/10 transition-all active:scale-95 flex items-center gap-2"
+            >
               <span className="text-primary text-xs font-bold tracking-widest uppercase group-hover:text-glow transition-all">
                 Editar Perfil
               </span>
@@ -86,7 +185,7 @@ const MeuPerfil = () => {
 
           {/* Stats */}
           <div className="w-full grid grid-cols-3 gap-3 mb-8">
-            {stats.map((stat) => (
+            {statsList.map((stat) => (
               <GlassCard
                 key={stat.label}
                 className={`rounded-2xl p-3 flex flex-col items-center justify-center text-center ${
@@ -111,51 +210,106 @@ const MeuPerfil = () => {
           <div className="w-full flex flex-col gap-4">
             <div className="flex items-center justify-between px-1">
               <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Itens</h2>
-              <button className="text-primary text-xs font-bold tracking-wide uppercase hover:text-foreground transition-colors flex items-center gap-1">
+              <button
+                onClick={() => navigate("/perfil")}
+                className="text-primary text-xs font-bold tracking-wide uppercase hover:text-foreground transition-colors flex items-center gap-1"
+              >
                 <PlusCircle className="h-4 w-4" />
                 Novo Item
               </button>
             </div>
 
-            <div className="space-y-3 pb-24">
-              {assets.map((asset) => (
-                <GlassCard
-                  key={asset.name}
-                  hoverable
-                  className="p-3 flex gap-4 active:scale-[0.99]"
+            {items.length === 0 ? (
+              <GlassCard className="p-8 flex flex-col items-center gap-3">
+                <PlusCircle className="h-10 w-10 text-foreground/20" />
+                <p className="text-foreground/40 text-sm text-center">Nenhum item cadastrado ainda</p>
+                <button
+                  onClick={() => navigate("/perfil")}
+                  className="text-primary text-xs font-bold uppercase tracking-wider"
                 >
-                  <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
-                    <img
-                      alt={asset.name}
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                      src={asset.image}
-                    />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-center gap-1">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{asset.category}</span>
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          asset.status === "green"
-                            ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
-                            : "bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.6)]"
-                        }`}
-                      />
-                    </div>
-                    <h3 className="text-base font-bold text-foreground leading-tight">{asset.name}</h3>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-foreground/40 text-xs font-medium">Valor de mercado</span>
-                      <span className="text-foreground font-bold text-sm">{asset.value}</span>
-                    </div>
-                  </div>
-                </GlassCard>
-              ))}
-            </div>
+                  Cadastrar primeiro item
+                </button>
+              </GlassCard>
+            ) : (
+              <div className="space-y-3 pb-24">
+                {items.map((item) => {
+                  const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
+                  return (
+                    <GlassCard
+                      key={item.id}
+                      hoverable
+                      className="p-3 flex gap-4 active:scale-[0.99]"
+                    >
+                      <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
+                        {mainImage ? (
+                          <img
+                            alt={item.name}
+                            className="w-full h-full object-cover opacity-80"
+                            src={mainImage.image_url}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-foreground/20 text-xs">
+                            Sem foto
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 flex flex-col justify-center gap-1">
+                        <div className="flex justify-between items-start">
+                          <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
+                            className="text-foreground/30 hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <h3 className="text-base font-bold text-foreground leading-tight">{item.name}</h3>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-foreground/40 text-xs font-medium">Valor de mercado</span>
+                          <span className="text-foreground font-bold text-sm">{formatValue(item.market_value)}</span>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </main>
 
       <BottomNav activeTab="perfil" />
+
+      {/* Edit Profile Sheet */}
+      <Sheet open={editOpen} onOpenChange={setEditOpen}>
+        <SheetContent side="bottom" className="bg-background border-t border-foreground/10 rounded-t-3xl px-6 pb-8">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-foreground text-lg font-bold">Editar Perfil</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="text-foreground/60 text-xs font-bold uppercase tracking-wider mb-1.5 block">Nome</label>
+              <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Seu nome" className="bg-muted/50 border-foreground/10" />
+            </div>
+            <div>
+              <label className="text-foreground/60 text-xs font-bold uppercase tracking-wider mb-1.5 block">Localização</label>
+              <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} placeholder="Cidade, Estado" className="bg-muted/50 border-foreground/10" />
+            </div>
+            <div>
+              <label className="text-foreground/60 text-xs font-bold uppercase tracking-wider mb-1.5 block">Bio</label>
+              <Textarea value={editBio} onChange={(e) => setEditBio(e.target.value)} placeholder="Conte um pouco sobre você..." rows={3} className="bg-muted/50 border-foreground/10 resize-none" />
+            </div>
+            <button
+              onClick={handleSaveProfile}
+              disabled={saving}
+              className="w-full py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm uppercase tracking-widest mt-2 hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+              Salvar
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </ScreenLayout>
   );
 };
