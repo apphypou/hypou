@@ -61,11 +61,7 @@ export const getExploreItems = async (userId: string) => {
 
   let query = supabase
     .from("items")
-    .select(`
-      *,
-      item_images (id, image_url, position),
-      profiles:user_id (display_name, avatar_url, location)
-    `)
+    .select(`*, item_images (id, image_url, position)`)
     .eq("status", "active")
     .neq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -77,5 +73,20 @@ export const getExploreItems = async (userId: string) => {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+
+  // Fetch profiles for item owners separately
+  const ownerIds = [...new Set((data || []).map((i) => i.user_id))];
+  let profileMap: Record<string, any> = {};
+  if (ownerIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, avatar_url, location")
+      .in("user_id", ownerIds);
+    (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
+  }
+
+  return (data || []).map((item) => ({
+    ...item,
+    profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
+  }));
 };
