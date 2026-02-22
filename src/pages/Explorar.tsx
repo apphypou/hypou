@@ -1,7 +1,6 @@
-import { X, Zap, Heart, MapPin, SlidersHorizontal, Image, Loader2 } from "lucide-react";
+import { X, Zap, Heart, MapPin, Image, Loader2 } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
-import IconButton from "@/components/IconButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getExploreItems } from "@/services/itemService";
@@ -135,7 +134,7 @@ const Explorar = () => {
             Explorar <span className="text-primary">Trocas</span>
           </h1>
         </div>
-        <IconButton icon={SlidersHorizontal} />
+        <div />
       </header>
 
       {/* Main Card Area */}

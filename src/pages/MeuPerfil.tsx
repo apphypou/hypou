@@ -92,7 +92,7 @@ const MeuPerfil = () => {
 
   const statsList = [
     { value: String(stats?.totalTrades ?? 0), label: "Trocas", highlight: false },
-    { value: String(stats?.rating ?? "-"), label: "Rating", highlight: true },
+    { value: "--", label: "Rating", highlight: false },
     { value: String(stats?.totalProposals ?? 0), label: "Propostas", highlight: false },
   ];
 
@@ -128,7 +128,7 @@ const MeuPerfil = () => {
           <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
           <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Meu Perfil</span>
         </div>
-        <IconButton icon={Settings} size="sm" />
+        <IconButton icon={Settings} size="sm" onClick={() => navigate("/configuracoes")} />
       </header>
 
       {/* Main Content */}
@@ -211,7 +211,7 @@ const MeuPerfil = () => {
             <div className="flex items-center justify-between px-1">
               <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Itens</h2>
               <button
-                onClick={() => navigate("/perfil")}
+                onClick={() => navigate("/novo-item")}
                 className="text-primary text-xs font-bold tracking-wide uppercase hover:text-foreground transition-colors flex items-center gap-1"
               >
                 <PlusCircle className="h-4 w-4" />
@@ -224,7 +224,7 @@ const MeuPerfil = () => {
                 <PlusCircle className="h-10 w-10 text-foreground/20" />
                 <p className="text-foreground/40 text-sm text-center">Nenhum item cadastrado ainda</p>
                 <button
-                  onClick={() => navigate("/perfil")}
+                  onClick={() => navigate("/novo-item")}
                   className="text-primary text-xs font-bold uppercase tracking-wider"
                 >
                   Cadastrar primeiro item

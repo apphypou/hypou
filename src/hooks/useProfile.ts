@@ -52,7 +52,7 @@ export const useProfile = () => {
       return {
         totalProposals: totalProposals ?? 0,
         totalTrades: totalTrades ?? 0,
-        rating: 4.9, // placeholder until rating system is implemented
+        rating: null,
       };
     },
     enabled: !!user,

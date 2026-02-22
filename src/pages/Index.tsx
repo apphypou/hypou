@@ -1,4 +1,4 @@
-import { Diamond, ArrowRight, Globe } from "lucide-react";
+import { Diamond, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NeonButton from "@/components/NeonButton";
 
@@ -26,9 +26,7 @@ const Index = () => {
             <Diamond className="h-5 w-5 text-primary" />
           </div>
         </div>
-        <button className="text-foreground/70 hover:text-foreground transition-colors">
-          <Globe className="h-5 w-5" />
-        </button>
+        <div />
       </div>
 
       {/* Main Content */}
@@ -65,13 +63,13 @@ const Index = () => {
 
         {/* Footer Links */}
         <div className="mt-8 flex justify-center gap-6 text-xs text-muted-foreground font-medium tracking-wide">
-          <a className="hover:text-primary transition-colors" href="#">
+          <span className="text-foreground/30 cursor-default">
             Termos de Uso
-          </a>
+          </span>
           <span className="w-1 h-1 rounded-full bg-muted my-auto" />
-          <a className="hover:text-primary transition-colors" href="#">
+          <span className="text-foreground/30 cursor-default">
             Política de Privacidade
-          </a>
+          </span>
         </div>
       </div>
     </div>

@@ -1,8 +1,7 @@
-import { SlidersHorizontal, Search, MessageSquare, Loader2 } from "lucide-react";
+import { MessageSquare, Loader2 } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import GlassCard from "@/components/GlassCard";
-import IconButton from "@/components/IconButton";
 import { useMatches } from "@/hooks/useMatches";
 import { useNavigate } from "react-router-dom";
 
@@ -32,10 +31,7 @@ const Matches = () => {
             Propostas de Troca
           </h1>
         </div>
-        <div className="flex gap-3">
-          <IconButton icon={SlidersHorizontal} />
-          <IconButton icon={Search} />
-        </div>
+        <div className="flex gap-3" />
       </header>
 
       {/* Main Content */}
@@ -122,7 +118,13 @@ const Matches = () => {
                           {match.other_user.display_name || "Usuário"}
                         </span>
                       </div>
-                      <button className="h-8 w-8 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/match/${match.id}`);
+                        }}
+                        className="h-8 w-8 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                      >
                         <MessageSquare className="h-4 w-4" />
                       </button>
                     </div>
