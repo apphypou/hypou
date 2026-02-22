@@ -1,0 +1,111 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Diamond, Lock, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import NeonButton from "@/components/NeonButton";
+import { useToast } from "@/hooks/use-toast";
+
+const ResetPassword = () => {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [valid, setValid] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Check for recovery token in URL hash
+    const hash = window.location.hash;
+    if (hash.includes("type=recovery")) {
+      setValid(true);
+    }
+    // Also listen for auth events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setValid(true);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      toast({ title: "As senhas não coincidem", variant: "destructive" });
+      return;
+    }
+    if (password.length < 6) {
+      toast({ title: "A senha deve ter no mínimo 6 caracteres", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+
+    if (error) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Senha atualizada com sucesso!" });
+      navigate("/explorar");
+    }
+  };
+
+  if (!valid) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground px-6">
+        <p className="text-muted-foreground text-center">
+          Link inválido ou expirado. Solicite um novo link de recuperação.
+        </p>
+        <button onClick={() => navigate("/recuperar-senha")} className="text-primary mt-4 font-semibold hover:underline">
+          Solicitar novo link
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
+      <div className="flex flex-col items-center pb-8 w-full max-w-sm">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/30 backdrop-blur-md mb-6">
+          <Diamond className="h-7 w-7 text-primary" />
+        </div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Nova <span className="gradient-text">Senha</span>
+        </h1>
+        <p className="text-muted-foreground text-sm mt-2">Digite sua nova senha abaixo</p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm mt-4">
+        <div className="relative">
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <input
+            type="password"
+            placeholder="Nova senha (mín. 6 caracteres)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={6}
+            className="w-full h-14 pl-12 pr-5 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+        </div>
+        <div className="relative">
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <input
+            type="password"
+            placeholder="Confirmar nova senha"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            minLength={6}
+            className="w-full h-14 pl-12 pr-5 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          />
+        </div>
+        <NeonButton variant="primary" icon={Check} type="submit" disabled={loading}>
+          {loading ? "Salvando..." : "Salvar nova senha"}
+        </NeonButton>
+      </form>
+    </div>
+  );
+};
+
+export default ResetPassword;
