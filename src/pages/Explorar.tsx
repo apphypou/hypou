@@ -456,7 +456,7 @@ const Explorar = () => {
                 </div>
 
                 {/* Card Content */}
-                <div className="relative mt-auto w-full p-7 pb-28 space-y-4">
+                <div className="relative z-20 mt-auto w-full p-7 pb-28 space-y-4">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
@@ -490,7 +490,7 @@ const Explorar = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center items-center gap-6 px-4">
+                <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center items-center gap-6 px-4">
                   <motion.button
                     onClick={() => handleButtonSwipe("dislike")}
                     disabled={swiping}
