@@ -1,4 +1,4 @@
-import { Loader2, Sparkles, X, Zap, Heart } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,9 +34,9 @@ const Explorar = () => {
   const navigate = useNavigate();
 
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [epoch, setEpoch] = useState(0);
-  const [localItems, setLocalItems] = useState<any[]>([]);
-  const swipingRef = useRef(false);
+  const [epoch, setEpoch] = useState(0); // Fix Bug 2: unique key per swipe
+  const [localItems, setLocalItems] = useState<any[]>([]); // Fix Bug 1: stable local list
+  const swipingRef = useRef(false); // Fix Bug 5: synchronous swiping flag
   const cardRef = useRef<SwipeCardHandle>(null);
 
   const [likeStreak, setLikeStreak] = useState(0);
@@ -45,6 +45,7 @@ const Explorar = () => {
   const [particles, setParticles] = useState<ReturnType<typeof generateParticles>>([]);
   const streakTimeout = useRef<NodeJS.Timeout>();
 
+  // Drag progress for stack animation (driven by SwipeCard callback)
   const dragProgressValue = useMotionValue(0);
   const nextScale = useTransform(dragProgressValue, [0, 1], [0.93, 0.97]);
   const nextOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 0.7]);
@@ -61,6 +62,7 @@ const Explorar = () => {
     refetchOnWindowFocus: false,
   });
 
+  // Fix Bug 1: populate localItems once from query, never refetch automatically
   useEffect(() => {
     if (items.length > 0 && localItems.length === 0) {
       setLocalItems(items);
@@ -71,8 +73,9 @@ const Explorar = () => {
   const nextItem = localItems[(currentIndex + 1) % localItems.length] ?? null;
   const thirdItem = localItems[(currentIndex + 2) % localItems.length] ?? null;
 
+  // Fix Bug 3 & 4: advanceCard just increments — no x.set, no setTimeout
   const advanceCard = useCallback(() => {
-    setEpoch((e) => e + 1);
+    setEpoch((e) => e + 1); // Fix Bug 2
     dragProgressValue.set(0);
     if (currentIndex + 1 >= localItems.length) {
       setCurrentIndex(0);
@@ -98,8 +101,10 @@ const Explorar = () => {
     }
   }, []);
 
+  // Fix Bug 4 & 6: called by SwipeCard's onAnimationComplete — no setTimeout, no stale closure
   const handleSwipeComplete = useCallback(
     async (direction: "like" | "dislike" | "superlike") => {
+      // Fix Bug 5: synchronous check
       if (swipingRef.current || !user || !currentItem) return;
       swipingRef.current = true;
 
@@ -108,6 +113,7 @@ const Explorar = () => {
       try {
         await createSwipe(user.id, currentItem.id, direction);
 
+        // Fix Bug 7: only check matches for likes/superlikes
         if (direction === "like" || direction === "superlike") {
           const { supabase } = await import("@/integrations/supabase/client");
           const { data: newMatches } = await supabase
@@ -140,12 +146,14 @@ const Explorar = () => {
     [user, currentItem, advanceCard, navigate, toast, triggerStreak]
   );
 
+  // Superlike wrapper: flash + particles, then complete
   const handleSwipeCompleteWithEffects = useCallback(
     (direction: "like" | "dislike" | "superlike") => {
       if (direction === "superlike") {
         setSuperlikeFlash(true);
         setParticles(generateParticles());
         setTimeout(() => setSuperlikeFlash(false), 400);
+        // Small delay for visual effect, then process
         setTimeout(() => {
           handleSwipeComplete("superlike").finally(() => setParticles([]));
         }, 350);
@@ -163,20 +171,16 @@ const Explorar = () => {
     [dragProgressValue]
   );
 
-  const doExit = useCallback(
-    (direction: "like" | "dislike" | "superlike") => {
-      cardRef.current?.triggerSwipe(direction);
-    },
-    []
-  );
+  const formatValue = (cents: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
   const nextImage = nextItem?.item_images?.[0]?.image_url;
   const thirdImage = thirdItem?.item_images?.[0]?.image_url;
 
   return (
     <ScreenLayout>
-      {/* Header with safe area */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pb-4" style={{ paddingTop: "max(3rem, env(safe-area-inset-top, 3rem))" }}>
+      {/* Header */}
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
             Encontre Trocas
@@ -189,7 +193,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-5 pb-24 pt-2 z-10 min-h-0">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-5 pb-8 pt-2 z-10">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -201,7 +205,7 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">Volte mais tarde para encontrar novas trocas!</p>
           </div>
         ) : currentItem ? (
-          <div className="relative w-full flex-1 flex flex-col min-h-0" style={{ perspective: "1200px" }}>
+          <div className="relative w-full h-full max-h-[580px] flex flex-col" style={{ perspective: "1200px" }}>
             {/* Streak indicator */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
@@ -306,7 +310,7 @@ const Explorar = () => {
               </motion.div>
             )}
 
-            {/* Main draggable card */}
+            {/* Main draggable card — Fix Bug 2: epoch key, Fix Bug 3: own motion values */}
             <AnimatePresence mode="popLayout">
               <SwipeCard
                 key={`${currentItem.id}-${epoch}`}
@@ -317,40 +321,6 @@ const Explorar = () => {
                 disabled={swipingRef.current}
               />
             </AnimatePresence>
-
-            {/* Action Buttons — OUTSIDE the card */}
-            <div className="flex justify-center items-center gap-6 pt-4 pb-2 shrink-0">
-              <motion.button
-                onClick={() => doExit("dislike")}
-                disabled={swipingRef.current}
-                className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl disabled:opacity-50"
-                whileTap={{ scale: 0.85 }}
-                whileHover={{ scale: 1.08, borderColor: "hsl(0 84% 60% / 0.5)" }}
-                transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              >
-                <X className="h-8 w-8" />
-              </motion.button>
-              <motion.button
-                onClick={() => doExit("superlike")}
-                disabled={swipingRef.current}
-                className="flex items-center justify-center h-14 w-14 rounded-full bg-background border border-primary/40 text-primary neon-glow backdrop-blur-xl -translate-y-2 disabled:opacity-50"
-                whileTap={{ scale: 0.8, rotate: 15 }}
-                whileHover={{ scale: 1.15, boxShadow: "0 0 30px hsl(184 100% 50% / 0.5)" }}
-                transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              >
-                <Zap className="h-7 w-7" />
-              </motion.button>
-              <motion.button
-                onClick={() => doExit("like")}
-                disabled={swipingRef.current}
-                className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl disabled:opacity-50"
-                whileTap={{ scale: 0.85 }}
-                whileHover={{ scale: 1.08, boxShadow: "0 0 25px hsl(142 71% 45% / 0.4)" }}
-                transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              >
-                <Heart className="h-8 w-8" />
-              </motion.button>
-            </div>
           </div>
         ) : null}
       </main>

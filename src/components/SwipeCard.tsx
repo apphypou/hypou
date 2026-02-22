@@ -2,6 +2,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  type Ref,
 } from "react";
 import {
   motion,
@@ -11,7 +12,7 @@ import {
   animate,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image } from "lucide-react";
+import { X, Zap, Heart, MapPin, Image } from "lucide-react";
 
 const SWIPE_THRESHOLD = 80;
 
@@ -26,11 +27,12 @@ interface SwipeCardProps {
   disabled?: boolean;
 }
 
-const formatValue = (value: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+const formatValue = (cents: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ item, onSwipeComplete, onDragProgressChange, disabled }, ref) => {
+    // Each card gets its own motion value — fixes Bug 3
     const x = useMotionValue(0);
     const rawRotate = useTransform(x, [-300, 300], [-18, 18]);
     const rotate = useSpring(rawRotate, { stiffness: 300, damping: 30 });
@@ -42,6 +44,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
     const rotateY = useTransform(x, [-200, 200], [-8, 8]);
     const imageX = useTransform(x, [-200, 200], [30, -30]);
 
+    // Report drag progress to parent for stack animation
     useTransform(x, (latest) => {
       const progress = Math.min(Math.abs(latest) / 200, 1);
       onDragProgressChange?.(progress);
@@ -56,6 +59,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         exitDirection.set(direction);
 
         if (direction === "superlike") {
+          // For superlike we just call complete immediately (parent handles flash/particles)
           onSwipeComplete("superlike");
         } else {
           const exitX = direction === "like" ? 600 : -600;
@@ -181,14 +185,12 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
               <Image className="h-16 w-16 text-foreground/10" />
             </div>
           )}
-          {/* Stronger gradient for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 h-[65%] bg-gradient-to-t from-background/95 via-background/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
         </div>
 
         {/* Card Content */}
-        <div className="relative z-20 mt-auto w-full p-7 pb-6 space-y-4">
+        <div className="relative z-20 mt-auto w-full p-7 pb-28 space-y-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
@@ -202,12 +204,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
               )}
             </div>
             <div className="space-y-0.5">
-              <h2
-                className="text-foreground text-3xl font-bold tracking-tight"
-                style={{ textShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
-              >
-                {item.name}
-              </h2>
+              <h2 className="text-foreground text-3xl font-bold tracking-tight">{item.name}</h2>
               <div className="flex items-center gap-1.5 text-foreground/60">
                 <MapPin className="h-4 w-4 text-primary" />
                 <span className="text-sm font-medium">
@@ -220,13 +217,44 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
             <span className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest">
               Valor de mercado
             </span>
-            <span
-              className="text-primary text-3xl font-extrabold tracking-tighter text-glow uppercase"
-              style={{ textShadow: "0 2px 12px hsl(184 100% 50% / 0.4)" }}
-            >
+            <span className="text-primary text-3xl font-extrabold tracking-tighter text-glow uppercase">
               {formatValue(item.market_value)}
             </span>
           </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center items-center gap-6 px-4">
+          <motion.button
+            onClick={() => doExit("dislike")}
+            disabled={disabled}
+            className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl disabled:opacity-50"
+            whileTap={{ scale: 0.85 }}
+            whileHover={{ scale: 1.08, borderColor: "hsl(0 84% 60% / 0.5)" }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            <X className="h-8 w-8" />
+          </motion.button>
+          <motion.button
+            onClick={() => doExit("superlike")}
+            disabled={disabled}
+            className="flex items-center justify-center h-14 w-14 rounded-full bg-background border border-primary/40 text-primary neon-glow backdrop-blur-xl -translate-y-2 disabled:opacity-50"
+            whileTap={{ scale: 0.8, rotate: 15 }}
+            whileHover={{ scale: 1.15, boxShadow: "0 0 30px hsl(184 100% 50% / 0.5)" }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            <Zap className="h-7 w-7" />
+          </motion.button>
+          <motion.button
+            onClick={() => doExit("like")}
+            disabled={disabled}
+            className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl disabled:opacity-50"
+            whileTap={{ scale: 0.85 }}
+            whileHover={{ scale: 1.08, boxShadow: "0 0 25px hsl(142 71% 45% / 0.4)" }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            <Heart className="h-8 w-8" />
+          </motion.button>
         </div>
       </motion.div>
     );
