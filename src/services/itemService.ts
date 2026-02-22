@@ -51,27 +51,14 @@ export const uploadItemImage = async (userId: string, itemId: string, file: File
 };
 
 export const getExploreItems = async (userId: string) => {
-  // Get items user already swiped
-  const { data: swipedItems } = await supabase
-    .from("swipes")
-    .select("item_id")
-    .eq("swiper_id", userId);
-
-  const swipedIds = (swipedItems || []).map((s) => s.item_id);
-
-  let query = supabase
+  // Fetch all active items from other users (no swiped filter — loop handles repetition)
+  const { data, error } = await supabase
     .from("items")
     .select(`*, item_images (id, image_url, position)`)
     .eq("status", "active")
     .neq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(20);
-
-  if (swipedIds.length > 0) {
-    query = query.not("id", "in", `(${swipedIds.join(",")})`);
-  }
-
-  const { data, error } = await query;
+    .limit(50);
   if (error) throw error;
 
   // Fetch profiles for item owners separately
