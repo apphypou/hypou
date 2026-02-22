@@ -1,81 +1,88 @@
 
 
-# Auditoria Completa do Swipe -- Todos os Bugs Encontrados e Plano de Correcao
+# Plano de Correcao UX/Layout -- Explorar
 
-## Bugs Identificados
+## Problemas e Solucoes
 
-### Bug 1: Query refetch retorna lista vazia (CAUSA PRINCIPAL da tela vazia)
-O `getExploreItems` filtra items ja swipados no servidor. Apesar do `staleTime: Infinity`, se o componente remonta (ex: navegar e voltar), o React Query pode refazer a query e retornar 0 itens porque **todos 18 itens ja foram swipados no banco** (18 swipes existem agora). O cache so e preservado enquanto o componente nao desmonta.
+### 1. Botoes de Acao Cortados pelo BottomNav
 
-### Bug 2: AnimatePresence com key repetida no loop
-Quando o loop volta ao index 0, `key={currentItem.id}` e o mesmo ID de um card ja exibido. O `AnimatePresence` nao re-anima cards com a mesma key -- o card fica invisivel (opacity: 0 do `initial`).
+**Causa**: O card usa `flex-1` dentro de um container com `max-h-[580px]`, mas os botoes ficam em `absolute bottom-6` dentro do card. O `BottomNav` tambem e `absolute bottom-0 z-50`, sobrepondo os botoes do card. Alem disso, o `main` tem `pb-8` que nao e suficiente para compensar a nav flutuante (~80px).
 
-### Bug 3: Motion value `x` compartilhado entre cards
-O `useMotionValue(0)` e global. Quando o card antigo sai com `animate(x, 600)` e o novo entra, ambos usam o mesmo `x`. O `x.set(0)` em `advanceCard` interrompe a animacao de saida, causando "pulos" visuais.
+**Solucao**:
+- Em `Explorar.tsx`: aumentar o `pb` do `main` para `pb-24` para dar espaco ao BottomNav
+- Remover o `max-h-[580px]` fixo e deixar o card ocupar o espaco disponivel naturalmente com `flex-1`
+- No `SwipeCard.tsx`: mover os botoes de acao para FORA do card, renderizando-os no `Explorar.tsx` como uma barra fixa abaixo do card (nao absolute dentro dele)
 
-### Bug 4: setTimeout fragil para coordenacao
-O `setTimeout(250ms)` entre animar e trocar o card e arbitrario. Se a animacao de mola leva mais tempo, o novo card aparece antes do antigo sair. Se leva menos, ha um gap vazio.
+### 2. Falta de Respiro -- Padding do Conteudo
 
-### Bug 5: Race condition no flag `swiping`
-`performSwipe` verifica `if (swiping) return` no inicio, mas so seta `setSwiping(true)` dentro de `handleSwipe` (chamado 250ms depois). Nesse intervalo, outro swipe pode disparar -- causando swipe duplo no mesmo item.
+**Causa**: O conteudo do card tem `pb-28` mas os botoes em `absolute bottom-6` disputam esse espaco. O valor "R$XX,00" fica colado nos botoes.
 
-### Bug 6: Closure stale no setTimeout
-`handleSwipe` e capturado no `useCallback` de `performSwipe`. Quando o setTimeout executa 250ms depois, `handleSwipe` pode referenciar um `currentItem` desatualizado se o estado mudou.
+**Solucao**:
+- Separar botoes do card (item 1 acima) elimina a disputa
+- Manter o conteudo com padding adequado sem precisar compensar botoes internos
 
-### Bug 7: Match detection ineficiente
-Apos cada swipe, faz 2 queries extras ao banco (`matches.select` + single match) independente da direcao. Dislikes nunca geram match, mas ainda fazem essas queries.
+### 3. Safe Area no Header
+
+**Causa**: `pt-12` e fixo e nao respeita `safe-area-inset-top` em dispositivos com notch/dynamic island.
+
+**Solucao**:
+- No `ScreenLayout.tsx`: adicionar `pt-[env(safe-area-inset-top)]` como base
+- No `Explorar.tsx` header: usar `pt-[max(3rem,env(safe-area-inset-top))]` para garantir minimo de 48px
+- No `index.html`: garantir que `<meta name="viewport">` inclui `viewport-fit=cover`
+
+### 4. Bug de Formatacao de Preco
+
+**Causa**: Os dados no banco estao inconsistentes. Alguns itens armazenam o valor em centavos (iPhone 16 = 450000 = R$4.500,00), outros em reais inteiros (Honda CB = 28000 = R$28.000, mas `formatValue` divide por 100, mostrando R$280,00).
+
+**Solucao**:
+- Padronizar: tratar TODOS os valores no banco como **reais inteiros** (sem centavos)
+- Alterar `formatValue` em `SwipeCard.tsx` e `Explorar.tsx` para NAO dividir por 100: `format(value)` em vez de `format(cents / 100)`
+- Criar migration SQL para corrigir o iPhone 16 de 450000 para 4500 (valor real)
+- Verificar e corrigir quaisquer outros itens com valores em centavos
+
+### 5. Gradiente de Contraste Insuficiente
+
+**Causa**: O gradiente inferior `from-background via-background/20 to-transparent` e muito transparente no meio, perdendo legibilidade sobre imagens claras.
+
+**Solucao**:
+- Aumentar a opacidade do gradiente: `from-background via-background/60 to-transparent`
+- Aumentar a altura do gradiente com um segundo layer: adicionar `from-background/90 via-background/40` que cubra 60% da altura do card
+- Adicionar `text-shadow` sutil nos textos sobre a imagem para garantir contraste
 
 ---
 
-## Plano de Implementacao
+## Arquivos Modificados
 
-### 1. Separar motion values por card (Fix Bug 3)
-Em vez de um `x` global, usar `useMotionValue` fresco para cada card. O approach: mover a logica do card para um componente filho `SwipeCard` que cria seu proprio `x`.
+### `src/components/SwipeCard.tsx`
+- Remover os botoes de acao (X, Zap, Heart) do componente -- eles vao para o `Explorar.tsx`
+- Corrigir `formatValue`: remover divisao por 100
+- Fortalecer gradiente inferior: `via-background/60`
+- Adicionar `text-shadow` no nome do item e valor
+- Reduzir `pb-28` do conteudo para `pb-6` (botoes nao estao mais dentro)
 
-### 2. Usar `onAnimationComplete` em vez de setTimeout (Fix Bug 4 e 6)
-Eliminar todos os `setTimeout` para coordenacao. Usar uma ref `pendingSwipe` para guardar a direcao, animar o card, e processar o swipe quando a animacao de saida completar via callback.
+### `src/pages/Explorar.tsx`
+- Renderizar botoes de acao FORA do card, abaixo dele, como componente fixo
+- Aumentar padding inferior do `main` para `pb-24`
+- Remover `max-h-[580px]` e usar flex natural
+- Corrigir `formatValue` (remover /100)
+- Header: usar padding com safe-area-inset-top
 
-### 3. Controle de swiping com ref (Fix Bug 5)
-Trocar `useState(swiping)` por `useRef(swiping)` para verificacao sincrona imediata, sem esperar re-render.
+### `src/components/ScreenLayout.tsx`
+- Nenhuma mudanca necessaria (ja usa `100dvh` corretamente)
 
-### 4. Adicionar epoch key para loop (Fix Bug 2)
-Manter um contador `epoch` que incrementa a cada swipe. Usar `key={currentItem.id + '-' + epoch}` para garantir que AnimatePresence sempre trate como card novo, mesmo no loop.
+### `index.html`
+- Garantir `viewport-fit=cover` no meta viewport
 
-### 5. Nao refiltrar items ja carregados (Fix Bug 1)
-Separar o cache de items exploraveis: ao carregar, guardar os items em um `useState` local. O loop roda sobre esse array fixo. Adicionar um botao "Recarregar" para buscar novos itens quando o usuario quiser. Isso evita que refetches apaguem a lista.
-
-### 6. Skip match check em dislikes (Fix Bug 7)
-So verificar matches quando `direction === "like" || direction === "superlike"`.
+### Migration SQL
+- Corrigir valores inconsistentes no banco (iPhone 16: 450000 -> 4500)
 
 ---
 
-## Mudancas Tecnicas
+## Resultado Esperado
 
-### Arquivo: `src/pages/Explorar.tsx`
-
-**Novo componente `SwipeCard` (extraido do card principal):**
-- Recebe `item`, `onSwipeComplete`, `onButtonSwipe` como props
-- Cria seu proprio `useMotionValue(0)` para `x`
-- Contem toda a logica visual (glow, stamps, parallax, image, content, buttons)
-- Expoe metodo `triggerSwipe(direction)` via `useImperativeHandle`
-
-**Mudancas no componente `Explorar`:**
-- Estado `localItems` (useState) inicializado a partir do resultado da query
-- Estado `epoch` (number) incrementado a cada swipe para key unica
-- Ref `swipingRef` (useRef boolean) em vez de `useState(swiping)`
-- `advanceCard` simplificado: so incrementa index (sem manipular x)
-- `handleSwipe` sem setTimeout -- chamado diretamente pelo `SwipeCard` apos animacao completar
-- Match check so para likes/superlikes
-- Remover `queryClient` da dep array de `advanceCard`
-
-**Fluxo novo do swipe:**
-1. Usuario arrasta ou clica botao
-2. `SwipeCard` anima seu `x` local para +/-600 (spring)
-3. Ao completar animacao, chama `onSwipeComplete(direction)`
-4. `Explorar` verifica `swipingRef`, registra swipe no banco, avanca card
-5. Novo `SwipeCard` monta com key unica e `x` fresco em 0
-
-**Stack de cards (next/third):**
-- Mantidas como estao, mas sem depender do `x` do card principal
-- Usam `dragProgress` derivado de um callback do `SwipeCard`
+- Botoes de acao sempre visiveis e nao sobrepostos pelo BottomNav
+- Conteudo do card com respiro adequado
+- Header respeita safe-area em todos os dispositivos
+- Precos exibidos corretamente (Honda CB = R$28.000, iPhone 14 = R$5.500)
+- Texto legivel sobre qualquer tipo de imagem
 
