@@ -88,7 +88,6 @@ const Explorar = () => {
   const advanceCard = useCallback(() => {
     x.set(0);
     if (currentIndex + 1 >= items.length) {
-      queryClient.invalidateQueries({ queryKey: ["explore-items"] });
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
