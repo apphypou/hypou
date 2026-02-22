@@ -104,16 +104,18 @@ const Explorar = () => {
   // Fix Bug 4 & 6: called by SwipeCard's onAnimationComplete — no setTimeout, no stale closure
   const handleSwipeComplete = useCallback(
     async (direction: "like" | "dislike" | "superlike") => {
-      // Fix Bug 5: synchronous check
       if (swipingRef.current || !user || !currentItem) return;
       swipingRef.current = true;
 
+      const swipedItem = currentItem; // capture before advancing
       triggerStreak(direction);
 
-      try {
-        await createSwipe(user.id, currentItem.id, direction);
+      // Advance card IMMEDIATELY so next card appears instantly
+      advanceCard();
 
-        // Fix Bug 7: only check matches for likes/superlikes
+      try {
+        await createSwipe(user.id, swipedItem.id, direction);
+
         if (direction === "like" || direction === "superlike") {
           const { supabase } = await import("@/integrations/supabase/client");
           const { data: newMatches } = await supabase
@@ -126,19 +128,14 @@ const Explorar = () => {
           if (newMatches && newMatches.length > 0) {
             const matchAge = Date.now() - new Date(newMatches[0].created_at).getTime();
             if (matchAge < 5000) {
-              advanceCard();
               navigate(`/match/${newMatches[0].id}`);
-              return;
             }
           }
         }
-
-        advanceCard();
       } catch (err: any) {
         if (!err.message?.includes("duplicate")) {
           toast({ title: "Erro ao registrar swipe", description: err.message, variant: "destructive" });
         }
-        advanceCard();
       } finally {
         swipingRef.current = false;
       }
