@@ -1,81 +1,31 @@
 
 
-# Auditoria Completa do Swipe -- Todos os Bugs Encontrados e Plano de Correcao
+# Fix: Transicao instantanea entre cards
 
-## Bugs Identificados
+## Problema
 
-### Bug 1: Query refetch retorna lista vazia (CAUSA PRINCIPAL da tela vazia)
-O `getExploreItems` filtra items ja swipados no servidor. Apesar do `staleTime: Infinity`, se o componente remonta (ex: navegar e voltar), o React Query pode refazer a query e retornar 0 itens porque **todos 18 itens ja foram swipados no banco** (18 swipes existem agora). O cache so e preservado enquanto o componente nao desmonta.
+O `AnimatePresence mode="popLayout"` esta aplicando uma animacao de **saida** (exit: opacity 0, scale 0.9, y -50) no card antigo ao mesmo tempo que o novo card aparece. Isso cria aquele "pulo" visual -- voce ve o card antigo encolhendo/sumindo enquanto o novo surge por baixo.
 
-### Bug 2: AnimatePresence com key repetida no loop
-Quando o loop volta ao index 0, `key={currentItem.id}` e o mesmo ID de um card ja exibido. O `AnimatePresence` nao re-anima cards com a mesma key -- o card fica invisivel (opacity: 0 do `initial`).
+O card ja anima sua saida via `animate(x, 600)` (desliza para fora). A animacao de exit do `AnimatePresence` e **redundante** e conflita com a saida natural do swipe.
 
-### Bug 3: Motion value `x` compartilhado entre cards
-O `useMotionValue(0)` e global. Quando o card antigo sai com `animate(x, 600)` e o novo entra, ambos usam o mesmo `x`. O `x.set(0)` em `advanceCard` interrompe a animacao de saida, causando "pulos" visuais.
+## Solucao
 
-### Bug 4: setTimeout fragil para coordenacao
-O `setTimeout(250ms)` entre animar e trocar o card e arbitrario. Se a animacao de mola leva mais tempo, o novo card aparece antes do antigo sair. Se leva menos, ha um gap vazio.
-
-### Bug 5: Race condition no flag `swiping`
-`performSwipe` verifica `if (swiping) return` no inicio, mas so seta `setSwiping(true)` dentro de `handleSwipe` (chamado 250ms depois). Nesse intervalo, outro swipe pode disparar -- causando swipe duplo no mesmo item.
-
-### Bug 6: Closure stale no setTimeout
-`handleSwipe` e capturado no `useCallback` de `performSwipe`. Quando o setTimeout executa 250ms depois, `handleSwipe` pode referenciar um `currentItem` desatualizado se o estado mudou.
-
-### Bug 7: Match detection ineficiente
-Apos cada swipe, faz 2 queries extras ao banco (`matches.select` + single match) independente da direcao. Dislikes nunca geram match, mas ainda fazem essas queries.
-
----
-
-## Plano de Implementacao
-
-### 1. Separar motion values por card (Fix Bug 3)
-Em vez de um `x` global, usar `useMotionValue` fresco para cada card. O approach: mover a logica do card para um componente filho `SwipeCard` que cria seu proprio `x`.
-
-### 2. Usar `onAnimationComplete` em vez de setTimeout (Fix Bug 4 e 6)
-Eliminar todos os `setTimeout` para coordenacao. Usar uma ref `pendingSwipe` para guardar a direcao, animar o card, e processar o swipe quando a animacao de saida completar via callback.
-
-### 3. Controle de swiping com ref (Fix Bug 5)
-Trocar `useState(swiping)` por `useRef(swiping)` para verificacao sincrona imediata, sem esperar re-render.
-
-### 4. Adicionar epoch key para loop (Fix Bug 2)
-Manter um contador `epoch` que incrementa a cada swipe. Usar `key={currentItem.id + '-' + epoch}` para garantir que AnimatePresence sempre trate como card novo, mesmo no loop.
-
-### 5. Nao refiltrar items ja carregados (Fix Bug 1)
-Separar o cache de items exploraveis: ao carregar, guardar os items em um `useState` local. O loop roda sobre esse array fixo. Adicionar um botao "Recarregar" para buscar novos itens quando o usuario quiser. Isso evita que refetches apaguem a lista.
-
-### 6. Skip match check em dislikes (Fix Bug 7)
-So verificar matches quando `direction === "like" || direction === "superlike"`.
-
----
+1. **Remover `AnimatePresence`** ao redor do `SwipeCard` -- nao precisamos de animacao de exit gerenciada pelo React porque o card ja sai via spring do `x`
+2. **Remover `exit` prop** do `SwipeCard` -- sem AnimatePresence, exit nao faz nada
+3. O resultado: quando `advanceCard` muda o index/epoch, o SwipeCard antigo desmonta instantaneamente (ja esta fora da tela nesse ponto) e o novo monta no lugar com `initial={false}` -- zero transicao visivel
 
 ## Mudancas Tecnicas
 
-### Arquivo: `src/pages/Explorar.tsx`
+### `src/pages/Explorar.tsx`
+- Linha 314: remover `<AnimatePresence mode="popLayout">`
+- Linha 323: remover `</AnimatePresence>`
+- Manter o `key` no SwipeCard para forcar remontagem
 
-**Novo componente `SwipeCard` (extraido do card principal):**
-- Recebe `item`, `onSwipeComplete`, `onButtonSwipe` como props
-- Cria seu proprio `useMotionValue(0)` para `x`
-- Contem toda a logica visual (glow, stamps, parallax, image, content, buttons)
-- Expoe metodo `triggerSwipe(direction)` via `useImperativeHandle`
+### `src/components/SwipeCard.tsx`
+- Linha 122-123: remover `animate` e `exit` props do motion.div principal
+- Manter `initial={false}` para garantir que o card aparece sem animacao
 
-**Mudancas no componente `Explorar`:**
-- Estado `localItems` (useState) inicializado a partir do resultado da query
-- Estado `epoch` (number) incrementado a cada swipe para key unica
-- Ref `swipingRef` (useRef boolean) em vez de `useState(swiping)`
-- `advanceCard` simplificado: so incrementa index (sem manipular x)
-- `handleSwipe` sem setTimeout -- chamado diretamente pelo `SwipeCard` apos animacao completar
-- Match check so para likes/superlikes
-- Remover `queryClient` da dep array de `advanceCard`
+## Resultado
 
-**Fluxo novo do swipe:**
-1. Usuario arrasta ou clica botao
-2. `SwipeCard` anima seu `x` local para +/-600 (spring)
-3. Ao completar animacao, chama `onSwipeComplete(direction)`
-4. `Explorar` verifica `swipingRef`, registra swipe no banco, avanca card
-5. Novo `SwipeCard` monta com key unica e `x` fresco em 0
-
-**Stack de cards (next/third):**
-- Mantidas como estao, mas sem depender do `x` do card principal
-- Usam `dragProgress` derivado de um callback do `SwipeCard`
+Card atual sai deslizando pelo spring -> `onSwipeComplete` dispara -> index avanca -> novo SwipeCard monta instantaneamente na posicao central, sem nenhuma animacao de transicao. Hiperfluido.
 
