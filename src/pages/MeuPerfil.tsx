@@ -258,7 +258,7 @@ const MeuPerfil = () => {
                           <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                            className="text-foreground/30 hover:text-red-400 transition-colors"
+                            className="text-foreground/30 hover:text-danger transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>

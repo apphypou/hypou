@@ -168,16 +168,16 @@ const Explorar = () => {
             >
               {/* Like/Dislike overlay indicators */}
               <motion.div
-                className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-green-500 pointer-events-none flex items-center justify-center"
+                className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-success pointer-events-none flex items-center justify-center"
                 style={{ opacity: likeOpacity }}
               >
-                <span className="text-green-500 text-5xl font-black rotate-[-15deg] border-4 border-green-500 px-4 py-2 rounded-xl">LIKE</span>
+                <span className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl">LIKE</span>
               </motion.div>
               <motion.div
-                className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-red-500 pointer-events-none flex items-center justify-center"
+                className="absolute inset-0 z-30 rounded-[2.5rem] border-4 border-danger pointer-events-none flex items-center justify-center"
                 style={{ opacity: dislikeOpacity }}
               >
-                <span className="text-red-500 text-5xl font-black rotate-[15deg] border-4 border-red-500 px-4 py-2 rounded-xl">NOPE</span>
+                <span className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl">NOPE</span>
               </motion.div>
 
               {/* Image */}
