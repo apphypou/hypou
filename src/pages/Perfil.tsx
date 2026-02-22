@@ -1,6 +1,10 @@
-import { ArrowLeft, ArrowRight, Camera, Pencil, User, MapPin, Check, Plus, TrendingUp, TrendingDown, Info, Rocket } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, ArrowRight, Camera, Pencil, User, MapPin, Check, Plus, TrendingUp, TrendingDown, Info, Rocket, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { updateProfile, uploadAvatar, saveUserCategories } from "@/services/profileService";
+import { createItem, uploadItemImage } from "@/services/itemService";
+import { useToast } from "@/hooks/use-toast";
 
 const categories = [
   { emoji: "📱", label: "Celulares" },
@@ -20,7 +24,17 @@ const Perfil = () => {
   const [itemDesc, setItemDesc] = useState("");
   const [valorization, setValorization] = useState(15);
   const [devalorization, setDevalorization] = useState(10);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [itemPhotos, setItemPhotos] = useState<File[]>([]);
+  const [itemPreviews, setItemPreviews] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [createdItemId, setCreatedItemId] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const itemInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const toggleCategory = (label: string) => {
     setSelected((prev) =>
@@ -28,8 +42,122 @@ const Perfil = () => {
     );
   };
 
+  const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const handleItemPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxNew = 5 - itemPhotos.length;
+    const toAdd = files.slice(0, maxNew);
+    setItemPhotos((prev) => [...prev, ...toAdd]);
+    setItemPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const handleStep1Next = async () => {
+    if (!user || !name.trim()) {
+      toast({ title: "Preencha seu nome", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      let avatarUrl: string | undefined;
+      if (avatarFile) {
+        avatarUrl = await uploadAvatar(user.id, avatarFile);
+      }
+      await updateProfile(user.id, {
+        display_name: name.trim(),
+        location: location.trim() || null,
+        avatar_url: avatarUrl,
+      } as any);
+      setStep(2);
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar perfil", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStep2Next = async () => {
+    if (!user || selected.length === 0) {
+      toast({ title: "Selecione ao menos uma categoria", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await saveUserCategories(user.id, selected);
+      setStep(3);
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar categorias", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleStep3Next = async () => {
+    if (!user || !itemName.trim()) {
+      toast({ title: "Preencha o nome do item", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      // Parse value: "6.500" or "6500" -> 650000 centavos
+      const cleanValue = itemValue.replace(/\D/g, "");
+      const valueInCents = parseInt(cleanValue || "0", 10) * 100;
+
+      const item = await createItem({
+        user_id: user.id,
+        name: itemName.trim(),
+        description: itemDesc.trim() || undefined,
+        category: selected[0] || "Outros",
+        market_value: valueInCents,
+        location: location.trim() || undefined,
+        margin_up: valorization,
+        margin_down: devalorization,
+      });
+
+      setCreatedItemId(item.id);
+
+      // Upload photos
+      for (let i = 0; i < itemPhotos.length; i++) {
+        await uploadItemImage(user.id, item.id, itemPhotos[i], i);
+      }
+
+      setStep(4);
+    } catch (err: any) {
+      toast({ title: "Erro ao cadastrar item", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFinish = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      // Update margins if changed after item creation
+      if (createdItemId) {
+        const { updateItem } = await import("@/services/itemService");
+        await updateItem(createdItemId, { margin_up: valorization, margin_down: devalorization });
+      }
+      await updateProfile(user.id, { onboarding_completed: true } as any);
+      navigate("/explorar");
+    } catch (err: any) {
+      toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden antialiased">
+      {/* Hidden file inputs */}
+      <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} />
+      <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleItemPhotos} />
+
       {/* Header */}
       <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-2">
         <button
@@ -48,7 +176,10 @@ const Perfil = () => {
             />
           ))}
         </div>
-        <button className="text-sm font-semibold text-foreground/40 hover:text-foreground transition-colors">
+        <button
+          onClick={() => navigate("/explorar")}
+          className="text-sm font-semibold text-foreground/40 hover:text-foreground transition-colors"
+        >
           Pular
         </button>
       </header>
@@ -68,9 +199,13 @@ const Perfil = () => {
             </div>
 
             <div className="flex flex-col items-center mb-10 w-full">
-              <div className="relative group cursor-pointer">
+              <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
                 <div className="h-32 w-32 rounded-full bg-card border-2 border-primary neon-border-glow flex items-center justify-center overflow-hidden transition-transform hover:scale-105">
-                  <Camera className="h-10 w-10 text-primary/50 group-hover:text-primary transition-colors" />
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <Camera className="h-10 w-10 text-primary/50 group-hover:text-primary transition-colors" />
+                  )}
                 </div>
                 <div className="absolute bottom-0 right-0 h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center border-4 border-background shadow-lg">
                   <Pencil className="h-4 w-4" />
@@ -115,11 +250,11 @@ const Perfil = () => {
 
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
-              onClick={() => setStep(2)}
-              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              onClick={handleStep1Next}
+              disabled={saving}
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span>PRÓXIMO</span>
-              <ArrowRight className="h-5 w-5" />
+              {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><span>PRÓXIMO</span><ArrowRight className="h-5 w-5" /></>}
             </button>
           </div>
         </>
@@ -197,11 +332,11 @@ const Perfil = () => {
 
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
-              onClick={() => setStep(3)}
-              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              onClick={handleStep2Next}
+              disabled={saving}
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span>PRÓXIMO</span>
-              <ArrowRight className="h-5 w-5" />
+              {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><span>PRÓXIMO</span><ArrowRight className="h-5 w-5" /></>}
             </button>
           </div>
         </>
@@ -222,13 +357,34 @@ const Perfil = () => {
             </div>
 
             {/* Photo Upload Area */}
-            <div className="relative w-full aspect-[16/10] rounded-3xl bg-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/80 mb-8 dashed-border-glow">
-              <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">
-                <Camera className="h-7 w-7 text-primary/60" />
+            {itemPreviews.length > 0 ? (
+              <div className="flex gap-3 mb-8 overflow-x-auto no-scrollbar">
+                {itemPreviews.map((url, i) => (
+                  <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30">
+                    <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+                {itemPreviews.length < 5 && (
+                  <div
+                    onClick={() => itemInputRef.current?.click()}
+                    className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
+                  >
+                    <Plus className="h-6 w-6 text-primary/50" />
+                  </div>
+                )}
               </div>
-              <span className="text-sm font-bold text-primary uppercase tracking-wider">Adicionar fotos</span>
-              <span className="text-xs text-muted-foreground">Até 5 fotos do item</span>
-            </div>
+            ) : (
+              <div
+                onClick={() => itemInputRef.current?.click()}
+                className="relative w-full aspect-[16/10] rounded-3xl bg-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/80 mb-8 dashed-border-glow"
+              >
+                <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">
+                  <Camera className="h-7 w-7 text-primary/60" />
+                </div>
+                <span className="text-sm font-bold text-primary uppercase tracking-wider">Adicionar fotos</span>
+                <span className="text-xs text-muted-foreground">Até 5 fotos do item</span>
+              </div>
+            )}
 
             {/* Form Fields */}
             <div className="flex flex-col gap-5 w-full">
@@ -273,11 +429,11 @@ const Perfil = () => {
 
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
-              onClick={() => setStep(4)}
-              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              onClick={handleStep3Next}
+              disabled={saving}
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span>CONTINUAR</span>
-              <ArrowRight className="h-5 w-5" />
+              {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><span>CONTINUAR</span><ArrowRight className="h-5 w-5" /></>}
             </button>
           </div>
         </>
@@ -359,11 +515,11 @@ const Perfil = () => {
 
           <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
             <button
-              onClick={() => navigate("/explorar")}
-              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2"
+              onClick={handleFinish}
+              disabled={saving}
+              className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span>COMEÇAR A TROCAR</span>
-              <Rocket className="h-5 w-5" />
+              {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><span>COMEÇAR A TROCAR</span><Rocket className="h-5 w-5" /></>}
             </button>
           </div>
         </>
