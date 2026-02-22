@@ -4,9 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import RecuperarSenha from "./pages/RecuperarSenha";
+import ResetPassword from "./pages/ResetPassword";
 import Explorar from "./pages/Explorar";
 import Matches from "./pages/Matches";
 import Match from "./pages/Match";
@@ -26,16 +29,40 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/explorar" element={<Explorar />} />
-            <Route path="/partidas" element={<Matches />} />
-            <Route path="/match/:matchId" element={<Match />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/chat/:conversationId" element={<Conversa />} />
-            <Route path="/onboarding" element={<Perfil />} />
-            <Route path="/meu-perfil" element={<MeuPerfil />} />
+            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Onboarding (requires auth but NOT onboarding check) */}
+            <Route path="/onboarding" element={
+              <ProtectedRoute requireOnboarding={false}>
+                <Perfil />
+              </ProtectedRoute>
+            } />
+
+            {/* Protected routes (require auth + completed onboarding) */}
+            <Route path="/explorar" element={
+              <ProtectedRoute><Explorar /></ProtectedRoute>
+            } />
+            <Route path="/partidas" element={
+              <ProtectedRoute><Matches /></ProtectedRoute>
+            } />
+            <Route path="/match/:matchId" element={
+              <ProtectedRoute><Match /></ProtectedRoute>
+            } />
+            <Route path="/chat" element={
+              <ProtectedRoute><Chat /></ProtectedRoute>
+            } />
+            <Route path="/chat/:conversationId" element={
+              <ProtectedRoute><Conversa /></ProtectedRoute>
+            } />
+            <Route path="/meu-perfil" element={
+              <ProtectedRoute><MeuPerfil /></ProtectedRoute>
+            } />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

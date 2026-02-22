@@ -26,6 +26,7 @@ const Login = () => {
         variant: "destructive",
       });
     } else {
+      // ProtectedRoute will handle onboarding redirect
       navigate("/explorar");
     }
   };
