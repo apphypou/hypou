@@ -134,7 +134,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className="relative z-10 flex-1 w-full bg-muted rounded-[2.5rem] overflow-hidden flex flex-col swipe-card touch-none"
+        className="relative z-10 flex-1 w-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col swipe-card touch-none shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted"
         style={{
           x,
           rotate,
