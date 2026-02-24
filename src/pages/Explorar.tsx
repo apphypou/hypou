@@ -1,4 +1,4 @@
-import { Loader2, Sparkles, X, Zap, Heart } from "lucide-react";
+import { Loader2, X, Heart } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,18 +16,6 @@ import {
 } from "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 
-const SUPERLIKE_PARTICLE_COUNT = 16;
-
-const generateParticles = () =>
-  Array.from({ length: SUPERLIKE_PARTICLE_COUNT }, (_, i) => ({
-    id: i,
-    angle: (360 / SUPERLIKE_PARTICLE_COUNT) * i + Math.random() * 20 - 10,
-    distance: 80 + Math.random() * 100,
-    size: 4 + Math.random() * 6,
-    delay: Math.random() * 0.15,
-    duration: 0.5 + Math.random() * 0.3,
-  }));
-
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
@@ -44,9 +32,6 @@ const Explorar = () => {
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
-  const [superlikeFlash, setSuperlikeFlash] = useState(false);
-  const [particles, setParticles] = useState<ReturnType<typeof generateParticles>>([]);
-  const streakTimeout = useRef<NodeJS.Timeout>();
 
   // Drag progress for stack animation
   const dragProgressValue = useMotionValue(0);
@@ -86,13 +71,13 @@ const Explorar = () => {
   }, [currentIndex, localItems.length, dragProgressValue]);
 
   const triggerStreak = useCallback((direction: string) => {
-    if (direction === "like" || direction === "superlike") {
+    if (direction === "like") {
       setLikeStreak((s) => {
         const next = s + 1;
         if (next >= 3) {
           setShowStreak(true);
-          if (streakTimeout.current) clearTimeout(streakTimeout.current);
-          streakTimeout.current = setTimeout(() => setShowStreak(false), 1500);
+          const t = setTimeout(() => setShowStreak(false), 1500);
+          return next;
         }
         return next;
       });
@@ -104,12 +89,12 @@ const Explorar = () => {
 
   // FASE 1: Fire-and-forget background API call
   const recordSwipeInBackground = useCallback(
-    (direction: "like" | "dislike" | "superlike", itemId: string) => {
+    (direction: "like" | "dislike", itemId: string) => {
       if (!user) return;
       (async () => {
         try {
           await createSwipe(user.id, itemId, direction);
-          if (direction === "like" || direction === "superlike") {
+          if (direction === "like") {
             const { supabase } = await import("@/integrations/supabase/client");
             const { data: newMatches } = await supabase
               .from("matches")
@@ -136,7 +121,7 @@ const Explorar = () => {
 
   // FASE 1: Optimistic transition — advance IMMEDIATELY, API in background
   const handleSwipeComplete = useCallback(
-    (direction: "like" | "dislike" | "superlike") => {
+    (direction: "like" | "dislike") => {
       if (swipingRef.current || !user || !currentItem) return;
       swipingRef.current = true;
 
@@ -154,23 +139,6 @@ const Explorar = () => {
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
   );
 
-  // Superlike wrapper: flash + particles, then complete
-  const handleSwipeCompleteWithEffects = useCallback(
-    (direction: "like" | "dislike" | "superlike") => {
-      if (direction === "superlike") {
-        setSuperlikeFlash(true);
-        setParticles(generateParticles());
-        setTimeout(() => setSuperlikeFlash(false), 400);
-        setTimeout(() => {
-          handleSwipeComplete("superlike");
-          setTimeout(() => setParticles([]), 600);
-        }, 350);
-      } else {
-        handleSwipeComplete(direction);
-      }
-    },
-    [handleSwipeComplete]
-  );
 
   const handleDragProgressChange = useCallback(
     (progress: number) => {
@@ -238,56 +206,6 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Superlike flash overlay */}
-            <AnimatePresence>
-              {superlikeFlash && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.6 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute inset-0 z-50 rounded-[2.5rem] bg-primary pointer-events-none"
-                />
-              )}
-            </AnimatePresence>
-
-            {/* Superlike particles */}
-            <AnimatePresence>
-              {particles.length > 0 && (
-                <div className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center">
-                  {particles.map((p) => (
-                    <motion.div
-                      key={p.id}
-                      initial={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-                      animate={{
-                        opacity: 0,
-                        scale: 0,
-                        x: Math.cos((p.angle * Math.PI) / 180) * p.distance,
-                        y: Math.sin((p.angle * Math.PI) / 180) * p.distance,
-                      }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: p.duration, delay: p.delay, ease: "easeOut" }}
-                      className="absolute rounded-full"
-                      style={{
-                        width: p.size,
-                        height: p.size,
-                        background: `radial-gradient(circle, hsl(184 100% 70%), hsl(184 100% 50%))`,
-                        boxShadow: `0 0 ${p.size * 2}px hsl(184 100% 50% / 0.8)`,
-                      }}
-                    />
-                  ))}
-                  <motion.div
-                    initial={{ scale: 0, opacity: 1 }}
-                    animate={{ scale: 3, opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="absolute w-8 h-8 rounded-full"
-                    style={{
-                      background: "radial-gradient(circle, hsl(184 100% 60% / 0.6), transparent)",
-                    }}
-                  />
-                </div>
-              )}
-            </AnimatePresence>
 
             {/* Third card in stack — with text preview */}
             {localItems.length >= 3 && thirdItem && (
@@ -342,7 +260,7 @@ const Explorar = () => {
               key={`${currentItem.id}-${epoch}`}
               ref={cardRef}
               item={currentItem}
-              onSwipeComplete={handleSwipeCompleteWithEffects}
+              onSwipeComplete={handleSwipeComplete}
               onDragProgressChange={handleDragProgressChange}
               disabled={swipingRef.current}
             />
@@ -351,33 +269,28 @@ const Explorar = () => {
 
         {/* Action Buttons — extracted from SwipeCard, fixed between card and BottomNav */}
         {currentItem && !isLoading && localItems.length > 0 && (
-          <div className="w-full flex justify-center items-center gap-6 pt-5">
+          <div className="w-full flex justify-center items-center gap-10 pt-5">
             <motion.button
               onClick={() => cardRef.current?.triggerSwipe("dislike")}
-              className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl"
+              className="flex flex-col items-center gap-1.5"
               whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: 1.08, borderColor: "hsl(0 84% 60% / 0.5)" }}
               transition={{ type: "spring", stiffness: 500, damping: 20 }}
             >
-              <X className="h-8 w-8" />
-            </motion.button>
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("superlike")}
-              className="flex items-center justify-center h-14 w-14 rounded-full bg-background border border-primary/40 text-primary neon-glow backdrop-blur-xl -translate-y-2"
-              whileTap={{ scale: 0.8, rotate: 15 }}
-              whileHover={{ scale: 1.15, boxShadow: "0 0 30px hsl(184 100% 50% / 0.5)" }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            >
-              <Zap className="h-7 w-7" />
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl">
+                <X className="h-8 w-8" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
             </motion.button>
             <motion.button
               onClick={() => cardRef.current?.triggerSwipe("like")}
-              className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl"
+              className="flex flex-col items-center gap-1.5"
               whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: 1.08, boxShadow: "0 0 25px hsl(142 71% 45% / 0.4)" }}
               transition={{ type: "spring", stiffness: 500, damping: 20 }}
             >
-              <Heart className="h-8 w-8" />
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl">
+                <Heart className="h-8 w-8" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
             </motion.button>
           </div>
         )}
