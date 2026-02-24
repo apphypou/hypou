@@ -189,7 +189,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-2 pt-1 z-10">
+      <main className="relative flex-1 flex flex-col items-center justify-center w-full px-4 pb-2 pt-1 z-10 max-h-[75vh]">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
