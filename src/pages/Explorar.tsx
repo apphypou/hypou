@@ -177,7 +177,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area — extra pb for action buttons + BottomNav */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-5 pb-40 pt-2 z-10">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -189,7 +189,7 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">Volte mais tarde para encontrar novas trocas!</p>
           </div>
         ) : currentItem ? (
-          <div className="relative w-full h-full max-h-[520px] flex flex-col" style={{ perspective: "1200px" }}>
+          <div className="relative w-full h-full max-h-[620px] flex flex-col" style={{ perspective: "1200px" }}>
             {/* Streak indicator — smoother animation */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
