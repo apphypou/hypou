@@ -229,14 +229,15 @@ const Explorar = () => {
                   filter: "blur(4px)",
                 }}
               >
+              <div className="w-full h-[60%]">
                 {thirdImage && (
                   <img src={thirdImage} alt="" className="w-full h-full object-cover object-center" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-                <div className="absolute bottom-4 left-5 right-5 z-10">
-                  <p className="text-foreground/80 text-lg font-bold truncate">{thirdItem.name}</p>
-                  <p className="text-primary/70 text-sm font-semibold">{formatValue(thirdItem.market_value)}</p>
-                </div>
+              </div>
+              <div className="w-full h-[40%] bg-card dark:bg-muted p-4">
+                <p className="text-foreground/80 text-lg font-bold truncate">{thirdItem.name}</p>
+                <p className="text-primary/70 text-sm font-semibold">{formatValue(thirdItem.market_value)}</p>
+              </div>
               </motion.div>
             )}
 
@@ -250,16 +251,17 @@ const Explorar = () => {
                   y: -15,
                 }}
               >
-                {nextImage && (
-                  <motion.img
-                    src={nextImage}
-                    alt=""
-                    className="w-full h-full object-cover object-center"
-                    style={{ filter: nextBlurFilter }}
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-                <div className="absolute bottom-4 left-5 right-5 z-10">
+                <div className="w-full h-[60%] overflow-hidden">
+                  {nextImage && (
+                    <motion.img
+                      src={nextImage}
+                      alt=""
+                      className="w-full h-full object-cover object-center"
+                      style={{ filter: nextBlurFilter }}
+                    />
+                  )}
+                </div>
+                <div className="w-full h-[40%] bg-card dark:bg-muted p-4">
                   <p className="text-foreground/80 text-lg font-bold truncate">{nextItem.name}</p>
                   <p className="text-primary/70 text-sm font-semibold">{formatValue(nextItem.market_value)}</p>
                 </div>
