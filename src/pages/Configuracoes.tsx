@@ -1,16 +1,18 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight } from "lucide-react";
+import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import IconButton from "@/components/IconButton";
 import GlassCard from "@/components/GlassCard";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
 const Configuracoes = () => {
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
@@ -24,6 +26,12 @@ const Configuracoes = () => {
   };
 
   const menuItems = [
+    {
+      icon: theme === "dark" ? Sun : Moon,
+      label: theme === "dark" ? "Modo Claro" : "Modo Escuro",
+      description: theme === "dark" ? "Trocar para o tema claro" : "Trocar para o tema escuro",
+      onClick: toggleTheme,
+    },
     {
       icon: Info,
       label: "Sobre o Hypou",
