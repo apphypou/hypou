@@ -188,28 +188,48 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
           </motion.span>
         </motion.div>
 
-        {/* Owner mini-profile — top-left over image */}
-        {ownerProfile && (
-          <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/40 backdrop-blur-xl border border-foreground/10">
-            {ownerProfile.avatar_url ? (
-              <img
-                src={ownerProfile.avatar_url}
-                alt=""
-                className="h-6 w-6 rounded-full object-cover border border-foreground/20"
-              />
-            ) : (
-              <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-[10px] font-bold">
-                {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
-              </div>
-            )}
-            <span className="text-foreground/90 text-xs font-semibold" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
-              {ownerProfile.display_name || "Usuário"}
-            </span>
-          </div>
-        )}
+        {/* ===== IMAGE SECTION — top ~60% ===== */}
+        <div className="relative w-full flex-[3] min-h-0 overflow-hidden" onClick={handleImageTap}>
+          {/* Owner mini-profile — top-left over image */}
+          {ownerProfile && (
+            <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+              {ownerProfile.avatar_url ? (
+                <img
+                  src={ownerProfile.avatar_url}
+                  alt=""
+                  className="h-6 w-6 rounded-full object-cover border border-white/30"
+                />
+              ) : (
+                <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] font-bold">
+                  {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
+                </div>
+              )}
+              <span className="text-white text-xs font-semibold drop-shadow-md">
+                {ownerProfile.display_name || "Usuário"}
+              </span>
+            </div>
+          )}
 
-        {/* Image gallery with tap navigation */}
-        <div className="absolute inset-0 overflow-hidden" onClick={handleImageTap}>
+          {/* Image dots indicator — top-right */}
+          {imageCount > 1 && (
+            <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
+              {images.map((_: any, i: number) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-200 ${
+                    i === activeImageIndex
+                      ? "w-5 bg-white"
+                      : "w-1.5 bg-white/40"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Subtle top gradient for owner profile readability */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
+
+          {/* The image itself */}
           {currentImage ? (
             <motion.img
               key={activeImageIndex}
@@ -223,76 +243,50 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
               transition={{ duration: 0.2 }}
             />
           ) : (
-            <div className="w-full h-full bg-card flex items-center justify-center">
+            <div className="w-full h-full bg-muted flex items-center justify-center">
               <Image className="h-16 w-16 text-foreground/10" />
             </div>
           )}
-          {/* Subtle bottom gradient for text readability */}
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
         </div>
 
-        {/* Image dots indicator — top */}
-        {imageCount > 1 && (
-          <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
-            {images.map((_: any, i: number) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  i === activeImageIndex
-                    ? "w-5 bg-primary"
-                    : "w-1.5 bg-foreground/30"
-                }`}
-              />
-            ))}
-          </div>
-        )}
+        {/* ===== CONTENT SECTION — bottom ~40%, solid background ===== */}
+        <div className="relative z-20 w-full flex-[2] bg-card dark:bg-muted p-5 pb-24 space-y-2">
+          {/* Category badge */}
+          <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">
+            {item.category}
+          </span>
 
-        {/* Card Content — reorganized hierarchy */}
-        <div className="relative z-20 mt-auto w-full p-6 pb-24 space-y-2.5">
-          {/* Row 1: Category badge */}
-          <div className="flex items-center justify-between">
-            <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
-              {item.category}
-            </span>
-          </div>
-
-          {/* Row 2: Name */}
-          <h2
-            className="text-foreground text-2xl font-bold tracking-tight leading-tight"
-            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.7)" }}
-          >
+          {/* Name */}
+          <h2 className="text-foreground text-xl font-bold tracking-tight leading-tight">
             {item.name}
           </h2>
 
-          {/* Row 3: Market value — prominent position */}
-          <span
-            className="block text-primary text-2xl font-extrabold tracking-tighter text-glow"
-            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
-          >
+          {/* Market value */}
+          <span className="block text-primary text-2xl font-extrabold tracking-tighter">
             {formatValue(item.market_value)}
           </span>
 
-          {/* Row 4: Location + Condition inline */}
+          {/* Location + Condition */}
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-1.5 text-foreground/60">
+            <div className="flex items-center gap-1.5 text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+              <span className="text-xs font-medium">
                 {item.location || ownerProfile?.location || "Local não informado"}
               </span>
             </div>
             {conditionLabel && (
               <div className="flex items-center gap-1">
                 <Package className="h-3.5 w-3.5 text-primary/70" />
-                <span className="px-2 py-0.5 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/70 text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.5 rounded-full bg-muted dark:bg-foreground/10 border border-border text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
                   {conditionLabel}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Row 5: Description */}
+          {/* Description */}
           {item.description && (
-            <p className="text-foreground/45 text-xs leading-snug line-clamp-2" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+            <p className="text-muted-foreground text-xs leading-snug line-clamp-2">
               {item.description}
             </p>
           )}
