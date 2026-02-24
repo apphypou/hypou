@@ -201,7 +201,7 @@ const Matches = () => {
               <XIcon className="h-5 w-5" />
             </button>
 
-            <div className="h-full w-full overflow-y-auto no-scrollbar pb-36">
+            <div className="h-full w-full overflow-y-auto overflow-x-hidden no-scrollbar pb-36">
               {/* Hero image */}
               <div className="relative w-full h-72">
                 {otherImages[0]?.image_url ? (
@@ -239,7 +239,7 @@ const Matches = () => {
                 </div>
 
                 {/* Item name + value */}
-                <h2 className="text-3xl font-extrabold text-foreground tracking-tight mb-1">
+                <h2 className="text-2xl font-extrabold text-foreground tracking-tight mb-1 break-words">
                   {otherItem.name}
                 </h2>
                 <p className="text-primary text-2xl font-bold text-glow mb-4">
@@ -262,41 +262,41 @@ const Matches = () => {
                   )}
                 </div>
 
-                {/* Exchange visualization */}
-                <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-4 mb-6">
+              {/* Exchange visualization */}
+                <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-4 mb-6 overflow-hidden">
                   <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-3 text-center">
                     Proposta de Troca
                   </p>
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
                     {/* My item */}
-                    <div className="flex-1 flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden border border-foreground/10 mb-2">
+                    <div className="flex-1 min-w-0 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-foreground/10 mb-2">
                         {myImages[0]?.image_url ? (
                           <img src={myImages[0].image_url} alt={myItem.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center text-lg">📦</div>
                         )}
                       </div>
-                      <p className="text-foreground/80 text-xs font-semibold truncate w-full">{myItem.name}</p>
+                      <p className="text-foreground/80 text-[11px] font-semibold truncate w-full px-1">{myItem.name}</p>
                       <p className="text-primary/70 text-[10px] font-bold">{formatValue(myItem.market_value)}</p>
                       <p className="text-foreground/30 text-[9px] mt-0.5">Seu item</p>
                     </div>
 
                     {/* Arrow */}
-                    <div className="flex items-center justify-center">
-                      <ArrowRightLeft className="h-5 w-5 text-primary/60" />
+                    <div className="flex-shrink-0 flex items-center justify-center">
+                      <ArrowRightLeft className="h-4 w-4 text-primary/60" />
                     </div>
 
                     {/* Their item */}
-                    <div className="flex-1 flex flex-col items-center text-center">
-                      <div className="w-16 h-16 rounded-xl overflow-hidden border border-primary/20 mb-2 ring-1 ring-primary/30">
+                    <div className="flex-1 min-w-0 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-primary/20 mb-2 ring-1 ring-primary/30">
                         {otherImages[0]?.image_url ? (
                           <img src={otherImages[0].image_url} alt={otherItem.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center text-lg">📦</div>
                         )}
                       </div>
-                      <p className="text-foreground/80 text-xs font-semibold truncate w-full">{otherItem.name}</p>
+                      <p className="text-foreground/80 text-[11px] font-semibold truncate w-full px-1">{otherItem.name}</p>
                       <p className="text-primary/70 text-[10px] font-bold">{formatValue(otherItem.market_value)}</p>
                       <p className="text-foreground/30 text-[9px] mt-0.5">Item deles</p>
                     </div>
