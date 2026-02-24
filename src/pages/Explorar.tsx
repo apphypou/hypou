@@ -221,7 +221,7 @@ const Explorar = () => {
             {/* Third card in stack */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
-                className="absolute inset-0 z-[-1] bg-muted rounded-[2.5rem] border border-foreground/5 overflow-hidden"
+                className="absolute inset-0 z-[-1] bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
                 style={{
                   scale: thirdScale,
                   opacity: thirdOpacity,
@@ -243,7 +243,7 @@ const Explorar = () => {
             {/* Second card (next item preview) */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
-                className="absolute inset-0 z-0 bg-muted rounded-[2.5rem] border border-foreground/5 overflow-hidden"
+                className="absolute inset-0 z-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
                 style={{
                   scale: nextScale,
                   opacity: nextOpacity,
@@ -301,7 +301,7 @@ const Explorar = () => {
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
           >
-            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl">
+            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted/80 border border-border dark:border-foreground/10 text-foreground/50 shadow-md dark:shadow-none backdrop-blur-xl">
               <X className="h-7 w-7" />
             </div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
@@ -316,7 +316,7 @@ const Explorar = () => {
             style={{ opacity: prevIndex !== null ? 1 : 0.25 }}
             disabled={prevIndex === null}
           >
-            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted/60 border border-foreground/10 text-foreground/40 backdrop-blur-xl">
+            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-card dark:bg-muted/60 border border-border dark:border-foreground/10 text-foreground/40 shadow-md dark:shadow-none backdrop-blur-xl">
               <Undo2 className="h-5 w-5" />
             </div>
             <span className="text-[8px] font-bold uppercase tracking-wider text-foreground/30">Voltar</span>
@@ -328,7 +328,7 @@ const Explorar = () => {
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
           >
-            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-primary border border-primary/20 text-background shadow-xl">
+            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-primary border border-primary/20 text-primary-foreground shadow-lg dark:shadow-xl">
               <Heart className="h-7 w-7" />
             </div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
