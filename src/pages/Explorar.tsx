@@ -1,4 +1,4 @@
-import { Loader2, X, Heart } from "lucide-react";
+import { Loader2, X, Heart, Undo2 } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,6 +29,7 @@ const Explorar = () => {
   const [localItems, setLocalItems] = useState<any[]>([]);
   const swipingRef = useRef(false);
   const cardRef = useRef<SwipeCardHandle>(null);
+  const [prevIndex, setPrevIndex] = useState<number | null>(null);
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
@@ -61,6 +62,7 @@ const Explorar = () => {
   const thirdItem = localItems[(currentIndex + 2) % localItems.length] ?? null;
 
   const advanceCard = useCallback(() => {
+    setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragProgressValue.set(0);
     if (currentIndex + 1 >= localItems.length) {
@@ -70,14 +72,21 @@ const Explorar = () => {
     }
   }, [currentIndex, localItems.length, dragProgressValue]);
 
+  const handleUndo = useCallback(() => {
+    if (prevIndex === null) return;
+    setCurrentIndex(prevIndex);
+    setPrevIndex(null);
+    setEpoch((e) => e + 1);
+    dragProgressValue.set(0);
+  }, [prevIndex, dragProgressValue]);
+
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
       setLikeStreak((s) => {
         const next = s + 1;
         if (next >= 3) {
           setShowStreak(true);
-          const t = setTimeout(() => setShowStreak(false), 1500);
-          return next;
+          setTimeout(() => setShowStreak(false), 1500);
         }
         return next;
       });
@@ -87,7 +96,7 @@ const Explorar = () => {
     }
   }, []);
 
-  // FASE 1: Fire-and-forget background API call
+  // Fire-and-forget background API call
   const recordSwipeInBackground = useCallback(
     (direction: "like" | "dislike", itemId: string) => {
       if (!user) return;
@@ -119,7 +128,6 @@ const Explorar = () => {
     [user, navigate, toast]
   );
 
-  // FASE 1: Optimistic transition — advance IMMEDIATELY, API in background
   const handleSwipeComplete = useCallback(
     (direction: "like" | "dislike") => {
       if (swipingRef.current || !user || !currentItem) return;
@@ -128,17 +136,18 @@ const Explorar = () => {
       triggerStreak(direction);
       const itemId = currentItem.id;
 
-      // Advance card FIRST (instant transition)
-      advanceCard();
+      // Haptic feedback on like
+      if (direction === "like" && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
 
-      // Record swipe in background (fire-and-forget)
+      advanceCard();
       recordSwipeInBackground(direction, itemId);
 
       swipingRef.current = false;
     },
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
   );
-
 
   const handleDragProgressChange = useCallback(
     (progress: number) => {
@@ -147,7 +156,7 @@ const Explorar = () => {
     [dragProgressValue]
   );
 
-  // FASE 1: Preload next image
+  // Preload next image
   const nextImage = nextItem?.item_images?.[0]?.image_url;
   const thirdImage = thirdItem?.item_images?.[0]?.image_url;
 
@@ -158,26 +167,29 @@ const Explorar = () => {
     }
   }, [nextImage]);
 
+  const progressText = localItems.length > 0
+    ? `${Math.min(currentIndex + 1, localItems.length)}/${localItems.length}`
+    : "";
+
   return (
     <ScreenLayout>
-      {/* Header — safe-area-inset-top */}
+      {/* Compact header */}
       <header
-        className="relative z-40 flex w-full justify-between items-center px-6 pb-4"
-        style={{ paddingTop: "max(3rem, env(safe-area-inset-top))" }}
+        className="relative z-40 flex w-full justify-between items-center px-6 pb-2"
+        style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))" }}
       >
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
-            Encontre Trocas
+        <h1 className="text-foreground text-lg font-extrabold tracking-tight">
+          Explorar
+        </h1>
+        {progressText && (
+          <span className="text-foreground/30 text-xs font-bold tabular-nums tracking-wider">
+            {progressText}
           </span>
-          <h1 className="text-foreground text-xl font-extrabold tracking-tight">
-            Explorar <span className="text-primary">Trocas</span>
-          </h1>
-        </div>
-        <div />
+        )}
       </header>
 
-      {/* Main Card Area — extra pb for action buttons + BottomNav */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-4 pt-1 z-10">
+      {/* Main Card Area */}
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-2 pt-1 z-10">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -190,7 +202,7 @@ const Explorar = () => {
           </div>
         ) : currentItem ? (
           <div className="relative w-full h-full flex flex-col" style={{ perspective: "1200px" }}>
-            {/* Streak indicator — smoother animation */}
+            {/* Streak indicator */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
                 <motion.div
@@ -206,8 +218,7 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-
-            {/* Third card in stack — with text preview */}
+            {/* Third card in stack */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
                 className="absolute inset-0 z-[-1] bg-muted rounded-[2.5rem] border border-foreground/5 overflow-hidden"
@@ -229,7 +240,7 @@ const Explorar = () => {
               </motion.div>
             )}
 
-            {/* Second card (next item preview) — with text preview */}
+            {/* Second card (next item preview) */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
                 className="absolute inset-0 z-0 bg-muted rounded-[2.5rem] border border-foreground/5 overflow-hidden"
@@ -266,36 +277,61 @@ const Explorar = () => {
             />
           </div>
         ) : null}
-
       </main>
+
+      {/* Fade gradient behind action buttons */}
+      {currentItem && !isLoading && localItems.length > 0 && (
+        <div
+          className="fixed left-0 right-0 z-30 pointer-events-none"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)", height: "8rem" }}
+        >
+          <div className="w-full h-full bg-gradient-to-t from-background via-background/80 to-transparent" />
+        </div>
+      )}
 
       {/* Action Buttons — fixed above BottomNav */}
       {currentItem && !isLoading && localItems.length > 0 && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-16 py-3"
+          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-8 py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
           <motion.button
             onClick={() => cardRef.current?.triggerSwipe("dislike")}
-            className="flex flex-col items-center gap-1.5"
+            className="flex flex-col items-center gap-1"
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
           >
-            <div className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl">
-              <X className="h-8 w-8" />
+            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl">
+              <X className="h-7 w-7" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
           </motion.button>
+
+          {/* Undo button — smaller, between the two */}
+          <motion.button
+            onClick={handleUndo}
+            className="flex flex-col items-center gap-1"
+            whileTap={{ scale: 0.85 }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            style={{ opacity: prevIndex !== null ? 1 : 0.25 }}
+            disabled={prevIndex === null}
+          >
+            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-muted/60 border border-foreground/10 text-foreground/40 backdrop-blur-xl">
+              <Undo2 className="h-5 w-5" />
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-wider text-foreground/30">Voltar</span>
+          </motion.button>
+
           <motion.button
             onClick={() => cardRef.current?.triggerSwipe("like")}
-            className="flex flex-col items-center gap-1.5"
+            className="flex flex-col items-center gap-1"
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
           >
-            <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl">
-              <Heart className="h-8 w-8" />
+            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-primary border border-primary/20 text-background shadow-xl">
+              <Heart className="h-7 w-7" />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
           </motion.button>
         </div>
       )}
