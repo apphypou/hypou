@@ -12,7 +12,7 @@ import {
   animate,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image } from "lucide-react";
+import { MapPin, Image, Package } from "lucide-react";
 
 const SWIPE_THRESHOLD = 80;
 
@@ -200,6 +200,19 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
                 </span>
               </div>
             </div>
+            {item.condition && (
+              <div className="flex items-center gap-1.5">
+                <Package className="h-3.5 w-3.5 text-primary/70" />
+                <span className="px-2 py-0.5 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/70 text-[10px] font-bold uppercase tracking-wider">
+                  {item.condition}
+                </span>
+              </div>
+            )}
+            {item.description && (
+              <p className="text-foreground/50 text-sm leading-snug line-clamp-2" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                {item.description}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest">

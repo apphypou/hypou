@@ -177,7 +177,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area — extra pb for action buttons + BottomNav */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-4 pt-1 z-10">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -189,7 +189,7 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">Volte mais tarde para encontrar novas trocas!</p>
           </div>
         ) : currentItem ? (
-          <div className="relative w-full h-full max-h-[620px] flex flex-col" style={{ perspective: "1200px" }}>
+          <div className="relative w-full h-full flex flex-col" style={{ perspective: "1200px" }}>
             {/* Streak indicator — smoother animation */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
@@ -267,34 +267,38 @@ const Explorar = () => {
           </div>
         ) : null}
 
-        {/* Action Buttons — extracted from SwipeCard, fixed between card and BottomNav */}
-        {currentItem && !isLoading && localItems.length > 0 && (
-          <div className="w-full flex justify-center items-center gap-10 pt-5">
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("dislike")}
-              className="flex flex-col items-center gap-1.5"
-              whileTap={{ scale: 0.85 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            >
-              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl">
-                <X className="h-8 w-8" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
-            </motion.button>
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("like")}
-              className="flex flex-col items-center gap-1.5"
-              whileTap={{ scale: 0.85 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            >
-              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl">
-                <Heart className="h-8 w-8" />
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
-            </motion.button>
-          </div>
-        )}
       </main>
+
+      {/* Action Buttons — fixed above BottomNav */}
+      {currentItem && !isLoading && localItems.length > 0 && (
+        <div
+          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-16 py-3"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
+        >
+          <motion.button
+            onClick={() => cardRef.current?.triggerSwipe("dislike")}
+            className="flex flex-col items-center gap-1.5"
+            whileTap={{ scale: 0.85 }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            <div className="flex items-center justify-center h-16 w-16 rounded-full bg-muted/80 border border-foreground/10 text-foreground/50 backdrop-blur-xl">
+              <X className="h-8 w-8" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
+          </motion.button>
+          <motion.button
+            onClick={() => cardRef.current?.triggerSwipe("like")}
+            className="flex flex-col items-center gap-1.5"
+            whileTap={{ scale: 0.85 }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          >
+            <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border border-primary/20 text-background shadow-xl">
+              <Heart className="h-8 w-8" />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
+          </motion.button>
+        </div>
+      )}
 
       <BottomNav activeTab="explorar" />
     </ScreenLayout>
