@@ -227,10 +227,8 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
               <Image className="h-16 w-16 text-foreground/10" />
             </div>
           )}
-          {/* Gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
+          {/* Subtle bottom gradient for text readability */}
+          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 via-black/30 to-transparent pointer-events-none" />
         </div>
 
         {/* Image dots indicator — top */}
