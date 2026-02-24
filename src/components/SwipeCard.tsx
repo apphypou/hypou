@@ -2,6 +2,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  useState,
   type Ref,
 } from "react";
 import {
@@ -30,6 +31,22 @@ interface SwipeCardProps {
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
+const CONDITION_MAP: Record<string, string> = {
+  used: "Usado",
+  USED: "Usado",
+  new: "Novo",
+  NEW: "Novo",
+  like_new: "Semi-novo",
+  LIKE_NEW: "Semi-novo",
+  "semi-novo": "Semi-novo",
+  "Semi-novo": "Semi-novo",
+};
+
+const translateCondition = (raw: string | null | undefined) => {
+  if (!raw) return null;
+  return CONDITION_MAP[raw] || raw;
+};
+
 const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ item, onSwipeComplete, onDragProgressChange, disabled }, ref) => {
     const x = useMotionValue(0);
@@ -42,6 +59,27 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
     const dislikeGlowOpacity = useTransform(x, [-120, -60, 0], [0.8, 0.3, 0]);
     const rotateY = useTransform(x, [-200, 200], [-8, 8]);
     const imageX = useTransform(x, [-200, 200], [30, -30]);
+
+    // Image gallery state
+    const images = item?.item_images || [];
+    const imageCount = images.length;
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const currentImage = images[activeImageIndex]?.image_url;
+
+    const handleImageTap = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (imageCount <= 1) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const tapX = e.clientX - rect.left;
+        const half = rect.width / 2;
+        if (tapX > half) {
+          setActiveImageIndex((i) => (i + 1) % imageCount);
+        } else {
+          setActiveImageIndex((i) => (i - 1 + imageCount) % imageCount);
+        }
+      },
+      [imageCount]
+    );
 
     useTransform(x, (latest) => {
       const progress = Math.min(Math.abs(latest) / 200, 1);
@@ -91,9 +129,8 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       [doExit, x]
     );
 
-    const mainImage = item?.item_images?.[0]?.image_url;
-    const imageCount = item?.item_images?.length || 0;
     const ownerProfile = item?.profiles as any;
+    const conditionLabel = translateCondition(item?.condition);
 
     return (
       <motion.div
@@ -127,7 +164,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
           }}
         />
 
-        {/* Like/Dislike stamp overlays — z-50 above everything */}
+        {/* Like/Dislike stamp overlays */}
         <motion.div
           className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
           style={{ opacity: likeOpacity }}
@@ -151,80 +188,116 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
           </motion.span>
         </motion.div>
 
-        {/* Image — no scale-110, object-center explicit */}
-        <div className="absolute inset-0 overflow-hidden">
-          {mainImage ? (
+        {/* Owner mini-profile — top-left over image */}
+        {ownerProfile && (
+          <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/40 backdrop-blur-xl border border-foreground/10">
+            {ownerProfile.avatar_url ? (
+              <img
+                src={ownerProfile.avatar_url}
+                alt=""
+                className="h-6 w-6 rounded-full object-cover border border-foreground/20"
+              />
+            ) : (
+              <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-[10px] font-bold">
+                {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
+              </div>
+            )}
+            <span className="text-foreground/90 text-xs font-semibold" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }}>
+              {ownerProfile.display_name || "Usuário"}
+            </span>
+          </div>
+        )}
+
+        {/* Image gallery with tap navigation */}
+        <div className="absolute inset-0 overflow-hidden" onClick={handleImageTap}>
+          {currentImage ? (
             <motion.img
+              key={activeImageIndex}
               alt={item.name}
               className="w-full h-full object-cover object-center"
-              src={mainImage}
+              src={currentImage}
               draggable={false}
               style={{ x: imageX }}
+              initial={{ opacity: 0.7 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
             />
           ) : (
             <div className="w-full h-full bg-card flex items-center justify-center">
               <Image className="h-16 w-16 text-foreground/10" />
             </div>
           )}
-          {/* Stronger gradient: two layers + higher via opacity */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/90 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent" />
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent pointer-events-none" />
         </div>
 
-        {/* Card Content — text-shadow for contrast */}
-        <div className="relative z-20 mt-auto w-full p-7 pb-8 space-y-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
-                {item.category}
+        {/* Image dots indicator — top */}
+        {imageCount > 1 && (
+          <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
+            {images.map((_: any, i: number) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  i === activeImageIndex
+                    ? "w-5 bg-primary"
+                    : "w-1.5 bg-foreground/30"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Card Content — reorganized hierarchy */}
+        <div className="relative z-20 mt-auto w-full p-6 pb-24 space-y-2.5">
+          {/* Row 1: Category badge */}
+          <div className="flex items-center justify-between">
+            <span className="px-3 py-1 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/90 text-[10px] font-bold tracking-[0.1em] uppercase">
+              {item.category}
+            </span>
+          </div>
+
+          {/* Row 2: Name */}
+          <h2
+            className="text-foreground text-2xl font-bold tracking-tight leading-tight"
+            style={{ textShadow: "0 2px 8px rgba(0,0,0,0.7)" }}
+          >
+            {item.name}
+          </h2>
+
+          {/* Row 3: Market value — prominent position */}
+          <span
+            className="block text-primary text-2xl font-extrabold tracking-tighter text-glow"
+            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
+          >
+            {formatValue(item.market_value)}
+          </span>
+
+          {/* Row 4: Location + Condition inline */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5 text-foreground/60">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-medium" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                {item.location || ownerProfile?.location || "Local não informado"}
               </span>
-              {imageCount > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-foreground/5 text-foreground/80">
-                  <Image className="h-3.5 w-3.5" />
-                  <span className="text-[11px] font-semibold">{imageCount}</span>
-                </div>
-              )}
             </div>
-            <div className="space-y-0.5">
-              <h2
-                className="text-foreground text-3xl font-bold tracking-tight"
-                style={{ textShadow: "0 2px 8px rgba(0,0,0,0.7)" }}
-              >
-                {item.name}
-              </h2>
-              <div className="flex items-center gap-1.5 text-foreground/60">
-                <MapPin className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-                  {item.location || ownerProfile?.location || "Localização não informada"}
-                </span>
-              </div>
-            </div>
-            {item.condition && (
-              <div className="flex items-center gap-1.5">
+            {conditionLabel && (
+              <div className="flex items-center gap-1">
                 <Package className="h-3.5 w-3.5 text-primary/70" />
                 <span className="px-2 py-0.5 rounded-full bg-foreground/10 backdrop-blur-md border border-foreground/10 text-foreground/70 text-[10px] font-bold uppercase tracking-wider">
-                  {item.condition}
+                  {conditionLabel}
                 </span>
               </div>
             )}
-            {item.description && (
-              <p className="text-foreground/50 text-sm leading-snug line-clamp-2" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-                {item.description}
-              </p>
-            )}
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-foreground/40 text-[11px] font-bold uppercase tracking-widest">
-              Valor de mercado
-            </span>
-            <span
-              className="text-primary text-3xl font-extrabold tracking-tighter text-glow uppercase"
-              style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6)" }}
-            >
-              {formatValue(item.market_value)}
-            </span>
-          </div>
+
+          {/* Row 5: Description */}
+          {item.description && (
+            <p className="text-foreground/45 text-xs leading-snug line-clamp-2" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+              {item.description}
+            </p>
+          )}
         </div>
       </motion.div>
     );
