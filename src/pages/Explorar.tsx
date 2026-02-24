@@ -281,15 +281,6 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Fade gradient behind action buttons */}
-      {currentItem && !isLoading && localItems.length > 0 && (
-        <div
-          className="fixed left-0 right-0 z-30 pointer-events-none"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)", height: "8rem" }}
-        >
-          <div className="w-full h-full bg-gradient-to-t from-background via-background/80 to-transparent" />
-        </div>
-      )}
 
       {/* Action Buttons — fixed above BottomNav */}
       {currentItem && !isLoading && localItems.length > 0 && (
