@@ -1,4 +1,4 @@
-import { Loader2, X, Heart, Undo2 } from "lucide-react";
+import { Loader2, X, Heart } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -307,21 +307,6 @@ const Explorar = () => {
               <X className="h-7 w-7" />
             </div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
-          </motion.button>
-
-          {/* Undo button — smaller, between the two */}
-          <motion.button
-            onClick={handleUndo}
-            className="flex flex-col items-center gap-1"
-            whileTap={{ scale: 0.85 }}
-            transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            style={{ opacity: prevIndex !== null ? 1 : 0.25 }}
-            disabled={prevIndex === null}
-          >
-            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-card dark:bg-muted/60 border border-border dark:border-foreground/10 text-foreground/40 shadow-md dark:shadow-none backdrop-blur-xl">
-              <Undo2 className="h-5 w-5" />
-            </div>
-            <span className="text-[8px] font-bold uppercase tracking-wider text-foreground/30">Voltar</span>
           </motion.button>
 
           <motion.button
