@@ -250,7 +250,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         </div>
 
         {/* ===== CONTENT SECTION — bottom ~40%, solid background ===== */}
-        <div className="relative z-20 w-full flex-[2] bg-card dark:bg-muted p-5 pb-24 space-y-2">
+        <div className="relative z-20 w-full flex-[1.2] bg-card dark:bg-muted p-4 pb-20 space-y-1.5">
           {/* Category badge */}
           <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">
             {item.category}
