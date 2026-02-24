@@ -17,12 +17,12 @@ import { MapPin, Image } from "lucide-react";
 const SWIPE_THRESHOLD = 80;
 
 export interface SwipeCardHandle {
-  triggerSwipe: (direction: "like" | "dislike" | "superlike") => void;
+  triggerSwipe: (direction: "like" | "dislike") => void;
 }
 
 interface SwipeCardProps {
   item: any;
-  onSwipeComplete: (direction: "like" | "dislike" | "superlike") => void;
+  onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragProgressChange?: (progress: number) => void;
   disabled?: boolean;
 }
@@ -49,29 +49,21 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       return progress;
     });
 
-    const exitDirection = useMotionValue<"like" | "dislike" | "superlike" | null>(null);
-
     const doExit = useCallback(
-      (direction: "like" | "dislike" | "superlike") => {
+      (direction: "like" | "dislike") => {
         if (disabled) return;
-        exitDirection.set(direction);
-
-        if (direction === "superlike") {
-          onSwipeComplete("superlike");
-        } else {
-          const exitX = direction === "like" ? 600 : -600;
-          animate(x, exitX, {
-            type: "spring",
-            stiffness: 600,
-            damping: 40,
-            velocity: exitX > 0 ? 800 : -800,
-            onComplete: () => {
-              onSwipeComplete(direction);
-            },
-          });
-        }
+        const exitX = direction === "like" ? 600 : -600;
+        animate(x, exitX, {
+          type: "spring",
+          stiffness: 600,
+          damping: 40,
+          velocity: exitX > 0 ? 800 : -800,
+          onComplete: () => {
+            onSwipeComplete(direction);
+          },
+        });
       },
-      [disabled, x, onSwipeComplete, exitDirection]
+      [disabled, x, onSwipeComplete]
     );
 
     useImperativeHandle(ref, () => ({
