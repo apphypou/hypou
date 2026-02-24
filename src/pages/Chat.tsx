@@ -67,8 +67,14 @@ const Chat = () => {
                       : "bg-card/30 border border-foreground/5 hover:bg-card/60"
                   }`}
                 >
-                  {/* Avatar */}
-                  <div className="relative shrink-0">
+                  {/* Avatar — clickable to user profile */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/usuario/${conv.other_user.user_id}`);
+                    }}
+                    className="relative shrink-0"
+                  >
                     {conv.other_user.avatar_url ? (
                       <img
                         src={conv.other_user.avatar_url}
@@ -88,7 +94,7 @@ const Chat = () => {
                         <img src={conv.other_item.image_url} alt="" className="w-full h-full object-cover" />
                       </div>
                     )}
-                  </div>
+                  </button>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">

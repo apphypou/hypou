@@ -47,6 +47,7 @@ const useConversationDetails = (conversationId: string | null) => {
         .single();
 
       return {
+        other_user_id: otherUserId,
         other_user: profile || { display_name: "Usuário", avatar_url: null },
         other_item: otherItem as any,
         my_item: myItem as any,
@@ -104,7 +105,10 @@ const Conversa = () => {
         </button>
 
         {details && (
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+          <button
+            onClick={() => navigate(`/usuario/${details.other_user_id}`)}
+            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+          >
             {details.other_user.avatar_url ? (
               <img
                 src={details.other_user.avatar_url}
@@ -126,7 +130,7 @@ const Conversa = () => {
                 {details.my_item?.name} ↔ {details.other_item?.name}
               </p>
             </div>
-          </div>
+          </button>
         )}
       </header>
 

@@ -19,6 +19,7 @@ import Chat from "./pages/Chat";
 import Conversa from "./pages/Conversa";
 import Perfil from "./pages/Perfil";
 import MeuPerfil from "./pages/MeuPerfil";
+import PerfilUsuario from "./pages/PerfilUsuario";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,9 @@ const App = () => (
             } />
             <Route path="/novo-item" element={
               <ProtectedRoute><NovoItem /></ProtectedRoute>
+            } />
+            <Route path="/usuario/:userId" element={
+              <ProtectedRoute><PerfilUsuario /></ProtectedRoute>
             } />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
