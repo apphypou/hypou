@@ -221,7 +221,7 @@ const Explorar = () => {
             {/* Third card in stack */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
-                className="absolute inset-0 z-[-1] bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
+                className="absolute inset-0 z-[-1] bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
                 style={{
                   scale: thirdScale,
                   opacity: thirdOpacity,
@@ -229,14 +229,15 @@ const Explorar = () => {
                   filter: "blur(4px)",
                 }}
               >
-              <div className="w-full h-[60%]">
+              <div className="w-full flex-[3] min-h-0 overflow-hidden">
                 {thirdImage && (
                   <img src={thirdImage} alt="" className="w-full h-full object-cover object-center" />
                 )}
               </div>
-              <div className="w-full h-[40%] bg-card dark:bg-muted p-4">
-                <p className="text-foreground/80 text-lg font-bold truncate">{thirdItem.name}</p>
-                <p className="text-primary/70 text-sm font-semibold">{formatValue(thirdItem.market_value)}</p>
+              <div className="w-full flex-[2] bg-card dark:bg-muted p-5 space-y-2">
+                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">{thirdItem.category}</span>
+                <p className="text-foreground text-xl font-bold tracking-tight leading-tight truncate">{thirdItem.name}</p>
+                <span className="block text-primary text-2xl font-extrabold tracking-tighter">{formatValue(thirdItem.market_value)}</span>
               </div>
               </motion.div>
             )}
@@ -244,14 +245,14 @@ const Explorar = () => {
             {/* Second card (next item preview) */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
-                className="absolute inset-0 z-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
+                className="absolute inset-0 z-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
                 style={{
                   scale: nextScale,
                   opacity: nextOpacity,
                   y: -15,
                 }}
               >
-                <div className="w-full h-[60%] overflow-hidden">
+                <div className="w-full flex-[3] min-h-0 overflow-hidden">
                   {nextImage && (
                     <motion.img
                       src={nextImage}
@@ -261,9 +262,10 @@ const Explorar = () => {
                     />
                   )}
                 </div>
-                <div className="w-full h-[40%] bg-card dark:bg-muted p-4">
-                  <p className="text-foreground/80 text-lg font-bold truncate">{nextItem.name}</p>
-                  <p className="text-primary/70 text-sm font-semibold">{formatValue(nextItem.market_value)}</p>
+                <div className="w-full flex-[2] bg-card dark:bg-muted p-5 space-y-2">
+                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">{nextItem.category}</span>
+                  <p className="text-foreground text-xl font-bold tracking-tight leading-tight truncate">{nextItem.name}</p>
+                  <span className="block text-primary text-2xl font-extrabold tracking-tighter">{formatValue(nextItem.market_value)}</span>
                 </div>
               </motion.div>
             )}
