@@ -238,9 +238,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
               src={currentImage}
               draggable={false}
               style={{ x: imageX }}
-              initial={{ opacity: 0.7 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
+              initial={false}
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
