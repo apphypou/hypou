@@ -333,7 +333,7 @@ const Matches = () => {
                   className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.4)]"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  Ir para conversa
+                  Tenho Interesse
                 </button>
               ) : (
                 <button
