@@ -1,4 +1,5 @@
-import { ArrowLeft, MapPin, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin } from "lucide-react";
+import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,8 +59,12 @@ const PerfilUsuario = () => {
 
       <main className="relative flex-1 w-full px-5 overflow-y-auto no-scrollbar z-10 pb-28">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          <div className="flex flex-col gap-6 py-4 items-center">
+            <SkeletonProfile />
+            <div className="w-full space-y-3 mt-6">
+              <SkeletonItemCard />
+              <SkeletonItemCard />
+            </div>
           </div>
         ) : !profile ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

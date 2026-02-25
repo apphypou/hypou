@@ -1,4 +1,5 @@
-import { Loader2, X, Check, Filter } from "lucide-react";
+import { X, Check, Filter } from "lucide-react";
+import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -314,8 +315,8 @@ const Explorar = () => {
       {/* Main Card Area */}
       <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10">
         {isLoading ? (
-          <div className="flex-1 flex items-center justify-center">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          <div className="flex-1 flex items-center justify-center w-full">
+            <SkeletonSwipeCard />
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
