@@ -40,14 +40,14 @@ const Explorar = () => {
   // Raw drag direction value (negative = left, positive = right)
   const dragDirectionValue = useMotionValue(0);
 
-  // Stack card 1 (next): scale 0.95→1.0, opacity 1→1, y 10→0
+  // Stack card 1 (next): scale 0.95→1.0, y 15→0
   const nextScale = useTransform(dragProgressValue, [0, 1], [0.95, 1.0]);
-  const nextY = useTransform(dragProgressValue, [0, 1], [10, 0]);
+  const nextY = useTransform(dragProgressValue, [0, 1], [15, 0]);
 
-  // Stack card 2 (background): scale 0.90→0.95, opacity 0.5→1.0, y 20→10
+  // Stack card 2 (background): scale 0.90→0.95, opacity 0.4→1.0, y 30→15
   const thirdScale = useTransform(dragProgressValue, [0, 1], [0.90, 0.95]);
-  const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.5, 1.0]);
-  const thirdY = useTransform(dragProgressValue, [0, 1], [20, 10]);
+  const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 1.0]);
+  const thirdY = useTransform(dragProgressValue, [0, 1], [30, 15]);
 
   // Reactive action buttons linked to drag direction
   const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
@@ -249,10 +249,10 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Third card in stack — z:8, scale:0.90, y:20, opacity:0.5 */}
+            {/* Third card (fundo) — z:8, scale:0.90, y:30, opacity:0.4 */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
-                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border-2 border-border/60 dark:border-foreground/8 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-none"
+                className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
                 style={{
                   scale: thirdScale,
                   opacity: thirdOpacity,
@@ -260,44 +260,31 @@ const Explorar = () => {
                   zIndex: 8,
                 }}
               >
-                <div className="w-full flex-[3] min-h-0 overflow-hidden">
-                  {thirdImage && (
-                    <img src={thirdImage} alt="" className="w-full h-full object-cover object-center" />
-                  )}
-                </div>
-                <div className="w-full flex-[2] bg-card dark:bg-muted p-5 space-y-2">
-                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">{thirdItem.category}</span>
-                  <p className="text-foreground text-xl font-bold tracking-tight leading-tight truncate">{thirdItem.name}</p>
-                  <span className="block text-primary text-2xl font-extrabold tracking-tighter">{formatValue(thirdItem.market_value)}</span>
-                </div>
+                <SwipeCard
+                  key={`third-${thirdItem.id}`}
+                  item={thirdItem}
+                  onSwipeComplete={() => {}}
+                  disabled
+                />
               </motion.div>
             )}
 
-            {/* Second card (next) — FULL SwipeCard pre-rendered behind active */}
+            {/* Second card (próximo) — z:9, scale:0.95, y:15 */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
                 style={{
+                  scale: nextScale,
+                  y: nextY,
                   zIndex: 9,
                 }}
               >
-                {/* Decorative border shell that scales with drag */}
-                <motion.div
-                  className="absolute inset-0 rounded-[2.5rem] border-2 border-border/80 dark:border-foreground/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none"
-                  style={{
-                    scale: nextScale,
-                    y: nextY,
-                  }}
+                <SwipeCard
+                  key={`next-${nextItem.id}`}
+                  item={nextItem}
+                  onSwipeComplete={() => {}}
+                  disabled
                 />
-                {/* Full SwipeCard at 1:1 scale — no transform, so zero visual shift on promotion */}
-                <div className="w-full h-full overflow-hidden rounded-[2.5rem]">
-                  <SwipeCard
-                    key={`next-${nextItem.id}`}
-                    item={nextItem}
-                    onSwipeComplete={() => {}}
-                    disabled
-                  />
-                </div>
               </motion.div>
             )}
 
