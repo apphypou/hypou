@@ -74,15 +74,17 @@ export const uploadItemImage = async (userId: string, itemId: string, file: File
   return imageUrl;
 };
 
-export const getExploreItems = async (userId: string) => {
-  // Fetch all active items from other users (no swiped filter — loop handles repetition)
+export const getExploreItems = async (userId: string, page = 0, pageSize = 50) => {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
   const { data, error } = await supabase
     .from("items")
     .select(`*, item_images (id, image_url, position)`)
     .eq("status", "active")
     .neq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(from, to);
   if (error) throw error;
 
   // Fetch profiles for item owners separately
