@@ -1,5 +1,6 @@
 import { X, Check, Filter } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
+import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -252,6 +253,7 @@ const Explorar = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationBell />
           {progressText && (
             <span className="text-foreground/30 text-xs font-bold tabular-nums tracking-wider">
               {progressText}

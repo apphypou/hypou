@@ -1,10 +1,11 @@
-import { ArrowLeft, MapPin } from "lucide-react";
-import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
+import { ArrowLeft, MapPin, Star } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ScreenLayout from "@/components/ScreenLayout";
 import GlassCard from "@/components/GlassCard";
+import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
+import { useUserRating } from "@/hooks/useRatings";
 
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -12,6 +13,7 @@ const formatValue = (cents: number) =>
 const PerfilUsuario = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { data: rating } = useUserRating(userId);
 
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["user-profile", userId],
@@ -99,6 +101,13 @@ const PerfilUsuario = () => {
               )}
               {profile.bio && (
                 <p className="text-sm text-foreground/60 mt-3 max-w-xs leading-relaxed">{profile.bio}</p>
+              )}
+              {rating && (
+                <div className="flex items-center gap-1.5 mt-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+                  <Star className="h-4 w-4 text-primary fill-primary" />
+                  <span className="text-sm font-bold text-primary">{rating.average}</span>
+                  <span className="text-xs text-muted-foreground">({rating.count} avaliação{rating.count !== 1 ? "ões" : ""})</span>
+                </div>
               )}
             </div>
 

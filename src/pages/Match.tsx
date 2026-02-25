@@ -4,11 +4,23 @@ import { useMatch } from "@/hooks/useMatches";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useMatchRating } from "@/hooks/useRatings";
+import RatingDialog from "@/components/RatingDialog";
+import { useState } from "react";
 
 const Match = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const { data: match, isLoading } = useMatch(matchId || null);
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [showRating, setShowRating] = useState(false);
+
+  const otherUserId = match
+    ? (match.my_item_side === "a" ? match.other_user.user_id : match.other_user.user_id)
+    : undefined;
+
+  const { data: existingRating } = useMatchRating(matchId || undefined, user?.id);
 
   // Get conversation ID for this match
   const { data: convData } = useQuery({
@@ -147,10 +159,33 @@ const Match = () => {
         <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" onClick={handleStartChat} className="shadow-[0_0_20px_hsl(184_100%_50%/0.4)] hover:shadow-[0_0_30px_hsl(184_100%_50%/0.6)]">
           Iniciar conversa
         </NeonButton>
+        {match.status === "accepted" && !existingRating && (
+          <NeonButton variant="outline" icon={Star} iconPosition="left" onClick={() => setShowRating(true)}>
+            Avaliar troca
+          </NeonButton>
+        )}
+        {existingRating && (
+          <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
+            <Star className="h-4 w-4 text-primary fill-primary" />
+            <span>Você avaliou com {existingRating.score} estrela{existingRating.score !== 1 ? "s" : ""}</span>
+          </div>
+        )}
         <NeonButton variant="ghost" size="sm" onClick={() => navigate("/explorar")}>
           Ver mais trocas
         </NeonButton>
       </div>
+
+      {/* Rating Dialog */}
+      {user && matchId && otherUserId && (
+        <RatingDialog
+          open={showRating}
+          onClose={() => setShowRating(false)}
+          matchId={matchId}
+          raterId={user.id}
+          ratedId={otherUserId}
+          ratedName={match.other_user.display_name || "Usuário"}
+        />
+      )}
     </div>
   );
 };

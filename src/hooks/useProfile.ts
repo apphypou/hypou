@@ -49,10 +49,22 @@ export const useProfile = () => {
         .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
         .eq("status", "accepted");
 
+      // Average rating
+      const { data: ratings } = await supabase
+        .from("ratings")
+        .select("score")
+        .eq("rated_id", user!.id);
+
+      let avgRating: number | null = null;
+      if (ratings && ratings.length > 0) {
+        avgRating = Math.round((ratings.reduce((s, r) => s + r.score, 0) / ratings.length) * 10) / 10;
+      }
+
       return {
         totalProposals: totalProposals ?? 0,
         totalTrades: totalTrades ?? 0,
-        rating: null,
+        rating: avgRating,
+        ratingCount: ratings?.length ?? 0,
       };
     },
     enabled: !!user,

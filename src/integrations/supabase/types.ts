@@ -203,6 +203,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -247,6 +280,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          match_id: string
+          rated_id: string
+          rater_id: string
+          score: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          match_id: string
+          rated_id: string
+          rater_id: string
+          score: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          match_id?: string
+          rated_id?: string
+          rater_id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       swipes: {
         Row: {

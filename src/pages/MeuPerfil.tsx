@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3 } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -101,9 +101,13 @@ const MeuPerfil = () => {
     return `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
   };
 
+  const ratingDisplay = stats?.rating
+    ? `${stats.rating}★`
+    : "--";
+
   const statsList = [
     { value: String(stats?.totalTrades ?? 0), label: "Trocas", highlight: false },
-    { value: "--", label: "Rating", highlight: false },
+    { value: ratingDisplay, label: "Rating", highlight: !!stats?.rating },
     { value: String(stats?.totalProposals ?? 0), label: "Propostas", highlight: false },
   ];
 
