@@ -174,13 +174,15 @@ const Explorar = () => {
   return (
     <ScreenLayout>
       {/* Compact header */}
-      <header
-        className="relative z-40 flex w-full justify-between items-center px-6 pb-2"
-        style={{ paddingTop: "max(1.5rem, env(safe-area-inset-top))" }}
-      >
-        <h1 className="text-foreground text-lg font-extrabold tracking-tight">
-          Explorar
-        </h1>
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4 shrink-0">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
+            Descubra
+          </span>
+          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+            Explorar
+          </h1>
+        </div>
         {progressText && (
           <span className="text-foreground/30 text-xs font-bold tabular-nums tracking-wider">
             {progressText}
