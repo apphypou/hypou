@@ -278,12 +278,19 @@ const Explorar = () => {
               <motion.div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  scale: nextScale,
-                  y: nextY,
                   zIndex: 9,
                 }}
               >
-                <div className="w-full h-full rounded-[2.5rem] border-2 border-border/80 dark:border-foreground/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none overflow-hidden">
+                {/* Decorative border shell that scales with drag */}
+                <motion.div
+                  className="absolute inset-0 rounded-[2.5rem] border-2 border-border/80 dark:border-foreground/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none"
+                  style={{
+                    scale: nextScale,
+                    y: nextY,
+                  }}
+                />
+                {/* Full SwipeCard at 1:1 scale — no transform, so zero visual shift on promotion */}
+                <div className="w-full h-full overflow-hidden rounded-[2.5rem]">
                   <SwipeCard
                     key={`next-${nextItem.id}`}
                     item={nextItem}
