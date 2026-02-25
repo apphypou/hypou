@@ -273,30 +273,23 @@ const Explorar = () => {
               </motion.div>
             )}
 
-            {/* Second card (next) — z:9, scale:0.95, y:10, opacity:1 */}
+            {/* Second card (next) — FULL SwipeCard pre-rendered behind active */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
-                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border-2 border-border/80 dark:border-foreground/10 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none"
+                className="absolute inset-0 pointer-events-none"
                 style={{
                   scale: nextScale,
-                  opacity: 1,
                   y: nextY,
                   zIndex: 9,
                 }}
               >
-                <div className="w-full flex-[3] min-h-0 overflow-hidden">
-                  {nextImage && (
-                    <img
-                      src={nextImage}
-                      alt=""
-                      className="w-full h-full object-cover object-center"
-                    />
-                  )}
-                </div>
-                <div className="w-full flex-[2] bg-card dark:bg-muted p-5 space-y-2">
-                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">{nextItem.category}</span>
-                  <p className="text-foreground text-xl font-bold tracking-tight leading-tight truncate">{nextItem.name}</p>
-                  <span className="block text-primary text-2xl font-extrabold tracking-tighter">{formatValue(nextItem.market_value)}</span>
+                <div className="w-full h-full rounded-[2.5rem] border-2 border-border/80 dark:border-foreground/10 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none overflow-hidden">
+                  <SwipeCard
+                    key={`next-${nextItem.id}`}
+                    item={nextItem}
+                    onSwipeComplete={() => {}}
+                    disabled
+                  />
                 </div>
               </motion.div>
             )}
