@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check } from "lucide-react";
+import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check, MapPin } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,24 @@ const categories = [
   { emoji: "🎮", label: "Videogames" },
 ];
 
+const conditions = [
+  { value: "new", label: "Novo" },
+  { value: "like_new", label: "Seminovo" },
+  { value: "used", label: "Usado" },
+  { value: "worn", label: "Bem usado" },
+];
+
+const formatCurrency = (value: string): string => {
+  const digits = value.replace(/\D/g, "");
+  const number = parseInt(digits || "0", 10);
+  return (number / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
+
+const parseCurrencyToCents = (formatted: string): number => {
+  const digits = formatted.replace(/\D/g, "");
+  return parseInt(digits || "0", 10);
+};
+
 const NovoItem = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -27,6 +45,8 @@ const NovoItem = () => {
   const [itemValue, setItemValue] = useState("");
   const [itemDesc, setItemDesc] = useState("");
   const [category, setCategory] = useState("");
+  const [condition, setCondition] = useState("used");
+  const [location, setLocation] = useState("");
   const [valorization, setValorization] = useState(15);
   const [devalorization, setDevalorization] = useState(10);
   const [itemPhotos, setItemPhotos] = useState<File[]>([]);
@@ -41,9 +61,19 @@ const NovoItem = () => {
     setItemPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
   };
 
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, "");
+    if (raw.length > 10) return; // max ~R$ 99.999.999,99
+    setItemValue(raw ? formatCurrency(raw) : "");
+  };
+
   const handleSubmit = async () => {
     if (!user || !itemName.trim()) {
       toast({ title: "Preencha o nome do item", variant: "destructive" });
+      return;
+    }
+    if (itemName.trim().length > 120) {
+      toast({ title: "Nome muito longo (máx. 120 caracteres)", variant: "destructive" });
       return;
     }
     if (!category) {
@@ -52,18 +82,24 @@ const NovoItem = () => {
     }
     setSaving(true);
     try {
-      const cleanValue = itemValue.replace(/\D/g, "");
-      const valueInCents = parseInt(cleanValue || "0", 10) * 100;
+      const valueInCents = parseCurrencyToCents(itemValue);
 
       const item = await createItem({
         user_id: user.id,
         name: itemName.trim(),
-        description: itemDesc.trim() || undefined,
+        description: itemDesc.trim().slice(0, 500) || undefined,
         category,
         market_value: valueInCents,
         margin_up: valorization,
         margin_down: devalorization,
+        location: location.trim() || undefined,
       });
+
+      // Update condition separately since createItem doesn't include it
+      if (condition) {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.from("items").update({ condition }).eq("id", item.id);
+      }
 
       for (let i = 0; i < itemPhotos.length; i++) {
         await uploadItemImage(user.id, item.id, itemPhotos[i], i);
@@ -133,6 +169,7 @@ const NovoItem = () => {
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               placeholder="Ex: iPhone 14 Pro Max 256GB"
+              maxLength={120}
               className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
             />
           </div>
@@ -157,14 +194,49 @@ const NovoItem = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Valor de Mercado (R$)</label>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Condição</label>
+            <div className="flex flex-wrap gap-2">
+              {conditions.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setCondition(c.value)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    condition === c.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-foreground/10 text-foreground/60 hover:border-foreground/20"
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Valor de Mercado</label>
             <input
               type="text"
+              inputMode="numeric"
               value={itemValue}
-              onChange={(e) => setItemValue(e.target.value)}
-              placeholder="0,00"
+              onChange={handleCurrencyChange}
+              placeholder="R$ 0,00"
               className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
+            <div className="relative">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Cidade, Estado"
+                maxLength={100}
+                className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl pl-12 pr-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
+              />
+            </div>
           </div>
 
           <div>
@@ -172,10 +244,12 @@ const NovoItem = () => {
             <textarea
               value={itemDesc}
               onChange={(e) => setItemDesc(e.target.value)}
-              placeholder="Detalhes sobre condição, tempo de uso, etc..."
+              placeholder="Detalhes sobre tempo de uso, acessórios inclusos, etc..."
               rows={3}
+              maxLength={500}
               className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none"
             />
+            <span className="text-xs text-muted-foreground mt-1 block text-right">{itemDesc.length}/500</span>
           </div>
         </div>
 
