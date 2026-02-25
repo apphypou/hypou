@@ -1,6 +1,7 @@
-import { Diamond, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NeonButton from "@/components/NeonButton";
+import logoHypou from "@/assets/logo-hypou.png";
 
 const HERO_IMAGE_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCX-F5mRp9yF5XL5xm8NDWAbCcse4MqlextTbPvBCQ1McUrOlmCutVVTUv8V2HB8uZv729Gx9b4_Ku-wp2AqOfiVSeu2dVr-VpyGPpKptDZOBTHmrPEsjTAUYZ8_FHbbXlWilZL6-vdhHPqJNx7VNxZHx7mgruGxuBf6AuUTv80qhp68E-IyBq-Llk84GUK1tWZk22yiXSjHbMDhrb-ttNP0r3jlF8qJYkozErryFurE8d052zzfddJEf8JiggMRhNvmU6bfvcD31o";
@@ -22,9 +23,7 @@ const Index = () => {
       {/* Header */}
       <div className="relative z-10 flex w-full justify-between items-center px-6 pt-12 pb-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 border border-primary/30 backdrop-blur-md">
-            <Diamond className="h-5 w-5 text-primary" />
-          </div>
+          <img src={logoHypou} alt="Hypou" className="h-8 w-8 object-contain" />
         </div>
         <div />
       </div>
