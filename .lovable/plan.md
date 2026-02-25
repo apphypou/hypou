@@ -1,91 +1,127 @@
 
 
-## Analise Completa da Animacao e Fluidez do Swipe
+## Analise Completa do App Hypou — O que esta faltando
 
-### Problemas Identificados
-
-**1. Transicao Abrupta ao Trocar de Card (Problema Critico)**
-Quando `advanceCard()` e chamado, `dragProgressValue.set(0)` reseta instantaneamente os motion values dos cards de fundo. Isso significa que o card que estava em `scale(0.95), y(-20)` pula instantaneamente para `scale(0.95), y(-20)` na nova posicao, sem animar suavemente para `scale(1), y(0)`. Nao ha transicao de "promoção" — o proximo card simplesmente aparece na posicao final.
-
-**2. useTransform com Side Effects (Anti-pattern)**
-No `SwipeCard.tsx` (linha 84-89), `useTransform` e usado para disparar callbacks (`onDragProgressChange`, `onDragDirectionChange`). Isso e um anti-pattern do framer-motion — `useTransform` deve ser puro. Callbacks em cada frame de arrasto podem causar micro-stutters por forcar re-renders no componente pai via `motionValue.set()`.
-
-**3. dragElastic: 0.9 Excessivo**
-O valor `dragElastic={0.9}` faz o card seguir o dedo quase 1:1 alem dos limites, mas sem constraints definidos. Isso cria uma sensacao de "arrasto infinito" sem resistencia, menos polida que apps de referencia (Tinder usa ~0.7 com constraints).
-
-**4. Exit Animation Muito Rigida**
-A saida usa `stiffness: 600, damping: 40` com `velocity: 800`. Isso cria uma saida muito rapida e linear, sem a curva organica de desaceleracao. O card "dispara" para fora em vez de "deslizar" com momentum natural.
-
-**5. Snap-back sem Overshoot**
-O retorno ao centro (`stiffness: 400, damping: 25`) e funcional mas falta um leve overshoot (bounce) que daria personalidade a interacao.
-
-**6. SWIPE_THRESHOLD Muito Baixo**
-80px e facilmente atingido acidentalmente. Apps de referencia usam ~120px ou combinam com velocidade de forma mais ponderada.
-
-**7. Stamps "HYPOU/PASSAR" sem Escala**
-Os stamps aparecem via opacidade pura, sem escala ou rotacao animada. Isso os torna "flat" — falta o efeito de "carimbo" que cresce ligeiramente ao aparecer.
-
-**8. Sem will-change ou Otimizacao GPU**
-Os cards nao declaram `will-change: transform` nem usam `translateZ(0)` para forcar composicao em GPU layer separada. Em dispositivos moveis, isso pode causar jank.
+Apos revisar todos os arquivos do projeto (pages, services, hooks, types, DB schema, RLS, storage), segue a lista completa organizada por prioridade.
 
 ---
 
-### Plano de Melhorias
+### PRIORIDADE CRITICA (Seguranca e Integridade)
 
-#### Arquivo: `src/components/SwipeCard.tsx`
+**1. Confirmacao de E-mail Ausente**
+O fluxo de cadastro (`Cadastro.tsx`) chama `signUp` mas nao ha nenhuma tela ou logica que informe ao usuario que ele precisa confirmar o e-mail antes de entrar. O usuario pode ficar preso sem feedback.
 
-**A. Substituir useTransform side-effect por onChange**
-- Remover o `useTransform` com callbacks (linhas 84-89)
-- Usar `x.on("change", callback)` dentro de um `useEffect` com cleanup
-- Isso elimina o anti-pattern e reduz re-renders
+**2. Leaked Password Protection Desativada**
+O linter do Supabase detectou que a protecao contra senhas vazadas esta desativada. Isso significa que usuarios podem usar senhas ja comprometidas em data breaches.
 
-**B. Refinar Exit Animation**
-- Reduzir stiffness para `400`, damping para `30`
-- Remover velocity manual — usar a velocidade real do gesto via `info.velocity.x`
-- Resultado: saida mais organica com desaceleracao natural
+**3. Validacao de Input Fraca**
+- `NovoItem.tsx`: o campo de valor aceita texto livre sem mascara. `replace(/\D/g, "")` pode causar bugs com valores como "1.500" (vira 1500 centavos = R$15,00 em vez de R$1.500).
+- Nenhum campo tem validacao de comprimento maximo (nome do item, bio, mensagens).
+- Sem sanitizacao de HTML/XSS no conteudo de mensagens.
 
-**C. Ajustar dragElastic e Threshold**
-- `dragElastic`: `0.9` → `0.75` (mais resistencia = mais controle)
-- `SWIPE_THRESHOLD`: `80` → `100`
-- Manter velocity threshold em `500`
-
-**D. Snap-back com Bounce**
-- `stiffness: 400, damping: 25` → `stiffness: 500, damping: 22`
-- O damping mais baixo cria um leve overshoot natural
-
-**E. Adicionar will-change para GPU**
-- No `motion.div` principal: adicionar `willChange: "transform"` no style
-- Forca composicao GPU em mobile
-
-**F. Stamps com Escala Animada**
-- `likeOpacity` e `dislikeOpacity` passam a controlar tambem um `scale` (0.5 → 1.0)
-- Cria efeito de "carimbo" que cresce ao aparecer
-
-#### Arquivo: `src/pages/Explorar.tsx`
-
-**G. Transicao Suave de Promoção dos Cards de Fundo**
-- Adicionar `transition` nos `motion.div` dos cards de fundo: `{ type: "spring", stiffness: 300, damping: 25 }`
-- Quando `dragProgressValue` reseta para 0, os cards animam suavemente de volta em vez de pular
-
-**H. Preload da Terceira Imagem**
-- Adicionar preload do `thirdImage` (ja declarado mas nao usado na linha 190)
-
-**I. React.memo no SwipeCard**
-- Envolver SwipeCard com `React.memo` para evitar re-renders desnecessarios nos cards de fundo (disabled) quando o pai re-renderiza
+**4. Deletar Item sem Confirmar**
+`MeuPerfil.tsx` deleta o item direto ao clicar no icone de lixeira, sem dialog de confirmacao. Um toque acidental apaga permanentemente o item e suas imagens.
 
 ---
 
-### Resumo Tecnico
+### PRIORIDADE ALTA (Funcionalidades Essenciais Faltando)
 
-| Mudanca | Arquivo | Impacto |
-|---|---|---|
-| `useTransform` → `x.on("change")` | SwipeCard.tsx | Elimina micro-stutters |
-| Exit spring: stiffness 400, damping 30 | SwipeCard.tsx | Saida mais organica |
-| dragElastic 0.75, threshold 100 | SwipeCard.tsx | Controle mais preciso |
-| Snap-back: stiffness 500, damping 22 | SwipeCard.tsx | Bounce sutil no retorno |
-| `willChange: "transform"` | SwipeCard.tsx | GPU compositing mobile |
-| Stamps com scale animado | SwipeCard.tsx | Efeito carimbo visual |
-| `transition` nos cards de fundo | Explorar.tsx | Promocao suave |
-| Preload terceira imagem | Explorar.tsx | Sem delay na terceira |
-| React.memo no SwipeCard | SwipeCard.tsx | Menos re-renders |
+**5. Notificacoes Push / In-App**
+Nao ha sistema de notificacoes. O usuario nao sabe quando recebe um match, uma mensagem ou uma proposta de troca a menos que abra o app e navegue manualmente.
+
+**6. Filtros e Busca na Exploracao**
+`Explorar.tsx` mostra todos os itens ativos de outros usuarios sem nenhum filtro. Falta:
+- Filtro por categoria (o usuario ja seleciona categorias no onboarding via `user_categories`, mas isso nao e usado no feed).
+- Filtro por localidade/distancia.
+- Busca por nome de item.
+
+**7. Editar Item Existente**
+Nao existe tela de edicao de item. O usuario so pode criar ou deletar. Falta poder editar nome, valor, fotos, margens e descricao.
+
+**8. Condicao do Item Nao e Preenchida**
+A tabela `items` tem coluna `condition` (string | null), e o `SwipeCard` exibe "condition", mas `NovoItem.tsx` nao tem campo para preencher a condicao do item. Sempre fica `null`.
+
+**9. Rejeitar/Recusar Proposta de Troca**
+`Matches.tsx` permite "Confirmar Troca" mas nao tem botao para recusar/rejeitar uma proposta. O usuario nao consegue sinalizar desinteresse — a proposta fica pendente para sempre.
+
+**10. Localidade do Item Nao e Preenchida**
+`NovoItem.tsx` nao tem campo de localizacao. A coluna `location` do item sempre fica `null`, mesmo que o perfil tenha localizacao.
+
+---
+
+### PRIORIDADE MEDIA (UX e Polish)
+
+**11. Pull-to-Refresh**
+Nenhuma tela tem pull-to-refresh. Para ver novos itens, matches ou mensagens, o usuario precisa recarregar a pagina inteira.
+
+**12. Paginacao / Infinite Scroll**
+`getExploreItems` faz `limit(50)` e para. Nao ha paginacao. Quando houver mais de 50 itens, o usuario nunca vera os demais.
+
+**13. Skeleton Loaders Inconsistentes**
+`MeuPerfil.tsx` tem skeleton loaders, mas `Explorar.tsx`, `Chat.tsx`, `Matches.tsx` e `PerfilUsuario.tsx` usam apenas um spinner centralizado. A experiencia de loading deveria ser consistente.
+
+**14. Empty State sem Call-to-Action**
+A tela Explorar mostra "Sem itens por agora" mas nao oferece acao (ex: "Cadastrar seu primeiro item" ou "Convidar amigos"). O mesmo ocorre no Chat e Matches.
+
+**15. Historico de Swipes / Desfazer Persistente**
+O undo (`handleUndo`) so funciona para o ultimo card e se perde ao recarregar. Nao ha historico persistido de swipes visualizados.
+
+**16. Logo Faltando em RecuperarSenha e ResetPassword**
+As telas `RecuperarSenha.tsx` e `ResetPassword.tsx` ainda usam o icone `Diamond` em vez da logo do Hypou.
+
+**17. Mascara de Moeda no Input de Valor**
+O campo de valor em `NovoItem.tsx` e texto puro sem mascara. Deveria ter formatacao em tempo real (R$ 1.500,00).
+
+---
+
+### PRIORIDADE BAIXA (Melhorias Futuras)
+
+**18. Sistema de Avaliacoes/Rating**
+O perfil mostra "Rating: --" mas nao existe nenhuma tabela, logica ou UI para avaliacoes entre usuarios apos uma troca concluida.
+
+**19. Denunciar Item ou Usuario**
+Nao ha mecanismo para reportar conteudo inapropriado, golpes ou usuarios abusivos.
+
+**20. Termos de Uso e Politica de Privacidade**
+A landing page mostra links para "Termos de Uso" e "Politica de Privacidade" mas ambos sao `cursor-default` sem href — nao levam a lugar nenhum.
+
+**21. Confirmacao de Entrega / Fluxo Pos-Match**
+Apos "Confirmar Troca", o fluxo termina no chat. Nao ha etapa de confirmacao de entrega/recebimento por ambas as partes para fechar o ciclo da troca.
+
+**22. Escolher Qual Item Trocar**
+Quando o usuario da like em um item, o sistema assume que ele quer trocar qualquer item dele. O usuario nao escolhe qual dos seus itens oferece na troca.
+
+**23. Contagem de Mensagens Nao Lidas no BottomNav**
+O `BottomNav` tem suporte a `badge` mas nenhuma tab usa. Deveria mostrar contagem de mensagens nao lidas no icone de Chat.
+
+**24. PWA / Instalacao no Celular**
+Nao ha manifest.json, service worker ou configuracao PWA. O app nao pode ser "instalado" na home screen do celular.
+
+**25. Testes Automatizados**
+O unico teste e `example.test.ts` (provavelmente boilerplate). Nao ha testes para services, hooks ou componentes criticos.
+
+---
+
+### RESUMO POR AREA
+
+```text
+AREA                  | ITENS FALTANDO
+----------------------|---------------
+Seguranca             | 3 (e-mail, senha, validacao)
+Funcionalidades Core  | 6 (filtros, editar item, rejeitar, condicao, localizacao, notificacoes)
+UX / Polish           | 7 (pull-refresh, paginacao, skeletons, logo, mascara, empty states, undo)
+Futuro / Crescimento  | 8 (rating, denuncia, termos, entrega, escolha item, badge, PWA, testes)
+TOTAL                 | 24 itens identificados
+```
+
+---
+
+### RECOMENDACAO DE ORDEM DE IMPLEMENTACAO
+
+Sugiro atacar em 4 sprints:
+
+1. **Sprint 1 — Seguranca**: Confirmacao de e-mail, leaked password, confirmacao de delete, validacao de inputs
+2. **Sprint 2 — Core Features**: Filtros por categoria, editar item, campo de condicao/localizacao, rejeitar proposta
+3. **Sprint 3 — UX Polish**: Mascara de moeda, skeletons consistentes, badge no BottomNav, logo nas telas restantes, pull-to-refresh
+4. **Sprint 4 — Escala**: Notificacoes, paginacao, rating, PWA, testes
 
