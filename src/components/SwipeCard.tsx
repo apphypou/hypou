@@ -3,6 +3,8 @@ import {
   useImperativeHandle,
   useCallback,
   useState,
+  useEffect,
+  memo,
   type Ref,
 } from "react";
 import {
@@ -14,7 +16,7 @@ import {
 } from "framer-motion";
 import { MapPin, Image, Package } from "lucide-react";
 
-const SWIPE_THRESHOLD = 80;
+const SWIPE_THRESHOLD = 100;
 
 export interface SwipeCardHandle {
   triggerSwipe: (direction: "like" | "dislike") => void;
@@ -47,7 +49,7 @@ const translateCondition = (raw: string | null | undefined) => {
   return CONDITION_MAP[raw] || raw;
 };
 
-const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
+const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ item, onSwipeComplete, onDragProgressChange, onDragDirectionChange, disabled }, ref) => {
     const x = useMotionValue(0);
 
@@ -56,6 +58,10 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     const likeOpacity = useTransform(x, [0, 80], [0, 1]);
     const dislikeOpacity = useTransform(x, [-80, 0], [1, 0]);
+    // Stamp scale — grows from 0.5 to 1.0 (stamp/carimbo effect)
+    const likeStampScale = useTransform(x, [0, 80], [0.5, 1.0]);
+    const dislikeStampScale = useTransform(x, [-80, 0], [1.0, 0.5]);
+
     const likeGlowOpacity = useTransform(x, [0, 60, 120], [0, 0.3, 0.8]);
     const dislikeGlowOpacity = useTransform(x, [-120, -60, 0], [0.8, 0.3, 0]);
 
@@ -80,23 +86,27 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
-    // Report drag progress (absolute 0-1) and raw direction
-    useTransform(x, (latest) => {
-      const progress = Math.min(Math.abs(latest) / 200, 1);
-      onDragProgressChange?.(progress);
-      onDragDirectionChange?.(latest);
-      return progress;
-    });
+    // Report drag progress and direction via onChange (not useTransform side-effect)
+    useEffect(() => {
+      if (disabled) return;
+      const unsubscribe = x.on("change", (latest) => {
+        const progress = Math.min(Math.abs(latest) / 200, 1);
+        onDragProgressChange?.(progress);
+        onDragDirectionChange?.(latest);
+      });
+      return unsubscribe;
+    }, [x, disabled, onDragProgressChange, onDragDirectionChange]);
 
     const doExit = useCallback(
-      (direction: "like" | "dislike") => {
+      (direction: "like" | "dislike", velocityX?: number) => {
         if (disabled) return;
         const exitX = direction === "like" ? 600 : -600;
+        const vel = velocityX != null ? velocityX : (direction === "like" ? 800 : -800);
         animate(x, exitX, {
           type: "spring",
-          stiffness: 600,
-          damping: 40,
-          velocity: exitX > 0 ? 800 : -800,
+          stiffness: 400,
+          damping: 30,
+          velocity: vel,
           onComplete: () => {
             onSwipeComplete(direction);
           },
@@ -106,7 +116,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
     );
 
     useImperativeHandle(ref, () => ({
-      triggerSwipe: doExit,
+      triggerSwipe: (dir) => doExit(dir),
     }));
 
     const handleDragEnd = useCallback(
@@ -115,15 +125,15 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         const offset = info.offset.x;
 
         if (offset > SWIPE_THRESHOLD || velocity > 500) {
-          doExit("like");
+          doExit("like", velocity);
         } else if (offset < -SWIPE_THRESHOLD || velocity < -500) {
-          doExit("dislike");
+          doExit("dislike", velocity);
         } else {
-          // Bouncy snap-back — jelly physics
+          // Bouncy snap-back with subtle overshoot
           animate(x, 0, {
             type: "spring",
-            stiffness: 400,
-            damping: 25,
+            stiffness: 500,
+            damping: 22,
           });
         }
       },
@@ -140,9 +150,10 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
           x,
           rotate,
           transformOrigin: "50% 100%",
+          willChange: "transform",
         }}
         drag="x"
-        dragElastic={0.9}
+        dragElastic={0.75}
         onDragEnd={handleDragEnd}
         initial={false}
       >
@@ -164,14 +175,14 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
           }}
         />
 
-        {/* Like/Dislike stamp overlays */}
+        {/* Like/Dislike stamp overlays — with scale animation */}
         <motion.div
           className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
           style={{ opacity: likeOpacity }}
         >
           <motion.span
             className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl"
-            style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)" }}
+            style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
           >
             HYPOU
           </motion.span>
@@ -182,7 +193,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         >
           <motion.span
             className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
-            style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)" }}
+            style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
           >
             PASSAR
           </motion.span>
@@ -290,7 +301,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       </motion.div>
     );
   }
-);
+));
 
 SwipeCard.displayName = "SwipeCard";
 

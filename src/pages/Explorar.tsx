@@ -185,7 +185,7 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  // Preload next image
+  // Preload next and third images
   const nextImage = nextItem?.item_images?.[0]?.image_url;
   const thirdImage = thirdItem?.item_images?.[0]?.image_url;
 
@@ -194,7 +194,11 @@ const Explorar = () => {
       const img = new window.Image();
       img.src = nextImage;
     }
-  }, [nextImage]);
+    if (thirdImage) {
+      const img = new window.Image();
+      img.src = thirdImage;
+    }
+  }, [nextImage, thirdImage]);
 
   const progressText = localItems.length > 0
     ? `${Math.min(currentIndex + 1, localItems.length)}/${localItems.length}`
@@ -249,7 +253,7 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Third card (fundo) — z:8, scale:0.90, y:30, opacity:0.4 */}
+            {/* Third card (fundo) — z:8, scale:0.90, y:-40, opacity:0.4 */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
                 className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
@@ -259,6 +263,7 @@ const Explorar = () => {
                   y: thirdY,
                   zIndex: 8,
                 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 <SwipeCard
                   key={`third-${thirdItem.id}`}
@@ -269,7 +274,7 @@ const Explorar = () => {
               </motion.div>
             )}
 
-            {/* Second card (próximo) — z:9, scale:0.95, y:15 */}
+            {/* Second card (próximo) — z:9, scale:0.95, y:-20 */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
                 className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
@@ -278,6 +283,7 @@ const Explorar = () => {
                   y: nextY,
                   zIndex: 9,
                 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 <SwipeCard
                   key={`next-${nextItem.id}`}
