@@ -40,14 +40,14 @@ const Explorar = () => {
   // Raw drag direction value (negative = left, positive = right)
   const dragDirectionValue = useMotionValue(0);
 
-  // Stack card 1 (next): scale 0.95→1.0, y 15→0
+  // Stack card 1 (next): scale 0.95→1.0, y -20→0 (peeks above)
   const nextScale = useTransform(dragProgressValue, [0, 1], [0.95, 1.0]);
-  const nextY = useTransform(dragProgressValue, [0, 1], [15, 0]);
+  const nextY = useTransform(dragProgressValue, [0, 1], [-20, 0]);
 
-  // Stack card 2 (background): scale 0.90→0.95, opacity 0.4→1.0, y 30→15
+  // Stack card 2 (background): scale 0.90→0.95, opacity 0.4→1.0, y -40→-20
   const thirdScale = useTransform(dragProgressValue, [0, 1], [0.90, 0.95]);
   const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 1.0]);
-  const thirdY = useTransform(dragProgressValue, [0, 1], [30, 15]);
+  const thirdY = useTransform(dragProgressValue, [0, 1], [-40, -20]);
 
   // Reactive action buttons linked to drag direction
   const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
