@@ -20,6 +20,12 @@ export const createItem = async (data: {
 };
 
 export const updateItem = async (itemId: string, data: {
+  name?: string;
+  description?: string | null;
+  category?: string;
+  condition?: string | null;
+  location?: string | null;
+  market_value?: number;
   margin_up?: number;
   margin_down?: number;
 }) => {
@@ -27,6 +33,24 @@ export const updateItem = async (itemId: string, data: {
     .from("items")
     .update(data)
     .eq("id", itemId);
+  if (error) throw error;
+};
+
+export const getItemById = async (itemId: string) => {
+  const { data, error } = await supabase
+    .from("items")
+    .select(`*, item_images (id, image_url, position)`)
+    .eq("id", itemId)
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const deleteItemImage = async (imageId: string) => {
+  const { error } = await supabase
+    .from("item_images")
+    .delete()
+    .eq("id", imageId);
   if (error) throw error;
 };
 

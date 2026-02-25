@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -249,7 +249,8 @@ const MeuPerfil = () => {
                     <GlassCard
                       key={item.id}
                       hoverable
-                      className="p-3 flex gap-4 active:scale-[0.99]"
+                      className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer"
+                      onClick={() => navigate(`/editar-item/${item.id}`)}
                     >
                       <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
                         {mainImage ? (
