@@ -1,4 +1,4 @@
-import { Loader2, X, Heart } from "lucide-react";
+import { Loader2, X, Check } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
@@ -315,43 +315,48 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Action Buttons — fixed above BottomNav, reactive to drag */}
+      {/* Action Buttons — pill style, reactive to drag */}
       {currentItem && !isLoading && localItems.length > 0 && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-8 py-3"
+          className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
-          <motion.button
-            onClick={() => cardRef.current?.triggerSwipe("dislike")}
-            className="flex flex-col items-center gap-1"
-            whileTap={{ scale: 0.85 }}
-            transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            style={{ scale: dislikeButtonScale }}
-          >
-            <motion.div
-              className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted/80 border border-border dark:border-foreground/10 text-foreground/50 shadow-md dark:shadow-none backdrop-blur-xl"
-              style={{ boxShadow: dislikeButtonGlow }}
+          <div className="flex items-center bg-card dark:bg-muted rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-border/50 dark:border-foreground/5 p-1.5 gap-1">
+            {/* Dislike button */}
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("dislike")}
+              whileTap={{ scale: 0.85 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              style={{ scale: dislikeButtonScale }}
+              className="relative"
             >
-              <X className="h-7 w-7" />
-            </motion.div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
-          </motion.button>
+              <motion.div
+                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted"
+                style={{ boxShadow: dislikeButtonGlow }}
+              >
+                <X className="h-6 w-6 text-[hsl(15,90%,55%)]" strokeWidth={3} />
+              </motion.div>
+            </motion.button>
 
-          <motion.button
-            onClick={() => cardRef.current?.triggerSwipe("like")}
-            className="flex flex-col items-center gap-1"
-            whileTap={{ scale: 0.85 }}
-            transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            style={{ scale: likeButtonScale }}
-          >
-            <motion.div
-              className="flex items-center justify-center h-14 w-14 rounded-full bg-primary border border-primary/20 text-primary-foreground shadow-lg dark:shadow-xl"
-              style={{ boxShadow: likeButtonGlow }}
+            {/* Divider */}
+            <div className="w-px h-8 bg-border/40 dark:bg-foreground/10" />
+
+            {/* Like button */}
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("like")}
+              whileTap={{ scale: 0.85 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              style={{ scale: likeButtonScale }}
+              className="relative"
             >
-              <Heart className="h-7 w-7" />
-            </motion.div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
-          </motion.button>
+              <motion.div
+                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted"
+                style={{ boxShadow: likeButtonGlow }}
+              >
+                <Check className="h-6 w-6 text-[hsl(142,71%,45%)]" strokeWidth={3} />
+              </motion.div>
+            </motion.button>
+          </div>
         </div>
       )}
 
