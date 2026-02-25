@@ -9,7 +9,6 @@ import {
   motion,
   useMotionValue,
   useTransform,
-  useSpring,
   animate,
   type PanInfo,
 } from "framer-motion";
@@ -25,6 +24,7 @@ interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragProgressChange?: (progress: number) => void;
+  onDragDirectionChange?: (rawX: number) => void;
   disabled?: boolean;
 }
 
@@ -48,17 +48,16 @@ const translateCondition = (raw: string | null | undefined) => {
 };
 
 const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragProgressChange, disabled }, ref) => {
+  ({ item, onSwipeComplete, onDragProgressChange, onDragDirectionChange, disabled }, ref) => {
     const x = useMotionValue(0);
-    const rawRotate = useTransform(x, [-300, 300], [-18, 18]);
-    const rotate = useSpring(rawRotate, { stiffness: 300, damping: 30 });
+
+    // Direct rotation from drag — no spring, immediate response
+    const rotate = useTransform(x, [-200, 200], [-15, 15]);
 
     const likeOpacity = useTransform(x, [0, 80], [0, 1]);
     const dislikeOpacity = useTransform(x, [-80, 0], [1, 0]);
     const likeGlowOpacity = useTransform(x, [0, 60, 120], [0, 0.3, 0.8]);
     const dislikeGlowOpacity = useTransform(x, [-120, -60, 0], [0.8, 0.3, 0]);
-    const rotateY = useTransform(x, [-200, 200], [-8, 8]);
-    const imageX = useTransform(x, [-200, 200], [30, -30]);
 
     // Image gallery state
     const images = item?.item_images || [];
@@ -81,9 +80,11 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
+    // Report drag progress (absolute 0-1) and raw direction
     useTransform(x, (latest) => {
       const progress = Math.min(Math.abs(latest) / 200, 1);
       onDragProgressChange?.(progress);
+      onDragDirectionChange?.(latest);
       return progress;
     });
 
@@ -118,11 +119,11 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         } else if (offset < -SWIPE_THRESHOLD || velocity < -500) {
           doExit("dislike");
         } else {
+          // Bouncy snap-back — jelly physics
           animate(x, 0, {
             type: "spring",
-            stiffness: 800,
+            stiffness: 400,
             damping: 25,
-            mass: 0.5,
           });
         }
       },
@@ -138,8 +139,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         style={{
           x,
           rotate,
-          rotateY,
-          transformStyle: "preserve-3d",
+          transformOrigin: "50% 100%",
         }}
         drag="x"
         dragElastic={0.9}
@@ -231,14 +231,12 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
 
           {/* The image itself */}
           {currentImage ? (
-            <motion.img
+            <img
               key={activeImageIndex}
               alt={item.name}
               className="w-full h-full object-cover object-center"
               src={currentImage}
               draggable={false}
-              style={{ x: imageX }}
-              initial={false}
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">

@@ -34,14 +34,34 @@ const Explorar = () => {
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
 
-  // Drag progress for stack animation
+  // Drag progress (0-1 absolute) for stack animation
   const dragProgressValue = useMotionValue(0);
-  const nextScale = useTransform(dragProgressValue, [0, 1], [0.93, 0.97]);
-  const nextOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 0.7]);
-  const nextBlur = useTransform(dragProgressValue, [0, 1], [4, 1]);
-  const nextBlurFilter = useTransform(nextBlur, (v) => `blur(${v}px)`);
-  const thirdScale = useTransform(dragProgressValue, [0, 1], [0.88, 0.91]);
-  const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.2, 0.3]);
+
+  // Raw drag direction value (negative = left, positive = right)
+  const dragDirectionValue = useMotionValue(0);
+
+  // Stack card 1 (next): scale 0.95→1.0, opacity 1→1, y 10→0
+  const nextScale = useTransform(dragProgressValue, [0, 1], [0.95, 1.0]);
+  const nextY = useTransform(dragProgressValue, [0, 1], [10, 0]);
+
+  // Stack card 2 (background): scale 0.90→0.95, opacity 0.5→1.0, y 20→10
+  const thirdScale = useTransform(dragProgressValue, [0, 1], [0.90, 0.95]);
+  const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.5, 1.0]);
+  const thirdY = useTransform(dragProgressValue, [0, 1], [20, 10]);
+
+  // Reactive action buttons linked to drag direction
+  const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
+  const likeButtonGlow = useTransform(
+    dragDirectionValue,
+    [0, 60, 150],
+    ["0px 0px 0px hsl(142 71% 45% / 0)", "0px 0px 12px hsl(142 71% 45% / 0.3)", "0px 0px 24px hsl(142 71% 45% / 0.6)"]
+  );
+  const dislikeButtonScale = useTransform(dragDirectionValue, [0, -120], [1, 1.3]);
+  const dislikeButtonGlow = useTransform(
+    dragDirectionValue,
+    [0, -60, -150],
+    ["0px 0px 0px hsl(0 84% 60% / 0)", "0px 0px 12px hsl(0 84% 60% / 0.3)", "0px 0px 24px hsl(0 84% 60% / 0.6)"]
+  );
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["explore-items", user?.id],
@@ -65,12 +85,13 @@ const Explorar = () => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragProgressValue.set(0);
+    dragDirectionValue.set(0);
     if (currentIndex + 1 >= localItems.length) {
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [currentIndex, localItems.length, dragProgressValue]);
+  }, [currentIndex, localItems.length, dragProgressValue, dragDirectionValue]);
 
   const handleUndo = useCallback(() => {
     if (prevIndex === null) return;
@@ -78,7 +99,8 @@ const Explorar = () => {
     setPrevIndex(null);
     setEpoch((e) => e + 1);
     dragProgressValue.set(0);
-  }, [prevIndex, dragProgressValue]);
+    dragDirectionValue.set(0);
+  }, [prevIndex, dragProgressValue, dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
@@ -156,6 +178,13 @@ const Explorar = () => {
     [dragProgressValue]
   );
 
+  const handleDragDirectionChange = useCallback(
+    (rawX: number) => {
+      dragDirectionValue.set(rawX);
+    },
+    [dragDirectionValue]
+  );
+
   // Preload next image
   const nextImage = nextItem?.item_images?.[0]?.image_url;
   const thirdImage = thirdItem?.item_images?.[0]?.image_url;
@@ -203,7 +232,7 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">Volte mais tarde para encontrar novas trocas!</p>
           </div>
         ) : currentItem ? (
-          <div className="relative w-full h-full flex flex-col" style={{ perspective: "1200px" }}>
+          <div className="relative w-full h-full flex flex-col">
             {/* Streak indicator */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
@@ -220,47 +249,47 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Third card in stack */}
+            {/* Third card in stack — z:8, scale:0.90, y:20, opacity:0.5 */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
-                className="absolute inset-0 z-[-1] bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
+                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
                 style={{
                   scale: thirdScale,
                   opacity: thirdOpacity,
-                  y: -25,
-                  filter: "blur(4px)",
+                  y: thirdY,
+                  zIndex: 8,
                 }}
               >
-              <div className="w-full flex-[3] min-h-0 overflow-hidden">
-                {thirdImage && (
-                  <img src={thirdImage} alt="" className="w-full h-full object-cover object-center" />
-                )}
-              </div>
-              <div className="w-full flex-[2] bg-card dark:bg-muted p-5 space-y-2">
-                <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">{thirdItem.category}</span>
-                <p className="text-foreground text-xl font-bold tracking-tight leading-tight truncate">{thirdItem.name}</p>
-                <span className="block text-primary text-2xl font-extrabold tracking-tighter">{formatValue(thirdItem.market_value)}</span>
-              </div>
+                <div className="w-full flex-[3] min-h-0 overflow-hidden">
+                  {thirdImage && (
+                    <img src={thirdImage} alt="" className="w-full h-full object-cover object-center" />
+                  )}
+                </div>
+                <div className="w-full flex-[2] bg-card dark:bg-muted p-5 space-y-2">
+                  <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">{thirdItem.category}</span>
+                  <p className="text-foreground text-xl font-bold tracking-tight leading-tight truncate">{thirdItem.name}</p>
+                  <span className="block text-primary text-2xl font-extrabold tracking-tighter">{formatValue(thirdItem.market_value)}</span>
+                </div>
               </motion.div>
             )}
 
-            {/* Second card (next item preview) */}
+            {/* Second card (next) — z:9, scale:0.95, y:10, opacity:1 */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
-                className="absolute inset-0 z-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
+                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
                 style={{
                   scale: nextScale,
-                  opacity: nextOpacity,
-                  y: -15,
+                  opacity: 1,
+                  y: nextY,
+                  zIndex: 9,
                 }}
               >
                 <div className="w-full flex-[3] min-h-0 overflow-hidden">
                   {nextImage && (
-                    <motion.img
+                    <img
                       src={nextImage}
                       alt=""
                       className="w-full h-full object-cover object-center"
-                      style={{ filter: nextBlurFilter }}
                     />
                   )}
                 </div>
@@ -272,21 +301,21 @@ const Explorar = () => {
               </motion.div>
             )}
 
-            {/* Main draggable card */}
+            {/* Main draggable card — z:10 */}
             <SwipeCard
               key={`${currentItem.id}-${epoch}`}
               ref={cardRef}
               item={currentItem}
               onSwipeComplete={handleSwipeComplete}
               onDragProgressChange={handleDragProgressChange}
+              onDragDirectionChange={handleDragDirectionChange}
               disabled={swipingRef.current}
             />
           </div>
         ) : null}
       </main>
 
-
-      {/* Action Buttons — fixed above BottomNav */}
+      {/* Action Buttons — fixed above BottomNav, reactive to drag */}
       {currentItem && !isLoading && localItems.length > 0 && (
         <div
           className="fixed left-0 right-0 z-40 flex justify-center items-center gap-8 py-3"
@@ -297,10 +326,14 @@ const Explorar = () => {
             className="flex flex-col items-center gap-1"
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            style={{ scale: dislikeButtonScale }}
           >
-            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted/80 border border-border dark:border-foreground/10 text-foreground/50 shadow-md dark:shadow-none backdrop-blur-xl">
+            <motion.div
+              className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted/80 border border-border dark:border-foreground/10 text-foreground/50 shadow-md dark:shadow-none backdrop-blur-xl"
+              style={{ boxShadow: dislikeButtonGlow }}
+            >
               <X className="h-7 w-7" />
-            </div>
+            </motion.div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-foreground/40">Passar</span>
           </motion.button>
 
@@ -309,10 +342,14 @@ const Explorar = () => {
             className="flex flex-col items-center gap-1"
             whileTap={{ scale: 0.85 }}
             transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            style={{ scale: likeButtonScale }}
           >
-            <div className="flex items-center justify-center h-14 w-14 rounded-full bg-primary border border-primary/20 text-primary-foreground shadow-lg dark:shadow-xl">
+            <motion.div
+              className="flex items-center justify-center h-14 w-14 rounded-full bg-primary border border-primary/20 text-primary-foreground shadow-lg dark:shadow-xl"
+              style={{ boxShadow: likeButtonGlow }}
+            >
               <Heart className="h-7 w-7" />
-            </div>
+            </motion.div>
             <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70">Hypou</span>
           </motion.button>
         </div>
