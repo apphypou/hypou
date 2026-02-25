@@ -15,6 +15,7 @@ import Explorar from "./pages/Explorar";
 import Matches from "./pages/Matches";
 import Configuracoes from "./pages/Configuracoes";
 import NovoItem from "./pages/NovoItem";
+import EditarItem from "./pages/EditarItem";
 import Match from "./pages/Match";
 import Chat from "./pages/Chat";
 import Conversa from "./pages/Conversa";
@@ -72,6 +73,9 @@ const App = () => (
             } />
             <Route path="/novo-item" element={
               <ProtectedRoute><NovoItem /></ProtectedRoute>
+            } />
+            <Route path="/editar-item/:itemId" element={
+              <ProtectedRoute><EditarItem /></ProtectedRoute>
             } />
             <Route path="/usuario/:userId" element={
               <ProtectedRoute><PerfilUsuario /></ProtectedRoute>

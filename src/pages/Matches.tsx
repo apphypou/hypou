@@ -1,4 +1,5 @@
 import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon } from "lucide-react";
+import { useMemo } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import GlassCard from "@/components/GlassCard";
@@ -22,6 +23,27 @@ const Matches = () => {
 
   const [selectedMatch, setSelectedMatch] = useState<MatchWithDetails | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+
+  const handleRejectMatch = useCallback(async () => {
+    if (!selectedMatch || rejecting) return;
+    setRejecting(true);
+    try {
+      const { error } = await supabase
+        .from("matches")
+        .update({ status: "rejected" })
+        .eq("id", selectedMatch.id);
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ["matches"] });
+      setSelectedMatch(null);
+      toast({ title: "Proposta recusada" });
+    } catch (err: any) {
+      toast({ title: "Erro ao recusar proposta", description: err.message, variant: "destructive" });
+    } finally {
+      setRejecting(false);
+    }
+  }, [selectedMatch, rejecting, queryClient, toast]);
 
   const getBadge = (match: MatchWithDetails) => {
     const age = Date.now() - new Date(match.created_at).getTime();
@@ -63,6 +85,8 @@ const Matches = () => {
   const otherImages = otherItem?.item_images || [];
   const myImages = myItem?.item_images || [];
 
+  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected"), [matches]);
+
   return (
     <ScreenLayout>
       {/* Header */}
@@ -83,7 +107,7 @@ const Matches = () => {
         <div className="flex items-center justify-between mb-6 mt-2">
           <h2 className="text-sm font-bold text-foreground/90 uppercase tracking-widest">Interesses Recebidos</h2>
           <div className="flex items-center gap-1">
-            <span className="text-primary text-xs font-semibold">{matches.length} Ativo{matches.length !== 1 ? "s" : ""}</span>
+            <span className="text-primary text-xs font-semibold">{activeMatches.length} Ativo{activeMatches.length !== 1 ? "s" : ""}</span>
             <span className="h-1.5 w-1.5 rounded-full bg-primary neon-glow" />
           </div>
         </div>
@@ -92,7 +116,7 @@ const Matches = () => {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
           </div>
-        ) : matches.length === 0 ? (
+        ) : activeMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-6xl mb-4">🤝</span>
             <h2 className="text-xl font-bold text-foreground mb-2">Nenhuma proposta ainda</h2>
@@ -100,7 +124,7 @@ const Matches = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 pb-6">
-            {matches.map((match) => {
+            {activeMatches.map((match) => {
               const otherItemCard = match.my_item_side === "a" ? match.item_b : match.item_a;
               const mainImage = otherItemCard?.item_images?.[0]?.image_url;
               const badge = getBadge(match);
@@ -335,21 +359,41 @@ const Matches = () => {
                   <MessageSquare className="h-5 w-5" />
                   Tenho Interesse
                 </button>
+              ) : selectedMatch.status === "rejected" ? (
+                <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-lg flex items-center justify-center">
+                  Proposta Recusada
+                </div>
               ) : (
-                <button
-                  onClick={handleConfirmMatch}
-                  disabled={confirming}
-                  className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.4)] disabled:opacity-50 transition-all active:scale-[0.97]"
-                >
-                  {confirming ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Handshake className="h-5 w-5" />
-                      Confirmar Troca
-                    </>
-                  )}
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleRejectMatch}
+                    disabled={rejecting}
+                    className="flex-1 h-14 rounded-2xl bg-card border border-foreground/10 text-foreground/70 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {rejecting ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <XIcon className="h-5 w-5" />
+                        Recusar
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleConfirmMatch}
+                    disabled={confirming}
+                    className="flex-[2] h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.4)] disabled:opacity-50 transition-all active:scale-[0.97]"
+                  >
+                    {confirming ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Handshake className="h-5 w-5" />
+                        Confirmar Troca
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
           </motion.div>

@@ -1,11 +1,11 @@
-import { Loader2, X, Check } from "lucide-react";
+import { Loader2, X, Check, Filter } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { getExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,6 +15,15 @@ import {
   AnimatePresence,
 } from "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
+import { supabase } from "@/integrations/supabase/client";
+
+const allCategories = [
+  { emoji: "📱", label: "Celulares" },
+  { emoji: "🚗", label: "Carros & Motos" },
+  { emoji: "👕", label: "Moda" },
+  { emoji: "🛋️", label: "Casa" },
+  { emoji: "🎮", label: "Videogames" },
+];
 
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -34,22 +43,33 @@ const Explorar = () => {
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
 
+  // Category filter state
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Fetch user's preferred categories
+  const { data: userCategories = [] } = useQuery({
+    queryKey: ["user-categories", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_categories")
+        .select("category")
+        .eq("user_id", user!.id);
+      return (data || []).map((c) => c.category);
+    },
+    enabled: !!user,
+  });
+
   // Drag progress (0-1 absolute) for stack animation
   const dragProgressValue = useMotionValue(0);
-
-  // Raw drag direction value (negative = left, positive = right)
   const dragDirectionValue = useMotionValue(0);
 
-  // Stack card 1 (next): scale 0.95→1.0, y -20→0 (peeks above)
   const nextScale = useTransform(dragProgressValue, [0, 1], [0.95, 1.0]);
   const nextY = useTransform(dragProgressValue, [0, 1], [-20, 0]);
-
-  // Stack card 2 (background): scale 0.90→0.95, opacity 0.4→1.0, y -40→-20
   const thirdScale = useTransform(dragProgressValue, [0, 1], [0.90, 0.95]);
   const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 1.0]);
   const thirdY = useTransform(dragProgressValue, [0, 1], [-40, -20]);
 
-  // Reactive action buttons linked to drag direction
   const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
   const likeButtonGlow = useTransform(
     dragDirectionValue,
@@ -77,21 +97,35 @@ const Explorar = () => {
     }
   }, [items, localItems.length]);
 
-  const currentItem = localItems[currentIndex];
-  const nextItem = localItems[(currentIndex + 1) % localItems.length] ?? null;
-  const thirdItem = localItems[(currentIndex + 2) % localItems.length] ?? null;
+  // Filter items by active category
+  const filteredItems = useMemo(() => {
+    if (!activeFilter) return localItems;
+    return localItems.filter((item) => item.category === activeFilter);
+  }, [localItems, activeFilter]);
+
+  // Reset index when filter changes
+  useEffect(() => {
+    setCurrentIndex(0);
+    setEpoch((e) => e + 1);
+    dragProgressValue.set(0);
+    dragDirectionValue.set(0);
+  }, [activeFilter, dragProgressValue, dragDirectionValue]);
+
+  const currentItem = filteredItems[currentIndex];
+  const nextItem = filteredItems[(currentIndex + 1) % filteredItems.length] ?? null;
+  const thirdItem = filteredItems[(currentIndex + 2) % filteredItems.length] ?? null;
 
   const advanceCard = useCallback(() => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragProgressValue.set(0);
     dragDirectionValue.set(0);
-    if (currentIndex + 1 >= localItems.length) {
+    if (currentIndex + 1 >= filteredItems.length) {
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [currentIndex, localItems.length, dragProgressValue, dragDirectionValue]);
+  }, [currentIndex, filteredItems.length, dragProgressValue, dragDirectionValue]);
 
   const handleUndo = useCallback(() => {
     if (prevIndex === null) return;
@@ -200,14 +234,14 @@ const Explorar = () => {
     }
   }, [nextImage, thirdImage]);
 
-  const progressText = localItems.length > 0
-    ? `${Math.min(currentIndex + 1, localItems.length)}/${localItems.length}`
+  const progressText = filteredItems.length > 0
+    ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
     : "";
 
   return (
     <ScreenLayout>
       {/* Compact header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4 shrink-0">
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-2 shrink-0">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
             Descubra
@@ -216,12 +250,66 @@ const Explorar = () => {
             Explorar
           </h1>
         </div>
-        {progressText && (
-          <span className="text-foreground/30 text-xs font-bold tabular-nums tracking-wider">
-            {progressText}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {progressText && (
+            <span className="text-foreground/30 text-xs font-bold tabular-nums tracking-wider">
+              {progressText}
+            </span>
+          )}
+          <button
+            onClick={() => setShowFilters((v) => !v)}
+            className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
+              showFilters || activeFilter ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
+            }`}
+          >
+            <Filter className="h-4 w-4" />
+          </button>
+        </div>
       </header>
+
+      {/* Category filter chips */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden px-6 shrink-0 z-30"
+          >
+            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+              <button
+                onClick={() => setActiveFilter(null)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                  !activeFilter
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-foreground/10 text-foreground/50"
+                }`}
+              >
+                Todos
+              </button>
+              {allCategories.map((cat) => {
+                const isUserPref = userCategories.includes(cat.label);
+                return (
+                  <button
+                    key={cat.label}
+                    onClick={() => setActiveFilter(activeFilter === cat.label ? null : cat.label)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                      activeFilter === cat.label
+                        ? "bg-primary text-primary-foreground"
+                        : isUserPref
+                          ? "bg-primary/10 border border-primary/30 text-primary"
+                          : "bg-card border border-foreground/10 text-foreground/50"
+                    }`}
+                  >
+                    {cat.emoji} {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Card Area */}
       <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10">
@@ -229,11 +317,23 @@ const Explorar = () => {
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="h-10 w-10 text-primary animate-spin" />
           </div>
-        ) : localItems.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
             <span className="text-6xl mb-4">🔍</span>
-            <h2 className="text-xl font-bold text-foreground mb-2">Sem itens por agora</h2>
-            <p className="text-muted-foreground text-sm">Volte mais tarde para encontrar novas trocas!</p>
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              {activeFilter ? `Sem itens em "${activeFilter}"` : "Sem itens por agora"}
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              {activeFilter ? "Tente outra categoria ou remova o filtro." : "Volte mais tarde para encontrar novas trocas!"}
+            </p>
+            {activeFilter && (
+              <button
+                onClick={() => setActiveFilter(null)}
+                className="mt-4 text-primary text-xs font-bold uppercase tracking-wider"
+              >
+                Limpar filtro
+              </button>
+            )}
           </div>
         ) : currentItem ? (
           <div className="relative w-full h-full flex flex-col">
@@ -254,7 +354,7 @@ const Explorar = () => {
             </AnimatePresence>
 
             {/* Third card (fundo) — z:8, scale:0.90, y:-40, opacity:0.4 */}
-            {localItems.length >= 3 && thirdItem && (
+            {filteredItems.length >= 3 && thirdItem && (
               <motion.div
                 className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
                 style={{
@@ -275,7 +375,7 @@ const Explorar = () => {
             )}
 
             {/* Second card (próximo) — z:9, scale:0.95, y:-20 */}
-            {localItems.length >= 2 && nextItem && (
+            {filteredItems.length >= 2 && nextItem && (
               <motion.div
                 className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
                 style={{
@@ -309,7 +409,7 @@ const Explorar = () => {
       </main>
 
       {/* Action Buttons — pill style, reactive to drag */}
-      {currentItem && !isLoading && localItems.length > 0 && (
+      {currentItem && !isLoading && filteredItems.length > 0 && (
         <div
           className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
