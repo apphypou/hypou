@@ -1,5 +1,6 @@
 import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon } from "lucide-react";
 import { useMemo } from "react";
+import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import GlassCard from "@/components/GlassCard";
@@ -113,8 +114,9 @@ const Matches = () => {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+          <div className="flex flex-col gap-6 py-2">
+            <SkeletonMatchCard />
+            <SkeletonMatchCard />
           </div>
         ) : activeMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">

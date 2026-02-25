@@ -1,4 +1,4 @@
-import { MessageSquare, Loader2 } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useConversations } from "@/hooks/useMessages";
@@ -6,11 +6,19 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { SkeletonConversation } from "@/components/SkeletonCard";
+import PullToRefresh from "@/components/PullToRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Chat = () => {
   const { data: conversations = [], isLoading } = useConversations();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  };
 
   return (
     <ScreenLayout>
@@ -34,11 +42,14 @@ const Chat = () => {
         </div>
       </header>
 
-      <main className="relative flex-1 w-full px-5 overflow-y-auto no-scrollbar z-10 pb-28">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-10 w-10 text-primary animate-spin" />
-          </div>
+      <PullToRefresh onRefresh={handleRefresh} className="relative flex-1 w-full z-10 pb-28">
+        <div className="px-5">
+          {isLoading ? (
+            <div className="flex flex-col gap-2 py-2">
+              <SkeletonConversation />
+              <SkeletonConversation />
+              <SkeletonConversation />
+            </div>
         ) : conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="text-6xl mb-4">💬</span>
@@ -131,7 +142,8 @@ const Chat = () => {
             })}
           </div>
         )}
-      </main>
+        </div>
+      </PullToRefresh>
 
       <BottomNav activeTab="chat" />
     </ScreenLayout>
