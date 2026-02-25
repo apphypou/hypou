@@ -252,7 +252,7 @@ const Explorar = () => {
             {/* Third card in stack — z:8, scale:0.90, y:20, opacity:0.5 */}
             {localItems.length >= 3 && thirdItem && (
               <motion.div
-                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
+                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border-2 border-border/60 dark:border-foreground/8 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-none"
                 style={{
                   scale: thirdScale,
                   opacity: thirdOpacity,
@@ -276,7 +276,7 @@ const Explorar = () => {
             {/* Second card (next) — z:9, scale:0.95, y:10, opacity:1 */}
             {localItems.length >= 2 && nextItem && (
               <motion.div
-                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border border-border dark:border-foreground/5 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.05)] dark:shadow-none"
+                className="absolute inset-0 bg-card dark:bg-muted rounded-[2.5rem] border-2 border-border/80 dark:border-foreground/10 overflow-hidden flex flex-col shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-none"
                 style={{
                   scale: nextScale,
                   opacity: 1,
