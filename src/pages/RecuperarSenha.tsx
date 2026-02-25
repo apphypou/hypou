@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Diamond, Mail, ArrowLeft, Send } from "lucide-react";
+import { Mail, ArrowLeft, Send } from "lucide-react";
+import logoHypou from "@/assets/logo-hypou.png";
 import { supabase } from "@/integrations/supabase/client";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
@@ -29,9 +30,7 @@ const RecuperarSenha = () => {
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/30 backdrop-blur-md mb-6">
-          <Diamond className="h-7 w-7 text-primary" />
-        </div>
+        <img src={logoHypou} alt="Hypou" className="h-20 w-auto object-contain mb-6" />
         <h1 className="text-3xl font-bold tracking-tight">
           Recuperar <span className="gradient-text">Senha</span>
         </h1>

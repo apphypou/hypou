@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2 } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -9,6 +9,16 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile, uploadAvatar } from "@/services/profileService";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,6 +40,7 @@ const MeuPerfil = () => {
   const [editBio, setEditBio] = useState("");
   const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
   const openEdit = () => {
     setEditName(profile?.display_name ?? "");
@@ -257,8 +268,8 @@ const MeuPerfil = () => {
                         <div className="flex justify-between items-start">
                           <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteItem(item.id); }}
-                            className="text-foreground/30 hover:text-danger transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setDeleteItemId(item.id); }}
+                            className="text-foreground/30 hover:text-destructive transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -310,6 +321,35 @@ const MeuPerfil = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteItemId} onOpenChange={(open) => !open && setDeleteItemId(null)}>
+        <AlertDialogContent className="bg-background border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Remover Item
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este item? Esta ação não pode ser desfeita e todas as fotos serão apagadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteItemId) {
+                  handleDeleteItem(deleteItemId);
+                  setDeleteItemId(null);
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ScreenLayout>
   );
 };
