@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Diamond, Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn } from "lucide-react";
+import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
@@ -35,9 +36,7 @@ const Login = () => {
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       {/* Header */}
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/30 backdrop-blur-md mb-6">
-          <Diamond className="h-7 w-7 text-primary" />
-        </div>
+        <img src={logoHypou} alt="Hypou" className="h-16 w-auto object-contain mb-6" />
         <h1 className="text-3xl font-bold tracking-tight">
           Entrar no <span className="gradient-text">Hypou</span>
         </h1>
