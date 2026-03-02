@@ -379,27 +379,18 @@ const Explorar = () => {
             style={{ rotate: containerRotate }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            {/* Dumbbell connector shape behind buttons */}
+            {/* Dumbbell connector between buttons */}
             <div
-              className="absolute inset-0 flex items-center justify-center pointer-events-none"
-              style={{ zIndex: 0 }}
-            >
-              <svg
-                viewBox="0 0 160 64"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-[160px] h-[64px]"
-                preserveAspectRatio="none"
-              >
-                {/* Dumbbell / bone shape: two circles connected by a narrow waist */}
-                <path
-                  d="M32 0 C49.7 0 64 14.3 64 32 C64 49.7 49.7 64 32 64 C14.3 64 0 49.7 0 32 C0 14.3 14.3 0 32 0 Z M128 0 C145.7 0 160 14.3 160 32 C160 49.7 145.7 64 128 64 C110.3 64 96 49.7 96 32 C96 14.3 110.3 0 128 0 Z M64 20 C68 28 68 36 64 44 L96 44 C92 36 92 28 96 20 Z"
-                  className="fill-card dark:fill-muted stroke-border/40 dark:stroke-foreground/5"
-                  strokeWidth="1"
-                  fillRule="evenodd"
-                />
-              </svg>
-            </div>
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              style={{
+                width: "48px",
+                height: "28px",
+                background: "hsl(var(--card))",
+                borderTop: "2px solid hsl(var(--border) / 0.3)",
+                borderBottom: "2px solid hsl(var(--border) / 0.3)",
+                zIndex: 0,
+              }}
+            />
 
             {/* Dislike button */}
             <motion.button
@@ -416,7 +407,7 @@ const Explorar = () => {
               className="relative"
             >
               <motion.div
-                className="flex items-center justify-center h-16 w-16 rounded-full bg-card dark:bg-card border-2 border-destructive/30"
+                className="flex items-center justify-center h-16 w-16 rounded-full bg-card border-2 border-destructive/30 shadow-lg"
                 style={{ boxShadow: dislikeButtonGlow }}
               >
                 <X className="h-7 w-7 text-destructive" strokeWidth={2.5} />
@@ -438,7 +429,7 @@ const Explorar = () => {
               className="relative"
             >
               <motion.div
-                className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border-2 border-primary"
+                className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border-2 border-primary shadow-lg"
                 style={{ boxShadow: likeButtonGlow }}
               >
                 <Heart className="h-7 w-7 text-primary-foreground fill-primary-foreground" strokeWidth={2} />
