@@ -62,15 +62,7 @@ const Explorar = () => {
     enabled: !!user,
   });
 
-  // Drag progress (0-1 absolute) for stack animation
-  const dragProgressValue = useMotionValue(0);
   const dragDirectionValue = useMotionValue(0);
-
-  const nextScale = useTransform(dragProgressValue, [0, 1], [0.95, 1.0]);
-  const nextY = useTransform(dragProgressValue, [0, 1], [-20, 0]);
-  const thirdScale = useTransform(dragProgressValue, [0, 1], [0.90, 0.95]);
-  const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 1.0]);
-  const thirdY = useTransform(dragProgressValue, [0, 1], [-40, -20]);
 
   const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
   const likeButtonGlow = useTransform(
@@ -109,34 +101,29 @@ const Explorar = () => {
   useEffect(() => {
     setCurrentIndex(0);
     setEpoch((e) => e + 1);
-    dragProgressValue.set(0);
     dragDirectionValue.set(0);
-  }, [activeFilter, dragProgressValue, dragDirectionValue]);
+  }, [activeFilter, dragDirectionValue]);
 
   const currentItem = filteredItems[currentIndex];
-  const nextItem = filteredItems[(currentIndex + 1) % filteredItems.length] ?? null;
-  const thirdItem = filteredItems[(currentIndex + 2) % filteredItems.length] ?? null;
 
   const advanceCard = useCallback(() => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
-    dragProgressValue.set(0);
     dragDirectionValue.set(0);
     if (currentIndex + 1 >= filteredItems.length) {
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [currentIndex, filteredItems.length, dragProgressValue, dragDirectionValue]);
+  }, [currentIndex, filteredItems.length, dragDirectionValue]);
 
   const handleUndo = useCallback(() => {
     if (prevIndex === null) return;
     setCurrentIndex(prevIndex);
     setPrevIndex(null);
     setEpoch((e) => e + 1);
-    dragProgressValue.set(0);
     dragDirectionValue.set(0);
-  }, [prevIndex, dragProgressValue, dragDirectionValue]);
+  }, [prevIndex, dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
@@ -207,13 +194,6 @@ const Explorar = () => {
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
   );
 
-  const handleDragProgressChange = useCallback(
-    (progress: number) => {
-      dragProgressValue.set(progress);
-    },
-    [dragProgressValue]
-  );
-
   const handleDragDirectionChange = useCallback(
     (rawX: number) => {
       dragDirectionValue.set(rawX);
@@ -221,20 +201,16 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  // Preload next and third images
+  // Preload next image
+  const nextItem = filteredItems[currentIndex + 1] ?? filteredItems[0] ?? null;
   const nextImage = nextItem?.item_images?.[0]?.image_url;
-  const thirdImage = thirdItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
     if (nextImage) {
       const img = new window.Image();
       img.src = nextImage;
     }
-    if (thirdImage) {
-      const img = new window.Image();
-      img.src = thirdImage;
-    }
-  }, [nextImage, thirdImage]);
+  }, [nextImage]);
 
   const progressText = filteredItems.length > 0
     ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
@@ -356,54 +332,12 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Third card (fundo) — z:8, scale:0.90, y:-40, opacity:0.4 */}
-            {filteredItems.length >= 3 && thirdItem && (
-              <motion.div
-                className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
-                style={{
-                  scale: thirdScale,
-                  opacity: thirdOpacity,
-                  y: thirdY,
-                  zIndex: 8,
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              >
-                <SwipeCard
-                  key={`third-${thirdItem.id}`}
-                  item={thirdItem}
-                  onSwipeComplete={() => {}}
-                  disabled
-                />
-              </motion.div>
-            )}
-
-            {/* Second card (próximo) — z:9, scale:0.95, y:-20 */}
-            {filteredItems.length >= 2 && nextItem && (
-              <motion.div
-                className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
-                style={{
-                  scale: nextScale,
-                  y: nextY,
-                  zIndex: 9,
-                }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              >
-                <SwipeCard
-                  key={`next-${nextItem.id}`}
-                  item={nextItem}
-                  onSwipeComplete={() => {}}
-                  disabled
-                />
-              </motion.div>
-            )}
-
-            {/* Main draggable card — z:10 */}
+            {/* Single active card */}
             <SwipeCard
               key={`${currentItem.id}-${epoch}`}
               ref={cardRef}
               item={currentItem}
               onSwipeComplete={handleSwipeComplete}
-              onDragProgressChange={handleDragProgressChange}
               onDragDirectionChange={handleDragDirectionChange}
               disabled={swipingRef.current}
             />
