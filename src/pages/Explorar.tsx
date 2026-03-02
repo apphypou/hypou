@@ -105,6 +105,7 @@ const Explorar = () => {
   }, [activeFilter, dragDirectionValue]);
 
   const currentItem = filteredItems[currentIndex];
+  const nextItem = filteredItems[currentIndex + 1] ?? (filteredItems.length > 1 ? filteredItems[0] : null);
 
   const advanceCard = useCallback(() => {
     setPrevIndex(currentIndex);
@@ -201,16 +202,16 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  // Preload next image
-  const nextItem = filteredItems[currentIndex + 1] ?? filteredItems[0] ?? null;
-  const nextImage = nextItem?.item_images?.[0]?.image_url;
+  // Preload image after next (next is already rendered in DOM)
+  const afterNextItem = filteredItems[currentIndex + 2] ?? filteredItems[0] ?? null;
+  const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
-    if (nextImage) {
+    if (afterNextImage) {
       const img = new window.Image();
-      img.src = nextImage;
+      img.src = afterNextImage;
     }
-  }, [nextImage]);
+  }, [afterNextImage]);
 
   const progressText = filteredItems.length > 0
     ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
@@ -315,7 +316,7 @@ const Explorar = () => {
             )}
           </div>
         ) : currentItem ? (
-          <div className="relative w-full h-full flex flex-col">
+          <div className="relative w-full h-full">
             {/* Streak indicator */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 && (
@@ -332,9 +333,19 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Single active card */}
+            {/* Next card — pre-rendered behind, ready to appear instantly */}
+            {nextItem && nextItem.id !== currentItem.id && (
+              <SwipeCard
+                key={`standby-${nextItem.id}`}
+                item={nextItem}
+                onSwipeComplete={() => {}}
+                standby
+              />
+            )}
+
+            {/* Active draggable card */}
             <SwipeCard
-              key={`${currentItem.id}-${epoch}`}
+              key={`active-${currentItem.id}-${epoch}`}
               ref={cardRef}
               item={currentItem}
               onSwipeComplete={handleSwipeComplete}
