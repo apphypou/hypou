@@ -1,4 +1,4 @@
-import { X, Check, Filter } from "lucide-react";
+import { X, Heart, Filter } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -356,48 +356,43 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Action Buttons — pill style, reactive to drag */}
+      {/* Action Buttons — separate circular, reactive to drag */}
       {currentItem && !isLoading && filteredItems.length > 0 && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
+          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-6 py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
-          <div className="flex items-center bg-card dark:bg-muted rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-border/50 dark:border-foreground/5 p-1.5 gap-1">
-            {/* Dislike button */}
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("dislike")}
-              whileTap={{ scale: 0.85 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              style={{ scale: dislikeButtonScale }}
-              className="relative"
+          {/* Dislike button */}
+          <motion.button
+            onClick={() => cardRef.current?.triggerSwipe("dislike")}
+            whileTap={{ scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 600, damping: 20 }}
+            style={{ scale: dislikeButtonScale }}
+            className="relative"
+          >
+            <motion.div
+              className="flex items-center justify-center h-16 w-16 rounded-full bg-card dark:bg-card border-2 border-destructive/20 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
+              style={{ boxShadow: dislikeButtonGlow }}
             >
-              <motion.div
-                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted"
-                style={{ boxShadow: dislikeButtonGlow }}
-              >
-                <X className="h-6 w-6 text-[hsl(15,90%,55%)]" strokeWidth={3} />
-              </motion.div>
-            </motion.button>
+              <X className="h-7 w-7 text-destructive" strokeWidth={2.5} />
+            </motion.div>
+          </motion.button>
 
-            {/* Divider */}
-            <div className="w-px h-8 bg-border/40 dark:bg-foreground/10" />
-
-            {/* Like button */}
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("like")}
-              whileTap={{ scale: 0.85 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-              style={{ scale: likeButtonScale }}
-              className="relative"
+          {/* Like button */}
+          <motion.button
+            onClick={() => cardRef.current?.triggerSwipe("like")}
+            whileTap={{ scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 600, damping: 20 }}
+            style={{ scale: likeButtonScale }}
+            className="relative"
+          >
+            <motion.div
+              className="flex items-center justify-center h-16 w-16 rounded-full bg-primary shadow-[0_4px_20px_hsl(var(--primary)/0.3)] dark:shadow-[0_4px_20px_hsl(var(--primary)/0.4)]"
+              style={{ boxShadow: likeButtonGlow }}
             >
-              <motion.div
-                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted"
-                style={{ boxShadow: likeButtonGlow }}
-              >
-                <Check className="h-6 w-6 text-[hsl(142,71%,45%)]" strokeWidth={3} />
-              </motion.div>
-            </motion.button>
-          </div>
+              <Heart className="h-7 w-7 text-primary-foreground fill-primary-foreground" strokeWidth={2} />
+            </motion.div>
+          </motion.button>
         </div>
       )}
 
