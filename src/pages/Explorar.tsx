@@ -10,7 +10,12 @@ import { createSwipe } from "@/services/swipeService";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -57,6 +62,29 @@ const Explorar = () => {
     enabled: !!user,
   });
 
+  // Drag progress (0-1 absolute) for stack animation
+  const dragProgressValue = useMotionValue(0);
+  const dragDirectionValue = useMotionValue(0);
+
+  const nextScale = useTransform(dragProgressValue, [0, 1], [0.95, 1.0]);
+  const nextY = useTransform(dragProgressValue, [0, 1], [-20, 0]);
+  const thirdScale = useTransform(dragProgressValue, [0, 1], [0.90, 0.95]);
+  const thirdOpacity = useTransform(dragProgressValue, [0, 1], [0.4, 1.0]);
+  const thirdY = useTransform(dragProgressValue, [0, 1], [-40, -20]);
+
+  const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
+  const likeButtonGlow = useTransform(
+    dragDirectionValue,
+    [0, 60, 150],
+    ["0px 0px 0px hsl(142 71% 45% / 0)", "0px 0px 12px hsl(142 71% 45% / 0.3)", "0px 0px 24px hsl(142 71% 45% / 0.6)"]
+  );
+  const dislikeButtonScale = useTransform(dragDirectionValue, [0, -120], [1, 1.3]);
+  const dislikeButtonGlow = useTransform(
+    dragDirectionValue,
+    [0, -60, -150],
+    ["0px 0px 0px hsl(0 84% 60% / 0)", "0px 0px 12px hsl(0 84% 60% / 0.3)", "0px 0px 24px hsl(0 84% 60% / 0.6)"]
+  );
+
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["explore-items", user?.id],
     queryFn: () => getExploreItems(user!.id),
@@ -81,20 +109,34 @@ const Explorar = () => {
   useEffect(() => {
     setCurrentIndex(0);
     setEpoch((e) => e + 1);
-  }, [activeFilter]);
+    dragProgressValue.set(0);
+    dragDirectionValue.set(0);
+  }, [activeFilter, dragProgressValue, dragDirectionValue]);
 
   const currentItem = filteredItems[currentIndex];
   const nextItem = filteredItems[(currentIndex + 1) % filteredItems.length] ?? null;
+  const thirdItem = filteredItems[(currentIndex + 2) % filteredItems.length] ?? null;
 
   const advanceCard = useCallback(() => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
+    dragProgressValue.set(0);
+    dragDirectionValue.set(0);
     if (currentIndex + 1 >= filteredItems.length) {
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
     }
-  }, [currentIndex, filteredItems.length]);
+  }, [currentIndex, filteredItems.length, dragProgressValue, dragDirectionValue]);
+
+  const handleUndo = useCallback(() => {
+    if (prevIndex === null) return;
+    setCurrentIndex(prevIndex);
+    setPrevIndex(null);
+    setEpoch((e) => e + 1);
+    dragProgressValue.set(0);
+    dragDirectionValue.set(0);
+  }, [prevIndex, dragProgressValue, dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
@@ -157,7 +199,6 @@ const Explorar = () => {
         navigator.vibrate(50);
       }
 
-      // The card already animated itself (scale down + fade). Now advance.
       advanceCard();
       recordSwipeInBackground(direction, itemId);
 
@@ -166,15 +207,34 @@ const Explorar = () => {
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
   );
 
-  // Preload next images
+  const handleDragProgressChange = useCallback(
+    (progress: number) => {
+      dragProgressValue.set(progress);
+    },
+    [dragProgressValue]
+  );
+
+  const handleDragDirectionChange = useCallback(
+    (rawX: number) => {
+      dragDirectionValue.set(rawX);
+    },
+    [dragDirectionValue]
+  );
+
+  // Preload next and third images
   const nextImage = nextItem?.item_images?.[0]?.image_url;
+  const thirdImage = thirdItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
     if (nextImage) {
       const img = new window.Image();
       img.src = nextImage;
     }
-  }, [nextImage]);
+    if (thirdImage) {
+      const img = new window.Image();
+      img.src = thirdImage;
+    }
+  }, [nextImage, thirdImage]);
 
   const progressText = filteredItems.length > 0
     ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
@@ -296,16 +356,40 @@ const Explorar = () => {
               )}
             </AnimatePresence>
 
-            {/* Next card (background) — always visible behind at 0.95 scale */}
-            {filteredItems.length >= 2 && nextItem && (
+            {/* Third card (fundo) — z:8, scale:0.90, y:-40, opacity:0.4 */}
+            {filteredItems.length >= 3 && thirdItem && (
               <motion.div
-                key={`bg-${nextItem.id}`}
                 className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
-                initial={{ scale: 0.95, opacity: 0.6 }}
-                animate={{ scale: 0.95, opacity: 0.6 }}
-                style={{ zIndex: 8 }}
+                style={{
+                  scale: thirdScale,
+                  opacity: thirdOpacity,
+                  y: thirdY,
+                  zIndex: 8,
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
               >
                 <SwipeCard
+                  key={`third-${thirdItem.id}`}
+                  item={thirdItem}
+                  onSwipeComplete={() => {}}
+                  disabled
+                />
+              </motion.div>
+            )}
+
+            {/* Second card (próximo) — z:9, scale:0.95, y:-20 */}
+            {filteredItems.length >= 2 && nextItem && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]"
+                style={{
+                  scale: nextScale,
+                  y: nextY,
+                  zIndex: 9,
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              >
+                <SwipeCard
+                  key={`next-${nextItem.id}`}
                   item={nextItem}
                   onSwipeComplete={() => {}}
                   disabled
@@ -313,33 +397,21 @@ const Explorar = () => {
               </motion.div>
             )}
 
-            {/* Active card — cross-fade scale transition */}
-            <AnimatePresence mode="popLayout">
-              <motion.div
-                key={`active-${currentItem.id}-${epoch}`}
-                className="relative z-10 flex-1 w-full"
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 25,
-                  mass: 0.8,
-                }}
-              >
-                <SwipeCard
-                  ref={cardRef}
-                  item={currentItem}
-                  onSwipeComplete={handleSwipeComplete}
-                  disabled={swipingRef.current}
-                />
-              </motion.div>
-            </AnimatePresence>
+            {/* Main draggable card — z:10 */}
+            <SwipeCard
+              key={`${currentItem.id}-${epoch}`}
+              ref={cardRef}
+              item={currentItem}
+              onSwipeComplete={handleSwipeComplete}
+              onDragProgressChange={handleDragProgressChange}
+              onDragDirectionChange={handleDragDirectionChange}
+              disabled={swipingRef.current}
+            />
           </div>
         ) : null}
       </main>
 
-      {/* Action Buttons — pill style */}
+      {/* Action Buttons — pill style, reactive to drag */}
       {currentItem && !isLoading && filteredItems.length > 0 && (
         <div
           className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
@@ -351,11 +423,15 @@ const Explorar = () => {
               onClick={() => cardRef.current?.triggerSwipe("dislike")}
               whileTap={{ scale: 0.85 }}
               transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              style={{ scale: dislikeButtonScale }}
               className="relative"
             >
-              <div className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted">
+              <motion.div
+                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted"
+                style={{ boxShadow: dislikeButtonGlow }}
+              >
                 <X className="h-6 w-6 text-[hsl(15,90%,55%)]" strokeWidth={3} />
-              </div>
+              </motion.div>
             </motion.button>
 
             {/* Divider */}
@@ -366,11 +442,15 @@ const Explorar = () => {
               onClick={() => cardRef.current?.triggerSwipe("like")}
               whileTap={{ scale: 0.85 }}
               transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              style={{ scale: likeButtonScale }}
               className="relative"
             >
-              <div className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted">
+              <motion.div
+                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-muted"
+                style={{ boxShadow: likeButtonGlow }}
+              >
                 <Check className="h-6 w-6 text-[hsl(142,71%,45%)]" strokeWidth={3} />
-              </div>
+              </motion.div>
             </motion.button>
           </div>
         </div>
