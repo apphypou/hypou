@@ -5,7 +5,6 @@ import {
   useState,
   useEffect,
   memo,
-  type Ref,
 } from "react";
 import {
   motion,
@@ -16,7 +15,8 @@ import {
 } from "framer-motion";
 import { MapPin, Image, Package } from "lucide-react";
 
-const SWIPE_THRESHOLD = 100;
+const SWIPE_THRESHOLD = 80;
+const EXIT_X = 500;
 
 export interface SwipeCardHandle {
   triggerSwipe: (direction: "like" | "dislike") => void;
@@ -25,9 +25,10 @@ export interface SwipeCardHandle {
 interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
-  onDragProgressChange?: (progress: number) => void;
   onDragDirectionChange?: (rawX: number) => void;
   disabled?: boolean;
+  /** When true, card is rendered behind the active card as a preloaded standby */
+  standby?: boolean;
 }
 
 const formatValue = (cents: number) =>
@@ -50,20 +51,21 @@ const translateCondition = (raw: string | null | undefined) => {
 };
 
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragProgressChange, onDragDirectionChange, disabled }, ref) => {
+  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby }, ref) => {
     const x = useMotionValue(0);
 
-    // Direct rotation from drag — no spring, immediate response
-    const rotate = useTransform(x, [-200, 200], [-15, 15]);
+    // Subtler rotation — max ±8° with smooth curve
+    const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
-    const likeOpacity = useTransform(x, [0, 80], [0, 1]);
-    const dislikeOpacity = useTransform(x, [-80, 0], [1, 0]);
-    // Stamp scale — grows from 0.5 to 1.0 (stamp/carimbo effect)
-    const likeStampScale = useTransform(x, [0, 80], [0.5, 1.0]);
-    const dislikeStampScale = useTransform(x, [-80, 0], [1.0, 0.5]);
+    // Stamp opacity & scale
+    const likeOpacity = useTransform(x, [0, 100], [0, 1]);
+    const dislikeOpacity = useTransform(x, [-100, 0], [1, 0]);
+    const likeStampScale = useTransform(x, [0, 100], [0.5, 1.0]);
+    const dislikeStampScale = useTransform(x, [-100, 0], [1.0, 0.5]);
 
-    const likeGlowOpacity = useTransform(x, [0, 60, 120], [0, 0.3, 0.8]);
-    const dislikeGlowOpacity = useTransform(x, [-120, -60, 0], [0.8, 0.3, 0]);
+    // Edge glow
+    const likeGlowOpacity = useTransform(x, [0, 60, 140], [0, 0.25, 0.7]);
+    const dislikeGlowOpacity = useTransform(x, [-140, -60, 0], [0.7, 0.25, 0]);
 
     // Image gallery state
     const images = item?.item_images || [];
@@ -86,33 +88,32 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
-    // Report drag progress and direction via onChange (not useTransform side-effect)
+    // Report drag direction
     useEffect(() => {
-      if (disabled) return;
+      if (disabled || standby) return;
       const unsubscribe = x.on("change", (latest) => {
-        const progress = Math.min(Math.abs(latest) / 200, 1);
-        onDragProgressChange?.(progress);
         onDragDirectionChange?.(latest);
       });
       return unsubscribe;
-    }, [x, disabled, onDragProgressChange, onDragDirectionChange]);
+    }, [x, disabled, standby, onDragDirectionChange]);
 
     const doExit = useCallback(
       (direction: "like" | "dislike", velocityX?: number) => {
-        if (disabled) return;
-        const exitX = direction === "like" ? 600 : -600;
+        if (disabled || standby) return;
+        const exitX = direction === "like" ? EXIT_X : -EXIT_X;
         const vel = velocityX != null ? velocityX : (direction === "like" ? 800 : -800);
         animate(x, exitX, {
           type: "spring",
-          stiffness: 400,
-          damping: 30,
+          stiffness: 600,
+          damping: 35,
           velocity: vel,
+          restSpeed: 100,
           onComplete: () => {
             onSwipeComplete(direction);
           },
         });
       },
-      [disabled, x, onSwipeComplete]
+      [disabled, standby, x, onSwipeComplete]
     );
 
     useImperativeHandle(ref, () => ({
@@ -124,16 +125,17 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         const velocity = info.velocity.x;
         const offset = info.offset.x;
 
-        if (offset > SWIPE_THRESHOLD || velocity > 500) {
+        if (offset > SWIPE_THRESHOLD || velocity > 400) {
           doExit("like", velocity);
-        } else if (offset < -SWIPE_THRESHOLD || velocity < -500) {
+        } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
           doExit("dislike", velocity);
         } else {
-          // Bouncy snap-back with subtle overshoot
+          // Snappy elastic snap-back
           animate(x, 0, {
             type: "spring",
-            stiffness: 500,
-            damping: 22,
+            stiffness: 600,
+            damping: 26,
+            mass: 0.8,
           });
         }
       },
@@ -145,63 +147,71 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className="relative z-10 flex-1 w-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col swipe-card touch-none shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted"
+        className={`absolute inset-0 w-full h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted ${
+          standby ? "pointer-events-none" : "touch-none"
+        }`}
         style={{
-          x,
-          rotate,
-          transformOrigin: "50% 100%",
-          willChange: "transform",
+          x: standby ? 0 : x,
+          rotate: standby ? 0 : rotate,
+          zIndex: standby ? 9 : 10,
+          willChange: standby ? "auto" : "transform",
+          transformOrigin: "50% 80%",
         }}
-        drag="x"
-        dragElastic={0.75}
-        onDragEnd={handleDragEnd}
-        initial={false}
+        drag={standby ? false : "x"}
+        dragElastic={0.65}
+        onDragEnd={standby ? undefined : handleDragEnd}
+        initial={standby ? false : { scale: 1, opacity: 1 }}
+        animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
-        {/* Dynamic glow borders */}
-        <motion.div
-          className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
-          style={{
-            opacity: likeGlowOpacity,
-            boxShadow: "inset 0 0 40px hsl(142 71% 45% / 0.4), 0 0 30px hsl(142 71% 45% / 0.3)",
-            border: "2px solid hsl(142 71% 45% / 0.6)",
-          }}
-        />
-        <motion.div
-          className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
-          style={{
-            opacity: dislikeGlowOpacity,
-            boxShadow: "inset 0 0 40px hsl(0 84% 60% / 0.4), 0 0 30px hsl(0 84% 60% / 0.3)",
-            border: "2px solid hsl(0 84% 60% / 0.6)",
-          }}
-        />
+        {/* Dynamic glow borders — only on active card */}
+        {!standby && (
+          <>
+            <motion.div
+              className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
+              style={{
+                opacity: likeGlowOpacity,
+                boxShadow: "inset 0 0 40px hsl(142 71% 45% / 0.4), 0 0 30px hsl(142 71% 45% / 0.3)",
+                border: "2px solid hsl(142 71% 45% / 0.6)",
+              }}
+            />
+            <motion.div
+              className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
+              style={{
+                opacity: dislikeGlowOpacity,
+                boxShadow: "inset 0 0 40px hsl(0 84% 60% / 0.4), 0 0 30px hsl(0 84% 60% / 0.3)",
+                border: "2px solid hsl(0 84% 60% / 0.6)",
+              }}
+            />
 
-        {/* Like/Dislike stamp overlays — with scale animation */}
-        <motion.div
-          className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
-          style={{ opacity: likeOpacity }}
-        >
-          <motion.span
-            className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl"
-            style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
-          >
-            HYPOU
-          </motion.span>
-        </motion.div>
-        <motion.div
-          className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
-          style={{ opacity: dislikeOpacity }}
-        >
-          <motion.span
-            className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
-            style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
-          >
-            PASSAR
-          </motion.span>
-        </motion.div>
+            {/* Like/Dislike stamp overlays */}
+            <motion.div
+              className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
+              style={{ opacity: likeOpacity }}
+            >
+              <motion.span
+                className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl"
+                style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
+              >
+                HYPOU
+              </motion.span>
+            </motion.div>
+            <motion.div
+              className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
+              style={{ opacity: dislikeOpacity }}
+            >
+              <motion.span
+                className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
+                style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
+              >
+                PASSAR
+              </motion.span>
+            </motion.div>
+          </>
+        )}
 
         {/* ===== IMAGE SECTION — top ~60% ===== */}
-        <div className="relative w-full flex-[3] min-h-0 overflow-hidden" onClick={handleImageTap}>
-          {/* Owner mini-profile — top-left over image */}
+        <div className="relative w-full flex-[3] min-h-0 overflow-hidden" onClick={standby ? undefined : handleImageTap}>
+          {/* Owner mini-profile */}
           {ownerProfile && (
             <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
               {ownerProfile.avatar_url ? (
@@ -221,7 +231,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </div>
           )}
 
-          {/* Image dots indicator — top-right */}
+          {/* Image dots indicator */}
           {imageCount > 1 && (
             <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
               {images.map((_: any, i: number) => (
@@ -237,10 +247,10 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </div>
           )}
 
-          {/* Subtle top gradient for owner profile readability */}
+          {/* Top gradient */}
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
 
-          {/* The image itself */}
+          {/* Image */}
           {currentImage ? (
             <img
               key={activeImageIndex}
@@ -256,24 +266,20 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           )}
         </div>
 
-        {/* ===== CONTENT SECTION — bottom ~40%, solid background ===== */}
+        {/* ===== CONTENT SECTION — bottom ~40% ===== */}
         <div className="relative z-20 w-full flex-[2] bg-card dark:bg-muted p-5 pb-24 space-y-2">
-          {/* Category badge */}
           <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">
             {item.category}
           </span>
 
-          {/* Name */}
           <h2 className="text-foreground text-xl font-bold tracking-tight leading-tight">
             {item.name}
           </h2>
 
-          {/* Market value */}
           <span className="block text-primary text-2xl font-extrabold tracking-tighter">
             {formatValue(item.market_value)}
           </span>
 
-          {/* Location + Condition */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <MapPin className="h-3.5 w-3.5 text-primary" />
@@ -291,7 +297,6 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             )}
           </div>
 
-          {/* Description */}
           {item.description && (
             <p className="text-muted-foreground text-xs leading-snug line-clamp-2">
               {item.description}
