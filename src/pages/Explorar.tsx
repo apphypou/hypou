@@ -64,18 +64,30 @@ const Explorar = () => {
 
   const dragDirectionValue = useMotionValue(0);
 
-  const likeButtonScale = useTransform(dragDirectionValue, [0, 120], [1, 1.3]);
+  // Like button: grows, rises, glows when dragging right; shrinks & fades when dragging left
+  const likeButtonScale = useTransform(dragDirectionValue, [-120, 0, 120], [0.85, 1, 1.25]);
+  const likeButtonY = useTransform(dragDirectionValue, [-120, 0, 120], [3, 0, -5]);
+  const likeButtonX = useTransform(dragDirectionValue, [-120, 0, 120], [-6, 0, 6]);
+  const likeButtonOpacity = useTransform(dragDirectionValue, [-150, 0, 50], [0.45, 1, 1]);
   const likeButtonGlow = useTransform(
     dragDirectionValue,
     [0, 60, 150],
-    ["0px 0px 0px hsl(142 71% 45% / 0)", "0px 0px 12px hsl(142 71% 45% / 0.3)", "0px 0px 24px hsl(142 71% 45% / 0.6)"]
+    ["0px 0px 0px hsl(142 71% 45% / 0)", "0px 0px 14px hsl(142 71% 45% / 0.35)", "0px 0px 28px hsl(142 71% 45% / 0.7)"]
   );
-  const dislikeButtonScale = useTransform(dragDirectionValue, [0, -120], [1, 1.3]);
+
+  // Dislike button: grows, rises, glows when dragging left; shrinks & fades when dragging right
+  const dislikeButtonScale = useTransform(dragDirectionValue, [-120, 0, 120], [1.25, 1, 0.85]);
+  const dislikeButtonY = useTransform(dragDirectionValue, [-120, 0, 120], [-5, 0, 3]);
+  const dislikeButtonX = useTransform(dragDirectionValue, [-120, 0, 120], [-6, 0, 6]);
+  const dislikeButtonOpacity = useTransform(dragDirectionValue, [-50, 0, 150], [1, 1, 0.45]);
   const dislikeButtonGlow = useTransform(
     dragDirectionValue,
-    [0, -60, -150],
-    ["0px 0px 0px hsl(0 84% 60% / 0)", "0px 0px 12px hsl(0 84% 60% / 0.3)", "0px 0px 24px hsl(0 84% 60% / 0.6)"]
+    [-150, -60, 0],
+    ["0px 0px 28px hsl(0 84% 60% / 0.7)", "0px 0px 14px hsl(0 84% 60% / 0.35)", "0px 0px 0px hsl(0 84% 60% / 0)"]
   );
+
+  // Container tilt for "tension" effect
+  const containerRotate = useTransform(dragDirectionValue, [-150, 0, 150], [-2, 0, 2]);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["explore-items", user?.id],
@@ -356,43 +368,59 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Action Buttons — separate circular, reactive to drag */}
+      {/* Action Buttons — capsule container with competitive animation */}
       {currentItem && !isLoading && filteredItems.length > 0 && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-6 py-3"
+          className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
-          {/* Dislike button */}
-          <motion.button
-            onClick={() => cardRef.current?.triggerSwipe("dislike")}
-            whileTap={{ scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 600, damping: 20 }}
-            style={{ scale: dislikeButtonScale }}
-            className="relative"
+          <motion.div
+            className="flex items-center bg-card dark:bg-muted rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.10)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-border/40 dark:border-foreground/5 px-3 py-2.5 gap-3"
+            style={{ rotate: containerRotate }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            <motion.div
-              className="flex items-center justify-center h-16 w-16 rounded-full bg-card dark:bg-card border-2 border-destructive/20 shadow-[0_4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]"
-              style={{ boxShadow: dislikeButtonGlow }}
+            {/* Dislike button */}
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("dislike")}
+              whileTap={{ scale: 0.75 }}
+              transition={{ type: "spring", stiffness: 600, damping: 20 }}
+              style={{
+                scale: dislikeButtonScale,
+                y: dislikeButtonY,
+                x: dislikeButtonX,
+                opacity: dislikeButtonOpacity,
+              }}
+              className="relative"
             >
-              <X className="h-7 w-7 text-destructive" strokeWidth={2.5} />
-            </motion.div>
-          </motion.button>
+              <motion.div
+                className="flex items-center justify-center h-14 w-14 rounded-full bg-card dark:bg-card border border-destructive/20"
+                style={{ boxShadow: dislikeButtonGlow }}
+              >
+                <X className="h-6 w-6 text-destructive" strokeWidth={2.5} />
+              </motion.div>
+            </motion.button>
 
-          {/* Like button */}
-          <motion.button
-            onClick={() => cardRef.current?.triggerSwipe("like")}
-            whileTap={{ scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 600, damping: 20 }}
-            style={{ scale: likeButtonScale }}
-            className="relative"
-          >
-            <motion.div
-              className="flex items-center justify-center h-16 w-16 rounded-full bg-primary shadow-[0_4px_20px_hsl(var(--primary)/0.3)] dark:shadow-[0_4px_20px_hsl(var(--primary)/0.4)]"
-              style={{ boxShadow: likeButtonGlow }}
+            {/* Like button */}
+            <motion.button
+              onClick={() => cardRef.current?.triggerSwipe("like")}
+              whileTap={{ scale: 0.75 }}
+              transition={{ type: "spring", stiffness: 600, damping: 20 }}
+              style={{
+                scale: likeButtonScale,
+                y: likeButtonY,
+                x: likeButtonX,
+                opacity: likeButtonOpacity,
+              }}
+              className="relative"
             >
-              <Heart className="h-7 w-7 text-primary-foreground fill-primary-foreground" strokeWidth={2} />
-            </motion.div>
-          </motion.button>
+              <motion.div
+                className="flex items-center justify-center h-14 w-14 rounded-full bg-primary"
+                style={{ boxShadow: likeButtonGlow }}
+              >
+                <Heart className="h-6 w-6 text-primary-foreground fill-primary-foreground" strokeWidth={2} />
+              </motion.div>
+            </motion.button>
+          </motion.div>
         </div>
       )}
 
