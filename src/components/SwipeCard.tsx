@@ -3,20 +3,10 @@ import {
   useImperativeHandle,
   useCallback,
   useState,
-  useEffect,
   memo,
-  type Ref,
 } from "react";
-import {
-  motion,
-  useMotionValue,
-  useTransform,
-  animate,
-  type PanInfo,
-} from "framer-motion";
-import { MapPin, Image, Package } from "lucide-react";
-
-const SWIPE_THRESHOLD = 100;
+import { motion, animate, useMotionValue } from "framer-motion";
+import { MapPin, Image, Package, X as XIcon } from "lucide-react";
 
 export interface SwipeCardHandle {
   triggerSwipe: (direction: "like" | "dislike") => void;
@@ -25,8 +15,6 @@ export interface SwipeCardHandle {
 interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
-  onDragProgressChange?: (progress: number) => void;
-  onDragDirectionChange?: (rawX: number) => void;
   disabled?: boolean;
 }
 
@@ -50,20 +38,10 @@ const translateCondition = (raw: string | null | undefined) => {
 };
 
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragProgressChange, onDragDirectionChange, disabled }, ref) => {
-    const x = useMotionValue(0);
-
-    // Direct rotation from drag — no spring, immediate response
-    const rotate = useTransform(x, [-200, 200], [-15, 15]);
-
-    const likeOpacity = useTransform(x, [0, 80], [0, 1]);
-    const dislikeOpacity = useTransform(x, [-80, 0], [1, 0]);
-    // Stamp scale — grows from 0.5 to 1.0 (stamp/carimbo effect)
-    const likeStampScale = useTransform(x, [0, 80], [0.5, 1.0]);
-    const dislikeStampScale = useTransform(x, [-80, 0], [1.0, 0.5]);
-
-    const likeGlowOpacity = useTransform(x, [0, 60, 120], [0, 0.3, 0.8]);
-    const dislikeGlowOpacity = useTransform(x, [-120, -60, 0], [0.8, 0.3, 0]);
+  ({ item, onSwipeComplete, disabled }, ref) => {
+    const scale = useMotionValue(1);
+    const opacity = useMotionValue(1);
+    const [feedbackDirection, setFeedbackDirection] = useState<"like" | "dislike" | null>(null);
 
     // Image gallery state
     const images = item?.item_images || [];
@@ -86,118 +64,55 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
-    // Report drag progress and direction via onChange (not useTransform side-effect)
-    useEffect(() => {
-      if (disabled) return;
-      const unsubscribe = x.on("change", (latest) => {
-        const progress = Math.min(Math.abs(latest) / 200, 1);
-        onDragProgressChange?.(progress);
-        onDragDirectionChange?.(latest);
-      });
-      return unsubscribe;
-    }, [x, disabled, onDragProgressChange, onDragDirectionChange]);
-
     const doExit = useCallback(
-      (direction: "like" | "dislike", velocityX?: number) => {
+      (direction: "like" | "dislike") => {
         if (disabled) return;
-        const exitX = direction === "like" ? 600 : -600;
-        const vel = velocityX != null ? velocityX : (direction === "like" ? 800 : -800);
-        animate(x, exitX, {
-          type: "spring",
-          stiffness: 400,
-          damping: 30,
-          velocity: vel,
+        setFeedbackDirection(direction);
+
+        // Collapse: scale down + fade out
+        animate(scale, 0.85, {
+          duration: 0.3,
+          ease: [0.4, 0, 0.2, 1],
+        });
+        animate(opacity, 0, {
+          duration: 0.3,
+          ease: [0.4, 0, 0.2, 1],
           onComplete: () => {
             onSwipeComplete(direction);
           },
         });
       },
-      [disabled, x, onSwipeComplete]
+      [disabled, scale, opacity, onSwipeComplete]
     );
 
     useImperativeHandle(ref, () => ({
       triggerSwipe: (dir) => doExit(dir),
     }));
 
-    const handleDragEnd = useCallback(
-      (_: any, info: PanInfo) => {
-        const velocity = info.velocity.x;
-        const offset = info.offset.x;
-
-        if (offset > SWIPE_THRESHOLD || velocity > 500) {
-          doExit("like", velocity);
-        } else if (offset < -SWIPE_THRESHOLD || velocity < -500) {
-          doExit("dislike", velocity);
-        } else {
-          // Bouncy snap-back with subtle overshoot
-          animate(x, 0, {
-            type: "spring",
-            stiffness: 500,
-            damping: 22,
-          });
-        }
-      },
-      [doExit, x]
-    );
-
     const ownerProfile = item?.profiles as any;
     const conditionLabel = translateCondition(item?.condition);
 
     return (
       <motion.div
-        className="relative z-10 flex-1 w-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col swipe-card touch-none shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted"
+        className="relative z-10 flex-1 w-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted"
         style={{
-          x,
-          rotate,
-          transformOrigin: "50% 100%",
-          willChange: "transform",
+          scale,
+          opacity,
+          willChange: "transform, opacity",
         }}
-        drag="x"
-        dragElastic={0.75}
-        onDragEnd={handleDragEnd}
-        initial={false}
       >
-        {/* Dynamic glow borders */}
-        <motion.div
-          className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
-          style={{
-            opacity: likeGlowOpacity,
-            boxShadow: "inset 0 0 40px hsl(142 71% 45% / 0.4), 0 0 30px hsl(142 71% 45% / 0.3)",
-            border: "2px solid hsl(142 71% 45% / 0.6)",
-          }}
-        />
-        <motion.div
-          className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
-          style={{
-            opacity: dislikeGlowOpacity,
-            boxShadow: "inset 0 0 40px hsl(0 84% 60% / 0.4), 0 0 30px hsl(0 84% 60% / 0.3)",
-            border: "2px solid hsl(0 84% 60% / 0.6)",
-          }}
-        />
-
-        {/* Like/Dislike stamp overlays — with scale animation */}
-        <motion.div
-          className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
-          style={{ opacity: likeOpacity }}
-        >
-          <motion.span
-            className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl"
-            style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
-          >
-            HYPOU
-          </motion.span>
-        </motion.div>
-        <motion.div
-          className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
-          style={{ opacity: dislikeOpacity }}
-        >
-          <motion.span
-            className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
-            style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
-          >
-            PASSAR
-          </motion.span>
-        </motion.div>
+        {/* Feedback overlay — dimming + icon */}
+        {feedbackDirection && (
+          <div className="absolute inset-0 z-50 rounded-[2.5rem] flex items-center justify-center pointer-events-none">
+            <div className="absolute inset-0 bg-black/30 rounded-[2.5rem]" />
+            {feedbackDirection === "dislike" && (
+              <XIcon className="relative z-10 h-20 w-20 text-white/70" strokeWidth={2.5} />
+            )}
+            {feedbackDirection === "like" && (
+              <span className="relative z-10 text-5xl font-black text-white/70">❤️</span>
+            )}
+          </div>
+        )}
 
         {/* ===== IMAGE SECTION — top ~60% ===== */}
         <div className="relative w-full flex-[3] min-h-0 overflow-hidden" onClick={handleImageTap}>
