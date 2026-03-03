@@ -22,7 +22,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
 
   return (
     <div className="fixed bottom-6 left-5 right-5 z-50 flex justify-center">
-      <nav className="bg-secondary border border-border rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative">
+      <nav className="bg-[hsl(0_0%_18%)] border border-[hsl(0_0%_22%)] rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
