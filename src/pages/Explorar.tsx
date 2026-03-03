@@ -218,11 +218,6 @@ const Explorar = () => {
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell />
-          {progressText
-
-
-
-          }
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
