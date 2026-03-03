@@ -169,7 +169,7 @@ const MeuPerfil = () => {
               {profile?.onboarding_completed && (
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gray-900 to-black border border-primary/30 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg w-max">
                   <span className="text-primary text-[14px]">✓</span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-foreground">Conta Verificada</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white">Conta Verificada</span>
                 </div>
               )}
             </div>
