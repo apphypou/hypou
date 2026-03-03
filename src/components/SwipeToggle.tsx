@@ -22,6 +22,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
   // Bidirectional progress from center
   const rightProgress = Math.max(0, (position - CENTER) / (MAX_DRAG - CENTER)); // 0..1 green
   const leftProgress = Math.max(0, (CENTER - position) / CENTER); // 0..1 red
+  const neutralOpacity = Math.max(0, 1 - (leftProgress + rightProgress) * 3);
 
   // React to external card drag
   useMotionValueEvent(dragProgress ?? null as any, "change", (v: number) => {
@@ -156,6 +157,26 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           style={{ transition: transitionStyle }}
         >
           <circle cx="50" cy="50" r="34" fill="#FFFFFF" filter="url(#st-shadowKnob)" />
+
+          {/* Neutral directional chevrons */}
+          <g opacity={neutralOpacity * 0.25} style={{ transition: transitionStyle }}>
+            <path
+              d="M 39 44 L 34 50 L 39 56"
+              stroke="#999999"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <path
+              d="M 61 44 L 66 50 L 61 56"
+              stroke="#999999"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </g>
 
           {/* X icon (appears on left drag) */}
           <g opacity={leftProgress} style={{ transition: transitionStyle }}>
