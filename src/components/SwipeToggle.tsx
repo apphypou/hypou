@@ -171,10 +171,8 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           >
             <circle
               cx="50" cy="50" r="38"
-              fill="rgba(255,255,255,0.25)"
-              stroke={knobStroke}
-              strokeWidth={knobStrokeWidth}
-              filter="url(#st-shadowKnob)"
+              fill="transparent"
+              stroke="none"
               style={{ transition: transitionStyle }}
             />
 
