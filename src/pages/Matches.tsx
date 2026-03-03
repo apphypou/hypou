@@ -234,23 +234,24 @@ const Matches = () => {
 
             <div className="h-full w-full overflow-y-auto overflow-x-hidden no-scrollbar pb-36">
               {/* Hero image */}
-              <div className="relative w-full h-72">
+              <div className="relative w-full aspect-square max-h-[50vh] bg-card overflow-hidden">
                 {otherImages[0]?.image_url ? (
                   <img
                     src={otherImages[0].image_url}
                     alt={otherItem.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain bg-card"
                   />
                 ) : (
                   <div className="w-full h-full bg-card flex items-center justify-center">
-                    <span className="text-6xl">📦</span>
+                    <Repeat2 className="h-16 w-16 text-foreground/10" />
                   </div>
                 )}
-                
+                {/* Scrim sutil só na base para transição suave */}
+                <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
               </div>
 
               {/* Content */}
-              <div className="px-6 -mt-12 relative z-10">
+              <div className="px-6 -mt-6 relative z-10">
                 {/* Other user badge */}
                 <div className="flex items-center gap-2 mb-3">
                   {selectedMatch.other_user.avatar_url ? (
