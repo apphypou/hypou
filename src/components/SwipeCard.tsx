@@ -134,7 +134,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className={`absolute inset-0 w-full h-full rounded-[1.5rem] overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none border-[4px] border-border dark:border-primary ${
+        className={`absolute inset-0 w-full h-full ${
           standby ? "pointer-events-none" : "touch-none"
         }`}
         style={{
@@ -151,6 +151,27 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
+        {/* Liquid glass border — blurred image reflection */}
+        {currentImage && (
+          <div
+            className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0"
+            aria-hidden
+          >
+            <img
+              src={currentImage}
+              alt=""
+              className="w-full h-full object-cover scale-105 blur-xl opacity-70 dark:opacity-90 saturate-150"
+              draggable={false}
+            />
+            <div className="absolute inset-0 bg-background/30 dark:bg-black/40" />
+          </div>
+        )}
+        {!currentImage && (
+          <div className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0 bg-border dark:bg-primary/30" aria-hidden />
+        )}
+
+        {/* Inner card */}
+        <div className="absolute inset-0 rounded-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
         {/* Glow borders */}
         {!standby && (
           <>
@@ -293,6 +314,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             )}
           </div>
         </div>
+        </div>{/* close inner card */}
       </motion.div>
     );
   }
