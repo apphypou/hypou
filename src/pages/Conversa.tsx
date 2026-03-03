@@ -96,7 +96,7 @@ const Conversa = () => {
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
       {/* Header */}
-      <header className="relative z-40 flex items-center gap-3 px-4 pt-12 pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl shrink-0">
+      <header className="relative z-40 flex items-center gap-3 px-4 pt-[env(safe-area-inset-top)] pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl shrink-0">
         <button
           onClick={() => navigate("/chat")}
           className="h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all"
@@ -184,7 +184,7 @@ const Conversa = () => {
 
       {/* Input */}
       <div className="shrink-0 px-4 pb-8 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-end gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex-1 relative">
             <textarea
               value={text}
