@@ -160,7 +160,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             <img
               src={currentImage}
               alt=""
-              className="w-full h-full object-cover scale-105 blur-xl opacity-70 dark:opacity-90 saturate-150"
+              className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
               draggable={false}
             />
             <div className="absolute inset-0 bg-background/30 dark:bg-black/40" />
