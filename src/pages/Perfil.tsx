@@ -151,28 +151,31 @@ const Perfil = () => {
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} />
 
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-2">
-        <button
-          onClick={() => step > 1 && goToStep(step - 1)}
-          className={`h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all ${step === 1 ? "opacity-0 pointer-events-none" : ""}`}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
+      <header className="relative z-40 flex w-full flex-col items-center px-6 pt-12 pb-2">
+        {/* Back button */}
+        <div className="w-full flex justify-start mb-4">
+          <button
+            onClick={() => step > 1 && goToStep(step - 1)}
+            className={`h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all ${step === 1 ? "opacity-0 pointer-events-none" : ""}`}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        </div>
 
-        {/* Progress indicator with labels */}
-        <div className="flex items-center gap-3">
+        {/* Progress indicator with labels - centered */}
+        <div className="flex items-center gap-6">
           {stepLabels.map((label, i) => {
             const s = i + 1;
             const isActive = s === step;
             const isDone = s < step;
             return (
-              <div key={s} className="flex flex-col items-center gap-1">
+              <div key={s} className="flex flex-col items-center gap-1.5">
                 <div
                   className={`h-1.5 rounded-full transition-all ${
-                    isActive ? "w-8 bg-primary neon-glow" : isDone ? "w-4 bg-primary/60" : "w-2 bg-foreground/20"
+                    isActive ? "w-10 bg-primary neon-glow" : isDone ? "w-4 bg-primary/60" : "w-2 bg-foreground/20"
                   }`}
                 />
-                <span className={`text-[10px] font-medium transition-colors ${
+                <span className={`text-xs font-medium transition-colors ${
                   isActive ? "text-primary" : isDone ? "text-foreground/50" : "text-foreground/20"
                 }`}>
                   {label}
@@ -181,18 +184,6 @@ const Perfil = () => {
             );
           })}
         </div>
-
-        {step < 3 ? (
-          <button
-            onClick={handleSkip}
-            disabled={saving}
-            className="text-sm font-semibold text-foreground/40 hover:text-foreground transition-colors disabled:opacity-50"
-          >
-            Pular
-          </button>
-        ) : (
-          <div className="w-10" />
-        )}
       </header>
 
       {/* Animated Steps */}
