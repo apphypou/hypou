@@ -22,7 +22,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
 
   const rightProgress = Math.max(0, (position - CENTER) / (MAX_DRAG - CENTER));
   const leftProgress = Math.max(0, (CENTER - position) / CENTER);
-  const neutralOpacity = Math.max(0, 1 - (leftProgress + rightProgress) * 3);
+  const neutralOpacity = Math.max(0, 1 - (leftProgress + rightProgress) * 8);
 
   const knobCx = 50 + position;
   const radialCxPercent = ((knobCx - 10) / 160) * 100;
