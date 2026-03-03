@@ -1,4 +1,4 @@
-import { X, Heart, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -13,10 +13,10 @@ import { useNavigate } from "react-router-dom";
 import {
   motion,
   useMotionValue,
-  useTransform,
   AnimatePresence,
 } from "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
+import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
@@ -63,31 +63,6 @@ const Explorar = () => {
   });
 
   const dragDirectionValue = useMotionValue(0);
-
-  // Like button: grows, rises, glows when dragging right; shrinks & fades when dragging left
-  const likeButtonScale = useTransform(dragDirectionValue, [-120, 0, 120], [0.85, 1, 1.25]);
-  const likeButtonY = useTransform(dragDirectionValue, [-120, 0, 120], [3, 0, -5]);
-  const likeButtonX = useTransform(dragDirectionValue, [-120, 0, 120], [-6, 0, 6]);
-  const likeButtonOpacity = useTransform(dragDirectionValue, [-150, 0, 50], [0.45, 1, 1]);
-  const likeButtonGlow = useTransform(
-    dragDirectionValue,
-    [0, 60, 150],
-    ["0px 0px 0px hsl(142 71% 45% / 0)", "0px 0px 14px hsl(142 71% 45% / 0.35)", "0px 0px 28px hsl(142 71% 45% / 0.7)"]
-  );
-
-  // Dislike button: grows, rises, glows when dragging left; shrinks & fades when dragging right
-  const dislikeButtonScale = useTransform(dragDirectionValue, [-120, 0, 120], [1.25, 1, 0.85]);
-  const dislikeButtonY = useTransform(dragDirectionValue, [-120, 0, 120], [-5, 0, 3]);
-  const dislikeButtonX = useTransform(dragDirectionValue, [-120, 0, 120], [-6, 0, 6]);
-  const dislikeButtonOpacity = useTransform(dragDirectionValue, [-50, 0, 150], [1, 1, 0.45]);
-  const dislikeButtonGlow = useTransform(
-    dragDirectionValue,
-    [-150, -60, 0],
-    ["0px 0px 28px hsl(0 84% 60% / 0.7)", "0px 0px 14px hsl(0 84% 60% / 0.35)", "0px 0px 0px hsl(0 84% 60% / 0)"]
-  );
-
-  // Container tilt for "tension" effect
-  const containerRotate = useTransform(dragDirectionValue, [-150, 0, 150], [-2, 0, 2]);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["explore-items", user?.id],
@@ -368,76 +343,17 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Action Buttons — capsule container with competitive animation */}
+      {/* Toggle Switch */}
       {currentItem && !isLoading && filteredItems.length > 0 && (
         <div
           className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
-          <motion.div
-            className="relative flex items-center"
-            style={{ rotate: containerRotate }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-          >
-            {/* Dumbbell / bone shape connector */}
-            <svg
-              viewBox="0 0 180 72"
-              xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-              style={{ width: 180, height: 72, zIndex: 0 }}
-            >
-              <path
-                d="M36,36 C36,16 36,0 56,0 C68,0 72,16 90,20 C108,16 112,0 124,0 C144,0 144,16 144,36 C144,56 144,72 124,72 C112,72 108,56 90,52 C72,56 68,72 56,72 C36,72 36,56 36,36 Z"
-                fill="hsl(var(--card))"
-                stroke="hsl(var(--border) / 0.3)"
-                strokeWidth="1.5"
-              />
-            </svg>
-
-            {/* Dislike button */}
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("dislike")}
-              whileTap={{ scale: 0.75 }}
-              transition={{ type: "spring", stiffness: 600, damping: 20 }}
-              style={{
-                scale: dislikeButtonScale,
-                y: dislikeButtonY,
-                x: dislikeButtonX,
-                opacity: dislikeButtonOpacity,
-                zIndex: 1,
-              }}
-              className="relative"
-            >
-              <motion.div
-                className="flex items-center justify-center h-16 w-16 rounded-full bg-card border-2 border-destructive/30 shadow-lg"
-                style={{ boxShadow: dislikeButtonGlow }}
-              >
-                <X className="h-7 w-7 text-destructive" strokeWidth={2.5} />
-              </motion.div>
-            </motion.button>
-
-            {/* Like button */}
-            <motion.button
-              onClick={() => cardRef.current?.triggerSwipe("like")}
-              whileTap={{ scale: 0.75 }}
-              transition={{ type: "spring", stiffness: 600, damping: 20 }}
-              style={{
-                scale: likeButtonScale,
-                y: likeButtonY,
-                x: likeButtonX,
-                opacity: likeButtonOpacity,
-                zIndex: 1,
-              }}
-              className="relative"
-            >
-              <motion.div
-                className="flex items-center justify-center h-16 w-16 rounded-full bg-primary border-2 border-primary shadow-lg"
-                style={{ boxShadow: likeButtonGlow }}
-              >
-                <Heart className="h-7 w-7 text-primary-foreground fill-primary-foreground" strokeWidth={2} />
-              </motion.div>
-            </motion.button>
-          </motion.div>
+          <SwipeToggle
+            onSwipe={handleSwipeComplete}
+            dragProgress={dragDirectionValue}
+            disabled={swipingRef.current}
+          />
         </div>
       )}
 
