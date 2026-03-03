@@ -98,8 +98,10 @@ export const getExploreItems = async (userId: string, page = 0, pageSize = 50) =
     (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
   }
 
-  return (data || []).map((item) => ({
-    ...item,
-    profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
-  }));
+  return (data || [])
+    .filter((item) => item.item_images && item.item_images.length > 0)
+    .map((item) => ({
+      ...item,
+      profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
+    }));
 };
