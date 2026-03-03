@@ -97,21 +97,26 @@ const Matches = () => {
 
   return (
     <ScreenLayout>
-      {/* Header — single level */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-3 shrink-0">
-        <h1 className="text-foreground text-2xl font-extrabold tracking-tight">
-          Propostas de Troca
-        </h1>
+      {/* Header */}
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4 shrink-0">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
+            Suas Trocas
+          </span>
+          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+            Propostas
+          </h1>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-primary text-xs font-semibold">{activeMatches.length}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+        </div>
       </header>
 
       {/* Main Content */}
       <main className="relative flex-1 w-full px-4 overflow-y-auto no-scrollbar z-10 pb-28">
         <div className="flex items-center justify-between mb-4 mt-1">
           <h2 className="text-xs font-bold text-foreground/70 uppercase tracking-widest">Interesses Recebidos</h2>
-          <div className="flex items-center gap-1.5">
-            <span className="text-foreground/60 text-xs font-semibold">{activeMatches.length}</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-          </div>
         </div>
 
         {isLoading ? (
@@ -153,7 +158,7 @@ const Matches = () => {
                         <Repeat2 className="h-10 w-10 text-foreground/10" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/10 to-transparent" />
+                    
                     {badge && (
                       <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full border text-[10px] font-bold tracking-wider uppercase ${badgeStyles[badge.color]}`}>
                         {badge.label}
@@ -244,7 +249,7 @@ const Matches = () => {
                     <span className="text-6xl">📦</span>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                
               </div>
 
               {/* Content */}
