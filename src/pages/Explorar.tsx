@@ -379,18 +379,21 @@ const Explorar = () => {
             style={{ rotate: containerRotate }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           >
-            {/* Dumbbell connector between buttons */}
-            <div
+            {/* Dumbbell / bone shape connector */}
+            <svg
+              viewBox="0 0 180 72"
+              xmlns="http://www.w3.org/2000/svg"
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-              style={{
-                width: "48px",
-                height: "28px",
-                background: "hsl(var(--card))",
-                borderTop: "2px solid hsl(var(--border) / 0.3)",
-                borderBottom: "2px solid hsl(var(--border) / 0.3)",
-                zIndex: 0,
-              }}
-            />
+              style={{ width: 180, height: 72, zIndex: 0 }}
+            >
+              <path
+                d="M36,0 A36,36 0 1,1 36,72 A36,36 0 1,1 36,0 Z M144,0 A36,36 0 1,1 144,72 A36,36 0 1,1 144,0 Z M58,26 C75,26 105,26 122,26 L122,46 C105,46 75,46 58,46 Z"
+                fill="hsl(var(--card))"
+                stroke="hsl(var(--border) / 0.3)"
+                strokeWidth="1.5"
+                fillRule="evenodd"
+              />
+            </svg>
 
             {/* Dislike button */}
             <motion.button
