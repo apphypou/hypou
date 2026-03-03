@@ -1,21 +1,45 @@
 
 
-## Plano: Cápsula orgânica estilo referência
+## Plano: Toggle Switch SVG com arraste (like/dislike)
 
-O problema atual é que o SVG usa três formas separadas (dois círculos + retângulo) com `fillRule="evenodd"`, que não cria a curva orgânica de "cintura" visível na referência. A referência mostra uma forma contínua com curvas Bézier suaves que se estreitam no centro.
+O usuário quer substituir os dois botões separados por um **único componente toggle switch** — um SVG com forma de osso/cápsula que tem um knob arrastável. Arrasta para a esquerda = dislike (vermelho com X), arrasta para a direita = like (verde com check).
 
-### Mudança
+### O que muda
 
-Substituir o `path` atual (linha 390) por um **path único contínuo** que desenha toda a forma de osso com curvas cúbicas de Bézier, criando a cintura orgânica:
+**Componente novo:** `src/components/SwipeToggle.tsx`
+- SVG único (viewBox `0 0 180 100`) com a forma de osso (`path` com curvas Bézier e arcos)
+- Dois fundos sobrepostos: vermelho (gradiente `#E75545`→`#C53A2A`) e verde (gradiente `#76E58F`→`#4BCC6B`) com opacidade controlada pelo progresso do arraste
+- Knob branco circular (r=34) que se move horizontalmente (0 a 80 unidades SVG)
+- Ícone X (vermelho) e ícone Check (verde) dentro do knob, com opacidade inversa baseada na posição
+- Arraste via `onPointerDown/Move/Up` com `touch-action: none`
+- Ao soltar: se passou da metade → dispara like e anima snap para direita; senão → dispara dislike e anima snap para esquerda
+- Após o snap, reseta automaticamente para a posição neutra (esquerda/vermelho) para o próximo card
+- Props: `onSwipe: (direction: "like" | "dislike") => void`, `disabled?: boolean`
 
-```
-M36,36 C36,16 36,0 56,0 C68,0 72,16 90,20
-C108,16 112,0 124,0 C144,0 144,16 144,36
-C144,56 144,72 124,72 C112,72 108,56 90,52
-C72,56 68,72 56,72 C36,72 36,56 36,36 Z
-```
+**Integração com o arraste do card (animação reativa):**
+- O componente também aceita `dragProgress` (o `dragDirectionValue` existente) para reagir ao arraste do card
+- Quando o card é arrastado para a direita, o knob se move proporcionalmente para a direita e o fundo verde aparece
+- Quando arrastado para a esquerda, o knob fica fixo na esquerda e o fundo permanece vermelho
+- Isso mantém o feedback visual "competitivo" existente
 
-Este path único cria dois "lobos" conectados por uma cintura suave que se estreita naturalmente no centro, exatamente como na imagem de referência.
+**Arquivo `src/pages/Explorar.tsx`:**
+- Remover as motion values dos botões individuais (likeButtonScale, likeButtonY, etc. — linhas 68-90)
+- Remover o bloco de botões inteiro (linhas 371-442)
+- Substituir por `<SwipeToggle onSwipe={handleSwipeComplete} dragProgress={dragDirectionValue} />`
+- Remover imports não usados: `X`, `Heart` do lucide-react
+- Manter `containerRotate` se quiser inclinar o toggle com o arraste, ou remover se preferir fixo
 
-Arquivo: `src/pages/Explorar.tsx`, linhas 389-395 — apenas o `<path>` e atributos do SVG mudam. Nenhuma animação é alterada.
+### Comportamento do toggle
+
+1. **Estado neutro:** Knob na esquerda, fundo vermelho, ícone X visível
+2. **Arrastando para direita:** Knob se move, fundo verde aparece gradualmente, ícone Check aparece, X desaparece
+3. **Soltar após metade:** Snap para direita → dispara `onSwipe("like")` → reseta para estado neutro
+4. **Soltar antes da metade:** Snap para esquerda → dispara `onSwipe("dislike")` → reseta para estado neutro
+5. **Toque rápido (tap):** Alterna para o lado oposto, dispara ação correspondente, reseta
+
+### Detalhes técnicos
+
+- Filtros SVG para sombras (`feDropShadow`) no fundo e no knob
+- Transição CSS `cubic-bezier(0.4, 0, 0.2, 1)` no snap (removida durante arraste para seguir o dedo)
+- Dimensões: `width="180" height="100"` no SVG renderizado
 
