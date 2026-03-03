@@ -20,8 +20,8 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 w-full">
-      <nav className="bg-background border-t border-border px-8 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-between items-center w-full max-w-md mx-auto">
+    <div className="fixed bottom-6 left-4 right-4 z-50 flex justify-center">
+      <nav className="glass-panel rounded-[2rem] px-8 py-3 flex justify-between items-center w-full max-w-md">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
