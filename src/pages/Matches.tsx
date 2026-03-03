@@ -115,9 +115,6 @@ const Matches = () => {
 
       {/* Main Content */}
       <main className="relative flex-1 w-full px-4 overflow-y-auto no-scrollbar z-10 pb-28">
-        <div className="flex items-center justify-between mb-4 mt-1">
-          <h2 className="text-xs font-bold text-foreground/70 uppercase tracking-widest">Interesses Recebidos</h2>
-        </div>
 
         {isLoading ? (
           <div className="flex flex-col gap-4 py-2">
