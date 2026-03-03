@@ -1,45 +1,53 @@
 
 
-## Plano: Toggle Switch SVG com arraste (like/dislike)
+## Plano: Toggle neutro no centro com animação bidirecional
 
-O usuário quer substituir os dois botões separados por um **único componente toggle switch** — um SVG com forma de osso/cápsula que tem um knob arrastável. Arrasta para a esquerda = dislike (vermelho com X), arrasta para a direita = like (verde com check).
+### Problema atual
+O knob começa fixo na esquerda (posição 0 = dislike/vermelho). O usuário quer que ele comece **no centro** (neutro), sem cor definida, e que a animação de cor/ícone **apareça gradualmente a partir do centro** conforme o arraste.
 
-### O que muda
+### Mudanças em `src/components/SwipeToggle.tsx`
 
-**Componente novo:** `src/components/SwipeToggle.tsx`
-- SVG único (viewBox `0 0 180 100`) com a forma de osso (`path` com curvas Bézier e arcos)
-- Dois fundos sobrepostos: vermelho (gradiente `#E75545`→`#C53A2A`) e verde (gradiente `#76E58F`→`#4BCC6B`) com opacidade controlada pelo progresso do arraste
-- Knob branco circular (r=34) que se move horizontalmente (0 a 80 unidades SVG)
-- Ícone X (vermelho) e ícone Check (verde) dentro do knob, com opacidade inversa baseada na posição
-- Arraste via `onPointerDown/Move/Up` com `touch-action: none`
-- Ao soltar: se passou da metade → dispara like e anima snap para direita; senão → dispara dislike e anima snap para esquerda
-- Após o snap, reseta automaticamente para a posição neutra (esquerda/vermelho) para o próximo card
-- Props: `onSwipe: (direction: "like" | "dislike") => void`, `disabled?: boolean`
+**1. Posição neutra no centro**
+- `position` começa em `MAX_DRAG / 2` (40) em vez de `0`
+- O knob fica centralizado na cápsula no repouso
 
-**Integração com o arraste do card (animação reativa):**
-- O componente também aceita `dragProgress` (o `dragDirectionValue` existente) para reagir ao arraste do card
-- Quando o card é arrastado para a direita, o knob se move proporcionalmente para a direita e o fundo verde aparece
-- Quando arrastado para a esquerda, o knob fica fixo na esquerda e o fundo permanece vermelho
-- Isso mantém o feedback visual "competitivo" existente
+**2. Fundo neutro (cinza/transparente) no centro**
+- Fundo base muda de vermelho fixo para um **cinza neutro** (ex: `#D0D0D0` → `#B8B8B8`)
+- Vermelho e verde são ambos camadas sobrepostas com opacidade baseada na direção:
+  - Arrastando para a **direita** do centro → fundo verde aparece (opacidade proporcional)
+  - Arrastando para a **esquerda** do centro → fundo vermelho aparece (opacidade proporcional)
+  - No centro → ambos com opacidade 0, só o cinza neutro visível
 
-**Arquivo `src/pages/Explorar.tsx`:**
-- Remover as motion values dos botões individuais (likeButtonScale, likeButtonY, etc. — linhas 68-90)
-- Remover o bloco de botões inteiro (linhas 371-442)
-- Substituir por `<SwipeToggle onSwipe={handleSwipeComplete} dragProgress={dragDirectionValue} />`
-- Remover imports não usados: `X`, `Heart` do lucide-react
-- Manter `containerRotate` se quiser inclinar o toggle com o arraste, ou remover se preferir fixo
+**3. Ícones com fade bidirecional**
+- No centro: ambos X e Check com opacidade 0 (ou baixíssima ~0.15 para hint sutil)
+- Arrastar para esquerda: X aparece gradualmente, Check desaparece
+- Arrastar para direita: Check aparece gradualmente, X desaparece
 
-### Comportamento do toggle
+**4. Lógica de progresso bidirecional**
+- `progress` passa de `0..1` linear para um cálculo bidirecional:
+  - `rightProgress = Math.max(0, (position - CENTER) / (MAX_DRAG - CENTER))` → 0..1 para verde/check
+  - `leftProgress = Math.max(0, (CENTER - position) / CENTER)` → 0..1 para vermelho/X
+- CENTER = MAX_DRAG / 2 = 40
 
-1. **Estado neutro:** Knob na esquerda, fundo vermelho, ícone X visível
-2. **Arrastando para direita:** Knob se move, fundo verde aparece gradualmente, ícone Check aparece, X desaparece
-3. **Soltar após metade:** Snap para direita → dispara `onSwipe("like")` → reseta para estado neutro
-4. **Soltar antes da metade:** Snap para esquerda → dispara `onSwipe("dislike")` → reseta para estado neutro
-5. **Toque rápido (tap):** Alterna para o lado oposto, dispara ação correspondente, reseta
+**5. Arraste e snap**
+- `handlePointerDown`: base de arraste é a posição atual (centro)
+- `handlePointerUp`: 
+  - Se posição > 60 (75% do caminho) → snap right → like → reset ao centro
+  - Se posição < 20 (25% do caminho) → snap left → dislike → reset ao centro
+  - Entre 20-60 → snap de volta ao centro (sem ação)
+- Reset sempre volta para `CENTER` (40) em vez de 0
 
-### Detalhes técnicos
+**6. Integração com card drag (`dragProgress`)**
+- Mapear `dragProgress` (-150..150) para posição (0..MAX_DRAG) com centro em 40:
+  - Valor positivo → move knob para direita do centro
+  - Valor negativo → move knob para esquerda do centro
+- Reset externo volta ao centro
 
-- Filtros SVG para sombras (`feDropShadow`) no fundo e no knob
-- Transição CSS `cubic-bezier(0.4, 0, 0.2, 1)` no snap (removida durante arraste para seguir o dedo)
-- Dimensões: `width="180" height="100"` no SVG renderizado
+**7. Tap desativado** (ou tap alterna entre os dois lados com passagem pelo centro)
+
+### Resultado visual
+- Repouso: cápsula cinza neutra, knob no meio, sem ícone visível
+- Arrastar direita: verde aparece suavemente, check surge no knob
+- Arrastar esquerda: vermelho aparece suavemente, X surge no knob
+- Soltar sem comprometimento: volta suavemente ao centro neutro
 
