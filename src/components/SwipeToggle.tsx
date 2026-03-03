@@ -24,10 +24,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
   const leftProgress = Math.max(0, (CENTER - position) / CENTER);
   const neutralOpacity = Math.max(0, 1 - (leftProgress + rightProgress) * 3);
 
-  // Knob center in SVG coords: pill starts at x=10, knob cx=50 at position=0
-  // So knob cx = 50 + position. At CENTER(40), cx=90 (middle of 180-wide SVG)
   const knobCx = 50 + position;
-  // Radial gradient center as percentage of pill width (10..170 = 160 wide)
   const radialCxPercent = ((knobCx - 10) / 160) * 100;
 
   useMotionValueEvent(dragProgress ?? null as any, "change", (v: number) => {
@@ -103,6 +100,16 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
 
   const knobScale = snapping ? 1.15 : 1;
 
+  // Determine stroke color: cyan (primary) when neutral, red/green when dragging
+  const knobStroke =
+    leftProgress > 0.05
+      ? `rgba(231, 85, 69, ${leftProgress})`
+      : rightProgress > 0.05
+        ? `rgba(75, 204, 107, ${rightProgress})`
+        : "hsl(var(--primary))";
+
+  const knobStrokeWidth = leftProgress > 0.05 || rightProgress > 0.05 ? 4 : 2.5;
+
   return (
     <div
       className="select-none"
@@ -114,10 +121,6 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
     >
       <svg viewBox="0 0 180 100" width="140" height="78" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="st-neutralBg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#E8E8ED" />
-            <stop offset="100%" stopColor="#D8D8DE" />
-          </linearGradient>
           <radialGradient id="st-redRadial" cx={`${radialCxPercent}%`} cy="50%" r="60%">
             <stop offset="0%" stopColor="#E75545" stopOpacity="1" />
             <stop offset="100%" stopColor="#E75545" stopOpacity="0" />
@@ -134,10 +137,10 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           </filter>
         </defs>
 
-        {/* Pill background */}
+        {/* Pill background — themed via CSS vars */}
         <rect
           x="10" y="10" width="160" height="80" rx="40"
-          fill="url(#st-neutralBg)"
+          fill="hsl(var(--secondary))"
           filter="url(#st-shadowBg)"
         />
 
@@ -168,15 +171,9 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           >
             <circle
               cx="50" cy="50" r="38"
-              fill="#FFFFFF"
-              stroke={
-                leftProgress > 0.05
-                  ? `rgba(231, 85, 69, ${leftProgress})`
-                  : rightProgress > 0.05
-                    ? `rgba(75, 204, 107, ${rightProgress})`
-                    : "rgba(0,0,0,0.08)"
-              }
-              strokeWidth={leftProgress > 0.05 || rightProgress > 0.05 ? 4 : 1.5}
+              fill="hsl(var(--card))"
+              stroke={knobStroke}
+              strokeWidth={knobStrokeWidth}
               filter="url(#st-shadowKnob)"
               style={{ transition: transitionStyle }}
             />
@@ -185,7 +182,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
             <g opacity={neutralOpacity * 0.5} style={{ transition: transitionStyle }}>
               <path
                 d="M 39 44 L 34 50 L 39 56"
-                stroke="#999999"
+                stroke="hsl(var(--primary))"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -193,7 +190,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
               />
               <path
                 d="M 61 44 L 66 50 L 61 56"
-                stroke="#999999"
+                stroke="hsl(var(--primary))"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
