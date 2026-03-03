@@ -1,6 +1,7 @@
 import { Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { motion, AnimatePresence } from "framer-motion";
 
 type TabId = "explorar" | "trocas" | "chat" | "perfil";
 
@@ -21,28 +22,29 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
 
   return (
     <div className="fixed bottom-6 left-5 right-5 z-50 flex justify-center">
-      <nav className="bg-secondary border border-border rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md">
+      <nav className="bg-secondary border border-border rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${
-                isActive
-                  ? "h-12 w-16 bg-foreground"
-                  : "h-10 flex-1"
-              }`}
+              className="relative flex items-center justify-center rounded-full h-12 flex-1 z-10"
             >
+              {isActive && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 bg-foreground rounded-full"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
               <item.icon
-                className={`h-5 w-5 transition-all duration-300 ${
-                  isActive
-                    ? "text-background"
-                    : "text-muted-foreground"
+                className={`h-5 w-5 relative z-10 transition-colors duration-200 ${
+                  isActive ? "text-background" : "text-muted-foreground"
                 }`}
               />
               {item.badge && item.badge > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center z-20">
                   {item.badge > 99 ? "99+" : item.badge}
                 </span>
               )}
