@@ -1,31 +1,21 @@
 
 
-## Plano: Cápsula formato haltere/osso com SVG
+## Plano: Cápsula orgânica estilo referência
 
-O conector atual é um retângulo simples entre os botões. Precisa virar uma forma orgânica de "osso/haltere" — dois círculos conectados por uma cintura estreita, como na imagem de referência.
+O problema atual é que o SVG usa três formas separadas (dois círculos + retângulo) com `fillRule="evenodd"`, que não cria a curva orgânica de "cintura" visível na referência. A referência mostra uma forma contínua com curvas Bézier suaves que se estreitam no centro.
 
-### Abordagem
+### Mudança
 
-Substituir o `div` retângulo (linhas 382-393) por um **SVG inline** com um `path` que desenha a forma de osso/haltere corretamente. A falha anterior do SVG foi por dimensões e coordenadas erradas.
+Substituir o `path` atual (linha 390) por um **path único contínuo** que desenha toda a forma de osso com curvas cúbicas de Bézier, criando a cintura orgânica:
 
-### Implementação (linhas 382-393 de `src/pages/Explorar.tsx`)
-
-Remover o `div` conector e substituir por um SVG absoluto que:
-
-1. **Viewbox `0 0 180 72`** — proporção que cobre os dois botões (`h-16 w-16` = 64px cada, ~180px total com gap)
-2. **Path com curvas Bézier** formando dois círculos (raio 36) nas extremidades conectados por uma cintura estreita (~20px de altura) no centro
-3. **Posicionamento absoluto** centralizado atrás dos botões com `z-0`
-4. **Estilo**: `fill` usando `hsl(var(--card))`, `stroke` usando `hsl(var(--border))` com opacidade
-
-O path será algo como:
 ```
-M36,0 A36,36 0 1,1 36,72 A36,36 0 1,1 36,0 Z  (círculo esquerdo)
-M144,0 A36,36 0 1,1 144,72 A36,36 0 1,1 144,0 Z  (círculo direito)
-M60,26 C70,26 110,26 120,26 L120,46 C110,46 70,46 60,46 Z  (cintura com curvas)
+M36,36 C36,16 36,0 56,0 C68,0 72,16 90,20
+C108,16 112,0 124,0 C144,0 144,16 144,36
+C144,56 144,72 124,72 C112,72 108,56 90,52
+C72,56 68,72 56,72 C36,72 36,56 36,36 Z
 ```
 
-Usando `fillRule="evenodd"` para unir as formas. Os botões continuam com `zIndex: 1` para ficarem acima do SVG.
+Este path único cria dois "lobos" conectados por uma cintura suave que se estreita naturalmente no centro, exatamente como na imagem de referência.
 
-### Todas as animações competitivas são preservadas
-- `containerRotate`, scale/y/x/opacity/glow de ambos os botões permanecem inalterados.
+Arquivo: `src/pages/Explorar.tsx`, linhas 389-395 — apenas o `<path>` e atributos do SVG mudam. Nenhuma animação é alterada.
 
