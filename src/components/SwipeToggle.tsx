@@ -169,9 +169,16 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
             <circle
               cx="50" cy="50" r="38"
               fill="#FFFFFF"
-              stroke="rgba(0,0,0,0.08)"
-              strokeWidth="1.5"
+              stroke={
+                leftProgress > 0.05
+                  ? `rgba(231, 85, 69, ${leftProgress})`
+                  : rightProgress > 0.05
+                    ? `rgba(75, 204, 107, ${rightProgress})`
+                    : "rgba(0,0,0,0.08)"
+              }
+              strokeWidth={leftProgress > 0.05 || rightProgress > 0.05 ? 4 : 1.5}
               filter="url(#st-shadowKnob)"
+              style={{ transition: transitionStyle }}
             />
 
             {/* Neutral directional chevrons */}
