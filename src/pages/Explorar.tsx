@@ -13,22 +13,22 @@ import { useNavigate } from "react-router-dom";
 import {
   motion,
   useMotionValue,
-  AnimatePresence,
-} from "framer-motion";
+  AnimatePresence } from
+"framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
-  { emoji: "📱", label: "Celulares" },
-  { emoji: "🚗", label: "Carros & Motos" },
-  { emoji: "👕", label: "Moda" },
-  { emoji: "🛋️", label: "Casa" },
-  { emoji: "🎮", label: "Videogames" },
-];
+{ emoji: "📱", label: "Celulares" },
+{ emoji: "🚗", label: "Carros & Motos" },
+{ emoji: "👕", label: "Moda" },
+{ emoji: "🛋️", label: "Casa" },
+{ emoji: "🎮", label: "Videogames" }];
+
 
 const formatValue = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 const Explorar = () => {
   const { user } = useAuth();
@@ -53,13 +53,13 @@ const Explorar = () => {
   const { data: userCategories = [] } = useQuery({
     queryKey: ["user-categories", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("user_categories")
-        .select("category")
-        .eq("user_id", user!.id);
+      const { data } = await supabase.
+      from("user_categories").
+      select("category").
+      eq("user_id", user!.id);
       return (data || []).map((c) => c.category);
     },
-    enabled: !!user,
+    enabled: !!user
   });
 
   const dragDirectionValue = useMotionValue(0);
@@ -69,7 +69,7 @@ const Explorar = () => {
     queryFn: () => getExploreItems(user!.id),
     enabled: !!user,
     staleTime: Infinity,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false
   });
 
   useEffect(() => {
@@ -138,12 +138,12 @@ const Explorar = () => {
           await createSwipe(user.id, itemId, direction);
           if (direction === "like") {
             const { supabase } = await import("@/integrations/supabase/client");
-            const { data: newMatches } = await supabase
-              .from("matches")
-              .select("id, created_at")
-              .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-              .order("created_at", { ascending: false })
-              .limit(1);
+            const { data: newMatches } = await supabase.
+            from("matches").
+            select("id, created_at").
+            or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`).
+            order("created_at", { ascending: false }).
+            limit(1);
             if (newMatches && newMatches.length > 0) {
               const matchAge = Date.now() - new Date(newMatches[0].created_at).getTime();
               if (matchAge < 5000) {
@@ -200,9 +200,9 @@ const Explorar = () => {
     }
   }, [afterNextImage]);
 
-  const progressText = filteredItems.length > 0
-    ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
-    : "";
+  const progressText = filteredItems.length > 0 ?
+  `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}` :
+  "";
 
   return (
     <ScreenLayout>
@@ -218,17 +218,17 @@ const Explorar = () => {
         </div>
         <div className="flex items-center gap-2">
           <NotificationBell />
-          {progressText && (
-            <span className="text-foreground/30 text-xs font-bold tabular-nums tracking-wider">
-              {progressText}
-            </span>
-          )}
+          {progressText
+
+
+
+          }
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
-              showFilters || activeFilter ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
-            }`}
-          >
+            showFilters || activeFilter ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"}`
+            }>
+            
             <Filter className="h-4 w-4" />
           </button>
         </div>
@@ -236,56 +236,56 @@ const Explorar = () => {
 
       {/* Category filter chips */}
       <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden px-6 shrink-0 z-30"
-          >
+        {showFilters &&
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: "auto", opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="overflow-hidden px-6 shrink-0 z-30">
+          
             <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
               <button
-                onClick={() => setActiveFilter(null)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                  !activeFilter
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-foreground/10 text-foreground/50"
-                }`}
-              >
+              onClick={() => setActiveFilter(null)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              !activeFilter ?
+              "bg-primary text-primary-foreground" :
+              "bg-card border border-foreground/10 text-foreground/50"}`
+              }>
+              
                 Todos
               </button>
               {allCategories.map((cat) => {
-                const isUserPref = userCategories.includes(cat.label);
-                return (
-                  <button
-                    key={cat.label}
-                    onClick={() => setActiveFilter(activeFilter === cat.label ? null : cat.label)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                      activeFilter === cat.label
-                        ? "bg-primary text-primary-foreground"
-                        : isUserPref
-                          ? "bg-primary/10 border border-primary/30 text-primary"
-                          : "bg-card border border-foreground/10 text-foreground/50"
-                    }`}
-                  >
+              const isUserPref = userCategories.includes(cat.label);
+              return (
+                <button
+                  key={cat.label}
+                  onClick={() => setActiveFilter(activeFilter === cat.label ? null : cat.label)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                  activeFilter === cat.label ?
+                  "bg-primary text-primary-foreground" :
+                  isUserPref ?
+                  "bg-primary/10 border border-primary/30 text-primary" :
+                  "bg-card border border-foreground/10 text-foreground/50"}`
+                  }>
+                  
                     {cat.emoji} {cat.label}
-                  </button>
-                );
-              })}
+                  </button>);
+
+            })}
             </div>
           </motion.div>
-        )}
+        }
       </AnimatePresence>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-6 pb-32 mt-4 z-10 max-h-[calc(100dvh-10rem)]">
-        {isLoading ? (
-          <div className="flex-1 flex items-center justify-center w-full">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10">
+        {isLoading ?
+        <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+          </div> :
+        filteredItems.length === 0 ?
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
             <span className="text-6xl mb-4">🔍</span>
             <h2 className="text-xl font-bold text-foreground mb-2">
               {activeFilter ? `Sem itens em "${activeFilter}"` : "Sem itens por agora"}
@@ -293,73 +293,73 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">
               {activeFilter ? "Tente outra categoria ou remova o filtro." : "Volte mais tarde para encontrar novas trocas!"}
             </p>
-            {activeFilter && (
-              <button
-                onClick={() => setActiveFilter(null)}
-                className="mt-4 text-primary text-xs font-bold uppercase tracking-wider"
-              >
+            {activeFilter &&
+          <button
+            onClick={() => setActiveFilter(null)}
+            className="mt-4 text-primary text-xs font-bold uppercase tracking-wider">
+            
                 Limpar filtro
               </button>
-            )}
-          </div>
-        ) : currentItem ? (
-          <div className="relative w-full h-full">
+          }
+          </div> :
+        currentItem ?
+        <div className="relative w-full h-full">
             {/* Streak indicator */}
             <AnimatePresence>
-              {showStreak && likeStreak >= 3 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="absolute -top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 backdrop-blur-xl"
-                >
+              {showStreak && likeStreak >= 3 &&
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -20 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="absolute -top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 backdrop-blur-xl">
+              
                   <span className="text-lg">🔥</span>
                   <span className="text-primary text-sm font-bold">{likeStreak} curtidas seguidas!</span>
                 </motion.div>
-              )}
+            }
             </AnimatePresence>
 
             {/* Next card — pre-rendered behind, ready to appear instantly */}
-            {nextItem && nextItem.id !== currentItem.id && (
-              <SwipeCard
-                key={`standby-${nextItem.id}`}
-                item={nextItem}
-                onSwipeComplete={() => {}}
-                standby
-              />
-            )}
+            {nextItem && nextItem.id !== currentItem.id &&
+          <SwipeCard
+            key={`standby-${nextItem.id}`}
+            item={nextItem}
+            onSwipeComplete={() => {}}
+            standby />
+
+          }
 
             {/* Active draggable card */}
             <SwipeCard
-              key={`active-${currentItem.id}-${epoch}`}
-              ref={cardRef}
-              item={currentItem}
-              onSwipeComplete={handleSwipeComplete}
-              onDragDirectionChange={handleDragDirectionChange}
-              disabled={swipingRef.current}
-            />
-          </div>
-        ) : null}
+            key={`active-${currentItem.id}-${epoch}`}
+            ref={cardRef}
+            item={currentItem}
+            onSwipeComplete={handleSwipeComplete}
+            onDragDirectionChange={handleDragDirectionChange}
+            disabled={swipingRef.current} />
+          
+          </div> :
+        null}
       </main>
 
       {/* Toggle Switch */}
-      {currentItem && !isLoading && filteredItems.length > 0 && (
-        <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
-        >
+      {currentItem && !isLoading && filteredItems.length > 0 &&
+      <div
+        className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}>
+        
           <SwipeToggle
-            onSwipe={handleSwipeComplete}
-            dragProgress={dragDirectionValue}
-            disabled={swipingRef.current}
-          />
+          onSwipe={handleSwipeComplete}
+          dragProgress={dragDirectionValue}
+          disabled={swipingRef.current} />
+        
         </div>
-      )}
+      }
 
       <BottomNav activeTab="explorar" />
-    </ScreenLayout>
-  );
+    </ScreenLayout>);
+
 };
 
 export default Explorar;
