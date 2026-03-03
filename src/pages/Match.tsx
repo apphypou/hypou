@@ -73,13 +73,14 @@ const Match = () => {
   return (
     <div className="relative flex h-[100dvh] w-full flex-col bg-background overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0f2223] to-[#050f0f]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background to-background" />
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
 
       {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-60">
         <Star className="absolute top-[15%] left-[10%] h-5 w-5 text-primary animate-float fill-primary" />
         <Diamond className="absolute top-[25%] right-[15%] h-3 w-3 text-primary animate-float-delayed opacity-60" />
-        <div className="absolute top-[10%] left-[50%] h-2 w-2 rounded-full bg-foreground/40 animate-pulse" />
+        <div className="absolute top-[10%] left-[50%] h-2 w-2 rounded-full bg-primary/40 animate-pulse" />
         <Sparkles className="absolute bottom-[40%] left-[5%] h-4 w-4 text-primary/50 animate-float-delayed rotate-45" />
         <ArrowUpRight className="absolute bottom-[30%] right-[10%] h-3 w-3 text-primary animate-pulse" />
       </div>
@@ -94,7 +95,7 @@ const Match = () => {
         </button>
         <div className="flex items-center gap-1 opacity-50">
           <Zap className="h-4 w-4 text-primary fill-primary" />
-          <span className="text-foreground text-xs font-bold tracking-widest uppercase">Troca!</span>
+          <span className="text-primary text-xs font-bold tracking-widest uppercase">Troca!</span>
         </div>
         <div className="h-10 w-10" />
       </div>
@@ -108,7 +109,7 @@ const Match = () => {
 
           {/* Left Image - My item */}
           <div className="relative z-10 animate-float">
-            <div className="w-32 h-32 rounded-full border-4 border-[#0f2223] overflow-hidden shadow-2xl ring-2 ring-primary/50 translate-x-4">
+            <div className="w-32 h-32 rounded-full border-4 border-background overflow-hidden shadow-2xl ring-2 ring-primary/50 translate-x-4">
               {myImage ? (
                 <img src={myImage} alt={myItem.name} className="w-full h-full object-cover" />
               ) : (
@@ -118,13 +119,13 @@ const Match = () => {
           </div>
 
           {/* Center Match Icon */}
-          <div className="absolute z-30 bg-primary text-primary-foreground rounded-full p-2 border-4 border-[#0f2223] shadow-lg neon-glow scale-125">
+          <div className="absolute z-30 bg-primary text-primary-foreground rounded-full p-2 border-4 border-background shadow-lg neon-glow scale-125">
             <Handshake className="h-6 w-6" />
           </div>
 
           {/* Right Image - Their item */}
           <div className="relative z-20 animate-float-delayed">
-            <div className="w-32 h-32 rounded-full border-4 border-[#0f2223] overflow-hidden shadow-2xl ring-2 ring-primary/50 -translate-x-4">
+            <div className="w-32 h-32 rounded-full border-4 border-background overflow-hidden shadow-2xl ring-2 ring-primary/50 -translate-x-4">
               {theirImage ? (
                 <img src={theirImage} alt={theirItem.name} className="w-full h-full object-cover" />
               ) : (
@@ -140,16 +141,16 @@ const Match = () => {
             Troca <br />
             <span className="text-primary text-glow">Confirmada!</span>
           </h1>
-          <p className="text-muted-foreground text-base font-normal leading-relaxed max-w-xs mx-auto">
-            Você e <span className="text-foreground font-semibold">{match.other_user.display_name || "alguém"}</span> têm interesse em trocar itens.
+          <p className="text-foreground/70 text-base font-normal leading-relaxed max-w-xs mx-auto">
+            Você e <span className="text-primary font-semibold">{match.other_user.display_name || "alguém"}</span> têm interesse em trocar itens.
           </p>
           {/* Matched Asset Detail */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-foreground/5 rounded-full border border-foreground/5 mt-2">
-            <span className="text-foreground/70 text-xs font-medium">{myItem.name}</span>
+            <span className="text-foreground text-xs font-medium">{myItem.name}</span>
             <svg className="h-3 w-3 text-primary mx-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M7 16l5-5-5-5M17 8l-5 5 5 5" />
             </svg>
-            <span className="text-foreground/70 text-xs font-medium">{theirItem.name}</span>
+            <span className="text-foreground text-xs font-medium">{theirItem.name}</span>
           </div>
         </div>
       </div>
