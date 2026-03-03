@@ -112,7 +112,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      <svg viewBox="0 0 180 100" width="180" height="100" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 180 100" width="140" height="78" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="st-neutralBg" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#E8E8ED" />
