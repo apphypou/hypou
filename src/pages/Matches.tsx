@@ -1,4 +1,4 @@
-import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2 } from "lucide-react";
+import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft } from "lucide-react";
 import { useMemo } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -223,13 +223,13 @@ const Matches = () => {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md"
           >
-            {/* Close button */}
+            {/* Back button */}
             <button
               onClick={() => setSelectedMatch(null)}
-              className="absolute top-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-foreground/10 text-foreground/70 hover:bg-foreground/20 transition-colors"
+              className="absolute top-4 left-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-foreground/10 text-foreground/70 hover:bg-foreground/20 transition-colors"
               style={{ marginTop: "env(safe-area-inset-top)" }}
             >
-              <XIcon className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" />
             </button>
 
             <div className="h-full w-full overflow-y-auto overflow-x-hidden no-scrollbar pb-36">
