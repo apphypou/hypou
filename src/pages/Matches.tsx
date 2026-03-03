@@ -26,6 +26,7 @@ const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<MatchWithDetails | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
 
   const handleRejectMatch = useCallback(async () => {
     if (!selectedMatch || rejecting) return;
@@ -341,9 +342,9 @@ const Matches = () => {
                     <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-3">Mais fotos</p>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar">
                       {otherImages.slice(1).map((img, i) => (
-                        <div key={i} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
+                        <button key={i} onClick={() => setZoomedImage(img.image_url)} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
                           <img src={img.image_url} alt="" className="w-full h-full object-cover" />
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -404,6 +405,33 @@ const Matches = () => {
                 </div>
               )}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Zoomed image overlay */}
+      <AnimatePresence>
+        {zoomedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center"
+            onClick={() => setZoomedImage(null)}
+          >
+            <button
+              onClick={() => setZoomedImage(null)}
+              className="absolute top-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              style={{ marginTop: "env(safe-area-inset-top)" }}
+            >
+              <XIcon className="h-5 w-5" />
+            </button>
+            <img
+              src={zoomedImage}
+              alt=""
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
+            />
           </motion.div>
         )}
       </AnimatePresence>
