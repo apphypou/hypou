@@ -151,9 +151,9 @@ const Perfil = () => {
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} />
 
       {/* Header */}
-      <header className="relative z-40 flex w-full flex-col items-center px-6 pt-12 pb-2">
+      <header className="relative z-40 flex w-full flex-col items-center px-6 pt-6 pb-2">
         {/* Back button */}
-        <div className="w-full flex justify-start mb-4">
+        <div className="w-full flex justify-start mb-2">
           <button
             onClick={() => step > 1 && goToStep(step - 1)}
             className={`h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all ${step === 1 ? "opacity-0 pointer-events-none" : ""}`}
@@ -199,9 +199,8 @@ const Perfil = () => {
             transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
             className="flex-1 flex flex-col overflow-hidden"
           >
-            <main className="relative flex-1 flex flex-col w-full px-6 pt-6 pb-8 z-10 overflow-y-auto no-scrollbar">
-              <div className="flex flex-col mb-8 items-center text-center">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">Bem-vindo.</h1>
+            <main className="relative flex-1 flex flex-col w-full px-6 pt-4 pb-8 z-10 overflow-y-auto no-scrollbar">
+              <div className="flex flex-col mb-6 items-center text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-foreground mb-3">
                   Crie <span className="text-primary text-glow">seu perfil</span>
                 </h2>
