@@ -76,6 +76,50 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
   });
 };
 
+export const createProposal = async (
+  userId: string,
+  myItemId: string,
+  theirItemId: string,
+  theirUserId: string
+) => {
+  const { data, error } = await supabase
+    .from("matches")
+    .insert({
+      user_a_id: userId,
+      user_b_id: theirUserId,
+      item_a_id: myItemId,
+      item_b_id: theirItemId,
+      status: "proposal",
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data;
+};
+
+export const acceptProposal = async (matchId: string) => {
+  // Update status to accepted
+  const { error: updateError } = await supabase
+    .from("matches")
+    .update({ status: "accepted" })
+    .eq("id", matchId);
+  if (updateError) throw updateError;
+
+  // Create conversation
+  const { error: convError } = await supabase
+    .from("conversations")
+    .insert({ match_id: matchId });
+  if (convError) throw convError;
+};
+
+export const rejectProposal = async (matchId: string) => {
+  const { error } = await supabase
+    .from("matches")
+    .update({ status: "rejected" })
+    .eq("id", matchId);
+  if (error) throw error;
+};
+
 export const getMatch = async (matchId: string, userId: string): Promise<MatchWithDetails | null> => {
   const { data, error } = await supabase
     .from("matches")
