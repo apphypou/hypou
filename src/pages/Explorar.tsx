@@ -345,6 +345,7 @@ const Explorar = () => {
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}>
         
           <SwipeToggle
+          key={`toggle-${epoch}`}
           onSwipe={handleSwipeComplete}
           dragProgress={dragDirectionValue}
           disabled={swipingRef.current} />
