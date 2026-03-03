@@ -170,7 +170,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
               cx="50" cy="50" r="38"
               fill="#FFFFFF"
               stroke="rgba(0,0,0,0.08)"
-              strokeWidth="1"
+              strokeWidth="1.5"
               filter="url(#st-shadowKnob)"
             />
 
@@ -199,7 +199,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
               <path
                 d="M 38 38 L 62 62 M 62 38 L 38 62"
                 stroke="#E75545"
-                strokeWidth="8"
+                strokeWidth="10"
                 strokeLinecap="round"
               />
             </g>
@@ -209,7 +209,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
               <path
                 d="M 38 52 L 46 60 L 62 40"
                 stroke="#4BCC6B"
-                strokeWidth="8"
+                strokeWidth="10"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
