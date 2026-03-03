@@ -140,11 +140,10 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
         {/* Pill background — liquid glass */}
         <rect
           x="10" y="10" width="160" height="80" rx="40"
-          fill="rgba(255,255,255,0.15)"
-          stroke="rgba(255,255,255,0.2)"
-          strokeWidth="1"
+          fill="rgba(255,255,255,0.06)"
+          stroke="none"
           filter="url(#st-shadowBg)"
-          className="dark:fill-[rgba(255,255,255,0.1)] dark:stroke-[rgba(255,255,255,0.1)]"
+          className="dark:fill-[rgba(255,255,255,0.04)]"
         />
 
         {/* Red radial glow (left drag) */}
