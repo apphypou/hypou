@@ -114,7 +114,7 @@ const MeuPerfil = () => {
   if (isLoading) {
     return (
       <ScreenLayout>
-        <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
+        <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4">
           <div className="flex items-center gap-3">
             <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
             <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Meu Perfil</span>
@@ -138,7 +138,7 @@ const MeuPerfil = () => {
   return (
     <ScreenLayout>
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-12 pb-4">
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4">
         <div className="flex items-center gap-3">
           <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
           <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Meu Perfil</span>
