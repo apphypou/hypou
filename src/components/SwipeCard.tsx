@@ -134,7 +134,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className={`absolute inset-0 w-full h-full rounded-[2.5rem] overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none border-[4px] border-border ${
+        className={`absolute inset-0 w-full h-full rounded-[1.5rem] overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none border-[4px] border-border ${
           standby ? "pointer-events-none" : "touch-none"
         }`}
         style={{
@@ -155,7 +155,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {!standby && (
           <>
             <motion.div
-              className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
+              className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
               style={{
                 opacity: likeGlowOpacity,
                 boxShadow: "inset 0 0 40px hsl(142 71% 45% / 0.4), 0 0 30px hsl(142 71% 45% / 0.3)",
@@ -163,7 +163,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               }}
             />
             <motion.div
-              className="absolute inset-0 z-40 rounded-[2.5rem] pointer-events-none"
+              className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
               style={{
                 opacity: dislikeGlowOpacity,
                 boxShadow: "inset 0 0 40px hsl(0 84% 60% / 0.4), 0 0 30px hsl(0 84% 60% / 0.3)",
@@ -173,7 +173,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
             {/* Like/Dislike stamps */}
             <motion.div
-              className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
+              className="absolute inset-0 z-50 rounded-[1.5rem] pointer-events-none flex items-center justify-center"
               style={{ opacity: likeOpacity }}
             >
               <motion.span
@@ -184,7 +184,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               </motion.span>
             </motion.div>
             <motion.div
-              className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
+              className="absolute inset-0 z-50 rounded-[1.5rem] pointer-events-none flex items-center justify-center"
               style={{ opacity: dislikeOpacity }}
             >
               <motion.span
