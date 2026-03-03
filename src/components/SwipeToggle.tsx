@@ -110,16 +110,16 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
 
   const knobStrokeWidth = leftProgress > 0.05 || rightProgress > 0.05 ? 4 : 2.5;
 
-  return (
-    <div
-      className="select-none"
-      style={{ touchAction: "none", cursor: disabled ? "default" : "grab" }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-    >
-      <svg viewBox="0 0 180 100" width="140" height="78" xmlns="http://www.w3.org/2000/svg">
+    return (
+      <div
+        className="select-none backdrop-blur-2xl rounded-full"
+        style={{ touchAction: "none", cursor: disabled ? "default" : "grab" }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <svg viewBox="0 0 180 100" width="140" height="78" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <radialGradient id="st-redRadial" cx={`${radialCxPercent}%`} cy="50%" r="60%">
             <stop offset="0%" stopColor="#E75545" stopOpacity="1" />
@@ -137,11 +137,14 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           </filter>
         </defs>
 
-        {/* Pill background — themed via CSS vars */}
+        {/* Pill background — liquid glass */}
         <rect
           x="10" y="10" width="160" height="80" rx="40"
-          fill="hsl(var(--secondary))"
+          fill="rgba(255,255,255,0.15)"
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1"
           filter="url(#st-shadowBg)"
+          className="dark:fill-[rgba(255,255,255,0.1)] dark:stroke-[rgba(255,255,255,0.1)]"
         />
 
         {/* Red radial glow (left drag) */}
@@ -171,7 +174,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           >
             <circle
               cx="50" cy="50" r="38"
-              fill="hsl(var(--card))"
+              fill="rgba(255,255,255,0.25)"
               stroke={knobStroke}
               strokeWidth={knobStrokeWidth}
               filter="url(#st-shadowKnob)"
