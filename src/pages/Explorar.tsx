@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { getExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
+import { createProposal } from "@/services/matchService";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,7 @@ import {
 "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
+import SelectItemDialog from "@/components/SelectItemDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
@@ -44,6 +46,11 @@ const Explorar = () => {
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
+
+  // Select item dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
+  const [proposalLoading, setProposalLoading] = useState(false);
 
   // Category filter state
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -129,28 +136,12 @@ const Explorar = () => {
     }
   }, []);
 
-  // Fire-and-forget background API call
   const recordSwipeInBackground = useCallback(
     (direction: "like" | "dislike", itemId: string) => {
       if (!user) return;
       (async () => {
         try {
           await createSwipe(user.id, itemId, direction);
-          if (direction === "like") {
-            const { supabase } = await import("@/integrations/supabase/client");
-            const { data: newMatches } = await supabase.
-            from("matches").
-            select("id, created_at").
-            or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`).
-            order("created_at", { ascending: false }).
-            limit(1);
-            if (newMatches && newMatches.length > 0) {
-              const matchAge = Date.now() - new Date(newMatches[0].created_at).getTime();
-              if (matchAge < 5000) {
-                navigate(`/match/${newMatches[0].id}`);
-              }
-            }
-          }
         } catch (err: any) {
           if (!err.message?.includes("duplicate")) {
             toast({ title: "Erro ao registrar swipe", description: err.message, variant: "destructive" });
@@ -158,7 +149,7 @@ const Explorar = () => {
         }
       })();
     },
-    [user, navigate, toast]
+    [user, toast]
   );
 
   const handleSwipeComplete = useCallback(
@@ -167,7 +158,15 @@ const Explorar = () => {
       swipingRef.current = true;
 
       triggerStreak(direction);
-      const itemId = currentItem.id;
+
+      if (direction === "like") {
+        // Open dialog to select which item to offer
+        setPendingLikeItem(currentItem);
+        setDialogOpen(true);
+      } else {
+        // Dislike: just record and advance
+        recordSwipeInBackground("dislike", currentItem.id);
+      }
 
       // Haptic feedback on like
       if (direction === "like" && navigator.vibrate) {
@@ -175,12 +174,44 @@ const Explorar = () => {
       }
 
       advanceCard();
-      recordSwipeInBackground(direction, itemId);
-
       swipingRef.current = false;
     },
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
   );
+
+  const handleProposalConfirm = useCallback(
+    async (myItemId: string) => {
+      if (!user || !pendingLikeItem) return;
+      setProposalLoading(true);
+      try {
+        // Record the swipe
+        await createSwipe(user.id, pendingLikeItem.id, "like").catch(() => {});
+        // Create proposal
+        await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
+        toast({ title: "Proposta enviada! 🎉", description: "O dono do item será notificado." });
+      } catch (err: any) {
+        if (err.message?.includes("duplicate")) {
+          toast({ title: "Proposta já enviada", description: "Você já fez uma proposta para este item." });
+        } else {
+          toast({ title: "Erro ao enviar proposta", description: err.message, variant: "destructive" });
+        }
+      } finally {
+        setProposalLoading(false);
+        setDialogOpen(false);
+        setPendingLikeItem(null);
+      }
+    },
+    [user, pendingLikeItem, toast]
+  );
+
+  const handleDialogClose = useCallback(() => {
+    // User cancelled - record as dislike so they don't see it again
+    if (pendingLikeItem && user) {
+      recordSwipeInBackground("dislike", pendingLikeItem.id);
+    }
+    setDialogOpen(false);
+    setPendingLikeItem(null);
+  }, [pendingLikeItem, user, recordSwipeInBackground]);
 
   const handleDragDirectionChange = useCallback(
     (rawX: number) => {
@@ -352,6 +383,14 @@ const Explorar = () => {
         
         </div>
       }
+
+      <SelectItemDialog
+        open={dialogOpen}
+        onClose={handleDialogClose}
+        onConfirm={handleProposalConfirm}
+        targetItemName={pendingLikeItem?.name}
+        loading={proposalLoading}
+      />
 
       <BottomNav activeTab="explorar" />
     </ScreenLayout>);

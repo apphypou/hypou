@@ -1,14 +1,15 @@
-import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft } from "lucide-react";
+import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send } from "lucide-react";
 import { useMemo } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import GlassCard from "@/components/GlassCard";
 import { useMatches } from "@/hooks/useMatches";
+import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
+import { acceptProposal, rejectProposal } from "@/services/matchService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +20,7 @@ const formatValue = (cents: number) =>
 
 const Matches = () => {
   const { data: matches = [], isLoading } = useMatches();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -32,12 +34,7 @@ const Matches = () => {
     if (!selectedMatch || rejecting) return;
     setRejecting(true);
     try {
-      const { error } = await supabase
-        .from("matches")
-        .update({ status: "rejected" })
-        .eq("id", selectedMatch.id);
-      if (error) throw error;
-
+      await rejectProposal(selectedMatch.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       toast({ title: "Proposta recusada" });
@@ -48,31 +45,32 @@ const Matches = () => {
     }
   }, [selectedMatch, rejecting, queryClient, toast]);
 
-  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" } | null => {
+  const isReceivedProposal = (match: MatchWithDetails) =>
+    match.status === "proposal" && match.my_item_side === "b";
+
+  const isSentProposal = (match: MatchWithDetails) =>
+    match.status === "proposal" && match.my_item_side === "a";
+
+  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" } | null => {
     if (match.status === "accepted") return { label: "Aceita", color: "accepted" };
+    if (isSentProposal(match)) return { label: "Enviada", color: "sent" };
     const age = Date.now() - new Date(match.created_at).getTime();
     if (age < 24 * 60 * 60 * 1000) return { label: "Nova Proposta", color: "new" };
     return { label: "Pendente", color: "pending" };
   };
 
-  const badgeStyles = {
+  const badgeStyles: Record<string, string> = {
     new: "bg-primary text-primary-foreground border-primary/50",
     accepted: "bg-success text-white border-success/50",
     pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
+    sent: "bg-amber-500/20 text-amber-600 border-amber-500/30",
   };
 
   const handleConfirmMatch = useCallback(async () => {
     if (!selectedMatch || confirming) return;
     setConfirming(true);
-
     try {
-      const { error } = await supabase
-        .from("matches")
-        .update({ status: "accepted" })
-        .eq("id", selectedMatch.id);
-
-      if (error) throw error;
-
+      await acceptProposal(selectedMatch.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       navigate(`/match/${selectedMatch.id}`);
@@ -366,11 +364,16 @@ const Matches = () => {
                   className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.4)]"
                 >
                   <MessageSquare className="h-5 w-5" />
-                  Tenho Interesse
+                  Iniciar Conversa
                 </button>
               ) : selectedMatch.status === "rejected" ? (
                 <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-lg flex items-center justify-center">
                   Proposta Recusada
+                </div>
+              ) : isSentProposal(selectedMatch) ? (
+                <div className="w-full h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 font-bold text-base flex items-center justify-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Aguardando resposta
                 </div>
               ) : (
                 <div className="flex gap-3">
