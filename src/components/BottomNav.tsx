@@ -13,10 +13,10 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
   const unreadCount = useUnreadCount();
 
-  const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; badge?: number }[] = [
+  const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; hasUnread?: boolean }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
     { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas" },
-    { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", badge: unreadCount },
+    { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", hasUnread: unreadCount > 0 },
     { icon: UserCircle, label: "Perfil", id: "perfil", path: "/meu-perfil" },
   ];
 
@@ -43,10 +43,8 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
                   isActive ? "text-background" : "text-muted-foreground"
                 }`}
               />
-              {item.badge && item.badge > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center z-20">
-                  {item.badge > 99 ? "99+" : item.badge}
-                </span>
+              {item.hasUnread && (
+                <span className="absolute top-1.5 right-[calc(50%-4px)] translate-x-3 h-2 w-2 rounded-full bg-primary z-20" />
               )}
             </button>
           );
