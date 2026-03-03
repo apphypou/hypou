@@ -27,7 +27,6 @@ interface SwipeCardProps {
   onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragDirectionChange?: (rawX: number) => void;
   disabled?: boolean;
-  /** When true, card is rendered behind the active card as a preloaded standby */
   standby?: boolean;
 }
 
@@ -53,8 +52,6 @@ const translateCondition = (raw: string | null | undefined) => {
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby }, ref) => {
     const x = useMotionValue(0);
-
-    // Subtler rotation — max ±8° with smooth curve
     const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
     // Stamp opacity & scale
@@ -88,7 +85,6 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
-    // Report drag direction
     useEffect(() => {
       if (disabled || standby) return;
       const unsubscribe = x.on("change", (latest) => {
@@ -108,9 +104,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           damping: 35,
           velocity: vel,
           restSpeed: 100,
-          onComplete: () => {
-            onSwipeComplete(direction);
-          },
+          onComplete: () => onSwipeComplete(direction),
         });
       },
       [disabled, standby, x, onSwipeComplete]
@@ -124,19 +118,12 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       (_: any, info: PanInfo) => {
         const velocity = info.velocity.x;
         const offset = info.offset.x;
-
         if (offset > SWIPE_THRESHOLD || velocity > 400) {
           doExit("like", velocity);
         } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
           doExit("dislike", velocity);
         } else {
-          // Snappy elastic snap-back
-          animate(x, 0, {
-            type: "spring",
-            stiffness: 600,
-            damping: 26,
-            mass: 0.8,
-          });
+          animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
         }
       },
       [doExit, x]
@@ -147,7 +134,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className={`absolute inset-0 w-full h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted border-[4px] border-border ${
+        className={`absolute inset-0 w-full h-full rounded-[2.5rem] overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none border-[4px] border-border ${
           standby ? "pointer-events-none" : "touch-none"
         }`}
         style={{
@@ -164,7 +151,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
-        {/* Dynamic glow borders — only on active card */}
+        {/* Glow borders */}
         {!standby && (
           <>
             <motion.div
@@ -184,7 +171,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               }}
             />
 
-            {/* Like/Dislike stamp overlays */}
+            {/* Like/Dislike stamps */}
             <motion.div
               className="absolute inset-0 z-50 rounded-[2.5rem] pointer-events-none flex items-center justify-center"
               style={{ opacity: likeOpacity }}
@@ -210,48 +197,8 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </>
         )}
 
-        {/* ===== IMAGE SECTION — top ~60% ===== */}
-        <div className="relative w-full flex-[3] min-h-0 overflow-hidden" onClick={standby ? undefined : handleImageTap}>
-          {/* Owner mini-profile */}
-          {ownerProfile && (
-            <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
-              {ownerProfile.avatar_url ? (
-                <img
-                  src={ownerProfile.avatar_url}
-                  alt=""
-                  className="h-6 w-6 rounded-full object-cover border border-white/30"
-                />
-              ) : (
-                <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] font-bold">
-                  {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
-                </div>
-              )}
-              <span className="text-white text-xs font-semibold drop-shadow-md">
-                {ownerProfile.display_name || "Usuário"}
-              </span>
-            </div>
-          )}
-
-          {/* Image dots indicator */}
-          {imageCount > 1 && (
-            <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
-              {images.map((_: any, i: number) => (
-                <div
-                  key={i}
-                  className={`h-1.5 rounded-full transition-all duration-200 ${
-                    i === activeImageIndex
-                      ? "w-5 bg-white"
-                      : "w-1.5 bg-white/40"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Top gradient */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
-
-          {/* Image */}
+        {/* ===== FULL IMAGE ===== */}
+        <div className="absolute inset-0 w-full h-full" onClick={standby ? undefined : handleImageTap}>
           {currentImage ? (
             <img
               key={activeImageIndex}
@@ -267,42 +214,84 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           )}
         </div>
 
-        {/* ===== CONTENT SECTION — bottom ~40% ===== */}
-        <div className="relative z-20 w-full flex-[2] bg-card dark:bg-muted p-5 pb-24 space-y-2">
-          <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">
-            {item.category}
-          </span>
+        {/* Owner mini-profile — top left */}
+        {ownerProfile && (
+          <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+            {ownerProfile.avatar_url ? (
+              <img
+                src={ownerProfile.avatar_url}
+                alt=""
+                className="h-6 w-6 rounded-full object-cover border border-white/30"
+              />
+            ) : (
+              <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] font-bold">
+                {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
+              </div>
+            )}
+            <span className="text-white text-xs font-semibold drop-shadow-md">
+              {ownerProfile.display_name || "Usuário"}
+            </span>
+          </div>
+        )}
 
-          <h2 className="text-foreground text-xl font-bold tracking-tight leading-tight">
-            {item.name}
-          </h2>
+        {/* Image dots — top right */}
+        {imageCount > 1 && (
+          <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
+            {images.map((_: any, i: number) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
-          <span className="block text-primary text-2xl font-extrabold tracking-tighter">
-            {formatValue(item.market_value)}
-          </span>
+        {/* Top gradient for readability */}
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
 
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium">
+        {/* Bottom gradient for glass panel readability */}
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-20" />
+
+        {/* ===== LIQUID GLASS INFO PANEL ===== */}
+        <div className="absolute bottom-0 inset-x-0 z-30 p-4">
+          <div className="rounded-[1.5rem] bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 p-4 space-y-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[10px] font-bold tracking-[0.1em] uppercase">
+                {item.category}
+              </span>
+              {conditionLabel && (
+                <div className="flex items-center gap-1">
+                  <Package className="h-3 w-3 text-white/70" />
+                  <span className="px-2 py-0.5 rounded-full bg-white/15 border border-white/15 text-white/90 text-[10px] font-bold uppercase tracking-wider">
+                    {conditionLabel}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <h2 className="text-white text-xl font-bold tracking-tight leading-tight drop-shadow-md">
+              {item.name}
+            </h2>
+
+            <span className="block text-white text-2xl font-extrabold tracking-tighter drop-shadow-md">
+              {formatValue(item.market_value)}
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-white/70" />
+              <span className="text-white/80 text-xs font-medium">
                 {item.location || ownerProfile?.location || "Local não informado"}
               </span>
             </div>
-            {conditionLabel && (
-              <div className="flex items-center gap-1">
-                <Package className="h-3.5 w-3.5 text-primary/70" />
-                <span className="px-2 py-0.5 rounded-full bg-muted dark:bg-foreground/10 border border-border text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
-                  {conditionLabel}
-                </span>
-              </div>
+
+            {item.description && (
+              <p className="text-white/70 text-xs leading-snug line-clamp-2">
+                {item.description}
+              </p>
             )}
           </div>
-
-          {item.description && (
-            <p className="text-muted-foreground text-xs leading-snug line-clamp-2">
-              {item.description}
-            </p>
-          )}
         </div>
       </motion.div>
     );
