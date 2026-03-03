@@ -20,30 +20,36 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   ];
 
   return (
-    <div className="fixed bottom-6 left-4 right-4 z-50 flex justify-center">
-      <nav className="glass-panel rounded-[2rem] px-8 py-3 flex justify-between items-center w-full max-w-md">
+    <div className="fixed bottom-6 left-6 right-6 z-50 flex justify-center">
+      <nav className="bg-card/80 backdrop-blur-xl border border-border rounded-full px-6 py-2 flex justify-between items-center w-full max-w-md">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 transition-colors relative ${
-                isActive ? "text-primary" : "text-foreground/50 hover:text-foreground/80"
-              }`}
+              className="flex items-center justify-center transition-all relative"
             >
-              <div className="relative flex items-center justify-center h-8 w-8">
-                <item.icon className={`h-6 w-6 ${isActive ? "text-glow" : ""}`} />
+              <div
+                className={`relative flex items-center justify-center rounded-full transition-all duration-300 ${
+                  isActive
+                    ? "h-12 w-12 bg-primary/15 border border-primary/30"
+                    : "h-10 w-10"
+                }`}
+              >
+                <item.icon
+                  className={`transition-all duration-300 ${
+                    isActive
+                      ? "h-6 w-6 text-primary text-glow"
+                      : "h-5 w-5 text-muted-foreground hover:text-foreground"
+                  }`}
+                />
                 {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-2 h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-2 border-background">
+                  <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
                     {item.badge > 99 ? "99+" : item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-[9px] font-bold tracking-wider uppercase">{item.label}</span>
-              {isActive && (
-                <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary neon-glow" />
-              )}
             </button>
           );
         })}
