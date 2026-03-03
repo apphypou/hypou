@@ -147,7 +147,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className={`absolute inset-0 w-full h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted ${
+        className={`absolute inset-0 w-full h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted border-2 border-border ${
           standby ? "pointer-events-none" : "touch-none"
         }`}
         style={{
@@ -156,6 +156,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           zIndex: standby ? 9 : 10,
           willChange: standby ? "auto" : "transform",
           transformOrigin: "50% 80%",
+          ...(standby ? { scale: 0.95, y: -12 } : {}),
         }}
         drag={standby ? false : "x"}
         dragElastic={0.65}
