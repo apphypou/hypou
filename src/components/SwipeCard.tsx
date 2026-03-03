@@ -276,6 +276,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-20" />
 
         {/* ===== LIQUID GLASS INFO PANEL ===== */}
+        {activeImageIndex === 0 && (
         <div className="absolute bottom-0 inset-x-0 z-30 p-4">
           <div className="rounded-[1.5rem] bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 p-4 space-y-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
             <div className="flex items-center gap-2 flex-wrap">
@@ -314,6 +315,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             )}
           </div>
         </div>
+        )}
         </div>{/* close inner card */}
       </motion.div>
     );
