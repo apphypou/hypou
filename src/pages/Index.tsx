@@ -27,19 +27,10 @@ const Index = () => {
           className="h-[65vh] w-full bg-cover bg-center scale-105"
           style={{ backgroundImage: `url('${HERO_IMAGE_URL}')` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/70 to-background" />
-        <div className="absolute bottom-0 h-[45%] w-full bg-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-background/80 to-background" />
+        <div className="absolute bottom-0 h-[50%] w-full bg-gradient-to-t from-background to-transparent" />
       </div>
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="relative z-10 flex w-full items-center px-6 pt-14 pb-4"
-      >
-        <HypouLogo size="md" />
-      </motion.div>
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col w-full px-6 pb-10 mt-auto">
