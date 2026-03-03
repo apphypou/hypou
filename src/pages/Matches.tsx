@@ -1,4 +1,4 @@
-import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon } from "lucide-react";
+import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2 } from "lucide-react";
 import { useMemo } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -46,11 +47,17 @@ const Matches = () => {
     }
   }, [selectedMatch, rejecting, queryClient, toast]);
 
-  const getBadge = (match: MatchWithDetails) => {
+  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" } | null => {
+    if (match.status === "accepted") return { label: "Aceita", color: "accepted" };
     const age = Date.now() - new Date(match.created_at).getTime();
-    if (age < 24 * 60 * 60 * 1000) return "Nova Proposta";
-    if (match.status === "accepted") return "Aceita";
-    return null;
+    if (age < 24 * 60 * 60 * 1000) return { label: "Nova Proposta", color: "new" };
+    return { label: "Pendente", color: "pending" };
+  };
+
+  const badgeStyles = {
+    new: "bg-primary text-primary-foreground border-primary/50",
+    accepted: "bg-success text-white border-success/50",
+    pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
   };
 
   const handleConfirmMatch = useCallback(async () => {
@@ -90,42 +97,41 @@ const Matches = () => {
 
   return (
     <ScreenLayout>
-      {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4 shrink-0">
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
-            Suas Trocas
-          </span>
-          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-            Propostas de Troca
-          </h1>
-        </div>
-        <div className="flex gap-3" />
+      {/* Header — single level */}
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-3 shrink-0">
+        <h1 className="text-foreground text-2xl font-extrabold tracking-tight">
+          Propostas de Troca
+        </h1>
       </header>
 
       {/* Main Content */}
-      <main className="relative flex-1 w-full px-5 overflow-y-auto no-scrollbar z-10 pb-28">
-        <div className="flex items-center justify-between mb-6 mt-2">
-          <h2 className="text-sm font-bold text-foreground/90 uppercase tracking-widest">Interesses Recebidos</h2>
-          <div className="flex items-center gap-1">
-            <span className="text-primary text-xs font-semibold">{activeMatches.length} Ativo{activeMatches.length !== 1 ? "s" : ""}</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-primary neon-glow" />
+      <main className="relative flex-1 w-full px-4 overflow-y-auto no-scrollbar z-10 pb-28">
+        <div className="flex items-center justify-between mb-4 mt-1">
+          <h2 className="text-xs font-bold text-foreground/70 uppercase tracking-widest">Interesses Recebidos</h2>
+          <div className="flex items-center gap-1.5">
+            <span className="text-foreground/60 text-xs font-semibold">{activeMatches.length}</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
           </div>
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col gap-6 py-2">
+          <div className="flex flex-col gap-4 py-2">
             <SkeletonMatchCard />
             <SkeletonMatchCard />
           </div>
         ) : activeMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-6xl mb-4">🤝</span>
-            <h2 className="text-xl font-bold text-foreground mb-2">Nenhuma proposta ainda</h2>
-            <p className="text-muted-foreground text-sm">Continue explorando para encontrar trocas!</p>
+            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <Repeat2 className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground mb-1">Nenhuma proposta ainda</h2>
+            <p className="text-muted-foreground text-sm mb-6">Explore itens e faça sua primeira troca!</p>
+            <Button onClick={() => navigate("/explorar")} className="rounded-full px-6">
+              Explorar itens
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 pb-6">
+          <div className="grid grid-cols-1 gap-4 pb-6">
             {activeMatches.map((match) => {
               const otherItemCard = match.my_item_side === "a" ? match.item_b : match.item_a;
               const mainImage = otherItemCard?.item_images?.[0]?.image_url;
@@ -135,56 +141,52 @@ const Matches = () => {
                 <GlassCard
                   key={match.id}
                   hoverable
-                  className="shadow-[0_4px_20px_hsl(184_100%_50%/0.15)] cursor-pointer"
+                  className="cursor-pointer transition-transform active:scale-[0.98] shadow-sm"
                   onClick={() => setSelectedMatch(match)}
                 >
                   {/* Image */}
-                  <div className="relative h-48 w-full">
+                  <div className="relative aspect-[4/3] w-full">
                     {mainImage ? (
                       <img alt={otherItemCard.name} className="h-full w-full object-cover" src={mainImage} />
                     ) : (
-                      <div className="h-full w-full bg-card flex items-center justify-center">
-                        <span className="text-4xl">📦</span>
+                      <div className="h-full w-full bg-muted flex items-center justify-center">
+                        <Repeat2 className="h-10 w-10 text-foreground/10" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-background/10 to-transparent" />
                     {badge && (
-                      <div className="absolute top-4 right-4 bg-background/60 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30">
-                        <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{badge}</span>
+                      <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full border text-[10px] font-bold tracking-wider uppercase ${badgeStyles[badge.color]}`}>
+                        {badge.label}
                       </div>
                     )}
                   </div>
 
                   {/* Info */}
-                  <div className="p-5 relative">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="text-foreground font-bold text-xl leading-tight mb-1">{otherItemCard.name}</h3>
-                        <p className="text-foreground/50 text-xs">{otherItemCard.location || match.other_user.location || "Sem localização"}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-primary font-bold text-lg text-glow">{formatValue(otherItemCard.market_value)}</p>
-                        <p className="text-foreground/40 text-[10px]">Valor de mercado</p>
-                      </div>
-                    </div>
+                  <div className="p-4 relative">
+                    <h3 className="text-foreground font-bold text-lg leading-tight mb-0.5">{otherItemCard.name}</h3>
+                    <p className="text-foreground font-semibold text-base mb-1.5">
+                      {formatValue(otherItemCard.market_value)}
+                    </p>
+                    <p className="text-foreground/60 text-xs flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {otherItemCard.location || match.other_user.location || "Sem localização"}
+                    </p>
 
                     {/* Owner */}
-                    <div className="mt-4 pt-4 border-t border-foreground/5 flex items-center justify-between">
+                    <div className="mt-3 pt-3 border-t border-foreground/8 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="relative">
-                          {match.other_user.avatar_url ? (
-                            <img
-                              alt={match.other_user.display_name || "Usuário"}
-                              className="h-8 w-8 rounded-full object-cover border border-foreground/20"
-                              src={match.other_user.avatar_url}
-                            />
-                          ) : (
-                            <div className="h-8 w-8 rounded-full bg-card border border-foreground/20 flex items-center justify-center text-xs font-bold text-foreground/40">
-                              {(match.other_user.display_name || "?")[0]}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-xs font-medium text-foreground/80">
+                        {match.other_user.avatar_url ? (
+                          <img
+                            alt={match.other_user.display_name || "Usuário"}
+                            className="h-7 w-7 rounded-full object-cover border-2 border-primary/30"
+                            src={match.other_user.avatar_url}
+                          />
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                            {(match.other_user.display_name || "?")[0]}
+                          </div>
+                        )}
+                        <span className="text-xs font-medium text-foreground/70">
                           {match.other_user.display_name || "Usuário"}
                         </span>
                       </div>
@@ -194,9 +196,10 @@ const Matches = () => {
                             e.stopPropagation();
                             navigate(`/match/${match.id}`);
                           }}
-                          className="h-8 w-8 flex items-center justify-center rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                          className="h-8 px-3 flex items-center justify-center gap-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-all"
                         >
-                          <MessageSquare className="h-4 w-4" />
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          Conversar
                         </button>
                       )}
                     </div>
