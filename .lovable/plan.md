@@ -1,91 +1,85 @@
 
 
-# Critical UI/UX Review: Tela de Propostas de Troca
+## Plano: Modelo C com Popup de Selecao de Item no Like
 
-## 1. Hierarquia Visual Quebrada
+### Resumo do Fluxo
 
-O header "SUAS TROCAS" + "Propostas de Troca" compete visualmente com "INTERESSES RECEBIDOS". São três níveis de texto antes do conteúdo começar, ocupando espaço vertical precioso em mobile. O subtítulo "SUAS TROCAS" em ciano com tracking exagerado (0.2em) é decorativo e não funcional — o usuário já sabe onde está porque clicou na tab.
+```text
+1. Usuario A ve item do Usuario B na Explorar → swipa LIKE
+2. POPUP aparece: "Qual dos seus itens voce quer oferecer?"
+   → Lista os itens ativos do Usuario A com foto, nome e valor
+   → Usuario A seleciona 1 item → confirma
+3. Proposta criada no banco (status='proposal', com item_a e item_b definidos)
+   → Notificacao para Usuario B: "Alguem quer trocar pelo seu [item]!"
+4. Usuario B abre tela Propostas
+   → Ve apenas os itens que Usuario A selecionou (nao todos)
+   → Aceita ou rejeita
+5. Ao aceitar → Match confirmado → Chat criado → Ambos notificados
+```
 
-**Recomendação:** Eliminar o subtítulo "SUAS TROCAS" ou fundir com o título. Um único título basta.
+### Mudancas no Banco de Dados
 
----
+**1. Alterar o trigger `check_for_match()`**
+- Remover a logica de match automatico por like mutuo
+- O trigger passa a nao criar matches -- apenas registra o swipe normalmente
 
-## 2. Degradê no Card: Corte Abrupto
+**2. Nova tabela `proposals`** (ou reutilizar `matches` com status `proposal`)
+- Reutilizar a tabela `matches` e mais simples. Adicionar status `proposal` ao fluxo:
+  - `proposal` → pendente de aceite do dono
+  - `accepted` → match confirmado
+  - `rejected` → recusado
+- O campo `item_a_id` sera o item do Usuario A (quem deu like/selecionou)
+- O campo `item_b_id` sera o item do Usuario B (o item que recebeu o like)
+- Nenhuma alteracao de schema necessaria -- os campos e status ja existem
 
-O gradiente `from-background/90 via-transparent to-transparent` sobre a imagem cria uma transição artificial que "corta" a foto. No modo claro (screenshot), o branco invade a imagem de forma brusca. Não há suavidade — parece um card mal recortado.
+**3. Novo insert de match via cliente (nao mais via trigger)**
+- Apos o usuario selecionar seu item no popup, o frontend insere diretamente na tabela `matches` com `status: 'proposal'`
+- Precisa adicionar RLS policy de INSERT na tabela `matches`
 
-**Recomendação:** Reduzir a intensidade do gradiente para `from-background/60` e usar uma transição mais longa (aumentar a altura do overlay ou usar um `via` mais suave).
+**4. Atualizar trigger `notify_on_match()`**
+- Mudar a mensagem para "Alguem quer trocar pelo seu [item]!" em vez de "Novo Match!"
+- Notificar apenas o dono do item (user_b), nao ambos
 
----
+### Mudancas no Frontend
 
-## 3. Contraste de Cores Problemático
+**1. Novo componente `SelectItemDialog`** (~novo arquivo)
+- Dialog/Drawer (mobile-first) que aparece apos o like
+- Busca os itens ativos do usuario logado (`items` where `user_id = current_user`)
+- Exibe lista com foto, nome e valor de cada item
+- Botao "Confirmar" cria a proposta
+- Se usuario nao tem itens: mostra CTA "Cadastre seu primeiro item"
 
-- O preço em **ciano sobre fundo branco** (`text-primary`) tem contraste insuficiente. Ciano claro (#00e5ff range) sobre branco falha WCAG AA para texto normal. É bonito no dark mode, ilegível no light mode.
-- "Valor de mercado" em `text-foreground/40` — 40% de opacidade sobre branco é praticamente invisível.
-- A localização "São Paulo, SP" em `text-foreground/50` também está no limite.
+**2. Modificar `Explorar.tsx`**
+- Ao dar like, em vez de chamar `createSwipe` + checar match automatico:
+  - Abrir o `SelectItemDialog` passando o item curtido
+  - No callback de confirmacao: criar swipe + inserir match com status `proposal`
+- Se o usuario cancelar o popup: nao registrar o swipe (ou registrar como dislike)
 
-**Recomendação:** No light mode, usar uma variante mais escura do primary para preços. Subir opacidades mínimas para `/60` em textos secundários.
+**3. Modificar `Matches.tsx` (tela Propostas)**
+- Diferenciar visualmente propostas recebidas vs enviadas
+- Para propostas recebidas (status `proposal`): mostrar botoes Aceitar/Rejeitar
+- Para propostas enviadas: mostrar status "Aguardando resposta"
+- Ao aceitar: update status para `accepted`, criar conversa, notificar
 
----
+**4. Modificar `matchService.ts`**
+- Nova funcao `createProposal(userId, myItemId, theirItemId)` que insere na tabela matches
+- Ajustar `getMatches` para incluir status `proposal` na query
 
-## 4. Badge "ACEITA" / "Nova Proposta" — Sem Hierarquia de Status
+**5. Atualizar `swipeService.ts`**
+- O swipe continua sendo registrado (para evitar ver o mesmo item de novo)
+- Mas nao depende mais do trigger para criar match
 
-Os badges são visualmente idênticos (mesmo estilo, mesma posição). "ACEITA" e "Nova Proposta" são estados completamente diferentes mas recebem o mesmo tratamento visual. O usuário não consegue escanear rapidamente quais propostas precisam de ação.
+**6. Modificar notificacoes**
+- Trigger `notify_on_match`: notificar so o dono ao receber proposta
+- Trigger `notify_on_trade_confirmed`: manter para quando aceitar
 
-**Recomendação:** Diferenciar por cor: propostas pendentes com badge ciano/primary, aceitas com badge verde (success), recusadas com vermelho. Usar cores sólidas nos badges, não transparências que se perdem sobre imagens claras.
+### Ordem de Implementacao
 
----
-
-## 5. Tipografia do Card — Peso Excessivo
-
-O nome do item ("iPhone 14 Pro Max") está em `font-bold text-xl`. O preço ao lado também está em `font-bold text-lg`. Dois elementos bold lado a lado competem entre si. Não há respiro tipográfico.
-
-**Recomendação:** Reduzir o preço para `font-semibold text-base` ou mover para uma linha separada. Criar hierarquia clara: nome > preço > localização.
-
----
-
-## 6. Área do Usuário (Avatar + Nome) — Subutilizada
-
-A seção do owner no footer do card é genérica. O avatar com iniciais em `text-foreground/40` sobre `bg-card` no light mode é quase invisível. O ícone de chat (MessageSquare) no canto direito não tem affordance — parece decorativo, não clicável.
-
-**Recomendação:** Dar mais destaque ao avatar (borda colorida ou shadow). O botão de chat precisa de um background mais visível ou um label "Conversar".
-
----
-
-## 7. Espaçamento e Densidade
-
-- `gap-6` entre cards é excessivo para mobile — desperdiça scroll.
-- `p-5` interno do card + `px-5` do container = muito padding acumulado, reduzindo a área útil da imagem.
-- A imagem tem apenas `h-48` — proporção achatada que não valoriza o produto.
-
-**Recomendação:** Reduzir gap para `gap-4`, padding interno para `p-4`. Aumentar altura da imagem para `h-56` ou usar aspect-ratio 4:3.
-
----
-
-## 8. Empty State Preguiçoso
-
-O emoji "🤝" como ilustração de empty state é amador. Falta um CTA claro direcionando o usuário para o Explorar.
-
-**Recomendação:** Adicionar um botão "Explorar itens" no empty state. Substituir emoji por ilustração ou ícone estilizado.
-
----
-
-## 9. O Card Inteiro é Clicável mas Não Parece
-
-O `cursor-pointer` existe mas não há feedback visual de tap/press. Em mobile não existe hover. O usuário não tem affordance de que pode clicar no card.
-
-**Recomendação:** Adicionar `active:scale-[0.98]` e uma transição sutil no card para feedback tátil.
-
----
-
-## Resumo de Prioridades
-
-| Severidade | Problema | Impacto |
-|-----------|---------|---------|
-| Alta | Contraste do preço no light mode | Acessibilidade |
-| Alta | Badges sem diferenciação de status | Usabilidade |
-| Média | Degradê abrupto na imagem | Estética |
-| Média | Hierarquia tipográfica competitiva | Legibilidade |
-| Baixa | Espaçamentos excessivos | Densidade |
-| Baixa | Empty state sem CTA | Engajamento |
+1. Migration: adicionar RLS INSERT policy na tabela `matches` + desativar/modificar trigger `check_for_match`
+2. Criar componente `SelectItemDialog`
+3. Modificar `Explorar.tsx` para usar o dialog
+4. Atualizar `matchService.ts` com `createProposal`
+5. Atualizar `Matches.tsx` para diferenciar propostas recebidas/enviadas
+6. Atualizar triggers de notificacao
+7. Testar fluxo completo
 
