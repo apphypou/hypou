@@ -279,7 +279,7 @@ const Explorar = () => {
       </AnimatePresence>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-6 pb-36 mt-4 z-10 max-h-[calc(100dvh-11rem)]">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-6 pb-24 mt-4 z-10 max-h-[calc(100dvh-8rem)]">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
