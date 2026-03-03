@@ -147,7 +147,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     return (
       <motion.div
-        className={`absolute inset-0 w-full h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted border-2 border-border ${
+        className={`absolute inset-0 w-full h-full bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none dark:bg-muted border-[4px] border-border ${
           standby ? "pointer-events-none" : "touch-none"
         }`}
         style={{
