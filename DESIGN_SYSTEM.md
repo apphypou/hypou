@@ -71,7 +71,7 @@ className="bg-black text-white border-[#00EEFF]"
 | **Font family** | `Plus Jakarta Sans` (Google Fonts) |
 | **Token Tailwind** | `font-display` |
 | **Pesos usados** | 200 (thin), 300, 400, 500, 600, 700, 800 (extrabold) |
-| **Títulos** | `text-3xl font-bold tracking-tight` ou `text-xl font-extrabold` |
+| **Títulos** | `text-3xl font-extrabold tracking-tight` ou `text-xl font-extrabold` |
 | **Corpo** | `text-base font-light leading-relaxed` ou `text-sm font-medium` |
 | **Labels** | `text-xs font-semibold uppercase tracking-widest text-muted-foreground` |
 | **Badges** | `text-[10px] font-bold uppercase tracking-[0.1em]` |
@@ -147,19 +147,24 @@ Wrapper de tela — todas as páginas internas devem usar.
 
 ### 4.4 `<BottomNav />` — `src/components/BottomNav.tsx`
 
-Barra de navegação inferior flutuante.
+Barra de navegação inferior flutuante com design de pílula e efeito de vidro líquido.
 
 | Prop | Tipo | Descrição |
 |---|---|---|
 | `activeTab` | `"explorar" \| "trocas" \| "chat" \| "perfil"` | Aba ativa |
 
-**Estilos:** `glass-panel rounded-[2rem]` posicionado de forma absoluta (`absolute bottom-6`)
+**Estilos:** `fixed bottom-6 left-5 right-5` com `bg-background/40 backdrop-blur-2xl border border-foreground/8 rounded-full`
+
+**Comportamento:**
+- Indicador de cápsula sólida (`bg-foreground`) que desliza entre abas via Framer Motion (`layoutId="nav-pill"`)
+- Ícones ativos invertem cor (`text-background`) sem rótulo de texto — estética minimalista
+- Mensagens não lidas indicadas por ponto ciano (`bg-primary`) discreto sobre o ícone de Chat
 
 **Tabs:**
-- Explorar (Search icon)
-- Trocas (Repeat icon)
-- Chat (MessageCircle icon)
-- Perfil (User icon)
+- Explorar (Compass icon)
+- Trocas (Handshake icon)
+- Chat (MessageSquare icon)
+- Perfil (UserCircle icon)
 
 ### 4.5 `<IconButton />` — `src/components/IconButton.tsx`
 
@@ -167,9 +172,196 @@ Botão circular para ações secundárias (filtros, voltar, etc).
 
 **Estilos:** `h-11 w-11 rounded-full bg-muted/50 border border-foreground/10 backdrop-blur-sm`
 
+### 4.6 `<SwipeCard />` — `src/components/SwipeCard.tsx`
+
+Card de item arrastável (swipe) para o feed Explorar.
+
+**Anatomia visual:**
+1. **Borda de reflexo líquido** — Imagem do item borrada (`blur-xl saturate-150`) por trás do card, criando borda que reflete as cores da foto
+2. **Card interno** — `rounded-[1.5rem]` com imagem fullscreen e galeria (tap na metade direita/esquerda para navegar)
+3. **Glow de feedback** — Bordas brilham verde (`--success`) ao arrastar para direita e vermelho (`--danger`) para esquerda
+4. **Stamps** — "HYPOU" (like) e "PASSAR" (dislike) aparecem com opacidade proporcional ao arraste
+5. **Owner pill** — Mini-perfil do dono no topo esquerdo (`bg-black/30 backdrop-blur-xl rounded-full`)
+6. **Image dots** — Indicadores de galeria no topo direito (pílula branca ativa, pontos brancos/40 inativos)
+7. **Liquid Glass info panel** — Painel inferior visível **apenas na primeira imagem** da galeria com `bg-white/15 backdrop-blur-2xl border border-white/20 rounded-[1.5rem]` contendo categoria, condição, nome, preço, localização e descrição
+
+**Props:**
+
+| Prop | Tipo | Descrição |
+|---|---|---|
+| `item` | `any` | Objeto do item com `item_images`, `profiles`, etc |
+| `onSwipeComplete` | `(direction) => void` | Callback ao finalizar swipe |
+| `onDragDirectionChange` | `(rawX) => void` | Progresso do arraste para sincronizar com SwipeToggle |
+| `standby` | `boolean` | Modo inativo (card seguinte pré-renderizado por trás) |
+
+### 4.7 `<SwipeToggle />` — `src/components/SwipeToggle.tsx`
+
+Controle de ação alternativo ao swipe — ultra-minimalista via SVG inline.
+
+**Design:** Fundo, knob e bordas são **totalmente invisíveis** (`fill="transparent"`). Exibem apenas:
+- Setas de affordance ciano (chevrons `<` `>`) no estado neutro
+- Ícone X vermelho ao arrastar para esquerda
+- Ícone ✓ verde ao arrastar para direita
+- Brilho radial colorido (vermelho/verde) que segue o knob
+
+**Sincronização:** Recebe `dragProgress` (MotionValue) do card arrastável para mover o knob em sincronia com o arraste do card.
+
+**Reset:** Estado do knob reseta instantaneamente ao `CENTER` a cada novo card (via `key={epoch}`).
+
+### 4.8 `<NotificationBell />` — `src/components/NotificationBell.tsx`
+
+Sino de notificações com badge de contagem.
+
+**Comportamento responsivo:**
+- **Mobile:** Abre como `<Drawer>` inferior (vaul) — mais natural para toque, `max-h-[85dvh]`
+- **Desktop:** Popover flutuante animado com `bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl`
+
+**Badge:** `h-5 min-w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold border-2 border-background`
+
+**Empty state:** Ícone centralizado + texto "Nenhuma notificação" + subtexto explicativo
+
+### 4.9 `<PullToRefresh />` — `src/components/PullToRefresh.tsx`
+
+Wrapper que permite refresh por gesto de puxar para baixo (mobile).
+
 ---
 
-## 5. Efeitos Visuais (Utilities CSS)
+## 5. Padrões de Tela
+
+### 5.1 Header padrão
+
+Todas as telas principais seguem o padrão de cabeçalho unificado:
+
+```tsx
+<header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-2 shrink-0">
+  <div className="flex flex-col">
+    <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
+      Label Ciano
+    </span>
+    <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+      Título
+    </h1>
+  </div>
+  {/* Ações à direita (ícones, badges) */}
+</header>
+```
+
+**Regras:**
+- `pt-6` otimizado para mobile (sem padding excessivo)
+- Rótulo pequeno em ciano (`text-primary/70`) acima do título
+- Título grande e bold (`text-3xl font-extrabold`)
+- **Sem** indicadores numéricos de progresso (ex: "1/18")
+- Ações à direita: ícones circulares (`h-9 w-9 rounded-full bg-card border border-foreground/10`)
+
+### 5.2 Tela Explorar (`/explorar`)
+
+**Estrutura:** Header → Filtros (colapsáveis) → SwipeCard → SwipeToggle → BottomNav
+
+**Header:** Label "Descubra" + título "Explorar" + NotificationBell + botão de filtro
+
+**Filtros:** Chips horizontais scrolláveis com `AnimatePresence` para animação de entrada/saída
+- Chip ativo: `bg-primary text-primary-foreground`
+- Chip preferido do usuário: `bg-primary/10 border-primary/30 text-primary`
+- Chip inativo: `bg-card border border-foreground/10 text-foreground/50`
+
+**SwipeCard:** Ocupa todo o espaço central (`flex-1`), com card seguinte pré-renderizado em `standby`
+
+**SwipeToggle:** Fixo acima do BottomNav (`fixed bottom` com `calc(env(safe-area-inset-bottom) + 4.5rem)`)
+
+**Streak indicator:** Aparece após 3+ likes seguidos com `bg-primary/20 border-primary/40 backdrop-blur-xl rounded-full`
+
+**Empty state:** Emoji 🔍 + título + subtexto + botão "Limpar filtro" se houver filtro ativo
+
+### 5.3 Tela Propostas (`/partidas`)
+
+**Estrutura:** Header → Lista de GlassCards → Popup fullscreen de detalhes → BottomNav
+
+**Header:** Label "Suas Trocas" + título "Propostas" + contador ciano com dot
+
+**Cards de lista:**
+- `<GlassCard hoverable>` com `active:scale-[0.98]`
+- Imagem `aspect-[4/3]` sem degradê sobre a foto na listagem
+- Badge de status no canto superior direito:
+  - Nova: `bg-primary text-primary-foreground` (ciano)
+  - Aceita: `bg-success text-white` (verde)
+  - Pendente: `bg-foreground/10 text-foreground/70` (cinza)
+- Info: nome bold + preço em `text-foreground` (contraste acessível) + localização
+- Owner row: avatar + nome + botão "Conversar" para matches aceitos
+
+**Popup de detalhes (fullscreen):**
+- `fixed inset-0 bg-background/95 backdrop-blur-md`
+- Botão voltar: `ArrowLeft` em `rounded-full bg-background/80 backdrop-blur-sm` com `safe-area-inset-top`
+- Hero image: `object-contain bg-card` (não corta a imagem)
+- Visualização de troca: Box `rounded-2xl bg-foreground/5 border border-foreground/10` com thumbnails dos dois itens + seta `ArrowRightLeft`
+- Galeria extra: scroll horizontal com botões de zoom fullscreen
+- Ações fixas no rodapé: `bg-gradient-to-t from-background` com `paddingBottom: max(1.5rem, env(safe-area-inset-bottom))`
+
+**Empty state:** Ícone `Repeat2` em box `bg-primary/10` + texto + CTA "Explorar itens"
+
+### 5.4 Tela Conversas (`/chat`)
+
+**Estrutura:** Header → PullToRefresh → Lista de conversas → BottomNav
+
+**Header:** Label "Negociações" + título "Conversas" + indicador de novas mensagens (texto ciano + dot com neon-glow)
+
+**Cards de conversa:**
+- Botão fullwidth com `rounded-2xl` e padding `p-4`
+- Com não lidas: `bg-primary/5 border border-primary/20`
+- Sem não lidas: `bg-card/30 border border-foreground/5`
+- Avatar `h-14 w-14 rounded-full` com thumbnail do item como overlay (`h-6 w-6 absolute -bottom-1 -right-1`)
+- Badge de não lidas: `h-5 min-w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold`
+- Timestamps: `text-[10px]` com destaque ciano quando há não lidas
+- Linha de contexto: `text-[10px] text-foreground/30` com "Meu item ↔ Item deles"
+
+**Empty state:** Emoji 💬 + texto
+
+### 5.5 Tela Conversa Individual (`/chat/:conversationId`)
+
+**Estrutura:** Header com avatar → Mensagens scrolláveis → Input fixo no rodapé
+
+**NÃO usa** `<ScreenLayout>` nem `<BottomNav>` — layout fullscreen dedicado: `h-[100dvh] bg-background`
+
+**Header:** `px-4 pt-4 pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl`
+- Botão voltar (ArrowLeft) circular + avatar clicável para perfil do usuário + nome + contexto da troca
+
+**Bolhas de mensagem:**
+- Enviada (minha): `bg-primary text-primary-foreground rounded-2xl rounded-br-md`
+- Recebida: `bg-card border border-foreground/5 text-foreground rounded-2xl rounded-bl-md`
+- Largura máxima: `max-w-[75%]`
+- Hora: `text-[10px]` + ícones de leitura (Check / CheckCheck)
+
+**Input:** `px-4 pb-8 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl`
+- Textarea com `bg-card/50 border border-foreground/10 rounded-2xl` (auto-resize via `max-h-32`)
+- Botão enviar: `h-11 w-11 rounded-full bg-primary neon-glow` centralizado verticalmente (`items-center`)
+
+### 5.6 Tela Meu Perfil (`/meu-perfil`)
+
+**Estrutura:** Header com back + settings → Seção de perfil → Stats → Meus Itens → BottomNav
+
+**Header:** IconButton(ArrowLeft) + "Meu Perfil" + IconButton(Settings)
+
+**Seção de perfil:**
+- Avatar `h-32 w-32 rounded-full` com borda neon: `border-2 border-primary neon-glow bg-background`
+- Botão de câmera: `absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary border-2 border-background`
+- Badge "Conta Verificada": `bg-gradient-to-r from-gray-900 to-black border border-primary/30 rounded-full`
+- Botão "Editar Perfil": `rounded-full border border-primary/50 bg-primary/5` com texto `text-primary text-xs font-bold tracking-widest uppercase`
+
+**Stats grid:** 3 colunas com `<GlassCard>` contendo valor e label
+- Highlight (ex: rating): `border-primary/20 bg-primary/5 text-primary`
+- Normal: `text-foreground` e `text-foreground/40`
+
+**Meus Itens:**
+- Título "Meus Itens" + link "Novo Item" em `text-primary text-xs font-bold uppercase`
+- Cards: `<GlassCard hoverable>` com thumbnail `h-20 w-20 rounded-xl`, categoria em `text-primary`, nome bold, preço
+- Ícone de delete: `Trash2 text-foreground/30 hover:text-destructive`
+
+**Editar Perfil:** `<Sheet side="bottom">` com `rounded-t-3xl`, inputs com `bg-muted/50 border-foreground/10`, labels `text-foreground/60 text-xs font-bold uppercase tracking-wider`
+
+**Delete item:** `<AlertDialog>` com ícone `AlertTriangle text-destructive` e botão `bg-destructive`
+
+---
+
+## 6. Efeitos Visuais (Utilities CSS)
 
 Definidos em `src/index.css` na `@layer utilities`:
 
@@ -188,16 +380,16 @@ Definidos em `src/index.css` na `@layer utilities`:
 
 ---
 
-## 6. Espaçamento Padrão
+## 7. Espaçamento Padrão
 
 ### Layout de tela
 
 | Área | Padding |
 |---|---|
-| Header | `px-6 pt-12 pb-4` |
+| Header | `px-6 pt-6 pb-2` (ou `pb-4` para telas de lista) |
 | Main content | `px-5 pb-8 pt-2` (ou `px-6 pt-6 pb-8` em formulários) |
 | Footer/CTAs | `p-6 pb-10` com `bg-gradient-to-t from-background` |
-| BottomNav | `absolute bottom-6 left-4 right-4` (margem de 16px dos lados) |
+| BottomNav | `fixed bottom-6 left-5 right-5` |
 
 ### Cards e elementos
 
@@ -205,6 +397,7 @@ Definidos em `src/index.css` na `@layer utilities`:
 |---|---|
 | Card interno | `p-7 pb-28` (com espaço para action buttons) |
 | Card de lista (Matches) | `p-4` com `gap-4` entre items |
+| Card de conversa | `p-4` com `gap-2` entre items |
 | Inputs | `px-5 py-4 rounded-xl` |
 | Badges | `px-3 py-1 rounded-full` |
 | Gaps entre seções | `gap-4` ou `gap-6` |
@@ -215,16 +408,36 @@ Definidos em `src/index.css` na `@layer utilities`:
 | Elemento | Radius |
 |---|---|
 | Botões (NeonButton) | `rounded-full` (pill) |
-| Cards grandes (swipe) | `rounded-[2.5rem]` |
-| Cards médios | `rounded-[2rem]` |
+| Cards grandes (swipe) | `rounded-[1.5rem]` com borda de reflexo `rounded-[1.65rem]` |
+| Cards médios (GlassCard) | `rounded-[2rem]` |
 | Cards pequenos | `rounded-2xl` (1rem) |
+| Cards de conversa | `rounded-2xl` |
+| Bolhas de mensagem | `rounded-2xl` com canto achatado (`rounded-br-md` ou `rounded-bl-md`) |
 | Inputs | `rounded-xl` |
 | Badges | `rounded-full` |
 | Avatares | `rounded-full` |
+| BottomNav | `rounded-full` |
+| Notification icons | `rounded-xl` |
 
 ---
 
-## 7. Padrões de Dados Mock
+## 8. Padrões Responsivos
+
+### Mobile-first
+
+- Todas as telas são otimizadas para mobile (`h-[100dvh]`, safe-areas, touch targets ≥ 44px)
+- `env(safe-area-inset-bottom)` para bottom actions em dispositivos com notch
+- Feedback tátil: `active:scale-[0.98]` em cards clicáveis, `active:scale-90` em botões de ação
+- Navegação por gesto: PullToRefresh no chat, swipe nos cards do Explorar
+
+### Adaptação desktop
+
+- `<NotificationBell>` usa `useIsMobile()` para alternar entre drawer (mobile) e popover (desktop)
+- Cards e listas usam `max-w-md` ou `max-w-xs` para limitar largura em telas grandes
+
+---
+
+## 9. Padrões de Dados Mock
 
 Para protótipos e testes, usar itens do público de massa:
 
@@ -243,13 +456,16 @@ Para protótipos e testes, usar itens do público de massa:
 
 ---
 
-## 8. Regras para Novas Telas
+## 10. Regras para Novas Telas
 
-1. **Sempre** usar `<ScreenLayout>` como wrapper
-2. **Sempre** usar `<BottomNav>` em telas internas (exceto landing e onboarding)
+1. **Sempre** usar `<ScreenLayout>` como wrapper (exceto telas de conversa individual que usam layout dedicado)
+2. **Sempre** usar `<BottomNav>` em telas internas (exceto landing, onboarding e conversa individual)
 3. **Sempre** usar `<NeonButton>` para CTAs — nunca criar botões inline
 4. **Sempre** usar tokens de cor (`bg-background`, `text-primary`, etc) — nunca HEX/RGB direto
-5. **Sempre** manter tom democrático na copy — consultar glossário acima
-6. **Nunca** usar itens de luxo nos mocks (mansões, Porsches, Rolexes)
-7. **Nunca** usar fontes além de `Plus Jakarta Sans`
-8. **Nunca** usar `rounded-xl` em botões — sempre `rounded-full`
+5. **Sempre** seguir o padrão de header (label ciano + título bold) nas telas principais
+6. **Sempre** manter tom democrático na copy — consultar glossário acima
+7. **Sempre** usar `active:scale-[0.98]` em cards clicáveis para feedback tátil
+8. **Nunca** usar itens de luxo nos mocks (mansões, Porsches, Rolexes)
+9. **Nunca** usar fontes além de `Plus Jakarta Sans`
+10. **Nunca** usar `rounded-xl` em botões — sempre `rounded-full`
+11. **Nunca** usar degradês sobre imagens na listagem (reservado para painéis de informação dentro do card)
