@@ -143,7 +143,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           zIndex: standby ? 9 : 10,
           willChange: standby ? "auto" : "transform",
           transformOrigin: "50% 80%",
-          ...(standby ? { scale: 0.92, y: -30, opacity: 0.7 } : {}),
+          ...(standby ? { scale: 0.97, y: 0, opacity: 0 } : {}),
         }}
         drag={standby ? false : "x"}
         dragElastic={0.65}
