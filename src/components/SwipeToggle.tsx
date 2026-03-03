@@ -8,8 +8,8 @@ interface SwipeToggleProps {
 }
 
 const MAX_DRAG = 80;
-const CENTER = MAX_DRAG / 2; // 40
-const SNAP_THRESHOLD = 20; // trigger zone: < 20 = dislike, > 60 = like
+const CENTER = MAX_DRAG / 2;
+const SNAP_THRESHOLD = 20;
 
 const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
   const isDragging = useRef(false);
@@ -17,18 +17,22 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
   const basePos = useRef(CENTER);
   const [position, setPosition] = useState(CENTER);
   const [animating, setAnimating] = useState(false);
+  const [snapping, setSnapping] = useState(false);
   const externalDriving = useRef(false);
 
-  // Bidirectional progress from center
-  const rightProgress = Math.max(0, (position - CENTER) / (MAX_DRAG - CENTER)); // 0..1 green
-  const leftProgress = Math.max(0, (CENTER - position) / CENTER); // 0..1 red
+  const rightProgress = Math.max(0, (position - CENTER) / (MAX_DRAG - CENTER));
+  const leftProgress = Math.max(0, (CENTER - position) / CENTER);
   const neutralOpacity = Math.max(0, 1 - (leftProgress + rightProgress) * 3);
 
-  // React to external card drag
+  // Knob center in SVG coords: pill starts at x=10, knob cx=50 at position=0
+  // So knob cx = 50 + position. At CENTER(40), cx=90 (middle of 180-wide SVG)
+  const knobCx = 50 + position;
+  // Radial gradient center as percentage of pill width (10..170 = 160 wide)
+  const radialCxPercent = ((knobCx - 10) / 160) * 100;
+
   useMotionValueEvent(dragProgress ?? null as any, "change", (v: number) => {
     if (!dragProgress) return;
     if (isDragging.current) return;
-    // Map card drag (-150..150) to toggle position (0..MAX_DRAG) centered at 40
     const mapped = CENTER + (v / 150) * CENTER;
     const clamped = Math.max(0, Math.min(MAX_DRAG, mapped));
     externalDriving.current = true;
@@ -36,7 +40,6 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
     setPosition(clamped);
   });
 
-  // When card drag ends, reset to center
   useEffect(() => {
     if (!dragProgress) return;
     const unsub = dragProgress.on("change", (v: number) => {
@@ -72,23 +75,24 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
     setAnimating(true);
 
     if (position > MAX_DRAG - SNAP_THRESHOLD) {
-      // Snap right → like
       setPosition(MAX_DRAG);
+      setSnapping(true);
       setTimeout(() => {
+        setSnapping(false);
         onSwipe("like");
         setAnimating(true);
         setPosition(CENTER);
-      }, 250);
+      }, 300);
     } else if (position < SNAP_THRESHOLD) {
-      // Snap left → dislike
       setPosition(0);
+      setSnapping(true);
       setTimeout(() => {
+        setSnapping(false);
         onSwipe("dislike");
         setAnimating(true);
         setPosition(CENTER);
-      }, 250);
+      }, 300);
     } else {
-      // Not enough — snap back to center
       setPosition(CENTER);
     }
   }, [position, onSwipe]);
@@ -96,6 +100,8 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
   const transitionStyle = animating
     ? "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
     : "none";
+
+  const knobScale = snapping ? 1.15 : 1;
 
   return (
     <div
@@ -109,17 +115,17 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
       <svg viewBox="0 0 180 100" width="180" height="100" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="st-neutralBg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#D0D0D0" />
-            <stop offset="100%" stopColor="#B8B8B8" />
+            <stop offset="0%" stopColor="#E8E8ED" />
+            <stop offset="100%" stopColor="#D8D8DE" />
           </linearGradient>
-          <linearGradient id="st-redBg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#E75545" />
-            <stop offset="100%" stopColor="#C53A2A" />
-          </linearGradient>
-          <linearGradient id="st-greenBg" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#76E58F" />
-            <stop offset="100%" stopColor="#4BCC6B" />
-          </linearGradient>
+          <radialGradient id="st-redRadial" cx={`${radialCxPercent}%`} cy="50%" r="60%">
+            <stop offset="0%" stopColor="#E75545" stopOpacity="1" />
+            <stop offset="100%" stopColor="#E75545" stopOpacity="0" />
+          </radialGradient>
+          <radialGradient id="st-greenRadial" cx={`${radialCxPercent}%`} cy="50%" r="60%">
+            <stop offset="0%" stopColor="#4BCC6B" stopOpacity="1" />
+            <stop offset="100%" stopColor="#4BCC6B" stopOpacity="0" />
+          </radialGradient>
           <filter id="st-shadowBg" x="-10%" y="-10%" width="120%" height="120%">
             <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#000000" floodOpacity="0.15" />
           </filter>
@@ -128,25 +134,25 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           </filter>
         </defs>
 
-        {/* Neutral gray base */}
-        <path
-          d="M 50 10 C 75 10, 75 25, 90 25 C 105 25, 105 10, 130 10 A 40 40 0 1 1 130 90 C 105 90, 105 75, 90 75 C 75 75, 75 90, 50 90 A 40 40 0 1 1 50 10 Z"
+        {/* Pill background */}
+        <rect
+          x="10" y="10" width="160" height="80" rx="40"
           fill="url(#st-neutralBg)"
           filter="url(#st-shadowBg)"
         />
 
-        {/* Red layer (left drag) */}
-        <path
-          d="M 50 10 C 75 10, 75 25, 90 25 C 105 25, 105 10, 130 10 A 40 40 0 1 1 130 90 C 105 90, 105 75, 90 75 C 75 75, 75 90, 50 90 A 40 40 0 1 1 50 10 Z"
-          fill="url(#st-redBg)"
+        {/* Red radial glow (left drag) */}
+        <rect
+          x="10" y="10" width="160" height="80" rx="40"
+          fill="url(#st-redRadial)"
           opacity={leftProgress}
           style={{ transition: transitionStyle }}
         />
 
-        {/* Green layer (right drag) */}
-        <path
-          d="M 50 10 C 75 10, 75 25, 90 25 C 105 25, 105 10, 130 10 A 40 40 0 1 1 130 90 C 105 90, 105 75, 90 75 C 75 75, 75 90, 50 90 A 40 40 0 1 1 50 10 Z"
-          fill="url(#st-greenBg)"
+        {/* Green radial glow (right drag) */}
+        <rect
+          x="10" y="10" width="160" height="80" rx="40"
+          fill="url(#st-greenRadial)"
           opacity={rightProgress}
           style={{ transition: transitionStyle }}
         />
@@ -156,48 +162,59 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
           transform={`translate(${position}, 0)`}
           style={{ transition: transitionStyle }}
         >
-          <circle cx="50" cy="50" r="34" fill="#FFFFFF" filter="url(#st-shadowKnob)" />
+          <g
+            transform={`translate(50, 50) scale(${knobScale}) translate(-50, -50)`}
+            style={{ transition: "transform 0.15s ease-out" }}
+          >
+            <circle
+              cx="50" cy="50" r="38"
+              fill="#FFFFFF"
+              stroke="rgba(0,0,0,0.08)"
+              strokeWidth="1"
+              filter="url(#st-shadowKnob)"
+            />
 
-          {/* Neutral directional chevrons */}
-          <g opacity={neutralOpacity * 0.25} style={{ transition: transitionStyle }}>
-            <path
-              d="M 39 44 L 34 50 L 39 56"
-              stroke="#999999"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-            <path
-              d="M 61 44 L 66 50 L 61 56"
-              stroke="#999999"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </g>
+            {/* Neutral directional chevrons */}
+            <g opacity={neutralOpacity * 0.5} style={{ transition: transitionStyle }}>
+              <path
+                d="M 39 44 L 34 50 L 39 56"
+                stroke="#999999"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <path
+                d="M 61 44 L 66 50 L 61 56"
+                stroke="#999999"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </g>
 
-          {/* X icon (appears on left drag) */}
-          <g opacity={leftProgress} style={{ transition: transitionStyle }}>
-            <path
-              d="M 38 38 L 62 62 M 62 38 L 38 62"
-              stroke="#E75545"
-              strokeWidth="8"
-              strokeLinecap="round"
-            />
-          </g>
+            {/* X icon (appears on left drag) */}
+            <g opacity={leftProgress} style={{ transition: transitionStyle }}>
+              <path
+                d="M 38 38 L 62 62 M 62 38 L 38 62"
+                stroke="#E75545"
+                strokeWidth="8"
+                strokeLinecap="round"
+              />
+            </g>
 
-          {/* Check icon (appears on right drag) */}
-          <g opacity={rightProgress} style={{ transition: transitionStyle }}>
-            <path
-              d="M 38 52 L 46 60 L 62 40"
-              stroke="#4BCC6B"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
+            {/* Check icon (appears on right drag) */}
+            <g opacity={rightProgress} style={{ transition: transitionStyle }}>
+              <path
+                d="M 38 52 L 46 60 L 62 40"
+                stroke="#4BCC6B"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </g>
           </g>
         </g>
       </svg>
