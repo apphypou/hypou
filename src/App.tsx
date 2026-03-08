@@ -12,6 +12,7 @@ import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ResetPassword from "./pages/ResetPassword";
 import Explorar from "./pages/Explorar";
+import Shorts from "./pages/Shorts";
 import Matches from "./pages/Matches";
 import Configuracoes from "./pages/Configuracoes";
 import NovoItem from "./pages/NovoItem";
