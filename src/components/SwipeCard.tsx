@@ -12,9 +12,12 @@ import {
   useMotionValue,
   useTransform,
   animate,
+  AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useUserRating } from "@/hooks/useRatings";
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
@@ -27,7 +30,6 @@ interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragDirectionChange?: (rawX: number) => void;
-  onExpandDetails?: () => void;
   disabled?: boolean;
   standby?: boolean;
 }
@@ -51,8 +53,116 @@ const translateCondition = (raw: string | null | undefined) => {
   return CONDITION_MAP[raw] || raw;
 };
 
+/* ── Expanded detail content inside card ── */
+const CardDetailContent = ({ item }: { item: any }) => {
+  const navigate = useNavigate();
+  const ownerProfile = item?.profiles as any;
+  const conditionLabel = translateCondition(item?.condition);
+  const { data: rating } = useUserRating(ownerProfile?.user_id);
+
+  return (
+    <div className="space-y-4 px-4 pb-6 pt-2">
+      {/* Price + tags */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">
+          {formatValue(item.market_value)}
+        </span>
+        <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[10px] font-bold tracking-[0.1em] uppercase">
+          {item.category}
+        </span>
+        {conditionLabel && (
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-[10px] font-bold uppercase">
+            <Package className="h-3 w-3" />
+            {conditionLabel}
+          </span>
+        )}
+      </div>
+
+      {/* Location */}
+      <div className="flex items-center gap-1.5">
+        <MapPin className="h-3.5 w-3.5 text-white/50" />
+        <span className="text-white/70 text-sm">
+          {item.location || ownerProfile?.location || "Local não informado"}
+        </span>
+      </div>
+
+      {/* Description */}
+      {item.description && (
+        <div>
+          <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
+            Descrição
+          </h3>
+          <p className="text-white/80 text-sm leading-relaxed">
+            {item.description}
+          </p>
+        </div>
+      )}
+
+      {/* Margin info */}
+      {(item.margin_down > 0 || item.margin_up > 0) && (
+        <div>
+          <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
+            Faixa de Troca
+          </h3>
+          <p className="text-white/70 text-sm">
+            {formatValue(item.market_value - (item.margin_down || 0))} — {formatValue(item.market_value + (item.margin_up || 0))}
+          </p>
+        </div>
+      )}
+
+      {/* Owner profile */}
+      {ownerProfile && (
+        <div>
+          <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
+            Anunciante
+          </h3>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/perfil/${ownerProfile.user_id}`);
+            }}
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+          >
+            {ownerProfile.avatar_url ? (
+              <img
+                src={ownerProfile.avatar_url}
+                alt=""
+                className="h-11 w-11 rounded-full object-cover border-2 border-white/20"
+              />
+            ) : (
+              <div className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center border-2 border-white/20">
+                <span className="text-base font-bold text-white/50">
+                  {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div className="flex-1 text-left">
+              <p className="text-white font-bold text-sm">
+                {ownerProfile.display_name || "Usuário"}
+              </p>
+              {ownerProfile.location && (
+                <p className="text-white/50 text-xs flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> {ownerProfile.location}
+                </p>
+              )}
+              {rating && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                  <span className="text-xs font-semibold text-yellow-400">{rating.average}</span>
+                  <span className="text-[10px] text-white/40">({rating.count})</span>
+                </div>
+              )}
+            </div>
+            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragDirectionChange, onExpandDetails, disabled, standby }, ref) => {
+  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby }, ref) => {
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
@@ -72,8 +182,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const [activeImageIndex, setActiveImageIndex] = useState(0);
     const currentImage = images[activeImageIndex]?.image_url;
 
+    // Expanded state
+    const [expanded, setExpanded] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
     const handleImageTap = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
+        if (expanded) return; // Don't switch images when expanded
         if (imageCount <= 1) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const tapX = e.clientX - rect.left;
@@ -84,31 +199,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           setActiveImageIndex((i) => (i - 1 + imageCount) % imageCount);
         }
       },
-      [imageCount]
+      [imageCount, expanded]
     );
 
-    // Vertical swipe-up detection via touch events
-    const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-
-    const handleTouchStart = useCallback((e: React.TouchEvent) => {
-      if (standby || disabled) return;
-      const touch = e.touches[0];
-      touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
-    }, [standby, disabled]);
-
-    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-      if (standby || disabled || !touchStartRef.current) return;
-      const touch = e.changedTouches[0];
-      const dx = touch.clientX - touchStartRef.current.x;
-      const dy = touch.clientY - touchStartRef.current.y;
-      const dt = Date.now() - touchStartRef.current.time;
-      touchStartRef.current = null;
-
-      // Swipe up: significant upward movement, more vertical than horizontal, fast enough
-      if (dy < -30 && Math.abs(dy) > Math.abs(dx) && dt < 600) {
-        onExpandDetails?.();
-      }
-    }, [standby, disabled, onExpandDetails]);
+    const toggleExpand = useCallback((e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      setExpanded((v) => !v);
+    }, []);
 
     useEffect(() => {
       if (disabled || standby) return;
@@ -120,7 +217,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     const doExit = useCallback(
       (direction: "like" | "dislike", velocityX?: number) => {
-        if (disabled || standby) return;
+        if (disabled || standby || expanded) return;
         const exitX = direction === "like" ? EXIT_X : -EXIT_X;
         const vel = velocityX != null ? velocityX : (direction === "like" ? 800 : -800);
         animate(x, exitX, {
@@ -132,7 +229,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           onComplete: () => onSwipeComplete(direction),
         });
       },
-      [disabled, standby, x, onSwipeComplete]
+      [disabled, standby, expanded, x, onSwipeComplete]
     );
 
     useImperativeHandle(ref, () => ({
@@ -141,17 +238,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
     const handleDragEnd = useCallback(
       (_: any, info: PanInfo) => {
+        if (expanded) return;
         const velocity = info.velocity.x;
-        const velocityY = info.velocity.y;
         const offset = info.offset.x;
-        const offsetY = info.offset.y;
-
-        // Detect swipe up: significant upward movement, more vertical than horizontal
-        if ((offsetY < -25 || velocityY < -200) && Math.abs(offsetY) > Math.abs(offset) * 0.8) {
-          animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
-          onExpandDetails?.();
-          return;
-        }
 
         if (offset > SWIPE_THRESHOLD || velocity > 400) {
           doExit("like", velocity);
@@ -161,7 +250,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
         }
       },
-      [doExit, x, onExpandDetails]
+      [doExit, x, expanded]
     );
 
     const ownerProfile = item?.profiles as any;
@@ -170,21 +259,21 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     return (
       <motion.div
         className={`absolute inset-0 w-full h-full ${
-          standby ? "pointer-events-none" : "touch-none"
+          standby ? "pointer-events-none" : expanded ? "" : "touch-none"
         }`}
         style={{
           x: standby ? 0 : x,
-          rotate: standby ? 0 : rotate,
+          rotate: standby || expanded ? 0 : rotate,
           zIndex: standby ? 9 : 10,
           willChange: standby ? "auto" : "transform",
           transformOrigin: "50% 80%",
           ...(standby ? { scale: 0.97, y: 0, opacity: 0 } : {}),
         }}
-        drag={standby ? false : true}
+        drag={standby || expanded ? false : true}
         dragDirectionLock
         dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
         dragElastic={{ top: 0.3, bottom: 0, left: 0.65, right: 0.65 }}
-        onDragEnd={standby ? undefined : handleDragEnd}
+        onDragEnd={standby || expanded ? undefined : handleDragEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
@@ -210,7 +299,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* Inner card */}
         <div className="absolute inset-0 rounded-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
         {/* Glow borders */}
-        {!standby && (
+        {!standby && !expanded && (
           <>
             <motion.div
               className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
@@ -273,7 +362,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         </div>
 
         {/* Owner mini-profile — top left */}
-        {ownerProfile && (
+        {ownerProfile && !expanded && (
           <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
             {ownerProfile.avatar_url ? (
               <img
@@ -293,7 +382,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         )}
 
         {/* Image dots — top right */}
-        {imageCount > 1 && (
+        {imageCount > 1 && !expanded && (
           <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
             {images.map((_: any, i: number) => (
               <div
@@ -309,16 +398,55 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* Top gradient for readability */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
 
-        {/* Bottom gradient for glass panel readability */}
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-20" />
+        {/* Bottom gradient */}
+        <div className={`absolute inset-x-0 bottom-0 pointer-events-none z-20 transition-all duration-200 ${
+          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-64 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
+        }`} />
 
-        {/* ===== COMPACT INFO PANEL ===== */}
-        {activeImageIndex === 0 && (
+        {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
+        <AnimatePresence>
+          {expanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="absolute inset-0 z-30 flex flex-col"
+            >
+              {/* Collapse button at top */}
+              <button
+                onClick={toggleExpand}
+                className="w-full flex justify-center items-center gap-1 pt-5 pb-2 text-white/60 z-40"
+              >
+                <ChevronDown className="h-4 w-4" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Recolher</span>
+              </button>
+
+              {/* Scrollable detail content */}
+              <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-auto no-scrollbar overscroll-contain"
+                onTouchMove={(e) => e.stopPropagation()}
+              >
+                {/* Item name header */}
+                <div className="px-4 pb-2">
+                  <h2 className="text-white text-xl font-bold tracking-tight drop-shadow-md">
+                    {item.name}
+                  </h2>
+                </div>
+                <CardDetailContent item={item} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ===== COMPACT INFO PANEL (collapsed) ===== */}
+        {activeImageIndex === 0 && !expanded && (
         <div
           className="absolute bottom-0 inset-x-0 z-30 p-3 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            onExpandDetails?.();
+            toggleExpand(e);
           }}
         >
           <div className="rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">

@@ -14,24 +14,20 @@ import { useNavigate } from "react-router-dom";
 import {
   motion,
   useMotionValue,
-  AnimatePresence } from
-"framer-motion";
+  AnimatePresence,
+} from "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import SelectItemDialog from "@/components/SelectItemDialog";
-import ItemDetailPanel from "@/components/ItemDetailPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
-{ emoji: "📱", label: "Celulares" },
-{ emoji: "🚗", label: "Carros & Motos" },
-{ emoji: "👕", label: "Moda" },
-{ emoji: "🛋️", label: "Casa" },
-{ emoji: "🎮", label: "Videogames" }];
-
-
-const formatValue = (cents: number) =>
-new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
+  { emoji: "📱", label: "Celulares" },
+  { emoji: "🚗", label: "Carros & Motos" },
+  { emoji: "👕", label: "Moda" },
+  { emoji: "🛋️", label: "Casa" },
+  { emoji: "🎮", label: "Videogames" },
+];
 
 const Explorar = () => {
   const { user } = useAuth();
@@ -57,20 +53,17 @@ const Explorar = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Detail sheet state
-  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
-
   // Fetch user's preferred categories
   const { data: userCategories = [] } = useQuery({
     queryKey: ["user-categories", user?.id],
     queryFn: async () => {
-      const { data } = await supabase.
-      from("user_categories").
-      select("category").
-      eq("user_id", user!.id);
+      const { data } = await supabase
+        .from("user_categories")
+        .select("category")
+        .eq("user_id", user!.id);
       return (data || []).map((c) => c.category);
     },
-    enabled: !!user
+    enabled: !!user,
   });
 
   const dragDirectionValue = useMotionValue(0);
@@ -80,7 +73,7 @@ const Explorar = () => {
     queryFn: () => getExploreItems(user!.id),
     enabled: !!user,
     staleTime: Infinity,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -109,21 +102,12 @@ const Explorar = () => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragDirectionValue.set(0);
-    setDetailSheetOpen(false);
     if (currentIndex + 1 >= filteredItems.length) {
       setCurrentIndex(0);
     } else {
       setCurrentIndex((i) => i + 1);
     }
   }, [currentIndex, filteredItems.length, dragDirectionValue]);
-
-  const handleUndo = useCallback(() => {
-    if (prevIndex === null) return;
-    setCurrentIndex(prevIndex);
-    setPrevIndex(null);
-    setEpoch((e) => e + 1);
-    dragDirectionValue.set(0);
-  }, [prevIndex, dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
@@ -165,15 +149,12 @@ const Explorar = () => {
       triggerStreak(direction);
 
       if (direction === "like") {
-        // Open dialog to select which item to offer
         setPendingLikeItem(currentItem);
         setDialogOpen(true);
       } else {
-        // Dislike: just record and advance
         recordSwipeInBackground("dislike", currentItem.id);
       }
 
-      // Haptic feedback on like
       if (direction === "like" && navigator.vibrate) {
         navigator.vibrate(50);
       }
@@ -189,9 +170,7 @@ const Explorar = () => {
       if (!user || !pendingLikeItem) return;
       setProposalLoading(true);
       try {
-        // Record the swipe
         await createSwipe(user.id, pendingLikeItem.id, "like").catch(() => {});
-        // Create proposal
         await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
         toast({ title: "Proposta enviada! 🎉", description: "O dono do item será notificado." });
       } catch (err: any) {
@@ -210,7 +189,6 @@ const Explorar = () => {
   );
 
   const handleDialogClose = useCallback(() => {
-    // User cancelled - record as dislike so they don't see it again
     if (pendingLikeItem && user) {
       recordSwipeInBackground("dislike", pendingLikeItem.id);
     }
@@ -225,7 +203,7 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  // Preload image after next (next is already rendered in DOM)
+  // Preload image after next
   const afterNextItem = filteredItems[currentIndex + 2] ?? filteredItems[0] ?? null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
 
@@ -236,9 +214,9 @@ const Explorar = () => {
     }
   }, [afterNextImage]);
 
-  const progressText = filteredItems.length > 0 ?
-  `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}` :
-  "";
+  const progressText = filteredItems.length > 0
+    ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
+    : "";
 
   return (
     <ScreenLayout>
@@ -257,9 +235,9 @@ const Explorar = () => {
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
-            showFilters || activeFilter ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"}`
-            }>
-            
+              showFilters || activeFilter ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
+            }`}
+          >
             <Filter className="h-4 w-4" />
           </button>
         </div>
@@ -267,56 +245,56 @@ const Explorar = () => {
 
       {/* Category filter chips */}
       <AnimatePresence>
-        {showFilters &&
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="overflow-hidden px-6 shrink-0 z-30">
-          
+        {showFilters && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden px-6 shrink-0 z-30"
+          >
             <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
               <button
-              onClick={() => setActiveFilter(null)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-              !activeFilter ?
-              "bg-primary text-primary-foreground" :
-              "bg-card border border-foreground/10 text-foreground/50"}`
-              }>
-              
+                onClick={() => setActiveFilter(null)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                  !activeFilter
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-foreground/10 text-foreground/50"
+                }`}
+              >
                 Todos
               </button>
               {allCategories.map((cat) => {
-              const isUserPref = userCategories.includes(cat.label);
-              return (
-                <button
-                  key={cat.label}
-                  onClick={() => setActiveFilter(activeFilter === cat.label ? null : cat.label)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                  activeFilter === cat.label ?
-                  "bg-primary text-primary-foreground" :
-                  isUserPref ?
-                  "bg-primary/10 border border-primary/30 text-primary" :
-                  "bg-card border border-foreground/10 text-foreground/50"}`
-                  }>
-                  
+                const isUserPref = userCategories.includes(cat.label);
+                return (
+                  <button
+                    key={cat.label}
+                    onClick={() => setActiveFilter(activeFilter === cat.label ? null : cat.label)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                      activeFilter === cat.label
+                        ? "bg-primary text-primary-foreground"
+                        : isUserPref
+                        ? "bg-primary/10 border border-primary/30 text-primary"
+                        : "bg-card border border-foreground/10 text-foreground/50"
+                    }`}
+                  >
                     {cat.emoji} {cat.label}
-                  </button>);
-
-            })}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
-        }
+        )}
       </AnimatePresence>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10 overflow-y-auto no-scrollbar">
-        {isLoading ?
-        <div className="flex-1 flex items-center justify-center w-full">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10 overflow-hidden">
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
-          </div> :
-        filteredItems.length === 0 ?
-        <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
             <span className="text-6xl mb-4">🔍</span>
             <h2 className="text-xl font-bold text-foreground mb-2">
               {activeFilter ? `Sem itens em "${activeFilter}"` : "Sem itens por agora"}
@@ -324,81 +302,72 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm">
               {activeFilter ? "Tente outra categoria ou remova o filtro." : "Volte mais tarde para encontrar novas trocas!"}
             </p>
-            {activeFilter &&
-          <button
-            onClick={() => setActiveFilter(null)}
-            className="mt-4 text-primary text-xs font-bold uppercase tracking-wider">
-            
+            {activeFilter && (
+              <button
+                onClick={() => setActiveFilter(null)}
+                className="mt-4 text-primary text-xs font-bold uppercase tracking-wider"
+              >
                 Limpar filtro
               </button>
-          }
-          </div> :
-        currentItem ?
-        <>
-          <div className={`relative w-full shrink-0 transition-all duration-300 ease-out ${
-            detailSheetOpen ? "h-[45vh]" : "h-full"
-          }`}>
-            {/* Streak indicator */}
-            <AnimatePresence>
-              {showStreak && likeStreak >= 3 &&
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.8, y: -20 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="absolute -top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 backdrop-blur-xl">
-              
-                  <span className="text-lg">🔥</span>
-                  <span className="text-primary text-sm font-bold">{likeStreak} curtidas seguidas!</span>
-                </motion.div>
-            }
-            </AnimatePresence>
-
-            {/* Next card — pre-rendered behind, ready to appear instantly */}
-            {nextItem && nextItem.id !== currentItem.id &&
-          <SwipeCard
-            key={`standby-${nextItem.id}`}
-            item={nextItem}
-            onSwipeComplete={() => {}}
-            standby />
-          }
-
-            {/* Active draggable card */}
-            <SwipeCard
-            key={`active-${currentItem.id}-${epoch}`}
-            ref={cardRef}
-            item={currentItem}
-            onSwipeComplete={handleSwipeComplete}
-            onDragDirectionChange={handleDragDirectionChange}
-            onExpandDetails={() => setDetailSheetOpen(true)}
-            disabled={swipingRef.current || detailSheetOpen} />
-          </div>
-
-          {/* Inline detail panel below card */}
-          <AnimatePresence>
-            {detailSheetOpen && currentItem && (
-              <ItemDetailPanel
-                item={currentItem}
-                onCollapse={() => setDetailSheetOpen(false)}
-              />
             )}
-          </AnimatePresence>
-        </> :
-        null}
+          </div>
+        ) : currentItem ? (
+          <>
+            <div className="relative w-full h-full shrink-0">
+              {/* Streak indicator */}
+              <AnimatePresence>
+                {showStreak && likeStreak >= 3 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/40 backdrop-blur-xl"
+                  >
+                    <span className="text-lg">🔥</span>
+                    <span className="text-primary text-sm font-bold">{likeStreak} curtidas seguidas!</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Next card — pre-rendered behind */}
+              {nextItem && nextItem.id !== currentItem.id && (
+                <SwipeCard
+                  key={`standby-${nextItem.id}`}
+                  item={nextItem}
+                  onSwipeComplete={() => {}}
+                  standby
+                />
+              )}
+
+              {/* Active draggable card */}
+              <SwipeCard
+                key={`active-${currentItem.id}-${epoch}`}
+                ref={cardRef}
+                item={currentItem}
+                onSwipeComplete={handleSwipeComplete}
+                onDragDirectionChange={handleDragDirectionChange}
+                disabled={swipingRef.current}
+              />
+            </div>
+          </>
+        ) : null}
       </main>
 
-      {/* Toggle Switch — hidden when details are expanded */}
-      {currentItem && !isLoading && filteredItems.length > 0 && !detailSheetOpen &&
-      <div
-        className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}>
+      {/* Toggle Switch */}
+      {currentItem && !isLoading && filteredItems.length > 0 && (
+        <div
+          className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
+        >
           <SwipeToggle
-          key={`toggle-${epoch}`}
-          onSwipe={handleSwipeComplete}
-          dragProgress={dragDirectionValue}
-          disabled={swipingRef.current} />
+            key={`toggle-${epoch}`}
+            onSwipe={handleSwipeComplete}
+            dragProgress={dragDirectionValue}
+            disabled={swipingRef.current}
+          />
         </div>
-      }
+      )}
 
       <SelectItemDialog
         open={dialogOpen}
@@ -409,8 +378,8 @@ const Explorar = () => {
       />
 
       <BottomNav activeTab="explorar" />
-    </ScreenLayout>);
-
+    </ScreenLayout>
+  );
 };
 
 export default Explorar;
