@@ -87,8 +87,28 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
-    // Track vertical pan for swipe-up detection
-    const panStartRef = { x: 0, y: 0 };
+    // Vertical swipe-up detection via touch events
+    const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+      if (standby || disabled) return;
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    }, [standby, disabled]);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+      if (standby || disabled || !touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      const dt = Date.now() - touchStartRef.current.time;
+      touchStartRef.current = null;
+
+      // Swipe up: significant upward movement, more vertical than horizontal, fast enough
+      if (dy < -50 && Math.abs(dy) > Math.abs(dx) * 1.3 && dt < 500) {
+        onExpandDetails?.();
+      }
+    }, [standby, disabled, onExpandDetails]);
 
     useEffect(() => {
       if (disabled || standby) return;
