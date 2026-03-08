@@ -173,6 +173,8 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         drag={standby ? false : "x"}
         dragElastic={0.65}
         onDragEnd={standby ? undefined : handleDragEnd}
+        onTouchStart={standby ? undefined : handleTouchStart}
+        onTouchEnd={standby ? undefined : handleTouchEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
