@@ -275,10 +275,8 @@ const Shorts = () => {
 
       {/* Video feed with AnimatePresence */}
       <div
+        ref={containerRef}
         className="h-full w-full relative"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onWheel={handleWheel}
       >
         <AnimatePresence initial={false} custom={direction} mode="popLayout" onExitComplete={() => setIsAnimating(false)}>
           <motion.div
