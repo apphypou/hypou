@@ -62,7 +62,7 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
         <span className="text-[10px] font-bold uppercase tracking-widest">Recolher</span>
       </button>
 
-      <div className="rounded-2xl bg-card border border-border p-4 space-y-5">
+      <div className="rounded-2xl bg-card/40 backdrop-blur-2xl border border-primary/20 p-4 space-y-5">
 
         {/* Price + tags */}
         <div className="flex items-center gap-3 flex-wrap">
