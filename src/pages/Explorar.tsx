@@ -109,6 +109,7 @@ const Explorar = () => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragDirectionValue.set(0);
+    setDetailSheetOpen(false);
     if (currentIndex + 1 >= filteredItems.length) {
       setCurrentIndex(0);
     } else {
