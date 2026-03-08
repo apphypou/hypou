@@ -272,7 +272,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         drag={standby || expanded ? false : true}
         dragDirectionLock
         dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
-        dragElastic={{ top: 0.3, bottom: 0, left: 0.65, right: 0.65 }}
+        dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
         onDragEnd={standby || expanded ? undefined : handleDragEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
