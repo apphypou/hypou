@@ -2,7 +2,17 @@ import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { updateItem, uploadItemImage, getItemById, deleteItemImage } from "@/services/itemService";
+import { updateItem, uploadItemImage, getItemById, deleteItemImage, validateItemPrice } from "@/services/itemService";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
