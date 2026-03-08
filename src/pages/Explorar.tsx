@@ -19,6 +19,7 @@ import {
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import SelectItemDialog from "@/components/SelectItemDialog";
+import ItemDetailSheet from "@/components/ItemDetailSheet";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
