@@ -75,6 +75,13 @@ const EditarItem = () => {
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [priceAlert, setPriceAlert] = useState<{
+    open: boolean;
+    reason: string;
+    suggestedMin: number;
+    suggestedMax: number;
+  }>({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
 
   // Populate form when item loads
   useEffect(() => {
