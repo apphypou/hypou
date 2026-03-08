@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import ChatSafetyDialog from "@/components/ChatSafetyDialog";
 
 // Fetch conversation details
 const useConversationDetails = (conversationId: string | null) => {
