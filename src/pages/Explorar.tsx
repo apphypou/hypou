@@ -19,7 +19,7 @@ import {
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import SelectItemDialog from "@/components/SelectItemDialog";
-import ItemDetailSheet from "@/components/ItemDetailSheet";
+import ItemDetailPanel from "@/components/ItemDetailPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
@@ -109,6 +109,7 @@ const Explorar = () => {
     setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragDirectionValue.set(0);
+    setDetailSheetOpen(false);
     if (currentIndex + 1 >= filteredItems.length) {
       setCurrentIndex(0);
     } else {
@@ -309,7 +310,7 @@ const Explorar = () => {
       </AnimatePresence>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10 overflow-y-auto no-scrollbar">
         {isLoading ?
         <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
@@ -333,7 +334,10 @@ const Explorar = () => {
           }
           </div> :
         currentItem ?
-        <div className="relative w-full h-full">
+        <>
+          <div className={`relative w-full shrink-0 transition-all duration-300 ease-out ${
+            detailSheetOpen ? "h-[45vh]" : "h-full"
+          }`}>
             {/* Streak indicator */}
             <AnimatePresence>
               {showStreak && likeStreak >= 3 &&
@@ -357,7 +361,6 @@ const Explorar = () => {
             item={nextItem}
             onSwipeComplete={() => {}}
             standby />
-
           }
 
             {/* Active draggable card */}
@@ -368,32 +371,34 @@ const Explorar = () => {
             onSwipeComplete={handleSwipeComplete}
             onDragDirectionChange={handleDragDirectionChange}
             onExpandDetails={() => setDetailSheetOpen(true)}
-            disabled={swipingRef.current} />
-          
-          </div> :
+            disabled={swipingRef.current || detailSheetOpen} />
+          </div>
+
+          {/* Inline detail panel below card */}
+          <AnimatePresence>
+            {detailSheetOpen && currentItem && (
+              <ItemDetailPanel
+                item={currentItem}
+                onCollapse={() => setDetailSheetOpen(false)}
+              />
+            )}
+          </AnimatePresence>
+        </> :
         null}
       </main>
 
-      {/* Toggle Switch */}
-      {currentItem && !isLoading && filteredItems.length > 0 &&
+      {/* Toggle Switch — hidden when details are expanded */}
+      {currentItem && !isLoading && filteredItems.length > 0 && !detailSheetOpen &&
       <div
         className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
         style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}>
-        
           <SwipeToggle
           key={`toggle-${epoch}`}
           onSwipe={handleSwipeComplete}
           dragProgress={dragDirectionValue}
           disabled={swipingRef.current} />
-        
         </div>
       }
-
-      <ItemDetailSheet
-        open={detailSheetOpen}
-        onOpenChange={setDetailSheetOpen}
-        item={currentItem}
-      />
 
       <SelectItemDialog
         open={dialogOpen}

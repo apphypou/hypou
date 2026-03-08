@@ -4,6 +4,7 @@ import {
   useCallback,
   useState,
   useEffect,
+  useRef,
   memo,
 } from "react";
 import {
@@ -86,6 +87,29 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
+    // Vertical swipe-up detection via touch events
+    const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+      if (standby || disabled) return;
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    }, [standby, disabled]);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+      if (standby || disabled || !touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      const dt = Date.now() - touchStartRef.current.time;
+      touchStartRef.current = null;
+
+      // Swipe up: significant upward movement, more vertical than horizontal, fast enough
+      if (dy < -50 && Math.abs(dy) > Math.abs(dx) * 1.3 && dt < 500) {
+        onExpandDetails?.();
+      }
+    }, [standby, disabled, onExpandDetails]);
+
     useEffect(() => {
       if (disabled || standby) return;
       const unsubscribe = x.on("change", (latest) => {
@@ -149,6 +173,8 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         drag={standby ? false : "x"}
         dragElastic={0.65}
         onDragEnd={standby ? undefined : handleDragEnd}
+        onTouchStart={standby ? undefined : handleTouchStart}
+        onTouchEnd={standby ? undefined : handleTouchEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
