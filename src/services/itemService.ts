@@ -74,6 +74,34 @@ export const uploadItemImage = async (userId: string, itemId: string, file: File
   return imageUrl;
 };
 
+export const validateItemPrice = async (
+  name: string,
+  category: string,
+  condition: string,
+  valueCents: number
+): Promise<{
+  valid: boolean;
+  reason: string;
+  suggestedMin: number;
+  suggestedMax: number;
+}> => {
+  try {
+    const { data, error } = await supabase.functions.invoke("validate-item-price", {
+      body: { name, category, condition, value_cents: valueCents },
+    });
+    if (error) throw error;
+    return {
+      valid: data.valid ?? true,
+      reason: data.reason ?? "",
+      suggestedMin: data.suggested_min_cents ?? 0,
+      suggestedMax: data.suggested_max_cents ?? 0,
+    };
+  } catch (err) {
+    console.error("Price validation failed, allowing item:", err);
+    return { valid: true, reason: "", suggestedMin: 0, suggestedMax: 0 };
+  }
+};
+
 export const getExploreItems = async (userId: string, page = 0, pageSize = 50) => {
   const from = page * pageSize;
   const to = from + pageSize - 1;

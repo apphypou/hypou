@@ -1,12 +1,22 @@
-import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check, MapPin } from "lucide-react";
+import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check, MapPin, AlertTriangle } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { createItem, uploadItemImage } from "@/services/itemService";
+import { createItem, uploadItemImage, validateItemPrice } from "@/services/itemService";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
 import IconButton from "@/components/IconButton";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 const categories = [
   { emoji: "📱", label: "Celulares" },
@@ -34,6 +44,10 @@ const parseCurrencyToCents = (formatted: string): number => {
   return parseInt(digits || "0", 10);
 };
 
+const formatCentsDisplay = (cents: number): string => {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
+
 const NovoItem = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -52,6 +66,15 @@ const NovoItem = () => {
   const [itemPhotos, setItemPhotos] = useState<File[]>([]);
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [validating, setValidating] = useState(false);
+
+  // Price validation dialog state
+  const [priceAlert, setPriceAlert] = useState<{
+    open: boolean;
+    reason: string;
+    suggestedMin: number;
+    suggestedMax: number;
+  }>({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
 
   const handleItemPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -63,23 +86,12 @@ const NovoItem = () => {
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
-    if (raw.length > 10) return; // max ~R$ 99.999.999,99
+    if (raw.length > 10) return;
     setItemValue(raw ? formatCurrency(raw) : "");
   };
 
-  const handleSubmit = async () => {
-    if (!user || !itemName.trim()) {
-      toast({ title: "Preencha o nome do item", variant: "destructive" });
-      return;
-    }
-    if (itemName.trim().length > 120) {
-      toast({ title: "Nome muito longo (máx. 120 caracteres)", variant: "destructive" });
-      return;
-    }
-    if (!category) {
-      toast({ title: "Selecione uma categoria", variant: "destructive" });
-      return;
-    }
+  const saveItem = async () => {
+    if (!user) return;
     setSaving(true);
     try {
       const valueInCents = parseCurrencyToCents(itemValue);
@@ -95,7 +107,6 @@ const NovoItem = () => {
         location: location.trim() || undefined,
       });
 
-      // Update condition separately since createItem doesn't include it
       if (condition) {
         const { supabase } = await import("@/integrations/supabase/client");
         await supabase.from("items").update({ condition }).eq("id", item.id);
@@ -115,9 +126,86 @@ const NovoItem = () => {
     }
   };
 
+  const handleSubmit = async () => {
+    if (!user || !itemName.trim()) {
+      toast({ title: "Preencha o nome do item", variant: "destructive" });
+      return;
+    }
+    if (itemName.trim().length > 120) {
+      toast({ title: "Nome muito longo (máx. 120 caracteres)", variant: "destructive" });
+      return;
+    }
+    if (!category) {
+      toast({ title: "Selecione uma categoria", variant: "destructive" });
+      return;
+    }
+
+    const valueInCents = parseCurrencyToCents(itemValue);
+
+    // Validate price with AI
+    setValidating(true);
+    try {
+      const validation = await validateItemPrice(itemName.trim(), category, condition, valueInCents);
+
+      if (!validation.valid) {
+        setPriceAlert({
+          open: true,
+          reason: validation.reason,
+          suggestedMin: validation.suggestedMin,
+          suggestedMax: validation.suggestedMax,
+        });
+        setValidating(false);
+        return;
+      }
+    } catch {
+      // Fail-open
+    }
+    setValidating(false);
+
+    await saveItem();
+  };
+
+  const handleForceSubmit = async () => {
+    setPriceAlert({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
+    await saveItem();
+  };
+
+  const isSubmitting = saving || validating;
+
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleItemPhotos} />
+
+      {/* Price validation alert dialog */}
+      <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
+        <AlertDialogContent className="bg-card border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Valor suspeito
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-3">
+              <p>{priceAlert.reason}</p>
+              {priceAlert.suggestedMin > 0 && priceAlert.suggestedMax > 0 && (
+                <p className="font-medium text-foreground/80">
+                  Faixa sugerida: {formatCentsDisplay(priceAlert.suggestedMin)} — {formatCentsDisplay(priceAlert.suggestedMax)}
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Corrigir valor
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleForceSubmit}
+              className="bg-card border border-foreground/10 text-foreground hover:bg-card/80"
+            >
+              Cadastrar mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <header className="relative z-40 flex w-full items-center gap-3 px-6 pt-12 pb-4">
         <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
@@ -298,10 +386,16 @@ const NovoItem = () => {
       <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
         <button
           onClick={handleSubmit}
-          disabled={saving}
+          disabled={isSubmitting}
           className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Check className="h-5 w-5" /><span>Cadastrar Item</span></>}
+          {validating ? (
+            <><Loader2 className="h-5 w-5 animate-spin" /><span>Verificando valor...</span></>
+          ) : saving ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <><Check className="h-5 w-5" /><span>Cadastrar Item</span></>
+          )}
         </button>
       </div>
     </ScreenLayout>

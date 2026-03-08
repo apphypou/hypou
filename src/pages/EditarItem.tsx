@@ -1,8 +1,18 @@
-import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check, MapPin, Trash2 } from "lucide-react";
+import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check, MapPin, Trash2, AlertTriangle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { updateItem, uploadItemImage, getItemById, deleteItemImage } from "@/services/itemService";
+import { updateItem, uploadItemImage, getItemById, deleteItemImage, validateItemPrice } from "@/services/itemService";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -65,6 +75,13 @@ const EditarItem = () => {
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [priceAlert, setPriceAlert] = useState<{
+    open: boolean;
+    reason: string;
+    suggestedMin: number;
+    suggestedMax: number;
+  }>({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
 
   // Populate form when item loads
   useEffect(() => {
@@ -106,15 +123,8 @@ const EditarItem = () => {
     setItemValue(raw ? formatCurrency(raw) : "");
   };
 
-  const handleSubmit = async () => {
-    if (!user || !itemId || !itemName.trim()) {
-      toast({ title: "Preencha o nome do item", variant: "destructive" });
-      return;
-    }
-    if (!category) {
-      toast({ title: "Selecione uma categoria", variant: "destructive" });
-      return;
-    }
+  const saveItem = async () => {
+    if (!user || !itemId) return;
     setSaving(true);
     try {
       const valueInCents = parseCurrencyToCents(itemValue);
@@ -130,7 +140,6 @@ const EditarItem = () => {
         margin_down: devalorization,
       });
 
-      // Upload new photos
       for (let i = 0; i < newPhotos.length; i++) {
         const position = existingImages.length + i;
         await uploadItemImage(user.id, itemId, newPhotos[i], position);
@@ -147,6 +156,50 @@ const EditarItem = () => {
     }
   };
 
+  const handleSubmit = async () => {
+    if (!user || !itemId || !itemName.trim()) {
+      toast({ title: "Preencha o nome do item", variant: "destructive" });
+      return;
+    }
+    if (!category) {
+      toast({ title: "Selecione uma categoria", variant: "destructive" });
+      return;
+    }
+
+    const valueInCents = parseCurrencyToCents(itemValue);
+
+    setValidating(true);
+    try {
+      const validation = await validateItemPrice(itemName.trim(), category, condition, valueInCents);
+      if (!validation.valid) {
+        setPriceAlert({
+          open: true,
+          reason: validation.reason,
+          suggestedMin: validation.suggestedMin,
+          suggestedMax: validation.suggestedMax,
+        });
+        setValidating(false);
+        return;
+      }
+    } catch {
+      // Fail-open
+    }
+    setValidating(false);
+
+    await saveItem();
+  };
+
+  const handleForceSubmit = async () => {
+    setPriceAlert({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
+    await saveItem();
+  };
+
+  const isSubmitting = saving || validating;
+
+  const formatCentsDisplay = (cents: number): string => {
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  };
+
   if (isLoading) {
     return (
       <ScreenLayout>
@@ -160,6 +213,37 @@ const EditarItem = () => {
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
+
+      {/* Price validation alert dialog */}
+      <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
+        <AlertDialogContent className="bg-card border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Valor suspeito
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-3">
+              <p>{priceAlert.reason}</p>
+              {priceAlert.suggestedMin > 0 && priceAlert.suggestedMax > 0 && (
+                <p className="font-medium text-foreground/80">
+                  Faixa sugerida: {formatCentsDisplay(priceAlert.suggestedMin)} — {formatCentsDisplay(priceAlert.suggestedMax)}
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Corrigir valor
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleForceSubmit}
+              className="bg-card border border-foreground/10 text-foreground hover:bg-card/80"
+            >
+              Salvar mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <header className="relative z-40 flex w-full items-center gap-3 px-6 pt-12 pb-4">
         <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
@@ -338,10 +422,16 @@ const EditarItem = () => {
       <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
         <button
           onClick={handleSubmit}
-          disabled={saving}
+          disabled={isSubmitting}
           className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Check className="h-5 w-5" /><span>Salvar Alterações</span></>}
+          {validating ? (
+            <><Loader2 className="h-5 w-5 animate-spin" /><span>Verificando valor...</span></>
+          ) : saving ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <><Check className="h-5 w-5" /><span>Salvar Alterações</span></>
+          )}
         </button>
       </div>
     </ScreenLayout>
