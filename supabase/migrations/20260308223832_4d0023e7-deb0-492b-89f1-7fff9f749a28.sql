@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN chat_terms_accepted_at timestamptz DEFAULT NULL;
