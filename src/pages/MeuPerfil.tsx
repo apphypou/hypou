@@ -277,9 +277,30 @@ const MeuPerfil = () => {
                     <GlassCard
                       key={item.id}
                       hoverable
-                      className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer"
+                      className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer relative"
                       onClick={() => navigate(`/editar-item/${item.id}`)}
                     >
+                      {/* Action buttons - top right corner */}
+                      <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteItemId(item.id); }}
+                          className="text-foreground/30 hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadingVideoItemId(item.id);
+                            videoInputRef.current?.click();
+                          }}
+                          className="text-foreground/30 hover:text-primary transition-colors"
+                          title="Adicionar vídeo"
+                        >
+                          <Video className="h-4 w-4" />
+                        </button>
+                      </div>
+
                       <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
                         {mainImage ? (
                           <img
@@ -293,27 +314,8 @@ const MeuPerfil = () => {
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 flex flex-col justify-center gap-1">
-                        <div className="flex justify-between items-start">
-                          <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteItemId(item.id); }}
-                            className="text-foreground/30 hover:text-destructive transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setUploadingVideoItemId(item.id);
-                              videoInputRef.current?.click();
-                            }}
-                            className="text-foreground/30 hover:text-primary transition-colors"
-                            title="Adicionar vídeo"
-                          >
-                            <Video className="h-4 w-4" />
-                          </button>
-                        </div>
+                      <div className="flex-1 flex flex-col justify-center gap-1 pr-14">
+                        <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
                         <h3 className="text-base font-bold text-foreground leading-tight">{item.name}</h3>
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-foreground/40 text-xs font-medium">Valor de mercado</span>
