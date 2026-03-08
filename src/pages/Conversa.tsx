@@ -208,33 +208,35 @@ const Conversa = () => {
         )}
       </div>
 
-      {/* Input */}
-      <div className="shrink-0 px-4 pb-8 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 relative">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Digite sua mensagem..."
-              rows={1}
-              className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-2xl px-4 py-3 pr-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none text-sm max-h-32"
-              style={{ minHeight: "44px" }}
-            />
+      {/* Input - hidden until terms accepted */}
+      {chatTermsAccepted !== false && (
+        <div className="shrink-0 px-4 pb-8 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 relative">
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite sua mensagem..."
+                rows={1}
+                className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-2xl px-4 py-3 pr-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none text-sm max-h-32"
+                style={{ minHeight: "44px" }}
+              />
+            </div>
+            <button
+              onClick={handleSend}
+              disabled={!text.trim() || sending}
+              className="h-11 w-11 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all active:scale-90 disabled:opacity-30 disabled:active:scale-100 neon-glow"
+            >
+              {sending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </button>
           </div>
-          <button
-            onClick={handleSend}
-            disabled={!text.trim() || sending}
-            className="h-11 w-11 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all active:scale-90 disabled:opacity-30 disabled:active:scale-100 neon-glow"
-          >
-            {sending ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 };
