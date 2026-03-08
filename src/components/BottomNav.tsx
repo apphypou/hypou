@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
 
-type TabId = "explorar" | "trocas" | "chat" | "perfil";
+type TabId = "explorar" | "shorts" | "trocas" | "chat" | "perfil";
 
 interface BottomNavProps {
   activeTab: TabId;
