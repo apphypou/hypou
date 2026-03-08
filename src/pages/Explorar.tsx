@@ -367,6 +367,7 @@ const Explorar = () => {
             item={currentItem}
             onSwipeComplete={handleSwipeComplete}
             onDragDirectionChange={handleDragDirectionChange}
+            onExpandDetails={() => setDetailSheetOpen(true)}
             disabled={swipingRef.current} />
           
           </div> :
