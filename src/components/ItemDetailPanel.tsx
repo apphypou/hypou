@@ -28,13 +28,31 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
 
   if (!item) return null;
 
-  return (
+    const touchStartRef = useRef<{ y: number; time: number } | null>(null);
+
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
+      touchStartRef.current = { y: e.touches[0].clientY, time: Date.now() };
+    }, []);
+
+    const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+      if (!touchStartRef.current) return;
+      const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+      const dt = Date.now() - touchStartRef.current.time;
+      touchStartRef.current = null;
+      if (dy > 50 && dt < 400) {
+        onCollapse();
+      }
+    }, [onCollapse]);
+
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="w-full px-1 pb-6"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Collapse handle */}
       <button
