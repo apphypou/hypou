@@ -386,6 +386,19 @@ const Explorar = () => {
         null}
       </main>
 
+      {/* Toggle Switch — hidden when details are expanded */}
+      {currentItem && !isLoading && filteredItems.length > 0 && !detailSheetOpen &&
+      <div
+        className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}>
+          <SwipeToggle
+          key={`toggle-${epoch}`}
+          onSwipe={handleSwipeComplete}
+          dragProgress={dragDirectionValue}
+          disabled={swipingRef.current} />
+        </div>
+      }
+
       <SelectItemDialog
         open={dialogOpen}
         onClose={handleDialogClose}
