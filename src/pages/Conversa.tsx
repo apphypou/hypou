@@ -65,8 +65,25 @@ const Conversa = () => {
   const { mutate: send, isPending: sending } = useSendMessage(conversationId || null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Check if user accepted chat terms
+  const { data: chatTermsAccepted } = useQuery({
+    queryKey: ["chat-terms", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("chat_terms_accepted_at")
+        .eq("user_id", user!.id)
+        .single();
+      return !!(data as any)?.chat_terms_accepted_at;
+    },
+    enabled: !!user,
+  });
+
+  const showSafetyDialog = chatTermsAccepted === false;
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
