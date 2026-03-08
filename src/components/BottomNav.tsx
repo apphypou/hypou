@@ -1,4 +1,4 @@
-import { Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
+import { Compass, Clapperboard, Handshake, MessageSquare, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion, AnimatePresence } from "framer-motion";
