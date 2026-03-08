@@ -113,6 +113,14 @@ const Conversa = () => {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
+      {/* Safety Dialog */}
+      {user && (
+        <ChatSafetyDialog
+          open={showSafetyDialog}
+          userId={user.id}
+          onAccepted={() => queryClient.setQueryData(["chat-terms", user.id], true)}
+        />
+      )}
       {/* Header */}
       <header className="relative z-40 flex items-center gap-3 px-4 pt-4 pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl shrink-0">
         <button
