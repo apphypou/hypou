@@ -42,6 +42,8 @@ const MeuPerfil = () => {
   const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingVideoItemId, setUploadingVideoItemId] = useState<string | null>(null);
 
   const openEdit = () => {
     setEditName(profile?.display_name ?? "");
