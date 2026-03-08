@@ -57,6 +57,9 @@ const Explorar = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Detail sheet state
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+
   // Fetch user's preferred categories
   const { data: userCategories = [] } = useQuery({
     queryKey: ["user-categories", user?.id],
