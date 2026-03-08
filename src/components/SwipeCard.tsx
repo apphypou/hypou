@@ -142,7 +142,17 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const handleDragEnd = useCallback(
       (_: any, info: PanInfo) => {
         const velocity = info.velocity.x;
+        const velocityY = info.velocity.y;
         const offset = info.offset.x;
+        const offsetY = info.offset.y;
+
+        // Detect swipe up: significant upward movement, more vertical than horizontal
+        if ((offsetY < -40 || velocityY < -300) && Math.abs(offsetY) > Math.abs(offset)) {
+          animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
+          onExpandDetails?.();
+          return;
+        }
+
         if (offset > SWIPE_THRESHOLD || velocity > 400) {
           doExit("like", velocity);
         } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
@@ -151,7 +161,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
         }
       },
-      [doExit, x]
+      [doExit, x, onExpandDetails]
     );
 
     const ownerProfile = item?.profiles as any;

@@ -63,19 +63,6 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
       </button>
 
       <div className="rounded-2xl bg-card border border-border p-4 space-y-5">
-        {/* Image gallery */}
-        {images.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-1">
-            {images.map((img: any, i: number) => (
-              <img
-                key={i}
-                src={img.image_url}
-                alt={`${item.name} ${i + 1}`}
-                className="h-36 w-36 rounded-xl object-cover flex-shrink-0 border border-border"
-              />
-            ))}
-          </div>
-        )}
 
         {/* Price + tags */}
         <div className="flex items-center gap-3 flex-wrap">
