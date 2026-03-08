@@ -105,7 +105,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       touchStartRef.current = null;
 
       // Swipe up: significant upward movement, more vertical than horizontal, fast enough
-      if (dy < -50 && Math.abs(dy) > Math.abs(dx) * 1.3 && dt < 500) {
+      if (dy < -30 && Math.abs(dy) > Math.abs(dx) && dt < 600) {
         onExpandDetails?.();
       }
     }, [standby, disabled, onExpandDetails]);
@@ -147,7 +147,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         const offsetY = info.offset.y;
 
         // Detect swipe up: significant upward movement, more vertical than horizontal
-        if ((offsetY < -40 || velocityY < -300) && Math.abs(offsetY) > Math.abs(offset)) {
+        if ((offsetY < -25 || velocityY < -200) && Math.abs(offsetY) > Math.abs(offset) * 0.8) {
           animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
           onExpandDetails?.();
           return;
