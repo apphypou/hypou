@@ -180,11 +180,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           transformOrigin: "50% 80%",
           ...(standby ? { scale: 0.97, y: 0, opacity: 0 } : {}),
         }}
-        drag={standby ? false : "x"}
-        dragElastic={0.65}
+        drag={standby ? false : true}
+        dragDirectionLock
+        dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
+        dragElastic={{ top: 0.3, bottom: 0, left: 0.65, right: 0.65 }}
         onDragEnd={standby ? undefined : handleDragEnd}
-        onTouchStart={standby ? undefined : handleTouchStart}
-        onTouchEnd={standby ? undefined : handleTouchEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
