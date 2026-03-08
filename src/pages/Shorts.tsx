@@ -64,23 +64,37 @@ const Shorts = () => {
     setVisibleIndex(idx);
   }, [isAnimating, videos.length, visibleIndex]);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: TouchEvent) => {
     setTouchStartY(e.touches[0].clientY);
   }, []);
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
     const dy = touchStartY - e.changedTouches[0].clientY;
     if (Math.abs(dy) < 60) return;
     if (dy > 0) goTo(visibleIndex + 1);
     else goTo(visibleIndex - 1);
   }, [touchStartY, visibleIndex, goTo]);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     if (isAnimating || Math.abs(e.deltaY) < 30) return;
     if (e.deltaY > 0) goTo(visibleIndex + 1);
     else goTo(visibleIndex - 1);
   }, [isAnimating, visibleIndex, goTo]);
+
+  // Attach non-passive event listeners
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", handleWheel);
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [handleWheel, handleTouchStart, handleTouchEnd]);
 
   const handleLikeUpdate = useCallback((videoId: string, liked: boolean, newCount: number) => {
     // Could update cache here
