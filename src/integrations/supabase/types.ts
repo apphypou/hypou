@@ -284,6 +284,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          chat_terms_accepted_at: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -298,6 +299,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          chat_terms_accepted_at?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -312,6 +314,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          chat_terms_accepted_at?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
