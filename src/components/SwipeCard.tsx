@@ -142,7 +142,17 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const handleDragEnd = useCallback(
       (_: any, info: PanInfo) => {
         const velocity = info.velocity.x;
+        const velocityY = info.velocity.y;
         const offset = info.offset.x;
+        const offsetY = info.offset.y;
+
+        // Detect swipe up: significant upward movement, more vertical than horizontal
+        if ((offsetY < -40 || velocityY < -300) && Math.abs(offsetY) > Math.abs(offset)) {
+          animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
+          onExpandDetails?.();
+          return;
+        }
+
         if (offset > SWIPE_THRESHOLD || velocity > 400) {
           doExit("like", velocity);
         } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
@@ -151,7 +161,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
         }
       },
-      [doExit, x]
+      [doExit, x, onExpandDetails]
     );
 
     const ownerProfile = item?.profiles as any;
@@ -170,11 +180,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           transformOrigin: "50% 80%",
           ...(standby ? { scale: 0.97, y: 0, opacity: 0 } : {}),
         }}
-        drag={standby ? false : "x"}
-        dragElastic={0.65}
+        drag={standby ? false : true}
+        dragDirectionLock
+        dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
+        dragElastic={{ top: 0.3, bottom: 0, left: 0.65, right: 0.65 }}
         onDragEnd={standby ? undefined : handleDragEnd}
-        onTouchStart={standby ? undefined : handleTouchStart}
-        onTouchEnd={standby ? undefined : handleTouchEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
       >
