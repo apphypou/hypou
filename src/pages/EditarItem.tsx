@@ -422,10 +422,16 @@ const EditarItem = () => {
       <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
         <button
           onClick={handleSubmit}
-          disabled={saving}
+          disabled={isSubmitting}
           className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Check className="h-5 w-5" /><span>Salvar Alterações</span></>}
+          {validating ? (
+            <><Loader2 className="h-5 w-5 animate-spin" /><span>Verificando valor...</span></>
+          ) : saving ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <><Check className="h-5 w-5" /><span>Salvar Alterações</span></>
+          )}
         </button>
       </div>
     </ScreenLayout>
