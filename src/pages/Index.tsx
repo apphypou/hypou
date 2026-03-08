@@ -27,8 +27,8 @@ const Index = () => {
           className="h-[65vh] w-full bg-cover bg-center scale-105"
           style={{ backgroundImage: `url('${HERO_IMAGE_URL}')` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-background/80 to-background" />
-        <div className="absolute bottom-0 h-[50%] w-full bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-transparent dark:from-black/50 dark:via-background/80 dark:to-background" />
+        <div className="absolute bottom-0 h-[55%] w-full bg-gradient-to-t from-background via-background/95 to-transparent" />
       </div>
 
 
