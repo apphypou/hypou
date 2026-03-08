@@ -123,15 +123,8 @@ const EditarItem = () => {
     setItemValue(raw ? formatCurrency(raw) : "");
   };
 
-  const handleSubmit = async () => {
-    if (!user || !itemId || !itemName.trim()) {
-      toast({ title: "Preencha o nome do item", variant: "destructive" });
-      return;
-    }
-    if (!category) {
-      toast({ title: "Selecione uma categoria", variant: "destructive" });
-      return;
-    }
+  const saveItem = async () => {
+    if (!user || !itemId) return;
     setSaving(true);
     try {
       const valueInCents = parseCurrencyToCents(itemValue);
@@ -147,7 +140,6 @@ const EditarItem = () => {
         margin_down: devalorization,
       });
 
-      // Upload new photos
       for (let i = 0; i < newPhotos.length; i++) {
         const position = existingImages.length + i;
         await uploadItemImage(user.id, itemId, newPhotos[i], position);
@@ -162,6 +154,50 @@ const EditarItem = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSubmit = async () => {
+    if (!user || !itemId || !itemName.trim()) {
+      toast({ title: "Preencha o nome do item", variant: "destructive" });
+      return;
+    }
+    if (!category) {
+      toast({ title: "Selecione uma categoria", variant: "destructive" });
+      return;
+    }
+
+    const valueInCents = parseCurrencyToCents(itemValue);
+
+    setValidating(true);
+    try {
+      const validation = await validateItemPrice(itemName.trim(), category, condition, valueInCents);
+      if (!validation.valid) {
+        setPriceAlert({
+          open: true,
+          reason: validation.reason,
+          suggestedMin: validation.suggestedMin,
+          suggestedMax: validation.suggestedMax,
+        });
+        setValidating(false);
+        return;
+      }
+    } catch {
+      // Fail-open
+    }
+    setValidating(false);
+
+    await saveItem();
+  };
+
+  const handleForceSubmit = async () => {
+    setPriceAlert({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
+    await saveItem();
+  };
+
+  const isSubmitting = saving || validating;
+
+  const formatCentsDisplay = (cents: number): string => {
+    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   };
 
   if (isLoading) {
