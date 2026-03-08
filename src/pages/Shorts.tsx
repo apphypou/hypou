@@ -39,6 +39,7 @@ const Shorts = () => {
   const [touchStartY, setTouchStartY] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: videos = [], isLoading } = useQuery({
     queryKey: ["shorts-feed", sort, category],
