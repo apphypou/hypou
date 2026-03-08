@@ -104,6 +104,27 @@ const MeuPerfil = () => {
     return `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !uploadingVideoItemId) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "Vídeo muito grande (máx 50MB)", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await uploadVideo(user.id, uploadingVideoItemId, file);
+      toast({ title: "Vídeo enviado! 🎬" });
+      queryClient.invalidateQueries({ queryKey: ["shorts-feed"] });
+    } catch {
+      toast({ title: "Erro ao enviar vídeo", variant: "destructive" });
+    } finally {
+      setSaving(false);
+      setUploadingVideoItemId(null);
+      e.target.value = "";
+    }
+  };
+
   const ratingDisplay = stats?.rating
     ? `${stats.rating}★`
     : "--";
