@@ -105,7 +105,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       touchStartRef.current = null;
 
       // Swipe up: significant upward movement, more vertical than horizontal, fast enough
-      if (dy < -50 && Math.abs(dy) > Math.abs(dx) * 1.3 && dt < 500) {
+      if (dy < -30 && Math.abs(dy) > Math.abs(dx) && dt < 600) {
         onExpandDetails?.();
       }
     }, [standby, disabled, onExpandDetails]);
