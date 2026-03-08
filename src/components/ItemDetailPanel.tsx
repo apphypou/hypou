@@ -1,7 +1,8 @@
 import { MapPin, Package, Star, ChevronRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
-import { motion } from "framer-motion";
+import { motion, type PanInfo } from "framer-motion";
+import { useCallback, useRef } from "react";
 
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
