@@ -91,14 +91,7 @@ const Shorts = () => {
     hideTimeout.current = setTimeout(() => setShowFilters(false), 3000);
   }, [visibleIndex]);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
-
-  // Auto-hide filters after initial display
+  // Auto-hide filters on mount
   useEffect(() => {
     hideTimeout.current = setTimeout(() => setShowFilters(false), 4000);
     return () => { if (hideTimeout.current) clearTimeout(hideTimeout.current); };
