@@ -78,27 +78,33 @@ export type Database = {
           duration_seconds: number | null
           id: string
           item_id: string
+          like_count: number
           thumbnail_url: string | null
           user_id: string
           video_url: string
+          view_count: number
         }
         Insert: {
           created_at?: string
           duration_seconds?: number | null
           id?: string
           item_id: string
+          like_count?: number
           thumbnail_url?: string | null
           user_id: string
           video_url: string
+          view_count?: number
         }
         Update: {
           created_at?: string
           duration_seconds?: number | null
           id?: string
           item_id?: string
+          like_count?: number
           thumbnail_url?: string | null
           user_id?: string
           video_url?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -410,17 +416,48 @@ export type Database = {
         }
         Relationships: []
       }
+      video_likes: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_likes_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "item_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      increment_video_view: { Args: { p_video_id: string }; Returns: undefined }
       is_conversation_participant: {
         Args: { _conversation_id: string }
         Returns: boolean
       }
       is_item_owner: { Args: { _item_id: string }; Returns: boolean }
       is_match_participant: { Args: { _match_id: string }; Returns: boolean }
+      toggle_video_like: { Args: { p_video_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
