@@ -214,6 +214,37 @@ const EditarItem = () => {
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
 
+      {/* Price validation alert dialog */}
+      <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
+        <AlertDialogContent className="bg-card border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+              Valor suspeito
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground space-y-3">
+              <p>{priceAlert.reason}</p>
+              {priceAlert.suggestedMin > 0 && priceAlert.suggestedMax > 0 && (
+                <p className="font-medium text-foreground/80">
+                  Faixa sugerida: {formatCentsDisplay(priceAlert.suggestedMin)} — {formatCentsDisplay(priceAlert.suggestedMax)}
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-primary text-primary-foreground hover:bg-primary/90">
+              Corrigir valor
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleForceSubmit}
+              className="bg-card border border-foreground/10 text-foreground hover:bg-card/80"
+            >
+              Salvar mesmo assim
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <header className="relative z-40 flex w-full items-center gap-3 px-6 pt-12 pb-4">
         <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
         <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Editar Item</span>
