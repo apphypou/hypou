@@ -1,87 +1,95 @@
 
 
-## Plano: Aba de Shorts (Videos de Produtos)
+## Critica Senior do Onboarding Atual + Plano de Reformulacao
 
-### Visao do Produto
+### Problemas Criticos Identificados
 
-Adicionar uma aba "Shorts" na navegacao principal, inspirada no TikTok/Reels, onde usuarios postam videos curtos dos seus produtos. Objetivo: aumentar engajamento, melhorar a qualidade de apresentacao dos itens e criar um canal de descoberta mais imersivo.
+**1. Fricção excessiva antes do valor (FATAL)**
+O usuario precisa completar 4 steps antes de ver qualquer item. Cadastrar um item inteiro (nome, valor, fotos, descricao) + definir margem de troca no onboarding e absurdo. O usuario ainda nem entende como a plataforma funciona e ja tem que precificar margem de valorizacao/desvalorizacao. Isso mata a conversao.
 
-### Escopo da Feature
+**2. Step 3 (Cadastro de Item) e uma copia da tela NovoItem**
+O onboarding repete logica que ja existe em `/novo-item`. Duplicacao de codigo, duplicacao de UX. O usuario vai cadastrar o primeiro item com pressa, sem fotos boas, sem descricao boa -- e depois vai ter que editar. Resultado: itens de baixa qualidade no feed.
 
-**Experiencia do usuario:**
-- Feed vertical full-screen com scroll snap (swipe up/down para navegar)
-- Cada short mostra: video do produto, nome do item, perfil do dono, botao de "Quero trocar"
-- Auto-play no video visivel, pause nos demais
-- Upload de video vinculado a um item existente do usuario
-- Duracao maxima: 30 segundos
+**3. Step 4 (Margem de Troca) e incompreensivel para novos usuarios**
+O conceito de "valorizacao +15%" e "desvalorizacao -10%" e abstrato demais para alguem que acabou de chegar. O usuario nao tem contexto para tomar essa decisao. Isso deveria ser configurado depois, quando o usuario ja entende o mecanismo de trocas.
 
-**Navegacao:**
-- Nova aba "Shorts" no BottomNav (icone `Play`/`Clapperboard` do lucide), posicionada entre "Explorar" e "Trocas"
-- TabId atualizado para incluir `"shorts"`
+**4. Botao "Pular" leva direto para `/explorar`**
+Mas o onboarding nao foi marcado como completo. Isso pode causar loop infinito (redirect de volta ao onboarding) ou estado inconsistente.
 
-### Mudancas Tecnicas
+**5. Apenas 5 categorias hardcoded**
+"Celulares", "Carros & Motos", "Moda", "Casa", "Videogames" -- poucas e fixas. O botao "Outros" nao faz nada. Usuario de livros, instrumentos, eletrodomesticos nao se ve representado.
 
-**1. Banco de Dados (migration)**
-- Nova tabela `item_videos`:
-  - `id` uuid PK
-  - `item_id` uuid FK -> items.id
-  - `user_id` uuid (para RLS)
-  - `video_url` text
-  - `thumbnail_url` text (nullable)
-  - `duration_seconds` integer (nullable)
-  - `created_at` timestamptz
-- RLS: qualquer um pode SELECT, dono do item pode INSERT/DELETE
+**6. UX do formulario de item no onboarding**
+- Nao tem selecao de categoria do item (usa `selected[0]` da step 2 -- se o usuario selecionou "Moda" e "Celulares", o item vai para "Moda" automaticamente)
+- Nao tem selecao de condicao (novo/usado)
+- Valor sem mascara de moeda (aceita qualquer texto)
+- Parsing do valor e fragil (`cleanValue * 100` pode dar errado)
 
-**2. Storage**
-- Novo bucket `item-videos` (publico)
-- RLS: usuario autenticado pode upload no proprio path
+**7. Sem animacoes de transicao entre steps**
+Troca abrupta entre steps. Sem slide, sem fade. Parece quebrado.
 
-**3. Arquivos novos**
-- `src/pages/Shorts.tsx` -- Feed vertical full-screen com scroll snap
-- `src/components/ShortCard.tsx` -- Card individual do short (video player + overlay de info)
-- `src/services/videoService.ts` -- CRUD de videos (upload, fetch feed, delete)
+**8. Indicador de progresso minimalista demais**
+4 bolinhas no topo -- o usuario nao sabe quantos steps faltam nem o que cada um pede.
 
-**4. Arquivos modificados**
-- `src/components/BottomNav.tsx` -- Adicionar aba "Shorts" com icone `Clapperboard`
-- `src/App.tsx` -- Nova rota `/shorts` protegida
-- `src/pages/MeuPerfil.tsx` -- Opcao para adicionar video a um item existente
+---
 
-### Detalhes de Implementacao
+### Plano de Reformulacao
 
-**Feed de Shorts (`Shorts.tsx`):**
-- Container `h-screen` com `snap-y snap-mandatory overflow-y-scroll`
-- Cada `ShortCard` ocupa `h-screen snap-start`
-- Intersection Observer para auto-play/pause
-- Fetch paginado dos videos ordenados por `created_at DESC`
-- Overlay com gradiente inferior mostrando: nome do item, valor, avatar do dono, botao "Propor troca"
+**Principio: reduzir o onboarding ao minimo para o usuario comecar a explorar.**
 
-**ShortCard (`ShortCard.tsx`):**
-- `<video>` nativo com `playsInline`, `loop`, `muted` (unmute on tap)
-- Tap para play/pause
-- Sidebar com icones: curtir (swipe right no item), compartilhar, perfil do dono
-- Info do produto no rodape com link para ver item completo
+#### Novo fluxo (3 steps rapidos, ~60 segundos)
 
-**Upload de Video:**
-- No perfil do usuario, cada item ganha um botao "Adicionar video"
-- Limite de 1 video por item
-- Compressao/validacao client-side (max 30s, max 50MB)
-- Upload para bucket `item-videos` via Supabase Storage
-- Gerar thumbnail do primeiro frame (ou aceitar upload separado)
+```text
+Step 1: "Quem e voce?"
+  → Nome (obrigatorio)
+  → Foto (opcional, com skip claro)
+  → Localizacao (opcional)
 
-**BottomNav atualizado:**
-- 5 abas: Explorar | Shorts | Trocas | Chat | Perfil
-- Icone: `Clapperboard` do lucide-react
+Step 2: "O que te interessa?"
+  → Categorias expandidas (8-10 opcoes)
+  → Multi-select com minimo 1
+  → Adicionar "Outros" funcional
 
-### Fases de Entrega
+Step 3: "Tudo pronto!"
+  → Tela de sucesso/celebracao
+  → CTA principal: "Explorar trocas"
+  → CTA secundario: "Cadastrar meu primeiro item"
+  → Marca onboarding_completed = true
+```
 
-**Fase 1 (MVP):** Banco + storage + feed de visualizacao + upload basico
-**Fase 2:** Thumbnail automatico, likes em shorts, contagem de views
-**Fase 3:** Algoritmo de recomendacao, filtro por categoria, trending
+**O que SAI do onboarding:**
+- Cadastro de item (Step 3 atual) → movido para CTA pos-onboarding e tela dedicada `/novo-item`
+- Margem de troca (Step 4 atual) → movido para configuracoes do item em `/novo-item` e `/editar-item`
 
-### Riscos e Consideracoes
+#### Mudancas tecnicas
 
-- **Custo de storage:** Videos consomem muito mais espaco que imagens. Limitar duracao (30s) e tamanho (50MB) e essencial
-- **Performance:** Lazy loading de videos e crucial. Carregar apenas 2-3 videos por vez
-- **Moderacao:** Sem moderacao automatica no MVP -- depende de reports manuais
-- **Compatibilidade:** `<video>` nativo funciona bem em mobile browsers, sem necessidade de player externo
+**1. Reescrever `src/pages/Perfil.tsx`**
+- Reduzir de 531 linhas para ~250
+- 3 steps em vez de 4
+- Remover toda logica de criacao de item e margem
+- Adicionar animacoes de transicao entre steps (framer-motion)
+- Adicionar labels descritivas no indicador de progresso
+
+**2. Expandir categorias**
+- Adicionar: "Eletronicos", "Esportes", "Livros", "Instrumentos", "Ferramentas"
+- Tornar a lista dinamica (facil de adicionar no futuro)
+
+**3. Step 3 de celebracao**
+- Animacao de confetti ou check animado
+- Dois CTAs claros: explorar vs cadastrar item
+- Marcar `onboarding_completed = true`
+
+**4. Corrigir botao "Pular"**
+- No step 1: ocultar (nome e obrigatorio)
+- No step 2: permitir pular mas com confirmacao
+- Pular deve marcar `onboarding_completed = true` antes de redirecionar
+
+**5. Animacoes entre steps**
+- Slide horizontal com framer-motion `AnimatePresence`
+- Fade nos elementos do formulario
+
+#### Arquivos afetados
+- `src/pages/Perfil.tsx` -- reescrita completa (simplificacao)
+- Nenhum arquivo novo necessario
+- Nenhuma mudanca de banco de dados
 

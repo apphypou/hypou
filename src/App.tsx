@@ -12,6 +12,7 @@ import Cadastro from "./pages/Cadastro";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import ResetPassword from "./pages/ResetPassword";
 import Explorar from "./pages/Explorar";
+import Shorts from "./pages/Shorts";
 import Matches from "./pages/Matches";
 import Configuracoes from "./pages/Configuracoes";
 import NovoItem from "./pages/NovoItem";
@@ -52,6 +53,9 @@ const App = () => (
             {/* Protected routes (require auth + completed onboarding) */}
             <Route path="/explorar" element={
               <ProtectedRoute><Explorar /></ProtectedRoute>
+            } />
+            <Route path="/shorts" element={
+              <ProtectedRoute><Shorts /></ProtectedRoute>
             } />
             <Route path="/partidas" element={
               <ProtectedRoute><Matches /></ProtectedRoute>

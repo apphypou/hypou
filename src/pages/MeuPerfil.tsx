@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star, Video } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -25,6 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { uploadVideo } from "@/services/videoService";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
@@ -41,6 +42,8 @@ const MeuPerfil = () => {
   const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingVideoItemId, setUploadingVideoItemId] = useState<string | null>(null);
 
   const openEdit = () => {
     setEditName(profile?.display_name ?? "");
@@ -99,6 +102,27 @@ const MeuPerfil = () => {
 
   const formatValue = (cents: number) => {
     return `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !uploadingVideoItemId) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "Vídeo muito grande (máx 50MB)", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await uploadVideo(user.id, uploadingVideoItemId, file);
+      toast({ title: "Vídeo enviado! 🎬" });
+      queryClient.invalidateQueries({ queryKey: ["shorts-feed"] });
+    } catch {
+      toast({ title: "Erro ao enviar vídeo", variant: "destructive" });
+    } finally {
+      setSaving(false);
+      setUploadingVideoItemId(null);
+      e.target.value = "";
+    }
   };
 
   const ratingDisplay = stats?.rating
@@ -278,6 +302,17 @@ const MeuPerfil = () => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadingVideoItemId(item.id);
+                              videoInputRef.current?.click();
+                            }}
+                            className="text-foreground/30 hover:text-primary transition-colors"
+                            title="Adicionar vídeo"
+                          >
+                            <Video className="h-4 w-4" />
+                          </button>
                         </div>
                         <h3 className="text-base font-bold text-foreground leading-tight">{item.name}</h3>
                         <div className="flex items-center justify-between mt-1">
@@ -295,6 +330,7 @@ const MeuPerfil = () => {
       </main>
 
       <BottomNav activeTab="perfil" />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
 
       {/* Edit Profile Sheet */}
       <Sheet open={editOpen} onOpenChange={setEditOpen}>
