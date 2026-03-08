@@ -51,7 +51,7 @@ const translateCondition = (raw: string | null | undefined) => {
 };
 
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby }, ref) => {
+  ({ item, onSwipeComplete, onDragDirectionChange, onExpandDetails, disabled, standby }, ref) => {
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
