@@ -26,6 +26,7 @@ interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragDirectionChange?: (rawX: number) => void;
+  onExpandDetails?: () => void;
   disabled?: boolean;
   standby?: boolean;
 }
