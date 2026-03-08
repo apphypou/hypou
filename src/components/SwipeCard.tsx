@@ -86,6 +86,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
       [imageCount]
     );
 
+    // Track vertical pan for swipe-up detection
+    const panStartRef = { x: 0, y: 0 };
+
     useEffect(() => {
       if (disabled || standby) return;
       const unsubscribe = x.on("change", (latest) => {
