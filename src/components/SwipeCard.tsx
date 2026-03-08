@@ -13,7 +13,7 @@ import {
   animate,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp } from "lucide-react";
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
