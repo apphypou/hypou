@@ -1,120 +1,95 @@
 
 
-## Plano: Upgrade Premium da Interface de Shorts
+## Critica Senior do Onboarding Atual + Plano de Reformulacao
 
-Analisei a implementacao atual e o screenshot. A interface funciona mas esta longe do nivel TikTok/Reels. Segue o plano de melhorias:
+### Problemas Criticos Identificados
 
----
+**1. Fricção excessiva antes do valor (FATAL)**
+O usuario precisa completar 4 steps antes de ver qualquer item. Cadastrar um item inteiro (nome, valor, fotos, descricao) + definir margem de troca no onboarding e absurdo. O usuario ainda nem entende como a plataforma funciona e ja tem que precificar margem de valorizacao/desvalorizacao. Isso mata a conversao.
 
-### 1. Transicao Animada entre Videos (Slide Vertical)
+**2. Step 3 (Cadastro de Item) e uma copia da tela NovoItem**
+O onboarding repete logica que ja existe em `/novo-item`. Duplicacao de codigo, duplicacao de UX. O usuario vai cadastrar o primeiro item com pressa, sem fotos boas, sem descricao boa -- e depois vai ter que editar. Resultado: itens de baixa qualidade no feed.
 
-**Problema:** Atualmente usa `scrollTo` que depende do scroll nativo -- sem animacao fluida entre cards.
+**3. Step 4 (Margem de Troca) e incompreensivel para novos usuarios**
+O conceito de "valorizacao +15%" e "desvalorizacao -10%" e abstrato demais para alguem que acabou de chegar. O usuario nao tem contexto para tomar essa decisao. Isso deveria ser configurado depois, quando o usuario ja entende o mecanismo de trocas.
 
-**Solucao:** Substituir o scroll container por um sistema baseado em `framer-motion` com `AnimatePresence`. Renderizar apenas 3 videos por vez (anterior, atual, proximo) e animar a transicao com slide vertical (`y: "100%"` -> `y: 0` -> `y: "-100%"`). Isso elimina jank e garante transicoes suaves tipo TikTok.
+**4. Botao "Pular" leva direto para `/explorar`**
+Mas o onboarding nao foi marcado como completo. Isso pode causar loop infinito (redirect de volta ao onboarding) ou estado inconsistente.
 
----
+**5. Apenas 5 categorias hardcoded**
+"Celulares", "Carros & Motos", "Moda", "Casa", "Videogames" -- poucas e fixas. O botao "Outros" nao faz nada. Usuario de livros, instrumentos, eletrodomesticos nao se ve representado.
 
-### 2. Barra de Progresso do Video
+**6. UX do formulario de item no onboarding**
+- Nao tem selecao de categoria do item (usa `selected[0]` da step 2 -- se o usuario selecionou "Moda" e "Celulares", o item vai para "Moda" automaticamente)
+- Nao tem selecao de condicao (novo/usado)
+- Valor sem mascara de moeda (aceita qualquer texto)
+- Parsing do valor e fragil (`cleanValue * 100` pode dar errado)
 
-**Problema:** Nao ha indicacao de quanto do video ja foi assistido.
+**7. Sem animacoes de transicao entre steps**
+Troca abrupta entre steps. Sem slide, sem fade. Parece quebrado.
 
-**Solucao:** Adicionar uma barra de progresso fina (2px) na parte inferior do ShortCard, acima do overlay. Atualizar via `timeupdate` event do video. Cor primaria do app, sem interacao (apenas visual).
-
----
-
-### 3. Sidebar de Acoes Refinada (Estilo TikTok)
-
-**Problema:** Os botoes da sidebar estao funcionais mas sem micro-animacoes e sem o polimento visual do TikTok.
-
-**Melhorias:**
-- Animacao de "bounce" no like com `framer-motion` (spring) ao curtir
-- Avatar do perfil com borda animada (ring pulsante tipo "story") e icone "+" sobreposto para seguir
-- Botao de comentarios (MessageCircle) -- mesmo sem backend de comentarios, preparar o slot
-- Icone de bookmark/salvar para futuro
-- Aumentar levemente o gap e usar sombras mais fortes nos icones
+**8. Indicador de progresso minimalista demais**
+4 bolinhas no topo -- o usuario nao sabe quantos steps faltam nem o que cada um pede.
 
 ---
 
-### 4. Bottom Overlay Redesign
+### Plano de Reformulacao
 
-**Problema:** O overlay inferior esta basico -- texto simples sem hierarquia visual forte.
+**Principio: reduzir o onboarding ao minimo para o usuario comecar a explorar.**
 
-**Melhorias:**
-- Username com `@` em bold + badge verificado (opcional)
-- Descricao do item com truncamento "ver mais" (expandir ao tocar)
-- Tag de categoria como chip colorido pequeno (nao so texto)
-- Preco com destaque visual (badge ou background sutil)
-- CTA "Quero Trocar" com gradiente animado e icone de setas (ArrowLeftRight)
-- Ticker/marquee horizontal para nomes longos de produto
-
----
-
-### 5. Header Fixo com Logo + Filtros
-
-**Problema:** Filtros somem e reaparecem de forma confusa. Nao ha identidade do app no topo.
-
-**Solucao:**
-- Header fixo sempre visivel com: logo "Hypou" a esquerda + tabs "Para Voce" / "Seguindo" ao centro (estilo TikTok)
-- Icone de busca a direita
-- Categorias movidas para um sheet/drawer acessivel via icone de filtro, removendo a poluicao visual do topo
-- Remover o comportamento de auto-hide dos filtros
-
----
-
-### 6. Indicador de Navegacao e Loading
-
-- Skeleton/shimmer enquanto o proximo video carrega (se houver latencia)
-- Indicador sutil de "arraste para cima" no primeiro video (seta animada)
-- Haptic feedback visual (pulso sutil) ao chegar no ultimo video
-
----
-
-### 7. Esconder BottomNav na Tela de Shorts
-
-**Problema:** O BottomNav ocupa espaco valioso na tela full-screen dos shorts, quebrando a imersao (TikTok e Reels escondem a nav durante o feed).
-
-**Solucao:** Nao renderizar o BottomNav na pagina de Shorts. Adicionar um botao de "voltar" ou gesto de swipe lateral para sair. O BottomNav ja nao e renderizado diretamente no Shorts.tsx, entao basta garantir que o layout pai nao o injete.
-
----
-
-### 8. Melhorias de Performance
-
-- Renderizar apenas 3 ShortCards por vez (virtualizacao manual)
-- Preload do proximo video (`preload="auto"` apenas no idx+1)
-- Lazy load dos videos distantes
-
----
-
-### Arquivos Modificados
-
-| Arquivo | Mudanca |
-|---|---|
-| `src/components/ShortCard.tsx` | Redesign completo: progress bar, sidebar refinada, bottom overlay premium, animacoes |
-| `src/pages/Shorts.tsx` | Transicao animada com framer-motion, header fixo, virtualizacao, remover scroll-based navigation |
-| `src/components/BottomNav.tsx` | Nenhuma mudanca necessaria (Shorts ja nao usa BottomNav) |
-
----
-
-### Resumo Visual
+#### Novo fluxo (3 steps rapidos, ~60 segundos)
 
 ```text
-+----------------------------------+
-|  Hypou    [P/ Voce] [Seguindo] Q |  <- Header fixo
-|                                  |
-|                                  |
-|         [VIDEO FULLSCREEN]       |
-|                                  |
-|                           [Like] |
-|                           [View] |
-|                           [Chat] |
-|                          [Share] |
-|                          [Save]  |
-|  @username                [Avt]  |
-|  [Categoria]                     |
-|  Nome do Produto                 |
-|  R$ 2.500                        |
-|  [====== QUERO TROCAR ======]    |
-|  ━━━━━━━━━━━━━━━━━━ (progress)   |
-+----------------------------------+
+Step 1: "Quem e voce?"
+  → Nome (obrigatorio)
+  → Foto (opcional, com skip claro)
+  → Localizacao (opcional)
+
+Step 2: "O que te interessa?"
+  → Categorias expandidas (8-10 opcoes)
+  → Multi-select com minimo 1
+  → Adicionar "Outros" funcional
+
+Step 3: "Tudo pronto!"
+  → Tela de sucesso/celebracao
+  → CTA principal: "Explorar trocas"
+  → CTA secundario: "Cadastrar meu primeiro item"
+  → Marca onboarding_completed = true
 ```
+
+**O que SAI do onboarding:**
+- Cadastro de item (Step 3 atual) → movido para CTA pos-onboarding e tela dedicada `/novo-item`
+- Margem de troca (Step 4 atual) → movido para configuracoes do item em `/novo-item` e `/editar-item`
+
+#### Mudancas tecnicas
+
+**1. Reescrever `src/pages/Perfil.tsx`**
+- Reduzir de 531 linhas para ~250
+- 3 steps em vez de 4
+- Remover toda logica de criacao de item e margem
+- Adicionar animacoes de transicao entre steps (framer-motion)
+- Adicionar labels descritivas no indicador de progresso
+
+**2. Expandir categorias**
+- Adicionar: "Eletronicos", "Esportes", "Livros", "Instrumentos", "Ferramentas"
+- Tornar a lista dinamica (facil de adicionar no futuro)
+
+**3. Step 3 de celebracao**
+- Animacao de confetti ou check animado
+- Dois CTAs claros: explorar vs cadastrar item
+- Marcar `onboarding_completed = true`
+
+**4. Corrigir botao "Pular"**
+- No step 1: ocultar (nome e obrigatorio)
+- No step 2: permitir pular mas com confirmacao
+- Pular deve marcar `onboarding_completed = true` antes de redirecionar
+
+**5. Animacoes entre steps**
+- Slide horizontal com framer-motion `AnimatePresence`
+- Fade nos elementos do formulario
+
+#### Arquivos afetados
+- `src/pages/Perfil.tsx` -- reescrita completa (simplificacao)
+- Nenhum arquivo novo necessario
+- Nenhuma mudanca de banco de dados
 
