@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchShortsFeed, type SortMode, type ShortVideo } from "@/services/videoService";
 import ShortCard from "@/components/ShortCard";
