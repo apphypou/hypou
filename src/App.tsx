@@ -54,6 +54,9 @@ const App = () => (
             <Route path="/explorar" element={
               <ProtectedRoute><Explorar /></ProtectedRoute>
             } />
+            <Route path="/shorts" element={
+              <ProtectedRoute><Shorts /></ProtectedRoute>
+            } />
             <Route path="/partidas" element={
               <ProtectedRoute><Matches /></ProtectedRoute>
             } />
