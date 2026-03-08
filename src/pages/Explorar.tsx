@@ -389,6 +389,12 @@ const Explorar = () => {
         </div>
       }
 
+      <ItemDetailSheet
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        item={currentItem}
+      />
+
       <SelectItemDialog
         open={dialogOpen}
         onClose={handleDialogClose}
