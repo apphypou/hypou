@@ -272,7 +272,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         drag={standby || expanded ? false : true}
         dragDirectionLock
         dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
-        dragElastic={{ top: 0.3, bottom: 0, left: 0.65, right: 0.65 }}
+        dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
         onDragEnd={standby || expanded ? undefined : handleDragEnd}
         initial={standby ? false : { scale: 1, opacity: 1 }}
         animate={standby ? { scale: 1, opacity: 1 } : undefined}
@@ -407,16 +407,16 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         <AnimatePresence>
           {expanded && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-0 z-30 flex flex-col"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 30 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute inset-x-3 bottom-3 top-3 z-30 flex flex-col rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
             >
               {/* Collapse button at top */}
               <button
                 onClick={toggleExpand}
-                className="w-full flex justify-center items-center gap-1 pt-5 pb-2 text-white/60 z-40"
+                className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-white/60 shrink-0"
               >
                 <ChevronDown className="h-4 w-4" />
                 <span className="text-[10px] font-bold uppercase tracking-widest">Recolher</span>
