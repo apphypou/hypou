@@ -32,32 +32,66 @@ const Shorts = () => {
   const [showFilters, setShowFilters] = useState(true);
   const { user } = useAuth();
   const hideTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const isScrolling = useRef(false);
+  const touchStartY = useRef(0);
 
   const { data: videos = [], isLoading } = useQuery({
     queryKey: ["shorts-feed", sort, category],
     queryFn: () => fetchShortsFeed(0, 20, sort, category || undefined, user?.id),
   });
 
-  const handleScroll = useCallback(() => {
+  const scrollToIndex = useCallback((idx: number) => {
     const el = containerRef.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollTop / el.clientHeight);
+    if (!el || idx < 0 || idx >= videos.length) return;
+    isScrolling.current = true;
     setVisibleIndex(idx);
+    el.scrollTo({ top: idx * el.clientHeight, behavior: "smooth" });
+    setTimeout(() => { isScrolling.current = false; }, 500);
+  }, [videos.length]);
 
-    // Show filters briefly on scroll
-    setShowFilters(true);
-    if (hideTimeout.current) clearTimeout(hideTimeout.current);
-    hideTimeout.current = setTimeout(() => setShowFilters(false), 3000);
+  // Touch-based single-page scroll
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
   }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dy = touchStartY.current - e.changedTouches[0].clientY;
+    const threshold = 50;
+    if (Math.abs(dy) < threshold) return;
+    if (dy > 0) {
+      scrollToIndex(visibleIndex + 1); // swipe up → next
+    } else {
+      scrollToIndex(visibleIndex - 1); // swipe down → prev
+    }
+  }, [visibleIndex, scrollToIndex]);
+
+  // Prevent free scroll with wheel (desktop)
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    if (isScrolling.current) return;
+    if (Math.abs(e.deltaY) < 30) return;
+    if (e.deltaY > 0) {
+      scrollToIndex(visibleIndex + 1);
+    } else {
+      scrollToIndex(visibleIndex - 1);
+    }
+  }, [visibleIndex, scrollToIndex]);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+    el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => el.removeEventListener("wheel", handleWheel);
+  }, [handleWheel]);
 
-  // Auto-hide filters after initial display
+  // Show filters briefly on index change
+  useEffect(() => {
+    setShowFilters(true);
+    if (hideTimeout.current) clearTimeout(hideTimeout.current);
+    hideTimeout.current = setTimeout(() => setShowFilters(false), 3000);
+  }, [visibleIndex]);
+
+  // Auto-hide filters on mount
   useEffect(() => {
     hideTimeout.current = setTimeout(() => setShowFilters(false), 4000);
     return () => { if (hideTimeout.current) clearTimeout(hideTimeout.current); };
@@ -154,7 +188,9 @@ const Shorts = () => {
       {/* Video feed */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar"
+        className="h-full w-full overflow-hidden no-scrollbar"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {videos.map((video, idx) => (
           <ShortCard key={video.id} video={video} isVisible={idx === visibleIndex} />
