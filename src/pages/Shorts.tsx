@@ -188,7 +188,9 @@ const Shorts = () => {
       {/* Video feed */}
       <div
         ref={containerRef}
-        className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar"
+        className="h-full w-full overflow-hidden no-scrollbar"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {videos.map((video, idx) => (
           <ShortCard key={video.id} video={video} isVisible={idx === visibleIndex} />
