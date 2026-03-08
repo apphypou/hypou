@@ -13,7 +13,7 @@ import {
   animate,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp } from "lucide-react";
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
@@ -26,6 +26,7 @@ interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragDirectionChange?: (rawX: number) => void;
+  onExpandDetails?: () => void;
   disabled?: boolean;
   standby?: boolean;
 }
@@ -50,7 +51,7 @@ const translateCondition = (raw: string | null | undefined) => {
 };
 
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby }, ref) => {
+  ({ item, onSwipeComplete, onDragDirectionChange, onExpandDetails, disabled, standby }, ref) => {
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
@@ -275,44 +276,40 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* Bottom gradient for glass panel readability */}
         <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-20" />
 
-        {/* ===== LIQUID GLASS INFO PANEL ===== */}
+        {/* ===== COMPACT INFO PANEL ===== */}
         {activeImageIndex === 0 && (
-        <div className="absolute bottom-0 inset-x-0 z-30 p-4">
-          <div className="rounded-[1.5rem] bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 p-4 space-y-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[10px] font-bold tracking-[0.1em] uppercase">
-                {item.category}
-              </span>
-              {conditionLabel && (
-                <div className="flex items-center gap-1">
-                  <Package className="h-3 w-3 text-white/70" />
-                  <span className="px-2 py-0.5 rounded-full bg-white/15 border border-white/15 text-white/90 text-[10px] font-bold uppercase tracking-wider">
-                    {conditionLabel}
+        <div
+          className="absolute bottom-0 inset-x-0 z-30 p-3 cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpandDetails?.();
+          }}
+        >
+          <div className="rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[9px] font-bold tracking-[0.1em] uppercase">
+                    {item.category}
                   </span>
+                  {conditionLabel && (
+                    <span className="text-white/60 text-[9px] font-bold uppercase flex items-center gap-0.5">
+                      <Package className="h-2.5 w-2.5" /> {conditionLabel}
+                    </span>
+                  )}
                 </div>
-              )}
+                <h2 className="text-white text-base font-bold tracking-tight leading-tight drop-shadow-md truncate">
+                  {item.name}
+                </h2>
+                <span className="text-white text-lg font-extrabold tracking-tighter drop-shadow-md">
+                  {formatValue(item.market_value)}
+                </span>
+              </div>
+              <div className="flex flex-col items-center gap-0.5 text-white/50">
+                <ChevronUp className="h-4 w-4 animate-bounce" />
+                <span className="text-[8px] font-semibold uppercase tracking-wider">Detalhes</span>
+              </div>
             </div>
-
-            <h2 className="text-white text-xl font-bold tracking-tight leading-tight drop-shadow-md">
-              {item.name}
-            </h2>
-
-            <span className="block text-white text-2xl font-extrabold tracking-tighter drop-shadow-md">
-              {formatValue(item.market_value)}
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-white/70" />
-              <span className="text-white/80 text-xs font-medium">
-                {item.location || ownerProfile?.location || "Local não informado"}
-              </span>
-            </div>
-
-            {item.description && (
-              <p className="text-white/70 text-xs leading-snug line-clamp-2">
-                {item.description}
-              </p>
-            )}
           </div>
         </div>
         )}

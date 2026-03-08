@@ -19,6 +19,7 @@ import {
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import SelectItemDialog from "@/components/SelectItemDialog";
+import ItemDetailSheet from "@/components/ItemDetailSheet";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
@@ -55,6 +56,9 @@ const Explorar = () => {
   // Category filter state
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Detail sheet state
+  const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
   // Fetch user's preferred categories
   const { data: userCategories = [] } = useQuery({
@@ -363,6 +367,7 @@ const Explorar = () => {
             item={currentItem}
             onSwipeComplete={handleSwipeComplete}
             onDragDirectionChange={handleDragDirectionChange}
+            onExpandDetails={() => setDetailSheetOpen(true)}
             disabled={swipingRef.current} />
           
           </div> :
@@ -383,6 +388,12 @@ const Explorar = () => {
         
         </div>
       }
+
+      <ItemDetailSheet
+        open={detailSheetOpen}
+        onOpenChange={setDetailSheetOpen}
+        item={currentItem}
+      />
 
       <SelectItemDialog
         open={dialogOpen}
