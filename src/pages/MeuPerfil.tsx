@@ -330,6 +330,7 @@ const MeuPerfil = () => {
       </main>
 
       <BottomNav activeTab="perfil" />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
 
       {/* Edit Profile Sheet */}
       <Sheet open={editOpen} onOpenChange={setEditOpen}>
