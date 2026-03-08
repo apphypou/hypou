@@ -1,7 +1,8 @@
 import { MapPin, Package, Star, ChevronRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
-import { motion } from "framer-motion";
+import { motion, type PanInfo } from "framer-motion";
+import { useCallback, useRef } from "react";
 
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
@@ -24,16 +25,33 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
   const conditionLabel = item?.condition ? (CONDITION_MAP[item.condition] || item.condition) : null;
   const images = item?.item_images || [];
   const { data: rating } = useUserRating(ownerProfile?.user_id);
+  const touchStartRef = useRef<{ y: number; time: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { y: e.touches[0].clientY, time: Date.now() };
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const dt = Date.now() - touchStartRef.current.time;
+    touchStartRef.current = null;
+    if (dy > 50 && dt < 400) {
+      onCollapse();
+    }
+  }, [onCollapse]);
 
   if (!item) return null;
 
-  return (
+    return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="w-full px-1 pb-6"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Collapse handle */}
       <button
