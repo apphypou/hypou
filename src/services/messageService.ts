@@ -1,10 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type MessageType = 'text' | 'image' | 'video' | 'audio';
+
 export interface Message {
   id: string;
   conversation_id: string;
   sender_id: string;
   content: string;
+  message_type: MessageType;
+  media_url: string | null;
   read_at: string | null;
   created_at: string;
 }
