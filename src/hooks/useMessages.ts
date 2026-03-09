@@ -43,7 +43,8 @@ export const useMessages = (conversationId: string | null) => {
   useEffect(() => {
     if (!conversationId) return;
 
-    const unsubscribe = subscribeToMessages(conversationId, (newMsg: Message) => {
+    const unsubscribe = subscribeToMessages(conversationId, (raw: any) => {
+      const newMsg: Message = { ...raw, message_type: raw.message_type as MessageType };
       queryClient.setQueryData<Message[]>(["messages", conversationId], (old) => {
         if (!old) return [newMsg];
         // Avoid duplicates
