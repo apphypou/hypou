@@ -1,10 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type MessageType = 'text' | 'image' | 'video' | 'audio';
+
 export interface Message {
   id: string;
   conversation_id: string;
   sender_id: string;
   content: string;
+  message_type: MessageType;
+  media_url: string | null;
   read_at: string | null;
   created_at: string;
 }
@@ -126,18 +130,48 @@ export const getMessages = async (conversationId: string): Promise<Message[]> =>
     .order("created_at", { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map((m: any) => ({ ...m, message_type: m.message_type as MessageType }));
 };
 
-export const sendMessage = async (conversationId: string, senderId: string, content: string) => {
+export const sendMessage = async (
+  conversationId: string,
+  senderId: string,
+  content: string,
+  messageType: MessageType = 'text',
+  mediaUrl: string | null = null
+) => {
   const { data, error } = await supabase
     .from("messages")
-    .insert({ conversation_id: conversationId, sender_id: senderId, content })
+    .insert({
+      conversation_id: conversationId,
+      sender_id: senderId,
+      content,
+      message_type: messageType,
+      media_url: mediaUrl,
+    })
     .select()
     .single();
 
   if (error) throw error;
   return data;
+};
+
+export const uploadChatMedia = async (
+  userId: string,
+  file: File,
+  type: MessageType
+): Promise<string> => {
+  const ext = file.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
+  const path = `${userId}/${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("chat-media")
+    .upload(path, file, { cacheControl: "3600", upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from("chat-media").getPublicUrl(path);
+  return data.publicUrl;
 };
 
 export const markMessagesAsRead = async (conversationId: string, userId: string) => {
