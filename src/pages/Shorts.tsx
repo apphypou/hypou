@@ -178,7 +178,7 @@ const Shorts = () => {
       {/* Header — simplified, no social tabs */}
       <div className="absolute top-0 left-0 right-0 z-40 pointer-events-none">
         <div className="bg-gradient-to-b from-black/60 via-black/30 to-transparent">
-          <div className="flex items-center justify-between px-4 pt-[env(safe-area-inset-top,12px)] pb-2 pointer-events-auto">
+          <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top,12px)+16px)] pb-2 pointer-events-auto">
             <button
               onClick={() => navigate(-1)}
               className="h-10 w-10 flex items-center justify-center rounded-full"
