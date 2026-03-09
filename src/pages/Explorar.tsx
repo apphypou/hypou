@@ -169,6 +169,28 @@ const Explorar = () => {
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground, toast]
   );
 
+  const handleProposalConfirm = useCallback(
+    async (myItemId: string) => {
+      if (!user || !pendingLikeItem) return;
+      setProposalLoading(true);
+      try {
+        await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
+        toast({ title: "🤝 Proposta enviada!", description: `Proposta de troca enviada com sucesso.` });
+      } catch (err: any) {
+        if (err.message?.includes("duplicate")) {
+          toast({ title: "Proposta já existe", description: "Você já enviou uma proposta para este item." });
+        } else {
+          toast({ title: "Erro ao enviar proposta", description: err.message, variant: "destructive" });
+        }
+      } finally {
+        setProposalLoading(false);
+        setShowSelectItem(false);
+        setPendingLikeItem(null);
+      }
+    },
+    [user, pendingLikeItem, toast]
+  );
+
   const handleDragDirectionChange = useCallback(
     (rawX: number) => {
       dragDirectionValue.set(rawX);
