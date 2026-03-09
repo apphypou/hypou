@@ -154,16 +154,13 @@ const Explorar = () => {
       triggerStreak(direction);
 
       if (direction === "like") {
-        // Just record swipe + save as favorite — NO dialog
+        // Record swipe and open SelectItemDialog for trade proposal
         recordSwipeInBackground("like", currentItem.id);
-        addFavorite(user.id, currentItem.id).catch(() => {});
-        toast({ title: "❤️ Curtido!", description: "Item salvo nos seus favoritos." });
+        if (navigator.vibrate) navigator.vibrate(50);
+        setPendingLikeItem(currentItem);
+        setShowSelectItem(true);
       } else {
         recordSwipeInBackground("dislike", currentItem.id);
-      }
-
-      if (direction === "like" && navigator.vibrate) {
-        navigator.vibrate(50);
       }
 
       advanceCard();
