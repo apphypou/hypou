@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,8 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import ChatSafetyDialog from "@/components/ChatSafetyDialog";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
+import { acceptProposal, rejectProposal } from "@/services/matchService";
+import { createReport } from "@/services/reportService";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
-// Fetch conversation details
+// Fetch conversation details including match status
 const useConversationDetails = (conversationId: string | null) => {
   const { user } = useAuth();
   return useQuery({
@@ -28,7 +37,7 @@ const useConversationDetails = (conversationId: string | null) => {
       const { data: match } = await supabase
         .from("matches")
         .select(`
-          id, user_a_id, user_b_id,
+          id, status, user_a_id, user_b_id,
           item_a:item_a_id (name, item_images (image_url, position)),
           item_b:item_b_id (name, item_images (image_url, position))
         `)
@@ -49,10 +58,13 @@ const useConversationDetails = (conversationId: string | null) => {
         .single();
 
       return {
+        match_id: match.id,
+        match_status: match.status,
         other_user_id: otherUserId,
         other_user: profile || { display_name: "Usuário", avatar_url: null },
         other_item: otherItem as any,
         my_item: myItem as any,
+        is_user_b: !isUserA, // user_b is the one who receives proposals
       };
     },
     enabled: !!conversationId && !!user,
@@ -62,7 +74,7 @@ const useConversationDetails = (conversationId: string | null) => {
 const Conversa = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { data: messages = [], isLoading } = useMessages(conversationId || null);
-  const { data: details } = useConversationDetails(conversationId || null);
+  const { data: details, refetch: refetchDetails } = useConversationDetails(conversationId || null);
   const { mutate: send, isPending: sending } = useSendMessage(conversationId || null);
   const { mutateAsync: uploadMedia } = useUploadChatMedia();
   const { user } = useAuth();
@@ -77,6 +89,13 @@ const Conversa = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Report dialog
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDesc, setReportDesc] = useState("");
+  const [reporting, setReporting] = useState(false);
 
   // Check if user accepted chat terms
   const { data: chatTermsAccepted } = useQuery({
@@ -158,6 +177,50 @@ const Conversa = () => {
     setIsRecording(false);
   }, []);
 
+  const handleAcceptTrade = async () => {
+    if (!details?.match_id) return;
+    setActionLoading(true);
+    try {
+      await acceptProposal(details.match_id);
+      toast({ title: "Troca aceita! ✅", description: "Combinem a entrega pelo chat." });
+      refetchDetails();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectTrade = async () => {
+    if (!details?.match_id) return;
+    setActionLoading(true);
+    try {
+      await rejectProposal(details.match_id);
+      toast({ title: "Proposta recusada" });
+      refetchDetails();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!user || !details?.other_user_id || !reportReason) return;
+    setReporting(true);
+    try {
+      await createReport(user.id, details.other_user_id, reportReason, reportDesc || undefined);
+      toast({ title: "Denúncia enviada", description: "Vamos analisar o caso." });
+      setReportOpen(false);
+      setReportReason("");
+      setReportDesc("");
+    } catch {
+      toast({ title: "Erro ao enviar denúncia", variant: "destructive" });
+    } finally {
+      setReporting(false);
+    }
+  };
+
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -204,6 +267,14 @@ const Conversa = () => {
     return <p className="text-sm leading-relaxed break-words">{msg.content}</p>;
   };
 
+  const matchStatusLabel = details?.match_status === "accepted"
+    ? "Troca aceita ✅"
+    : details?.match_status === "rejected"
+    ? "Proposta recusada ❌"
+    : details?.match_status === "proposal"
+    ? "Proposta pendente ⏳"
+    : null;
+
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
       {/* Safety Dialog */}
@@ -214,6 +285,7 @@ const Conversa = () => {
           onAccepted={() => queryClient.setQueryData(["chat-terms", user.id], true)}
         />
       )}
+
       {/* Header */}
       <header className="relative z-40 flex items-center gap-3 px-4 pt-4 pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl shrink-0">
         <button
@@ -251,7 +323,52 @@ const Conversa = () => {
             </div>
           </button>
         )}
+
+        {/* Report button */}
+        {details && (
+          <button
+            onClick={() => setReportOpen(true)}
+            className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-destructive transition-colors"
+          >
+            <Flag className="h-4 w-4" />
+          </button>
+        )}
       </header>
+
+      {/* Trade status banner */}
+      {matchStatusLabel && (
+        <div className={`px-4 py-2 text-center text-xs font-bold uppercase tracking-wider shrink-0 ${
+          details?.match_status === "accepted"
+            ? "bg-success/10 text-success border-b border-success/20"
+            : details?.match_status === "rejected"
+            ? "bg-destructive/10 text-destructive border-b border-destructive/20"
+            : "bg-primary/10 text-primary border-b border-primary/20"
+        }`}>
+          {matchStatusLabel}
+        </div>
+      )}
+
+      {/* Accept/Reject buttons for pending proposals (only for receiver) */}
+      {details?.match_status === "proposal" && details?.is_user_b && (
+        <div className="flex gap-2 px-4 py-3 border-b border-foreground/5 bg-card/50 shrink-0">
+          <button
+            onClick={handleAcceptTrade}
+            disabled={actionLoading}
+            className="flex-1 py-2.5 rounded-full bg-success text-success-foreground text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+          >
+            {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            Aceitar Troca
+          </button>
+          <button
+            onClick={handleRejectTrade}
+            disabled={actionLoading}
+            className="flex-1 py-2.5 rounded-full bg-card border border-foreground/10 text-foreground text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+          >
+            <XCircle className="h-4 w-4" />
+            Recusar
+          </button>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar px-4 py-4 space-y-3">
@@ -415,6 +532,56 @@ const Conversa = () => {
           </div>
         </div>
       )}
+
+      {/* Report Dialog */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent className="bg-card border-foreground/10">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Flag className="h-5 w-5 text-destructive" />
+              Denunciar Usuário
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 mt-2">
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Motivo</p>
+              <div className="flex flex-wrap gap-2">
+                {["Golpe", "Conteúdo impróprio", "Assédio", "Perfil falso", "Outro"].map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setReportReason(reason)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      reportReason === reason
+                        ? "bg-destructive text-destructive-foreground"
+                        : "bg-card border border-foreground/10 text-foreground/60"
+                    }`}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Detalhes (opcional)</p>
+              <Textarea
+                value={reportDesc}
+                onChange={(e) => setReportDesc(e.target.value)}
+                placeholder="Descreva o que aconteceu..."
+                rows={3}
+                className="bg-background border-foreground/10 resize-none"
+              />
+            </div>
+            <button
+              onClick={handleReport}
+              disabled={!reportReason || reporting}
+              className="w-full py-3 rounded-full bg-destructive text-destructive-foreground font-bold text-sm uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {reporting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enviar Denúncia
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
