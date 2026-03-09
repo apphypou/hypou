@@ -7,8 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { getExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
-import { addFavorite } from "@/services/favoriteService";
+import { createProposal } from "@/services/matchService";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import SelectItemDialog from "@/components/SelectItemDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
