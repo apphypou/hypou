@@ -8,6 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
 import IconButton from "@/components/IconButton";
 import TradeRangeCard from "@/components/TradeRangeCard";
+import LocationSearch from "@/components/LocationSearch";
 import {
   AlertDialog,
   AlertDialogContent,
