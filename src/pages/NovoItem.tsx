@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,6 +90,12 @@ const NovoItem = () => {
     const toAdd = files.slice(0, maxNew);
     setItemPhotos((prev) => [...prev, ...toAdd]);
     setItemPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+  };
+
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(itemPreviews[index]);
+    setItemPhotos((prev) => prev.filter((_, i) => i !== index));
+    setItemPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,8 +248,15 @@ const NovoItem = () => {
           {itemPreviews.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto no-scrollbar">
               {itemPreviews.map((url, i) => (
-                <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30">
+                <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30 group">
                   <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3 text-destructive-foreground" />
+                  </button>
                 </div>
               ))}
               {itemPreviews.length < 5 && (

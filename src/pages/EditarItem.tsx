@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, Loader2, Check, Trash2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, Trash2, AlertTriangle, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -284,10 +284,11 @@ const EditarItem = () => {
               <div key={img.id} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30 group">
                 <img src={img.image_url} alt="Foto" className="w-full h-full object-cover" />
                 <button
+                  type="button"
                   onClick={() => handleRemoveExistingImage(img.id)}
-                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <Trash2 className="h-3 w-3 text-destructive-foreground" />
+                  <X className="h-3 w-3 text-destructive-foreground" />
                 </button>
               </div>
             ))}
