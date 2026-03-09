@@ -53,6 +53,11 @@ const Explorar = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  // SelectItemDialog state
+  const [showSelectItem, setShowSelectItem] = useState(false);
+  const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
+  const [proposalLoading, setProposalLoading] = useState(false);
+
   // Fetch user's preferred categories
   const { data: userCategories = [] } = useQuery({
     queryKey: ["user-categories", user?.id],
