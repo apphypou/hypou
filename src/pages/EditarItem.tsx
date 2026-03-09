@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, TrendingUp, TrendingDown, Info, Loader2, Check, MapPin, Trash2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, MapPin, Trash2, AlertTriangle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
 import IconButton from "@/components/IconButton";
+import TradeRangeCard from "@/components/TradeRangeCard";
 
 const categories = [
   { emoji: "📱", label: "Celulares" },
@@ -54,6 +55,10 @@ const centsToFormatted = (cents: number): string => {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
+const formatCentsDisplay = (cents: number): string => {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
+
 const EditarItem = () => {
   const { itemId } = useParams<{ itemId: string }>();
   const navigate = useNavigate();
@@ -88,7 +93,6 @@ const EditarItem = () => {
     suggestedMax: number;
   }>({ open: false, reason: "", suggestedMin: 0, suggestedMax: 0 });
 
-  // Populate form when item loads
   useEffect(() => {
     if (item) {
       setItemName(item.name);
@@ -104,6 +108,7 @@ const EditarItem = () => {
   }, [item]);
 
   const totalImages = existingImages.length + newPhotos.length;
+  const valueCents = parseCurrencyToCents(itemValue);
 
   const handleNewPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -132,15 +137,13 @@ const EditarItem = () => {
     if (!user || !itemId) return;
     setSaving(true);
     try {
-      const valueInCents = parseCurrencyToCents(itemValue);
-
       await updateItem(itemId, {
         name: itemName.trim(),
         description: itemDesc.trim().slice(0, 500) || null,
         category,
         condition,
         location: location.trim() || null,
-        market_value: valueInCents,
+        market_value: valueCents,
         margin_up: valorization,
         margin_down: devalorization,
       });
@@ -171,11 +174,9 @@ const EditarItem = () => {
       return;
     }
 
-    const valueInCents = parseCurrencyToCents(itemValue);
-
     setValidating(true);
     try {
-      const validation = await validateItemPrice(itemName.trim(), category, condition, valueInCents);
+      const validation = await validateItemPrice(itemName.trim(), category, condition, valueCents);
       if (!validation.valid) {
         setPriceAlert({
           open: true,
@@ -190,7 +191,6 @@ const EditarItem = () => {
       // Fail-open
     }
     setValidating(false);
-
     await saveItem();
   };
 
@@ -200,10 +200,6 @@ const EditarItem = () => {
   };
 
   const isSubmitting = saving || validating;
-
-  const formatCentsDisplay = (cents: number): string => {
-    return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-  };
 
   if (isLoading) {
     return (
@@ -219,7 +215,6 @@ const EditarItem = () => {
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
 
-      {/* Price validation alert dialog */}
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="bg-card border-foreground/10">
           <AlertDialogHeader>
@@ -289,7 +284,7 @@ const EditarItem = () => {
           </div>
         </div>
 
-        {/* Form */}
+        {/* Form: Name > Category > Condition > Value > Trade Range > Location > Description */}
         <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Nome do Item</label>
@@ -352,7 +347,21 @@ const EditarItem = () => {
               className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
             />
           </div>
+        </div>
 
+        {/* Trade Range - only shows when value > 0 */}
+        {valueCents > 0 && (
+          <TradeRangeCard
+            valueCents={valueCents}
+            marginDown={devalorization}
+            marginUp={valorization}
+            onMarginDownChange={setDevalorization}
+            onMarginUpChange={setValorization}
+          />
+        )}
+
+        {/* Optional fields: Location & Description */}
+        <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
             <div className="relative">
@@ -380,46 +389,6 @@ const EditarItem = () => {
             />
             <span className="text-xs text-muted-foreground mt-1 block text-right">{itemDesc.length}/500</span>
           </div>
-        </div>
-
-        {/* Margins */}
-        <div className="rounded-2xl bg-card border border-foreground/5 p-6 mb-4">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Acima do Valor</span>
-          <div className="flex items-center justify-between mt-2 mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">Valorização</span>
-            </div>
-            <span className="text-3xl font-bold text-primary text-glow">+{valorization}<span className="text-lg">%</span></span>
-          </div>
-          <input type="range" min={0} max={50} value={valorization} onChange={(e) => setValorization(Number(e.target.value))} className="w-full accent-primary" />
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-muted-foreground">0%</span>
-            <span className="text-xs text-muted-foreground">+50%</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-card border border-foreground/5 p-6 mb-6">
-          <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Abaixo do Valor</span>
-          <div className="flex items-center justify-between mt-2 mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">Desvalorização</span>
-            </div>
-            <span className="text-3xl font-bold text-primary text-glow">-{devalorization}<span className="text-lg">%</span></span>
-          </div>
-          <input type="range" min={0} max={50} value={devalorization} onChange={(e) => setDevalorization(Number(e.target.value))} className="w-full accent-primary" />
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-muted-foreground">0%</span>
-            <span className="text-xs text-muted-foreground">-50%</span>
-          </div>
-        </div>
-
-        <div className="flex items-start gap-3 rounded-xl bg-card/50 border border-foreground/5 p-4 mb-8">
-          <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            A margem ajuda nosso algoritmo a encontrar trocas com valores compatíveis ao seu item.
-          </p>
         </div>
       </main>
 
