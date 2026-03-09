@@ -358,6 +358,24 @@ const NovoItem = () => {
           </div>
 
           <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Descrição</label>
+            <textarea
+              value={itemDesc}
+              onChange={(e) => setItemDesc(e.target.value)}
+              placeholder="Detalhes sobre tempo de uso, acessórios inclusos, etc..."
+              rows={3}
+              maxLength={500}
+              className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none"
+            />
+            <span className="text-xs text-muted-foreground mt-1 block text-right">{itemDesc.length}/500</span>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
+            <LocationSearch value={location} onChange={setLocation} />
+          </div>
+
+          <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Valor de Mercado</label>
             <div className="flex gap-2">
               <input
@@ -395,27 +413,6 @@ const NovoItem = () => {
             onMarginUpChange={setValorization}
           />
         )}
-
-        {/* Location & Description */}
-        <div className="flex flex-col gap-5 mb-6">
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
-            <LocationSearch value={location} onChange={setLocation} />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Descrição</label>
-            <textarea
-              value={itemDesc}
-              onChange={(e) => setItemDesc(e.target.value)}
-              placeholder="Detalhes sobre tempo de uso, acessórios inclusos, etc..."
-              rows={3}
-              maxLength={500}
-              className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none"
-            />
-            <span className="text-xs text-muted-foreground mt-1 block text-right">{itemDesc.length}/500</span>
-          </div>
-        </div>
       </main>
 
       {/* Submit */}
