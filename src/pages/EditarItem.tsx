@@ -18,6 +18,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
 import IconButton from "@/components/IconButton";
 import TradeRangeCard from "@/components/TradeRangeCard";
+import LocationSearch from "@/components/LocationSearch";
 
 const categories = [
   { emoji: "📱", label: "Celulares" },
