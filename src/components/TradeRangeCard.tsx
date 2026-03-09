@@ -24,10 +24,6 @@ const TradeRangeCard = ({
   const minValue = Math.round(valueCents * (1 - marginDown / 100));
   const maxValue = Math.round(valueCents * (1 + marginUp / 100));
 
-  // Slider uses [marginDown, marginUp] mapped to 0-50 each
-  // We use a single range slider from 0 to 100 where:
-  // left thumb = 50 - marginDown (so 0=50% down, 50=0% down)
-  // right thumb = 50 + marginUp (so 50=0% up, 100=50% up)
   const sliderValue = [50 - marginDown, 50 + marginUp];
 
   const handleSliderChange = (values: number[]) => {
@@ -82,9 +78,9 @@ const TradeRangeCard = ({
         />
       </div>
 
-      {/* Percentage hint */}
+      {/* Simple hint instead of percentages */}
       <p className="text-xs text-muted-foreground text-center">
-        De {marginDown}% abaixo até {marginUp}% acima do valor
+        Arraste para ajustar a faixa de valor aceita
       </p>
 
       {/* Help text */}
