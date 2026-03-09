@@ -7,8 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { getExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
-import { addFavorite } from "@/services/favoriteService";
+import { createProposal } from "@/services/matchService";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import SelectItemDialog from "@/components/SelectItemDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
@@ -51,6 +52,11 @@ const Explorar = () => {
   // Category filter state
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // SelectItemDialog state
+  const [showSelectItem, setShowSelectItem] = useState(false);
+  const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
+  const [proposalLoading, setProposalLoading] = useState(false);
 
   // Fetch user's preferred categories
   const { data: userCategories = [] } = useQuery({
@@ -148,22 +154,41 @@ const Explorar = () => {
       triggerStreak(direction);
 
       if (direction === "like") {
-        // Just record swipe + save as favorite — NO dialog
+        // Record swipe and open SelectItemDialog for trade proposal
         recordSwipeInBackground("like", currentItem.id);
-        addFavorite(user.id, currentItem.id).catch(() => {});
-        toast({ title: "❤️ Curtido!", description: "Item salvo nos seus favoritos." });
+        if (navigator.vibrate) navigator.vibrate(50);
+        setPendingLikeItem(currentItem);
+        setShowSelectItem(true);
       } else {
         recordSwipeInBackground("dislike", currentItem.id);
-      }
-
-      if (direction === "like" && navigator.vibrate) {
-        navigator.vibrate(50);
       }
 
       advanceCard();
       swipingRef.current = false;
     },
     [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground, toast]
+  );
+
+  const handleProposalConfirm = useCallback(
+    async (myItemId: string) => {
+      if (!user || !pendingLikeItem) return;
+      setProposalLoading(true);
+      try {
+        await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
+        toast({ title: "🤝 Proposta enviada!", description: `Proposta de troca enviada com sucesso.` });
+      } catch (err: any) {
+        if (err.message?.includes("duplicate")) {
+          toast({ title: "Proposta já existe", description: "Você já enviou uma proposta para este item." });
+        } else {
+          toast({ title: "Erro ao enviar proposta", description: err.message, variant: "destructive" });
+        }
+      } finally {
+        setProposalLoading(false);
+        setShowSelectItem(false);
+        setPendingLikeItem(null);
+      }
+    },
+    [user, pendingLikeItem, toast]
   );
 
   const handleDragDirectionChange = useCallback(
@@ -392,6 +417,14 @@ const Explorar = () => {
       )}
 
       <BottomNav activeTab="explorar" />
+
+      <SelectItemDialog
+        open={showSelectItem}
+        onClose={() => { setShowSelectItem(false); setPendingLikeItem(null); }}
+        onConfirm={handleProposalConfirm}
+        targetItemName={pendingLikeItem?.name}
+        loading={proposalLoading}
+      />
     </ScreenLayout>
   );
 };
