@@ -44,6 +44,22 @@ const SelectItemDialog = ({ open, onClose, onConfirm, targetItemName, loading }:
     enabled: !!user && open,
   });
 
+  // Check if user has ever had any item (active or not) to differentiate first-time vs returning
+  const { data: totalItemCount = 0 } = useQuery({
+    queryKey: ["user-total-items", user?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("items")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user && open,
+  });
+
+  const isFirstTime = totalItemCount === 0 && myItems.length === 0;
+
   const handleConfirm = () => {
     if (selectedId) onConfirm(selectedId);
   };
