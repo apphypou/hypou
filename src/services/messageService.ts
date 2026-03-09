@@ -133,15 +133,45 @@ export const getMessages = async (conversationId: string): Promise<Message[]> =>
   return data || [];
 };
 
-export const sendMessage = async (conversationId: string, senderId: string, content: string) => {
+export const sendMessage = async (
+  conversationId: string,
+  senderId: string,
+  content: string,
+  messageType: MessageType = 'text',
+  mediaUrl: string | null = null
+) => {
   const { data, error } = await supabase
     .from("messages")
-    .insert({ conversation_id: conversationId, sender_id: senderId, content })
+    .insert({
+      conversation_id: conversationId,
+      sender_id: senderId,
+      content,
+      message_type: messageType,
+      media_url: mediaUrl,
+    })
     .select()
     .single();
 
   if (error) throw error;
   return data;
+};
+
+export const uploadChatMedia = async (
+  userId: string,
+  file: File,
+  type: MessageType
+): Promise<string> => {
+  const ext = file.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
+  const path = `${userId}/${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("chat-media")
+    .upload(path, file, { cacheControl: "3600", upsert: false });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from("chat-media").getPublicUrl(path);
+  return data.publicUrl;
 };
 
 export const markMessagesAsRead = async (conversationId: string, userId: string) => {
