@@ -7,9 +7,15 @@ interface LocationSearchProps {
   placeholder?: string;
 }
 
-interface NominatimResult {
-  place_id: number;
-  display_name: string;
+interface PhotonFeature {
+  geometry: { coordinates: [number, number] };
+  properties: {
+    osm_id: number;
+    name?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  };
 }
 
 const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: LocationSearchProps) => {
