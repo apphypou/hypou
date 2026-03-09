@@ -11,6 +11,7 @@ interface PhotonFeature {
   geometry: { coordinates: [number, number] };
   properties: {
     osm_id: number;
+    countrycode?: string;
     name?: string;
     city?: string;
     state?: string;
