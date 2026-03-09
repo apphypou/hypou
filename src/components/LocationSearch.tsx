@@ -11,6 +11,7 @@ interface PhotonFeature {
   geometry: { coordinates: [number, number] };
   properties: {
     osm_id: number;
+    countrycode?: string;
     name?: string;
     city?: string;
     state?: string;
@@ -56,12 +57,12 @@ const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: Loc
     setLoading(true);
     try {
       const res = await fetch(
-        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=default&lat=-15.78&lon=-47.93&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=15&lang=default&lat=-15.78&lon=-47.93`
       );
       const data = await res.json();
-      const features: PhotonFeature[] = (data.features || []).filter(
-        (f: PhotonFeature) => f.properties.country === "Brazil" || f.properties.country === "Brasil"
-      );
+      const features: PhotonFeature[] = (data.features || [])
+        .filter((f: PhotonFeature) => f.properties.countrycode === "BR")
+        .slice(0, 5);
       setResults(features);
       setIsOpen(features.length > 0);
     } catch {
