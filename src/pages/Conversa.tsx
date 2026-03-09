@@ -191,7 +191,13 @@ const Conversa = () => {
 
     if (type === 'audio' && mediaUrl) {
       return (
-        <audio src={mediaUrl} controls className="max-w-full min-w-[200px]" preload="metadata" />
+        <audio
+          src={mediaUrl}
+          controls
+          className="max-w-full min-w-[180px] [&::-webkit-media-controls-panel]:bg-transparent [&::-webkit-media-controls-panel]:shadow-none"
+          preload="metadata"
+          style={{ height: '36px' }}
+        />
       );
     }
 
