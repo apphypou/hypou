@@ -18,9 +18,16 @@ interface PhotonFeature {
   };
 }
 
+const formatFeature = (f: PhotonFeature): string => {
+  const { name, city, state } = f.properties;
+  const parts = [name, city, state].filter(Boolean);
+  // Deduplicate consecutive equal parts
+  return parts.filter((p, i) => i === 0 || p !== parts[i - 1]).join(", ");
+};
+
 const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: LocationSearchProps) => {
   const [query, setQuery] = useState(value);
-  const [results, setResults] = useState<NominatimResult[]>([]);
+  const [results, setResults] = useState<PhotonFeature[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -49,12 +56,14 @@ const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: Loc
     setLoading(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&countrycodes=br&limit=5&q=${encodeURIComponent(q)}`,
-        { headers: { "Accept-Language": "pt-BR" } }
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=default&lat=-15.78&lon=-47.93&osm_tag=place:city&osm_tag=place:town&osm_tag=place:village`
       );
-      const data: NominatimResult[] = await res.json();
-      setResults(data);
-      setIsOpen(data.length > 0);
+      const data = await res.json();
+      const features: PhotonFeature[] = (data.features || []).filter(
+        (f: PhotonFeature) => f.properties.country === "Brazil" || f.properties.country === "Brasil"
+      );
+      setResults(features);
+      setIsOpen(features.length > 0);
     } catch {
       setResults([]);
     } finally {
@@ -68,15 +77,13 @@ const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: Loc
     onChange(val);
 
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => search(val), 400);
+    timerRef.current = setTimeout(() => search(val), 300);
   };
 
-  const handleSelect = (result: NominatimResult) => {
-    // Extract city/state from display_name
-    const parts = result.display_name.split(", ");
-    const short = parts.length >= 2 ? `${parts[0]}, ${parts[1]}` : result.display_name;
-    setQuery(short);
-    onChange(short);
+  const handleSelect = (feature: PhotonFeature) => {
+    const label = formatFeature(feature);
+    setQuery(label);
+    onChange(label);
     setIsOpen(false);
   };
 
@@ -96,21 +103,21 @@ const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: Loc
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-card border border-foreground/10 rounded-xl overflow-hidden shadow-lg">
-          {results.map((r) => {
-            const parts = r.display_name.split(", ");
-            const short = parts.length >= 2 ? `${parts[0]}, ${parts[1]}` : r.display_name;
+          {results.map((f, i) => {
+            const label = formatFeature(f);
+            const { state } = f.properties;
             return (
               <button
-                key={r.place_id}
+                key={f.properties.osm_id || i}
                 type="button"
-                onClick={() => handleSelect(r)}
+                onClick={() => handleSelect(f)}
                 className="w-full px-4 py-3 text-left text-sm text-foreground hover:bg-primary/10 transition-colors flex items-center gap-3 border-b border-foreground/5 last:border-b-0"
               >
                 <MapPin className="h-4 w-4 text-primary shrink-0" />
                 <div className="min-w-0">
-                  <span className="font-medium block truncate">{short}</span>
-                  {parts.length > 2 && (
-                    <span className="text-xs text-muted-foreground truncate block">{r.display_name}</span>
+                  <span className="font-medium block truncate">{label}</span>
+                  {state && (
+                    <span className="text-xs text-muted-foreground truncate block">{state}</span>
                   )}
                 </div>
               </button>
