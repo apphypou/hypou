@@ -92,6 +92,12 @@ const NovoItem = () => {
     setItemPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
   };
 
+  const removePhoto = (index: number) => {
+    URL.revokeObjectURL(itemPreviews[index]);
+    setItemPhotos((prev) => prev.filter((_, i) => i !== index));
+    setItemPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
     if (raw.length > 10) return;
