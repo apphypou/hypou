@@ -279,10 +279,10 @@ const EditarItem = () => {
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
             Fotos do Item
           </label>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 pt-1">
             {existingImages.map((img) => (
-              <div key={img.id} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30 group">
-                <img src={img.image_url} alt="Foto" className="w-full h-full object-cover" />
+              <div key={img.id} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
+                <img src={img.image_url} alt="Foto" className="w-full h-full object-cover rounded-2xl" />
                 <button
                   type="button"
                   onClick={() => handleRemoveExistingImage(img.id)}
@@ -293,8 +293,19 @@ const EditarItem = () => {
               </div>
             ))}
             {newPreviews.map((url, i) => (
-              <div key={`new-${i}`} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30">
-                <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover" />
+              <div key={`new-${i}`} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
+                <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    URL.revokeObjectURL(newPreviews[i]);
+                    setNewPhotos((prev) => prev.filter((_, idx) => idx !== i));
+                    setNewPreviews((prev) => prev.filter((_, idx) => idx !== i));
+                  }}
+                  className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
+                >
+                  <X className="h-3 w-3 text-destructive-foreground" />
+                </button>
               </div>
             ))}
             {totalImages < 5 && (
