@@ -72,18 +72,29 @@ export const useSendMessage = (conversationId: string | null) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (content: string) => {
+    mutationFn: ({ content, messageType = 'text', mediaUrl = null }: { content: string; messageType?: MessageType; mediaUrl?: string | null }) => {
       if (!conversationId || !user) throw new Error("Not ready");
-      return sendMessage(conversationId, user.id, content);
+      return sendMessage(conversationId, user.id, content, messageType, mediaUrl);
     },
     onSuccess: (newMsg) => {
-      // Optimistic: add to cache immediately
+      const msg: Message = { ...newMsg, message_type: newMsg.message_type as MessageType };
       queryClient.setQueryData<Message[]>(["messages", conversationId], (old) => {
-        if (!old) return [newMsg];
-        if (old.some((m) => m.id === newMsg.id)) return old;
-        return [...old, newMsg];
+        if (!old) return [msg];
+        if (old.some((m) => m.id === msg.id)) return old;
+        return [...old, msg];
       });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+};
+
+export const useUploadChatMedia = () => {
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: ({ file, type }: { file: File; type: MessageType }) => {
+      if (!user) throw new Error("Not authenticated");
+      return uploadChatMedia(user.id, file, type);
     },
   });
 };
