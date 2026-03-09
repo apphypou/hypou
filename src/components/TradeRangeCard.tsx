@@ -56,18 +56,16 @@ const TradeRangeCard = ({
       </p>
 
       {/* Values display */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-center">
-          <span className="text-2xl font-bold text-foreground">{formatCentsDisplay(minValue)}</span>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="text-center min-w-0 flex-1">
+          <span className="text-xl font-bold text-foreground truncate block">{formatCentsDisplay(minValue)}</span>
           <p className="text-xs text-muted-foreground mt-1">mínimo</p>
         </div>
-        <div className="flex-1 flex items-center justify-center px-3">
-          <div className="h-px flex-1 bg-foreground/10" />
-          <ArrowLeftRight className="h-4 w-4 text-primary mx-2 shrink-0" />
-          <div className="h-px flex-1 bg-foreground/10" />
+        <div className="flex items-center justify-center shrink-0 px-1">
+          <ArrowLeftRight className="h-4 w-4 text-primary" />
         </div>
-        <div className="text-center">
-          <span className="text-2xl font-bold text-foreground">{formatCentsDisplay(maxValue)}</span>
+        <div className="text-center min-w-0 flex-1">
+          <span className="text-xl font-bold text-foreground truncate block">{formatCentsDisplay(maxValue)}</span>
           <p className="text-xs text-muted-foreground mt-1">máximo</p>
         </div>
       </div>
