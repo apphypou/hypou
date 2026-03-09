@@ -130,7 +130,7 @@ export const getMessages = async (conversationId: string): Promise<Message[]> =>
     .order("created_at", { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map((m: any) => ({ ...m, message_type: m.message_type as MessageType }));
 };
 
 export const sendMessage = async (
