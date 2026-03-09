@@ -248,8 +248,15 @@ const NovoItem = () => {
           {itemPreviews.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto no-scrollbar">
               {itemPreviews.map((url, i) => (
-                <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30">
+                <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30 group">
                   <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    className="absolute top-1 right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="h-3 w-3 text-destructive-foreground" />
+                  </button>
                 </div>
               ))}
               {itemPreviews.length < 5 && (
