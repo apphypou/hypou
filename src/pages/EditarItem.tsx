@@ -295,6 +295,17 @@ const EditarItem = () => {
             {newPreviews.map((url, i) => (
               <div key={`new-${i}`} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30">
                 <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    URL.revokeObjectURL(newPreviews[i]);
+                    setNewPhotos((prev) => prev.filter((_, idx) => idx !== i));
+                    setNewPreviews((prev) => prev.filter((_, idx) => idx !== i));
+                  }}
+                  className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
+                >
+                  <X className="h-3 w-3 text-destructive-foreground" />
+                </button>
               </div>
             ))}
             {totalImages < 5 && (
