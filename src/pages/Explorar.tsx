@@ -1,4 +1,4 @@
-import { Filter } from "lucide-react";
+import { Filter, Search, Share2, PlusCircle, Clapperboard, Heart } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { getExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
-import { createProposal } from "@/services/matchService";
+import { addFavorite } from "@/services/favoriteService";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,6 @@ import {
 } from "framer-motion";
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
-import SelectItemDialog from "@/components/SelectItemDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 const allCategories = [
@@ -48,11 +47,6 @@ const Explorar = () => {
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
-
-  // Select item dialog state
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
-  const [proposalLoading, setProposalLoading] = useState(false);
 
   // Category filter state
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -154,8 +148,10 @@ const Explorar = () => {
       triggerStreak(direction);
 
       if (direction === "like") {
-        setPendingLikeItem(currentItem);
-        setDialogOpen(true);
+        // Just record swipe + save as favorite — NO dialog
+        recordSwipeInBackground("like", currentItem.id);
+        addFavorite(user.id, currentItem.id).catch(() => {});
+        toast({ title: "❤️ Curtido!", description: "Item salvo nos seus favoritos." });
       } else {
         recordSwipeInBackground("dislike", currentItem.id);
       }
@@ -167,39 +163,8 @@ const Explorar = () => {
       advanceCard();
       swipingRef.current = false;
     },
-    [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground]
+    [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground, toast]
   );
-
-  const handleProposalConfirm = useCallback(
-    async (myItemId: string) => {
-      if (!user || !pendingLikeItem) return;
-      setProposalLoading(true);
-      try {
-        await createSwipe(user.id, pendingLikeItem.id, "like").catch(() => {});
-        await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
-        toast({ title: "Proposta enviada! 🎉", description: "O dono do item será notificado." });
-      } catch (err: any) {
-        if (err.message?.includes("duplicate")) {
-          toast({ title: "Proposta já enviada", description: "Você já fez uma proposta para este item." });
-        } else {
-          toast({ title: "Erro ao enviar proposta", description: err.message, variant: "destructive" });
-        }
-      } finally {
-        setProposalLoading(false);
-        setDialogOpen(false);
-        setPendingLikeItem(null);
-      }
-    },
-    [user, pendingLikeItem, toast]
-  );
-
-  const handleDialogClose = useCallback(() => {
-    if (pendingLikeItem && user) {
-      recordSwipeInBackground("dislike", pendingLikeItem.id);
-    }
-    setDialogOpen(false);
-    setPendingLikeItem(null);
-  }, [pendingLikeItem, user, recordSwipeInBackground]);
 
   const handleDragDirectionChange = useCallback(
     (rawX: number) => {
@@ -236,6 +201,12 @@ const Explorar = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/busca")}
+            className="h-9 w-9 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/50 hover:text-foreground transition-all"
+          >
+            <Search className="h-4 w-4" />
+          </button>
           <NotificationBell />
           <button
             onClick={() => setShowFilters((v) => !v)}
@@ -299,22 +270,68 @@ const Explorar = () => {
             <SkeletonSwipeCard />
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-            <span className="text-6xl mb-4">🔍</span>
+          /* ===== IMPROVED EMPTY STATE ===== */
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+            <motion.span
+              className="text-7xl mb-5"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              {activeFilter ? "🔍" : "🤷‍♂️"}
+            </motion.span>
             <h2 className="text-xl font-bold text-foreground mb-2">
-              {activeFilter ? `Sem itens em "${activeFilter}"` : "Sem itens por agora"}
+              {activeFilter ? `Sem itens em "${activeFilter}"` : "Ainda não há itens por aqui"}
             </h2>
-            <p className="text-muted-foreground text-sm">
-              {activeFilter ? "Tente outra categoria ou remova o filtro." : "Volte mais tarde para encontrar novas trocas!"}
+            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+              {activeFilter
+                ? "Tente outra categoria ou remova o filtro."
+                : "Seja o primeiro a cadastrar um item ou convide amigos!"}
             </p>
-            {activeFilter && (
+
+            <div className="flex flex-col gap-3 w-full max-w-xs">
+              {activeFilter && (
+                <button
+                  onClick={() => setActiveFilter(null)}
+                  className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+                >
+                  <Filter className="h-4 w-4" />
+                  Limpar filtro
+                </button>
+              )}
+
               <button
-                onClick={() => setActiveFilter(null)}
-                className="mt-4 text-primary text-xs font-bold uppercase tracking-wider"
+                onClick={() => navigate("/novo-item")}
+                className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider neon-glow transition-all flex items-center justify-center gap-2"
               >
-                Limpar filtro
+                <PlusCircle className="h-4 w-4" />
+                Cadastrar meu item
               </button>
-            )}
+
+              <button
+                onClick={() => navigate("/shorts")}
+                className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+              >
+                <Clapperboard className="h-4 w-4" />
+                Explorar a Vitrine
+              </button>
+
+              {typeof navigator.share === "function" && (
+                <button
+                  onClick={() => {
+                    navigator.share({
+                      title: "Hypou — Troque seus itens",
+                      text: "Conheça o Hypou, o app de trocas inteligentes!",
+                      url: "https://hypou.lovable.app",
+                    }).catch(() => {});
+                  }}
+                  className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Convidar amigos
+                </button>
+              )}
+            </div>
           </div>
         ) : currentItem ? (
           <>
@@ -373,14 +390,6 @@ const Explorar = () => {
           />
         </div>
       )}
-
-      <SelectItemDialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        onConfirm={handleProposalConfirm}
-        targetItemName={pendingLikeItem?.name}
-        loading={proposalLoading}
-      />
 
       <BottomNav activeTab="explorar" />
     </ScreenLayout>

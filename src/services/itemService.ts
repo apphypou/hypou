@@ -121,7 +121,7 @@ export const getExploreItems = async (userId: string, page = 0, pageSize = 50) =
   if (ownerIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, display_name, avatar_url, location")
+      .select("user_id, display_name, avatar_url, location, created_at")
       .in("user_id", ownerIds);
     (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
   }

@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X, Sparkles } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,6 +74,7 @@ const NovoItem = () => {
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [suggestingPrice, setSuggestingPrice] = useState(false);
 
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
@@ -102,6 +103,28 @@ const NovoItem = () => {
     const raw = e.target.value.replace(/\D/g, "");
     if (raw.length > 10) return;
     setItemValue(raw ? formatCurrency(raw) : "");
+  };
+
+  const handleSuggestPrice = async () => {
+    if (!itemName.trim() || !category || !condition) {
+      toast({ title: "Preencha nome, categoria e condição primeiro", variant: "destructive" });
+      return;
+    }
+    setSuggestingPrice(true);
+    try {
+      const result = await validateItemPrice(itemName.trim(), category, condition, 0);
+      if (result.suggestedMin > 0 && result.suggestedMax > 0) {
+        const avg = Math.round((result.suggestedMin + result.suggestedMax) / 2);
+        setItemValue(formatCurrency(String(avg)));
+        toast({ title: "💡 Preço sugerido!", description: `Baseado em preços reais do mercado: ${formatCentsDisplay(result.suggestedMin)} — ${formatCentsDisplay(result.suggestedMax)}` });
+      } else {
+        toast({ title: "Não foi possível sugerir um preço", description: "Tente preencher manualmente.", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao buscar preço", variant: "destructive" });
+    } finally {
+      setSuggestingPrice(false);
+    }
   };
 
   const saveItem = async () => {
@@ -282,7 +305,7 @@ const NovoItem = () => {
           )}
         </div>
 
-        {/* Form: Name > Category > Condition > Value > Trade Range > Location > Description */}
+        {/* Form */}
         <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Nome do Item</label>
@@ -336,18 +359,33 @@ const NovoItem = () => {
 
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Valor de Mercado</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={itemValue}
-              onChange={handleCurrencyChange}
-              placeholder="R$ 0,00"
-              className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={itemValue}
+                onChange={handleCurrencyChange}
+                placeholder="R$ 0,00"
+                className="flex-1 bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
+              />
+              <button
+                type="button"
+                onClick={handleSuggestPrice}
+                disabled={suggestingPrice || !itemName.trim() || !category}
+                className="px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-all disabled:opacity-30 flex items-center gap-1.5 shrink-0"
+              >
+                {suggestingPrice ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                Sugerir
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Trade Range - only shows when value > 0 */}
+        {/* Trade Range */}
         {valueCents > 0 && (
           <TradeRangeCard
             valueCents={valueCents}
@@ -358,7 +396,7 @@ const NovoItem = () => {
           />
         )}
 
-        {/* Optional fields: Location & Description */}
+        {/* Location & Description */}
         <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
