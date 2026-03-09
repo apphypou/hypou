@@ -86,16 +86,26 @@ const SelectItemDialog = ({ open, onClose, onConfirm, targetItemName, loading }:
           ) : myItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
-                <Package className="h-7 w-7 text-primary" />
+                {isFirstTime ? (
+                  <Sparkles className="h-7 w-7 text-primary" />
+                ) : (
+                  <Package className="h-7 w-7 text-primary" />
+                )}
               </div>
-              <p className="text-foreground font-bold text-base mb-1">Nenhum item cadastrado</p>
-              <p className="text-muted-foreground text-xs mb-4">Cadastre um item para poder propor trocas</p>
+              <p className="text-foreground font-bold text-base mb-1">
+                {isFirstTime ? "Cadastre seu primeiro item!" : "Nenhum item ativo"}
+              </p>
+              <p className="text-muted-foreground text-xs mb-4">
+                {isFirstTime
+                  ? "Para propor trocas, você precisa cadastrar pelo menos um item seu."
+                  : "Cadastre um novo item para poder propor trocas."}
+              </p>
               <Button
                 onClick={() => { onClose(); navigate("/novo-item"); }}
                 className="rounded-full px-6"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Cadastrar item
+                {isFirstTime ? "Cadastrar meu primeiro item" : "Cadastrar item"}
               </Button>
             </div>
           ) : (
