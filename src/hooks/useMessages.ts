@@ -7,7 +7,9 @@ import {
   sendMessage,
   markMessagesAsRead,
   subscribeToMessages,
+  uploadChatMedia,
   type Message,
+  type MessageType,
 } from "@/services/messageService";
 
 export const useConversations = () => {
