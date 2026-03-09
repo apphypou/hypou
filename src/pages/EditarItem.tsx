@@ -239,7 +239,7 @@ const EditarItem = () => {
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
 
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
-        <AlertDialogContent className="bg-card border-foreground/10 w-[calc(100%-2rem)] max-w-lg rounded-2xl mx-auto">
+        <AlertDialogContent className="bg-card border-foreground/10">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-foreground">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />

@@ -367,7 +367,7 @@ const MeuPerfil = () => {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteItemId} onOpenChange={(open) => !open && setDeleteItemId(null)}>
-        <AlertDialogContent className="bg-background border-foreground/10 w-[calc(100%-2rem)] max-w-lg rounded-2xl mx-auto">
+        <AlertDialogContent className="bg-background border-foreground/10">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-destructive" />
