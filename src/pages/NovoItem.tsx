@@ -134,7 +134,7 @@ const NovoItem = () => {
 
   const handleSubmit = async () => {
     if (!user) return;
-    if (photos.length === 0) {
+    if (itemPhotos.length === 0) {
       toast({ title: "Adicione pelo menos uma foto", variant: "destructive" });
       return;
     }
