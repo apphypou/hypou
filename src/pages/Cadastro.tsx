@@ -37,7 +37,8 @@ const Cadastro = () => {
         variant: "destructive",
       });
     } else {
-      setEmailSent(true);
+      toast({ title: "Conta criada com sucesso!" });
+      navigate("/explorar");
     }
   };
 
