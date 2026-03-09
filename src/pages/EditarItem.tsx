@@ -24,6 +24,11 @@ const categories = [
   { emoji: "👕", label: "Moda" },
   { emoji: "🛋️", label: "Casa" },
   { emoji: "🎮", label: "Videogames" },
+  { emoji: "💻", label: "Eletrônicos" },
+  { emoji: "⚽", label: "Esportes" },
+  { emoji: "📚", label: "Livros" },
+  { emoji: "🎸", label: "Instrumentos" },
+  { emoji: "🔧", label: "Ferramentas" },
 ];
 
 const conditions = [
