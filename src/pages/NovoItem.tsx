@@ -328,17 +328,7 @@ const NovoItem = () => {
         <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
-            <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Cidade, Estado"
-                maxLength={100}
-                className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl pl-12 pr-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
-              />
-            </div>
+            <LocationSearch value={location} onChange={setLocation} />
           </div>
 
           <div>
