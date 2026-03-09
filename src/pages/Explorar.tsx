@@ -417,6 +417,14 @@ const Explorar = () => {
       )}
 
       <BottomNav activeTab="explorar" />
+
+      <SelectItemDialog
+        open={showSelectItem}
+        onClose={() => { setShowSelectItem(false); setPendingLikeItem(null); }}
+        onConfirm={handleProposalConfirm}
+        targetItemName={pendingLikeItem?.name}
+        loading={proposalLoading}
+      />
     </ScreenLayout>
   );
 };
