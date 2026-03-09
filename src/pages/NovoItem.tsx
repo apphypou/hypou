@@ -246,10 +246,10 @@ const NovoItem = () => {
             Fotos do Item
           </label>
           {itemPreviews.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto no-scrollbar">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 pt-1">
               {itemPreviews.map((url, i) => (
-                <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30 group">
-                  <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                <div key={i} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
+                  <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
                   <button
                     type="button"
                     onClick={() => removePhoto(i)}

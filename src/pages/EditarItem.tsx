@@ -293,8 +293,8 @@ const EditarItem = () => {
               </div>
             ))}
             {newPreviews.map((url, i) => (
-              <div key={`new-${i}`} className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 border border-primary/30">
-                <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover" />
+              <div key={`new-${i}`} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
+                <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
                 <button
                   type="button"
                   onClick={() => {
