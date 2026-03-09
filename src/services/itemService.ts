@@ -78,7 +78,8 @@ export const validateItemPrice = async (
   name: string,
   category: string,
   condition: string,
-  valueCents: number
+  valueCents: number,
+  description?: string
 ): Promise<{
   valid: boolean;
   reason: string;
@@ -87,7 +88,7 @@ export const validateItemPrice = async (
 }> => {
   try {
     const { data, error } = await supabase.functions.invoke("validate-item-price", {
-      body: { name, category, condition, value_cents: valueCents },
+      body: { name, category, condition, value_cents: valueCents, description },
     });
     if (error) throw error;
     return {

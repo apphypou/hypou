@@ -142,7 +142,7 @@ const EditarItem = () => {
     }
     setSuggestingPrice(true);
     try {
-      const result = await validateItemPrice(itemName.trim(), category, condition, 0);
+      const result = await validateItemPrice(itemName.trim(), category, condition, 0, itemDesc.trim() || undefined);
       if (result.suggestedMin > 0 && result.suggestedMax > 0) {
         const avg = Math.round((result.suggestedMin + result.suggestedMax) / 2);
         setItemValue(formatCurrency(String(avg)));
