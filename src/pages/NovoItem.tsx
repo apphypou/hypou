@@ -133,7 +133,12 @@ const NovoItem = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user || !itemName.trim()) {
+    if (!user) return;
+    if (photos.length === 0) {
+      toast({ title: "Adicione pelo menos uma foto", variant: "destructive" });
+      return;
+    }
+    if (!itemName.trim()) {
       toast({ title: "Preencha o nome do item", variant: "destructive" });
       return;
     }
@@ -143,6 +148,22 @@ const NovoItem = () => {
     }
     if (!category) {
       toast({ title: "Selecione uma categoria", variant: "destructive" });
+      return;
+    }
+    if (!condition) {
+      toast({ title: "Selecione a condição do item", variant: "destructive" });
+      return;
+    }
+    if (valueCents <= 0) {
+      toast({ title: "Informe o valor de mercado", variant: "destructive" });
+      return;
+    }
+    if (!location.trim()) {
+      toast({ title: "Informe a localização", variant: "destructive" });
+      return;
+    }
+    if (!itemDesc.trim()) {
+      toast({ title: "Adicione uma descrição", variant: "destructive" });
       return;
     }
 
