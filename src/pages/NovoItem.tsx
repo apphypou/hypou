@@ -78,7 +78,6 @@ const NovoItem = () => {
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
-  const [suggestingPrice, setSuggestingPrice] = useState(false);
 
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
