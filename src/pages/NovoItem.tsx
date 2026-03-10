@@ -61,6 +61,7 @@ const NovoItem = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const itemInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
@@ -72,8 +73,11 @@ const NovoItem = () => {
   const [devalorization, setDevalorization] = useState(10);
   const [itemPhotos, setItemPhotos] = useState<File[]>([]);
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [suggestingPrice, setSuggestingPrice] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
 
   const [priceAlert, setPriceAlert] = useState<{
