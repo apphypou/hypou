@@ -213,8 +213,31 @@ const EditarItem = () => {
         await uploadItemImage(user.id, itemId, newPhotos[i], position);
       }
 
+      // Upload new video if selected
+      if (videoFile) {
+        const ext = videoFile.name.split(".").pop();
+        const videoPath = `${user.id}/${itemId}/video.${ext}`;
+        const { error: vUpErr } = await supabase.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
+        if (!vUpErr) {
+          const { data: vUrl } = supabase.storage.from("item-videos").getPublicUrl(videoPath);
+          const { data: imgs } = await supabase.from("item_images").select("image_url").eq("item_id", itemId).order("position").limit(1);
+          const thumbnail = imgs?.[0]?.image_url || null;
+          // Remove old video entry if exists
+          if (existingVideo) {
+            await supabase.from("item_videos").delete().eq("id", existingVideo.id);
+          }
+          await supabase.from("item_videos").insert({
+            item_id: itemId,
+            user_id: user.id,
+            video_url: vUrl.publicUrl,
+            thumbnail_url: thumbnail,
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["my-items"] });
       queryClient.invalidateQueries({ queryKey: ["item-detail", itemId] });
+      queryClient.invalidateQueries({ queryKey: ["shorts-feed"] });
       toast({ title: "Item atualizado com sucesso!" });
       navigate("/meu-perfil");
     } catch (err: any) {
