@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X, Sparkles, Video } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,6 +61,7 @@ const NovoItem = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const itemInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
@@ -72,6 +73,8 @@ const NovoItem = () => {
   const [devalorization, setDevalorization] = useState(10);
   const [itemPhotos, setItemPhotos] = useState<File[]>([]);
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
@@ -97,6 +100,24 @@ const NovoItem = () => {
     URL.revokeObjectURL(itemPreviews[index]);
     setItemPhotos((prev) => prev.filter((_, i) => i !== index));
     setItemPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "Vídeo muito grande (máx. 50MB)", variant: "destructive" });
+      return;
+    }
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const removeVideo = () => {
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
   };
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -149,6 +170,27 @@ const NovoItem = () => {
 
       for (let i = 0; i < itemPhotos.length; i++) {
         await uploadItemImage(user.id, item.id, itemPhotos[i], i);
+      }
+
+      // Upload optional video for Shorts
+      if (videoFile) {
+        const { supabase: sb } = await import("@/integrations/supabase/client");
+        const ext = videoFile.name.split(".").pop();
+        const videoPath = `${user.id}/${item.id}/video.${ext}`;
+        const { error: vUpErr } = await sb.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
+        if (!vUpErr) {
+          const { data: vUrl } = sb.storage.from("item-videos").getPublicUrl(videoPath);
+          // Use the first uploaded image as thumbnail
+          const { data: imgs } = await sb.from("item_images").select("image_url").eq("item_id", item.id).order("position").limit(1);
+          const thumbnail = imgs?.[0]?.image_url || null;
+          
+          await sb.from("item_videos").insert({
+            item_id: item.id,
+            user_id: user.id,
+            video_url: vUrl.publicUrl,
+            thumbnail_url: thumbnail,
+          });
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["my-items"] });
@@ -226,6 +268,7 @@ const NovoItem = () => {
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleItemPhotos} />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
 
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="bg-card border-foreground/10">
@@ -302,6 +345,39 @@ const NovoItem = () => {
               <span className="text-sm font-bold text-primary uppercase tracking-wider">Adicionar fotos</span>
               <span className="text-xs text-muted-foreground">Até 5 fotos do item</span>
             </div>
+          )}
+        </div>
+
+        {/* Video (optional) */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
+            Vídeo <span className="text-foreground/30 normal-case">(opcional — aparece na Vitrine)</span>
+          </label>
+          {videoPreview ? (
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-primary/30">
+              <video src={videoPreview} className="w-full h-full object-cover" controls preload="metadata" />
+              <button
+                type="button"
+                onClick={removeVideo}
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
+              >
+                <X className="h-4 w-4 text-destructive-foreground" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className="w-full py-4 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-card/80 transition-all"
+            >
+              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                <Video className="h-5 w-5 text-primary/60" />
+              </div>
+              <div className="text-left">
+                <span className="text-sm font-bold text-primary block">Adicionar vídeo</span>
+                <span className="text-[11px] text-muted-foreground">Até 50MB · Aparece na aba Vitrine</span>
+              </div>
+            </button>
           )}
         </div>
 
