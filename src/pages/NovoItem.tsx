@@ -180,9 +180,6 @@ const NovoItem = () => {
         const { error: vUpErr } = await sb.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
         if (!vUpErr) {
           const { data: vUrl } = sb.storage.from("item-videos").getPublicUrl(videoPath);
-          // Get thumbnail from first photo if available
-          const thumbUrl = itemPreviews.length > 0 ? undefined : null;
-          const firstImage = itemPhotos.length > 0 ? undefined : null;
           // Use the first uploaded image as thumbnail
           const { data: imgs } = await sb.from("item_images").select("image_url").eq("item_id", item.id).order("position").limit(1);
           const thumbnail = imgs?.[0]?.image_url || null;
