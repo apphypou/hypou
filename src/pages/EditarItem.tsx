@@ -110,8 +110,39 @@ const EditarItem = () => {
       setValorization(item.margin_up);
       setDevalorization(item.margin_down);
       setExistingImages((item.item_images || []).sort((a: any, b: any) => a.position - b.position));
+      // Fetch existing video
+      supabase
+        .from("item_videos")
+        .select("id, video_url, thumbnail_url")
+        .eq("item_id", item.id)
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) setExistingVideo(data[0]);
+        });
     }
   }, [item]);
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "Vídeo muito grande (máx. 50MB)", variant: "destructive" });
+      return;
+    }
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const removeVideo = async () => {
+    if (existingVideo) {
+      await supabase.from("item_videos").delete().eq("id", existingVideo.id);
+      setExistingVideo(null);
+    }
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
+  };
 
   const totalImages = existingImages.length + newPhotos.length;
   const valueCents = parseCurrencyToCents(itemValue);
