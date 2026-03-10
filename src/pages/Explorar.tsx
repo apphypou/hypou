@@ -1,15 +1,16 @@
-import { Filter, Search, Share2, PlusCircle, Clapperboard, Heart } from "lucide-react";
+import { Filter, Search, Share2, PlusCircle, Clapperboard, Heart, MapPin } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { getExploreItems } from "@/services/itemService";
+import { getExploreItems, getPublicExploreItems, getNearbyItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
 import { createProposal } from "@/services/matchService";
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import SelectItemDialog from "@/components/SelectItemDialog";
+import GuestPromptDialog from "@/components/GuestPromptDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,6 +21,7 @@ import {
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 const allCategories = [
   { emoji: "📱", label: "Celulares" },
@@ -34,10 +36,19 @@ const allCategories = [
   { emoji: "🔧", label: "Ferramentas" },
 ];
 
+const distanceOptions = [
+  { label: "5 km", value: 5 },
+  { label: "10 km", value: 10 },
+  { label: "25 km", value: 25 },
+  { label: "50 km", value: 50 },
+  { label: "Todos", value: 0 },
+];
+
 const Explorar = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isGuest = !user;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [epoch, setEpoch] = useState(0);
@@ -53,10 +64,19 @@ const Explorar = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Distance filter
+  const [distanceFilter, setDistanceFilter] = useState(0); // 0 = all
+
+  // Guest prompt
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+
   // SelectItemDialog state
   const [showSelectItem, setShowSelectItem] = useState(false);
   const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
   const [proposalLoading, setProposalLoading] = useState(false);
+
+  // Geolocation
+  const { position, requestLocation } = useGeolocation(user?.id);
 
   // Fetch user's preferred categories
   const { data: userCategories = [] } = useQuery({
@@ -73,19 +93,27 @@ const Explorar = () => {
 
   const dragDirectionValue = useMotionValue(0);
 
+  // Fetch items — use nearby if distance filter + position, otherwise standard
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["explore-items", user?.id],
-    queryFn: () => getExploreItems(user!.id),
-    enabled: !!user,
+    queryKey: ["explore-items", user?.id, distanceFilter, position?.lat, position?.lng],
+    queryFn: async () => {
+      if (distanceFilter > 0 && position) {
+        return getNearbyItems(position.lat, position.lng, distanceFilter, user?.id || undefined);
+      }
+      if (user) {
+        return getExploreItems(user.id);
+      }
+      return getPublicExploreItems();
+    },
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
-    if (items.length > 0 && localItems.length === 0) {
+    if (items.length > 0) {
       setLocalItems(items);
     }
-  }, [items, localItems.length]);
+  }, [items]);
 
   // Filter items by active category
   const filteredItems = useMemo(() => {
@@ -148,13 +176,26 @@ const Explorar = () => {
 
   const handleSwipeComplete = useCallback(
     (direction: "like" | "dislike") => {
-      if (swipingRef.current || !user || !currentItem) return;
+      if (swipingRef.current || !currentItem) return;
       swipingRef.current = true;
+
+      // Guest mode: show prompt on like
+      if (isGuest && direction === "like") {
+        setShowGuestPrompt(true);
+        swipingRef.current = false;
+        return;
+      }
+
+      if (isGuest) {
+        // Guest can swipe dislike freely
+        advanceCard();
+        swipingRef.current = false;
+        return;
+      }
 
       triggerStreak(direction);
 
       if (direction === "like") {
-        // Record swipe and open SelectItemDialog for trade proposal
         recordSwipeInBackground("like", currentItem.id);
         if (navigator.vibrate) navigator.vibrate(50);
         setPendingLikeItem(currentItem);
@@ -166,7 +207,7 @@ const Explorar = () => {
       advanceCard();
       swipingRef.current = false;
     },
-    [user, currentItem, advanceCard, triggerStreak, recordSwipeInBackground, toast]
+    [user, isGuest, currentItem, advanceCard, triggerStreak, recordSwipeInBackground, toast]
   );
 
   const handleProposalConfirm = useCallback(
@@ -198,6 +239,16 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
+  const handleDistanceChange = (km: number) => {
+    if (km > 0 && !position) {
+      requestLocation();
+    }
+    setDistanceFilter(km);
+    setLocalItems([]);
+    setCurrentIndex(0);
+    setEpoch((e) => e + 1);
+  };
+
   // Preload image after next
   const afterNextItem = filteredItems[currentIndex + 2] ?? filteredItems[0] ?? null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
@@ -226,17 +277,19 @@ const Explorar = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/busca")}
-            className="h-9 w-9 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/50 hover:text-foreground transition-all"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-          <NotificationBell />
+          {!isGuest && (
+            <button
+              onClick={() => navigate("/busca")}
+              className="h-9 w-9 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/50 hover:text-foreground transition-all"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+          )}
+          {!isGuest && <NotificationBell />}
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
-              showFilters || activeFilter ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
+              showFilters || activeFilter || distanceFilter > 0 ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
             }`}
           >
             <Filter className="h-4 w-4" />
@@ -244,7 +297,7 @@ const Explorar = () => {
         </div>
       </header>
 
-      {/* Category filter chips */}
+      {/* Category + Distance filter chips */}
       <AnimatePresence>
         {showFilters && (
           <motion.div
@@ -254,6 +307,25 @@ const Explorar = () => {
             transition={{ duration: 0.2 }}
             className="overflow-hidden px-6 shrink-0 z-30"
           >
+            {/* Distance chips */}
+            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+              <MapPin className="h-4 w-4 text-primary shrink-0 mt-1" />
+              {distanceOptions.map((d) => (
+                <button
+                  key={d.value}
+                  onClick={() => handleDistanceChange(d.value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                    distanceFilter === d.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-foreground/10 text-foreground/50"
+                  }`}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Category chips */}
             <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
               <button
                 onClick={() => setActiveFilter(null)}
@@ -295,7 +367,7 @@ const Explorar = () => {
             <SkeletonSwipeCard />
           </div>
         ) : filteredItems.length === 0 ? (
-          /* ===== IMPROVED EMPTY STATE ===== */
+          /* ===== EMPTY STATE ===== */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
             <motion.span
               className="text-7xl mb-5"
@@ -311,6 +383,8 @@ const Explorar = () => {
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
               {activeFilter
                 ? "Tente outra categoria ou remova o filtro."
+                : isGuest
+                ? "Crie sua conta e seja o primeiro a cadastrar um item!"
                 : "Seja o primeiro a cadastrar um item ou convide amigos!"}
             </p>
 
@@ -325,42 +399,70 @@ const Explorar = () => {
                 </button>
               )}
 
-              <button
-                onClick={() => navigate("/novo-item")}
-                className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider neon-glow transition-all flex items-center justify-center gap-2"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Cadastrar meu item
-              </button>
+              {isGuest ? (
+                <>
+                  <button
+                    onClick={() => navigate("/cadastro")}
+                    className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider neon-glow transition-all flex items-center justify-center gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Criar conta grátis
+                  </button>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+                  >
+                    Já tenho conta
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate("/novo-item")}
+                    className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider neon-glow transition-all flex items-center justify-center gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Cadastrar meu item
+                  </button>
 
-              <button
-                onClick={() => navigate("/shorts")}
-                className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
-              >
-                <Clapperboard className="h-4 w-4" />
-                Explorar a Vitrine
-              </button>
+                  <button
+                    onClick={() => navigate("/shorts")}
+                    className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Clapperboard className="h-4 w-4" />
+                    Explorar a Vitrine
+                  </button>
 
-              {typeof navigator.share === "function" && (
-                <button
-                  onClick={() => {
-                    navigator.share({
-                      title: "Hypou — Troque seus itens",
-                      text: "Conheça o Hypou, o app de trocas inteligentes!",
-                      url: "https://hypou.lovable.app",
-                    }).catch(() => {});
-                  }}
-                  className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Convidar amigos
-                </button>
+                  {typeof navigator.share === "function" && (
+                    <button
+                      onClick={() => {
+                        navigator.share({
+                          title: "Hypou — Troque seus itens",
+                          text: "Conheça o Hypou, o app de trocas inteligentes!",
+                          url: "https://hypou.lovable.app",
+                        }).catch(() => {});
+                      }}
+                      className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      Convidar amigos
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
         ) : currentItem ? (
           <>
             <div className="relative w-full h-full shrink-0">
+              {/* Distance badge */}
+              {currentItem.distance_km != null && (
+                <div className="absolute top-2 left-2 z-50 flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 text-xs font-semibold text-foreground">
+                  <MapPin className="h-3 w-3 text-primary" />
+                  {currentItem.distance_km} km
+                </div>
+              )}
+
               {/* Streak indicator */}
               <AnimatePresence>
                 {showStreak && likeStreak >= 3 && (
@@ -418,13 +520,22 @@ const Explorar = () => {
 
       <BottomNav activeTab="explorar" />
 
-      <SelectItemDialog
-        open={showSelectItem}
-        onClose={() => { setShowSelectItem(false); setPendingLikeItem(null); }}
-        onConfirm={handleProposalConfirm}
-        targetItemName={pendingLikeItem?.name}
-        loading={proposalLoading}
+      {/* Guest prompt dialog */}
+      <GuestPromptDialog
+        open={showGuestPrompt}
+        onClose={() => setShowGuestPrompt(false)}
       />
+
+      {/* Select item dialog (authenticated only) */}
+      {!isGuest && (
+        <SelectItemDialog
+          open={showSelectItem}
+          onClose={() => { setShowSelectItem(false); setPendingLikeItem(null); }}
+          onConfirm={handleProposalConfirm}
+          targetItemName={pendingLikeItem?.name}
+          loading={proposalLoading}
+        />
+      )}
     </ScreenLayout>
   );
 };

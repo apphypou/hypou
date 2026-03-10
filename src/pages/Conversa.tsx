@@ -6,6 +6,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ChatSafetyDialog from "@/components/ChatSafetyDialog";
+import TradeContextCard from "@/components/TradeContextCard";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { acceptProposal, rejectProposal } from "@/services/matchService";
