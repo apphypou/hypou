@@ -336,17 +336,13 @@ const Conversa = () => {
         )}
       </header>
 
-      {/* Trade status banner */}
-      {matchStatusLabel && (
-        <div className={`px-4 py-2 text-center text-xs font-bold uppercase tracking-wider shrink-0 ${
-          details?.match_status === "accepted"
-            ? "bg-success/10 text-success border-b border-success/20"
-            : details?.match_status === "rejected"
-            ? "bg-destructive/10 text-destructive border-b border-destructive/20"
-            : "bg-primary/10 text-primary border-b border-primary/20"
-        }`}>
-          {matchStatusLabel}
-        </div>
+      {/* Trade context card */}
+      {details && (
+        <TradeContextCard
+          myItem={details.my_item}
+          otherItem={details.other_item}
+          matchStatus={details.match_status}
+        />
       )}
 
       {/* Accept/Reject buttons for pending proposals (only for receiver) */}
