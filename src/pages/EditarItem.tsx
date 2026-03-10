@@ -1,8 +1,9 @@
-import { ArrowLeft, Camera, Plus, Loader2, Check, Trash2, AlertTriangle, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, Trash2, AlertTriangle, X, Sparkles, Video } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { updateItem, uploadItemImage, getItemById, deleteItemImage, validateItemPrice } from "@/services/itemService";
+import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -67,6 +68,7 @@ const EditarItem = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const itemInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: item, isLoading } = useQuery({
     queryKey: ["item-detail", itemId],
@@ -88,6 +90,9 @@ const EditarItem = () => {
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [existingVideo, setExistingVideo] = useState<any>(null);
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
     reason: string;
@@ -106,8 +111,39 @@ const EditarItem = () => {
       setValorization(item.margin_up);
       setDevalorization(item.margin_down);
       setExistingImages((item.item_images || []).sort((a: any, b: any) => a.position - b.position));
+      // Fetch existing video
+      supabase
+        .from("item_videos")
+        .select("id, video_url, thumbnail_url")
+        .eq("item_id", item.id)
+        .limit(1)
+        .then(({ data }) => {
+          if (data && data.length > 0) setExistingVideo(data[0]);
+        });
     }
   }, [item]);
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "Vídeo muito grande (máx. 50MB)", variant: "destructive" });
+      return;
+    }
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const removeVideo = async () => {
+    if (existingVideo) {
+      await supabase.from("item_videos").delete().eq("id", existingVideo.id);
+      setExistingVideo(null);
+    }
+    if (videoPreview) URL.revokeObjectURL(videoPreview);
+    setVideoFile(null);
+    setVideoPreview(null);
+  };
 
   const totalImages = existingImages.length + newPhotos.length;
   const valueCents = parseCurrencyToCents(itemValue);
@@ -177,8 +213,31 @@ const EditarItem = () => {
         await uploadItemImage(user.id, itemId, newPhotos[i], position);
       }
 
+      // Upload new video if selected
+      if (videoFile) {
+        const ext = videoFile.name.split(".").pop();
+        const videoPath = `${user.id}/${itemId}/video.${ext}`;
+        const { error: vUpErr } = await supabase.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
+        if (!vUpErr) {
+          const { data: vUrl } = supabase.storage.from("item-videos").getPublicUrl(videoPath);
+          const { data: imgs } = await supabase.from("item_images").select("image_url").eq("item_id", itemId).order("position").limit(1);
+          const thumbnail = imgs?.[0]?.image_url || null;
+          // Remove old video entry if exists
+          if (existingVideo) {
+            await supabase.from("item_videos").delete().eq("id", existingVideo.id);
+          }
+          await supabase.from("item_videos").insert({
+            item_id: itemId,
+            user_id: user.id,
+            video_url: vUrl.publicUrl,
+            thumbnail_url: thumbnail,
+          });
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["my-items"] });
       queryClient.invalidateQueries({ queryKey: ["item-detail", itemId] });
+      queryClient.invalidateQueries({ queryKey: ["shorts-feed"] });
       toast({ title: "Item atualizado com sucesso!" });
       navigate("/meu-perfil");
     } catch (err: any) {
@@ -260,6 +319,7 @@ const EditarItem = () => {
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
 
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="bg-card border-foreground/10">
@@ -340,6 +400,44 @@ const EditarItem = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Video (optional) */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
+            Vídeo <span className="text-foreground/30 normal-case">(opcional — aparece na Vitrine)</span>
+          </label>
+          {videoPreview || existingVideo ? (
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-primary/30">
+              <video
+                src={videoPreview || existingVideo?.video_url}
+                className="w-full h-full object-cover"
+                controls
+                preload="metadata"
+              />
+              <button
+                type="button"
+                onClick={removeVideo}
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
+              >
+                <X className="h-4 w-4 text-destructive-foreground" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className="w-full py-4 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-card/80 transition-all"
+            >
+              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                <Video className="h-5 w-5 text-primary/60" />
+              </div>
+              <div className="text-left">
+                <span className="text-sm font-bold text-primary block">Adicionar vídeo</span>
+                <span className="text-[11px] text-muted-foreground">Até 50MB · Aparece na aba Vitrine</span>
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Form */}
