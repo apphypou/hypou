@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Plus, Loader2, Check, AlertTriangle, X, Sparkles, Video } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
