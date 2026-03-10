@@ -344,7 +344,9 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          latitude: number | null
           location: string | null
+          longitude: number | null
           onboarding_completed: boolean
           phone: string | null
           subscription_expires_at: string | null
@@ -359,7 +361,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           onboarding_completed?: boolean
           phone?: string | null
           subscription_expires_at?: string | null
@@ -374,7 +378,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
           onboarding_completed?: boolean
           phone?: string | null
           subscription_expires_at?: string | null
