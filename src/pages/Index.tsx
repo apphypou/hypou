@@ -20,15 +20,15 @@ const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-between overflow-hidden">
+    <div className="dark relative min-h-screen flex flex-col justify-between overflow-hidden bg-[hsl(0,0%,11%)]">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <div
           className="h-[65vh] w-full bg-cover bg-center scale-105"
           style={{ backgroundImage: `url('${HERO_IMAGE_URL}')` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-transparent dark:from-black/50 dark:via-background/80 dark:to-background" />
-        <div className="absolute bottom-0 h-[55%] w-full bg-gradient-to-t from-background via-background/95 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-[hsl(0,0%,11%)]/80 to-[hsl(0,0%,11%)]" />
+        <div className="absolute bottom-0 h-[55%] w-full bg-gradient-to-t from-[hsl(0,0%,11%)] via-[hsl(0,0%,11%)]/95 to-transparent" />
       </div>
 
 
