@@ -89,6 +89,9 @@ const EditarItem = () => {
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [existingVideo, setExistingVideo] = useState<any>(null);
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
     reason: string;
