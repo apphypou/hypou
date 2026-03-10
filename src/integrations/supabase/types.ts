@@ -549,6 +549,31 @@ export type Database = {
       }
       is_item_owner: { Args: { _item_id: string }; Returns: boolean }
       is_match_participant: { Args: { _match_id: string }; Returns: boolean }
+      nearby_items: {
+        Args: {
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_radius_km?: number
+          p_user_id?: string
+        }
+        Returns: {
+          category: string
+          condition: string
+          created_at: string
+          description: string
+          distance_km: number
+          id: string
+          location: string
+          margin_down: number
+          margin_up: number
+          market_value: number
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       toggle_video_like: { Args: { p_video_id: string }; Returns: boolean }
     }
     Enums: {

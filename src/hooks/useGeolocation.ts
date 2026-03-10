@@ -26,12 +26,13 @@ export const useGeolocation = (userId: string | undefined) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPosition(coords);
 
-        // Save to profile using raw SQL point format via RPC
+        // Save to profile
         try {
           await supabase
             .from("profiles")
             .update({
-              location_point: `SRID=4326;POINT(${coords.lng} ${coords.lat})` as any,
+              latitude: coords.lat,
+              longitude: coords.lng,
             })
             .eq("user_id", userId);
         } catch (err) {
