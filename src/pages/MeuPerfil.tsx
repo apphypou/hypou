@@ -277,30 +277,7 @@ const MeuPerfil = () => {
             ))}
           </div>
 
-          {/* Tab: Meus Itens / Favoritos */}
-          <div className="w-full flex gap-2 mb-4">
-            <button
-              onClick={() => setShowFavorites(false)}
-              className={`flex-1 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all ${
-                !showFavorites ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
-              }`}
-            >
-              Meus Itens
-            </button>
-            <button
-              onClick={() => setShowFavorites(true)}
-              className={`flex-1 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                showFavorites ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
-              }`}
-            >
-              <Heart className="h-3.5 w-3.5" />
-              Favoritos
-            </button>
-          </div>
-
-          {/* Content based on tab */}
-          {!showFavorites ? (
-            /* ===== MEUS ITENS ===== */
+          {/* ===== MEUS ITENS ===== */}
             <div className="w-full flex flex-col gap-4">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Itens</h2>
@@ -308,14 +285,14 @@ const MeuPerfil = () => {
                   onClick={() => navigate("/novo-item")}
                   className="text-primary text-xs font-bold tracking-wide uppercase hover:text-foreground transition-colors flex items-center gap-1"
                 >
-                  <PlusCircle className="h-4 w-4" />
+                  <PlusCircle className="h-3.5 w-3.5" />
                   Novo Item
                 </button>
               </div>
 
               {items.length === 0 ? (
                 <GlassCard className="p-8 flex flex-col items-center gap-3">
-                  <PlusCircle className="h-10 w-10 text-foreground/20" />
+                  <span className="text-4xl">📦</span>
                   <p className="text-foreground/40 text-sm text-center">Nenhum item cadastrado ainda</p>
                   <button
                     onClick={() => navigate("/novo-item")}
@@ -326,16 +303,22 @@ const MeuPerfil = () => {
                 </GlassCard>
               ) : (
                 <div className="space-y-3 pb-24">
-                  {items.map((item) => {
+                  {items.map((item: any) => {
                     const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
                     return (
                       <GlassCard
                         key={item.id}
                         hoverable
-                        className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer relative"
                         onClick={() => navigate(`/editar-item/${item.id}`)}
+                        className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer relative"
                       >
-                        <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
+                        <div className="absolute top-2 right-2 flex gap-2 z-10">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/editar-item/${item.id}`); }}
+                            className="text-foreground/30 hover:text-primary transition-colors"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); setDeleteItemId(item.id); }}
                             className="text-foreground/30 hover:text-destructive transition-colors"
@@ -357,77 +340,12 @@ const MeuPerfil = () => {
                             </div>
                           )}
                         </div>
-                        <div className="flex-1 flex flex-col justify-center gap-1 pr-14">
-                          <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
-                          <h3 className="text-base font-bold text-foreground leading-tight">{item.name}</h3>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-foreground/40 text-xs font-medium">Valor de mercado</span>
-                            <span className="text-foreground font-bold text-sm">{formatValue(item.market_value)}</span>
-                          </div>
-                        </div>
-                      </GlassCard>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* ===== FAVORITOS ===== */
-            <div className="w-full flex flex-col gap-4">
-              <h2 className="text-lg font-bold text-foreground tracking-tight px-1">Itens Curtidos</h2>
-
-              {loadingFavorites ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                </div>
-              ) : favorites.length === 0 ? (
-                <GlassCard className="p-8 flex flex-col items-center gap-3">
-                  <Heart className="h-10 w-10 text-foreground/20" />
-                  <p className="text-foreground/40 text-sm text-center">Nenhum item curtido ainda</p>
-                  <button
-                    onClick={() => navigate("/explorar")}
-                    className="text-primary text-xs font-bold uppercase tracking-wider"
-                  >
-                    Explorar itens
-                  </button>
-                </GlassCard>
-              ) : (
-                <div className="space-y-3 pb-24">
-                  {favorites.map((item: any) => {
-                    const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
-                    return (
-                      <GlassCard
-                        key={item.id}
-                        hoverable
-                        className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer relative"
-                      >
-                        <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
-                          {mainImage ? (
-                            <img
-                              alt={item.name}
-                              className="w-full h-full object-cover opacity-80"
-                              src={mainImage.image_url}
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-foreground/20 text-xs">
-                              Sem foto
-                            </div>
-                          )}
-                        </div>
                         <div className="flex-1 flex flex-col justify-center gap-1">
                           <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
                           <h3 className="text-base font-bold text-foreground leading-tight">{item.name}</h3>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-foreground/40 text-xs font-medium">{formatValue(item.market_value)}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setProposalTarget(item);
-                              }}
-                              className="px-3 py-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider"
-                            >
-                              Propor Troca
-                            </button>
+                          <div className="flex items-baseline gap-2 mt-1">
+                            <span className="text-foreground/40 text-xs font-medium">Valor de mercado</span>
+                            <span className="text-primary text-sm font-semibold">{formatValue(item.market_value)}</span>
                           </div>
                         </div>
                       </GlassCard>
@@ -436,7 +354,6 @@ const MeuPerfil = () => {
                 </div>
               )}
             </div>
-          )}
         </div>
       </main>
 
