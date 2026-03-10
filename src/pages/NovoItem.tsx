@@ -271,6 +271,7 @@ const NovoItem = () => {
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleItemPhotos} />
+      <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
 
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="bg-card border-foreground/10">
