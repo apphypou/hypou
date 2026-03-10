@@ -351,7 +351,37 @@ const NovoItem = () => {
           )}
         </div>
 
-        {/* Form */}
+        {/* Video (optional) */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
+            Vídeo <span className="text-foreground/30 normal-case">(opcional — aparece na Vitrine)</span>
+          </label>
+          {videoPreview ? (
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-primary/30">
+              <video src={videoPreview} className="w-full h-full object-cover" controls preload="metadata" />
+              <button
+                type="button"
+                onClick={removeVideo}
+                className="absolute top-2 right-2 h-8 w-8 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
+              >
+                <X className="h-4 w-4 text-destructive-foreground" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              className="w-full py-4 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-card/80 transition-all"
+            >
+              <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                <Video className="h-5 w-5 text-primary/60" />
+              </div>
+              <div className="text-left">
+                <span className="text-sm font-bold text-primary block">Adicionar vídeo</span>
+                <span className="text-[11px] text-muted-foreground">Até 50MB · Aparece na aba Vitrine</span>
+              </div>
+            </button>
+          )}
         <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Nome do Item</label>
