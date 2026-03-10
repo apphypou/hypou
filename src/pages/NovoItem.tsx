@@ -382,6 +382,9 @@ const NovoItem = () => {
               </div>
             </button>
           )}
+        </div>
+
+        {/* Form */}
         <div className="flex flex-col gap-5 mb-6">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Nome do Item</label>
