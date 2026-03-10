@@ -342,17 +342,6 @@ const MeuPerfil = () => {
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setUploadingVideoItemId(item.id);
-                              videoInputRef.current?.click();
-                            }}
-                            className="text-foreground/30 hover:text-primary transition-colors"
-                            title="Adicionar vídeo"
-                          >
-                            <Video className="h-4 w-4" />
-                          </button>
                         </div>
 
                         <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
