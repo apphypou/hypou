@@ -1,23 +1,12 @@
-import { ArrowLeft, ArrowRight, Camera, Pencil, User, MapPin, Check, Rocket, Loader2, Sparkles, Package } from "lucide-react";
-import { useState, useRef } from "react";
+import { ArrowLeft, ArrowRight, Camera, Pencil, User, Check, Rocket, Loader2, Sparkles, Package } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile, uploadAvatar, saveUserCategories } from "@/services/profileService";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-
-const categories = [
-  { emoji: "📱", label: "Celulares" },
-  { emoji: "🚗", label: "Carros & Motos" },
-  { emoji: "👕", label: "Moda" },
-  { emoji: "🛋️", label: "Casa" },
-  { emoji: "🎮", label: "Videogames" },
-  { emoji: "💻", label: "Eletrônicos" },
-  { emoji: "⚽", label: "Esportes" },
-  { emoji: "📚", label: "Livros" },
-  { emoji: "🎸", label: "Instrumentos" },
-  { emoji: "🔧", label: "Ferramentas" },
-];
+import { categories } from "@/constants/categories";
+import LocationSearch from "@/components/LocationSearch";
 
 const stepLabels = ["Perfil", "Interesses", "Pronto!"];
 
