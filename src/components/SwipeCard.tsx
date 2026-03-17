@@ -15,7 +15,7 @@ import {
   AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { useQuery } from "@tanstack/react-query";
