@@ -34,6 +34,8 @@ const allCategories = [
   { emoji: "📚", label: "Livros" },
   { emoji: "🎸", label: "Instrumentos" },
   { emoji: "🔧", label: "Ferramentas" },
+  { emoji: "🐾", label: "Animais" },
+  { emoji: "📦", label: "Outros" },
 ];
 
 const distanceOptions = [
