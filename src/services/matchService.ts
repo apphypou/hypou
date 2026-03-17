@@ -97,26 +97,50 @@ export const createProposal = async (
   return data;
 };
 
-export const acceptProposal = async (matchId: string) => {
+export const acceptProposal = async (matchId: string, currentUserId: string) => {
+  // Fetch match to validate user_b and status
+  const { data: match, error: fetchErr } = await supabase
+    .from("matches")
+    .select("user_b_id, status")
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !match) throw new Error("Proposta não encontrada");
+  if (match.user_b_id !== currentUserId) throw new Error("Apenas o dono do item pode aceitar a proposta");
+  if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
+
   // Update status to accepted
   const { error: updateError } = await supabase
     .from("matches")
     .update({ status: "accepted" })
-    .eq("id", matchId);
+    .eq("id", matchId)
+    .eq("status", "proposal");
   if (updateError) throw updateError;
 
-  // Create conversation
+  // Create conversation (UNIQUE constraint prevents duplicates)
   const { error: convError } = await supabase
     .from("conversations")
     .insert({ match_id: matchId });
-  if (convError) throw convError;
+  if (convError && !convError.message?.includes("duplicate")) throw convError;
 };
 
-export const rejectProposal = async (matchId: string) => {
+export const rejectProposal = async (matchId: string, currentUserId: string) => {
+  // Validate status before rejecting
+  const { data: match, error: fetchErr } = await supabase
+    .from("matches")
+    .select("user_b_id, status")
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !match) throw new Error("Proposta não encontrada");
+  if (match.user_b_id !== currentUserId) throw new Error("Apenas o dono do item pode recusar a proposta");
+  if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
+
   const { error } = await supabase
     .from("matches")
     .update({ status: "rejected" })
-    .eq("id", matchId);
+    .eq("id", matchId)
+    .eq("status", "proposal");
   if (error) throw error;
 };
 

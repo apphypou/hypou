@@ -182,7 +182,7 @@ const Conversa = () => {
     if (!details?.match_id) return;
     setActionLoading(true);
     try {
-      await acceptProposal(details.match_id);
+      await acceptProposal(details.match_id, user!.id);
       toast({ title: "Troca aceita! ✅", description: "Combinem a entrega pelo chat." });
       refetchDetails();
     } catch (err: any) {
@@ -196,7 +196,7 @@ const Conversa = () => {
     if (!details?.match_id) return;
     setActionLoading(true);
     try {
-      await rejectProposal(details.match_id);
+      await rejectProposal(details.match_id, user!.id);
       toast({ title: "Proposta recusada" });
       refetchDetails();
     } catch (err: any) {
@@ -345,27 +345,7 @@ const Conversa = () => {
         />
       )}
 
-      {/* Accept/Reject buttons for pending proposals (only for receiver) */}
-      {details?.match_status === "proposal" && details?.is_user_b && (
-        <div className="flex gap-2 px-4 py-3 border-b border-foreground/5 bg-card/50 shrink-0">
-          <button
-            onClick={handleAcceptTrade}
-            disabled={actionLoading}
-            className="flex-1 py-2.5 rounded-full bg-success text-success-foreground text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
-          >
-            {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            Aceitar Troca
-          </button>
-          <button
-            onClick={handleRejectTrade}
-            disabled={actionLoading}
-            className="flex-1 py-2.5 rounded-full bg-card border border-foreground/10 text-foreground text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
-          >
-            <XCircle className="h-4 w-4" />
-            Recusar
-          </button>
-        </div>
-      )}
+      {/* Accept/Reject only happens in Matches.tsx — conversations are created after acceptance */}
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar px-4 py-4 space-y-3">

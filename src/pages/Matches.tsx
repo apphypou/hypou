@@ -34,7 +34,7 @@ const Matches = () => {
     if (!selectedMatch || rejecting) return;
     setRejecting(true);
     try {
-      await rejectProposal(selectedMatch.id);
+      await rejectProposal(selectedMatch.id, user!.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       toast({ title: "Proposta recusada" });
@@ -70,7 +70,7 @@ const Matches = () => {
     if (!selectedMatch || confirming) return;
     setConfirming(true);
     try {
-      await acceptProposal(selectedMatch.id);
+      await acceptProposal(selectedMatch.id, user!.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       navigate(`/match/${selectedMatch.id}`);

@@ -1,0 +1,1 @@
+ALTER TABLE public.conversations ADD CONSTRAINT conversations_match_id_unique UNIQUE (match_id);

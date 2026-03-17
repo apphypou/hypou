@@ -76,24 +76,31 @@ export const getConversations = async (userId: string): Promise<ConversationWith
   const unreadCounts: Record<string, number> = {};
 
   if (conversationIds.length > 0) {
-    // Get latest message per conversation (fetch all messages, we'll group)
-    const { data: msgs } = await supabase
-      .from("messages")
-      .select("*")
-      .in("conversation_id", conversationIds)
-      .order("created_at", { ascending: false });
+    // Get last message per conversation (one query per conversation for efficiency)
+    await Promise.all(conversationIds.map(async (convId) => {
+      const { data: lastMsgArr } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", convId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      if (lastMsgArr && lastMsgArr.length > 0) {
+        lastMessages[convId] = lastMsgArr[0] as Message;
+      }
 
-    const seen = new Set<string>();
-    (msgs || []).forEach((msg: Message) => {
-      if (!seen.has(msg.conversation_id)) {
-        lastMessages[msg.conversation_id] = msg;
-        seen.add(msg.conversation_id);
+      // Count unread
+      const { count } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("conversation_id", convId)
+        .neq("sender_id", userId)
+        .is("read_at", null);
+      
+      if (count && count > 0) {
+        unreadCounts[convId] = count;
       }
-      // Count unread (messages not from me, without read_at)
-      if (msg.sender_id !== userId && !msg.read_at) {
-        unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
-      }
-    });
+    }));
   }
 
   return matches.map((m: any) => {
@@ -104,8 +111,10 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
     const convId = conv?.id;
 
+    if (!convId) return null; // Skip matches without a real conversation
+
     return {
-      id: convId || m.id,
+      id: convId,
       match_id: m.id,
       created_at: conv?.created_at || m.created_at,
       other_user: profileMap[otherId] || { user_id: otherId, display_name: null, avatar_url: null },
@@ -119,7 +128,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
       unread_count: convId ? (unreadCounts[convId] || 0) : 0,
       match_status: m.status,
     };
-  }).filter((c: any) => c.id);
+  }).filter(Boolean) as ConversationWithDetails[];
 };
 
 export const getMessages = async (conversationId: string): Promise<Message[]> => {
