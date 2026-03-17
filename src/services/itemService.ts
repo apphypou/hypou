@@ -188,16 +188,21 @@ export const getNearbyItems = async (
   const ownerIds = [...new Set((data || []).map((i: any) => i.user_id))];
 
   let imageMap: Record<string, any[]> = {};
+  let videoMap: Record<string, any[]> = {};
   let profileMap: Record<string, any> = {};
 
   if (itemIds.length > 0) {
-    const { data: images } = await supabase
-      .from("item_images")
-      .select("id, item_id, image_url, position")
-      .in("item_id", itemIds);
+    const [{ data: images }, { data: videos }] = await Promise.all([
+      supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
+      supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
+    ]);
     (images || []).forEach((img) => {
       if (!imageMap[img.item_id]) imageMap[img.item_id] = [];
       imageMap[img.item_id].push(img);
+    });
+    (videos || []).forEach((vid) => {
+      if (!videoMap[vid.item_id]) videoMap[vid.item_id] = [];
+      videoMap[vid.item_id].push(vid);
     });
   }
 
