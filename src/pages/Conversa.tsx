@@ -182,7 +182,7 @@ const Conversa = () => {
     if (!details?.match_id) return;
     setActionLoading(true);
     try {
-      await acceptProposal(details.match_id);
+      await acceptProposal(details.match_id, user!.id);
       toast({ title: "Troca aceita! ✅", description: "Combinem a entrega pelo chat." });
       refetchDetails();
     } catch (err: any) {
