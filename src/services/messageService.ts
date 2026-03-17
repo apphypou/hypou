@@ -111,8 +111,10 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
     const convId = conv?.id;
 
+    if (!convId) return null; // Skip matches without a real conversation
+
     return {
-      id: convId || m.id,
+      id: convId,
       match_id: m.id,
       created_at: conv?.created_at || m.created_at,
       other_user: profileMap[otherId] || { user_id: otherId, display_name: null, avatar_url: null },
