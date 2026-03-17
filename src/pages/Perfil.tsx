@@ -104,7 +104,7 @@ const Perfil = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await updateProfile(user.id, { onboarding_completed: true } as any);
+      await updateProfile(user.id, { onboarding_completed: true });
       navigate(goTo === "explorar" ? "/explorar" : "/novo-item");
     } catch (err: any) {
       toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
