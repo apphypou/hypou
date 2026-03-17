@@ -7,6 +7,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { LogIn, UserPlus } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 interface GuestPromptDialogProps {
   open: boolean;
@@ -15,6 +17,15 @@ interface GuestPromptDialogProps {
 
 const GuestPromptDialog = ({ open, onClose }: GuestPromptDialogProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // If user is already logged in (e.g. just signed up), redirect to onboarding
+  useEffect(() => {
+    if (open && user) {
+      onClose();
+      navigate("/onboarding", { replace: true });
+    }
+  }, [open, user, onClose, navigate]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

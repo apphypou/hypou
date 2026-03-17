@@ -1,53 +1,25 @@
 
 
-## Problem Analysis
+## Plano de Melhorias do Hypou — IMPLEMENTADO ✅
 
-The current auth/navigation flow has gaps that create a confusing experience:
+### Fase 1 — Críticas ✅
+1. **Busca de itens** — `/busca` com texto, categoria, condição ✅
+2. **Curtir sem item cadastrado** — Like salva como favorito, proposta via MeuPerfil ✅
+3. **Feed vazio melhorado** — CTAs: cadastrar item, vitrine, convidar amigos ✅
 
-1. **`/explorar` is completely public** (no `ProtectedRoute`) — a logged-in user who hasn't completed onboarding can stay on `/explorar` without being redirected to onboarding
-2. **After signup**, the user gets auto-logged in by Supabase. If they were previously browsing `/explorar` as a guest, the `GuestPromptDialog` may still redirect them to `/cadastro` instead of `/onboarding`
-3. **`GuestPromptDialog` doesn't account for "logged in but no onboarding"** — it only checks `!user`, so a freshly signed-up user (who IS authenticated) shouldn't see it, but if there's a race condition they get sent to `/cadastro` again
+### Fase 2 — Alta Prioridade ✅
+4. **Sinais de confiança no SwipeCard** — Rating, nº de trocas, tempo na plataforma ✅
+5. **Sugestão automática de preço** — Botão "Sugerir" em NovoItem e EditarItem ✅
+6. **TradeRangeCard simplificado** — Linguagem clara, sem percentagens ✅
 
-## Ideal Flow (Senior Architect Design)
+### Fase 3 — Média Prioridade ✅
+7. **Configurações reais** — Alterar senha, excluir conta, gerenciar bloqueios ✅
 
-```text
-First Visit:
-  / (landing) → "Criar conta" → /cadastro → /onboarding → /explorar
-                 "Entrar"     → /login     → /explorar (if onboarding done)
-                                            → /onboarding (if not done)
+### Fase 4 — Melhorias ✅
+8. **Negociação no chat** — Status da proposta, aceitar/recusar inline ✅
+9. **Sistema de denúncia** — Botão reportar com motivos e descrição ✅
 
-Guest browsing:
-  /explorar (public) → like → GuestPromptDialog → /cadastro → /onboarding → /explorar
-
-Returning user:
-  /login → /explorar (onboarding already done)
-```
-
-## Changes
-
-### 1. Wrap `/explorar` in an onboarding-aware guard (NOT full ProtectedRoute)
-
-In `src/pages/Explorar.tsx`, add an effect that checks: if user is logged in AND `onboarding_completed === false`, redirect to `/onboarding`. This preserves guest browsing while ensuring authenticated users complete onboarding.
-
-### 2. Update `GuestPromptDialog` to handle "logged in, no onboarding"
-
-Add `useAuth()` check — if user IS logged in, navigate to `/onboarding` instead of showing the signup/login buttons. This handles edge cases where auth state updates mid-session.
-
-### 3. Ensure `Login.tsx` redirects through ProtectedRoute properly
-
-After login, navigate to `/explorar` which will be wrapped — the onboarding guard in Explorar will catch users who haven't completed onboarding and redirect them.
-
-### 4. Cadastro.tsx already navigates to `/onboarding` — no change needed
-
-## Technical Details
-
-**Explorar.tsx** — add near the top of the component:
-- Query `profiles.onboarding_completed` when `user` exists
-- `useEffect`: if user is logged in and `onboarding_completed === false`, `navigate("/onboarding")`
-
-**GuestPromptDialog.tsx**:
-- Import `useAuth`, check if user exists
-- If user exists → navigate directly to `/onboarding` and close dialog (instead of showing buttons)
-
-These are small, surgical changes — no restructuring of routes or ProtectedRoute needed.
-
+### Tabelas criadas
+- `favorites` (user_id, item_id)
+- `blocked_users` (blocker_id, blocked_id)
+- `reports` (reporter_id, reported_user_id, reason, description)

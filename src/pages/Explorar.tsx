@@ -52,6 +52,27 @@ const Explorar = () => {
   const navigate = useNavigate();
   const isGuest = !user;
 
+  // Onboarding guard: redirect logged-in users who haven't completed onboarding
+  const { data: onboardingProfile } = useQuery({
+    queryKey: ["onboarding-check", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("user_id", user!.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (user && onboardingProfile && !onboardingProfile.onboarding_completed) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [user, onboardingProfile, navigate]);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [epoch, setEpoch] = useState(0);
   const [localItems, setLocalItems] = useState<any[]>([]);
