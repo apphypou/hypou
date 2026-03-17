@@ -15,7 +15,7 @@ import {
   AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { useQuery } from "@tanstack/react-query";
@@ -218,11 +218,16 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeGlowOpacity = useTransform(x, [0, 60, 140], [0, 0.25, 0.7]);
     const dislikeGlowOpacity = useTransform(x, [-140, -60, 0], [0.7, 0.25, 0]);
 
-    // Image gallery state
+    // Image + video gallery state
     const images = item?.item_images || [];
-    const imageCount = images.length;
+    const videos = item?.item_videos || [];
+    const hasVideo = videos.length > 0;
+    const totalSlides = images.length + (hasVideo ? 1 : 0);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    const currentImage = images[activeImageIndex]?.image_url;
+    const isVideoSlide = hasVideo && activeImageIndex === images.length;
+    const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
+    const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     // Expanded state
     const [expanded, setExpanded] = useState(false);
@@ -231,17 +236,17 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const handleImageTap = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (expanded) return;
-        if (imageCount <= 1) return;
+        if (totalSlides <= 1) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const tapX = e.clientX - rect.left;
         const half = rect.width / 2;
         if (tapX > half) {
-          setActiveImageIndex((i) => (i + 1) % imageCount);
+          setActiveImageIndex((i) => (i + 1) % totalSlides);
         } else {
-          setActiveImageIndex((i) => (i - 1 + imageCount) % imageCount);
+          setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
         }
       },
-      [imageCount, expanded]
+      [totalSlides, expanded]
     );
 
     const toggleExpand = useCallback((e?: React.MouseEvent) => {
@@ -387,9 +392,21 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </>
         )}
 
-        {/* ===== FULL IMAGE ===== */}
+        {/* ===== FULL IMAGE / VIDEO ===== */}
         <div className="absolute inset-0 w-full h-full" onClick={standby ? undefined : handleImageTap}>
-          {currentImage ? (
+          {isVideoSlide && currentVideo ? (
+            <video
+              ref={videoRef}
+              key={`video-${activeImageIndex}`}
+              className="w-full h-full object-cover object-center"
+              src={currentVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              draggable={false}
+            />
+          ) : currentImage ? (
             <img
               key={activeImageIndex}
               alt={item.name}
@@ -430,10 +447,10 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </div>
         )}
 
-        {/* Image dots — top right */}
-        {imageCount > 1 && !expanded && (
+        {/* Slide dots — top right */}
+        {totalSlides > 1 && !expanded && (
           <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
-            {images.map((_: any, i: number) => (
+            {Array.from({ length: totalSlides }).map((_, i) => (
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-200 ${

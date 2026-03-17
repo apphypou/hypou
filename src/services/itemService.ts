@@ -109,7 +109,7 @@ export const getExploreItems = async (userId: string, page = 0, pageSize = 50) =
 
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position)`)
+    .select(`*, item_images (id, image_url, position), item_videos (id, video_url, thumbnail_url)`)
     .eq("status", "active")
     .neq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -142,7 +142,7 @@ export const getPublicExploreItems = async (page = 0, pageSize = 50) => {
 
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position)`)
+    .select(`*, item_images (id, image_url, position), item_videos (id, video_url, thumbnail_url)`)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -188,16 +188,21 @@ export const getNearbyItems = async (
   const ownerIds = [...new Set((data || []).map((i: any) => i.user_id))];
 
   let imageMap: Record<string, any[]> = {};
+  let videoMap: Record<string, any[]> = {};
   let profileMap: Record<string, any> = {};
 
   if (itemIds.length > 0) {
-    const { data: images } = await supabase
-      .from("item_images")
-      .select("id, item_id, image_url, position")
-      .in("item_id", itemIds);
+    const [{ data: images }, { data: videos }] = await Promise.all([
+      supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
+      supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
+    ]);
     (images || []).forEach((img) => {
       if (!imageMap[img.item_id]) imageMap[img.item_id] = [];
       imageMap[img.item_id].push(img);
+    });
+    (videos || []).forEach((vid) => {
+      if (!videoMap[vid.item_id]) videoMap[vid.item_id] = [];
+      videoMap[vid.item_id].push(vid);
     });
   }
 
@@ -214,6 +219,7 @@ export const getNearbyItems = async (
     .map((item: any) => ({
       ...item,
       item_images: imageMap[item.id] || [],
+      item_videos: videoMap[item.id] || [],
       profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
     }));
 };
