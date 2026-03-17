@@ -160,17 +160,6 @@ const Match = () => {
         <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" onClick={handleStartChat} className="shadow-[0_0_20px_hsl(184_100%_50%/0.4)] hover:shadow-[0_0_30px_hsl(184_100%_50%/0.6)]">
           Iniciar conversa
         </NeonButton>
-        {match.status === "accepted" && !existingRating && (
-          <NeonButton variant="outline" icon={Star} iconPosition="left" onClick={() => setShowRating(true)}>
-            Avaliar troca
-          </NeonButton>
-        )}
-        {existingRating && (
-          <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
-            <Star className="h-4 w-4 text-primary fill-primary" />
-            <span>Você avaliou com {existingRating.score} estrela{existingRating.score !== 1 ? "s" : ""}</span>
-          </div>
-        )}
         <NeonButton variant="ghost" size="sm" onClick={() => navigate("/explorar")}>
           Ver mais trocas
         </NeonButton>
