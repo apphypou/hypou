@@ -142,7 +142,7 @@ export const getPublicExploreItems = async (page = 0, pageSize = 50) => {
 
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position)`)
+    .select(`*, item_images (id, image_url, position), item_videos (id, video_url, thumbnail_url)`)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .range(from, to);
