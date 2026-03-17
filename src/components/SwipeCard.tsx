@@ -236,17 +236,17 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const handleImageTap = useCallback(
       (e: React.MouseEvent<HTMLDivElement>) => {
         if (expanded) return;
-        if (imageCount <= 1) return;
+        if (totalSlides <= 1) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const tapX = e.clientX - rect.left;
         const half = rect.width / 2;
         if (tapX > half) {
-          setActiveImageIndex((i) => (i + 1) % imageCount);
+          setActiveImageIndex((i) => (i + 1) % totalSlides);
         } else {
-          setActiveImageIndex((i) => (i - 1 + imageCount) % imageCount);
+          setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
         }
       },
-      [imageCount, expanded]
+      [totalSlides, expanded]
     );
 
     const toggleExpand = useCallback((e?: React.MouseEvent) => {
