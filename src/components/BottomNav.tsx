@@ -1,4 +1,4 @@
-import { Compass, Clapperboard, Handshake, MessageSquare, UserCircle, Search } from "lucide-react";
+import { Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { motion } from "framer-motion";
@@ -15,7 +15,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
 
   const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; hasUnread?: boolean }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
-    { icon: Clapperboard, label: "Shorts", id: "shorts", path: "/shorts" },
+    // { icon: Clapperboard, label: "Shorts", id: "shorts", path: "/shorts" },
     { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas" },
     { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", hasUnread: unreadCount > 0 },
     { icon: UserCircle, label: "Perfil", id: "perfil", path: "/meu-perfil" },
