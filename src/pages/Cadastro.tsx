@@ -38,7 +38,7 @@ const Cadastro = () => {
       });
     } else {
       toast({ title: "Conta criada com sucesso!" });
-      navigate("/explorar");
+      navigate("/onboarding");
     }
   };
 
