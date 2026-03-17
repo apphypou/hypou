@@ -144,6 +144,12 @@ const Configuracoes = () => {
       onClick: () => setPasswordDialogOpen(true),
     },
     {
+      icon: Ban,
+      label: "Usuários Bloqueados",
+      description: "Gerenciar usuários bloqueados",
+      onClick: () => setBlockedDialogOpen(true),
+    },
+    {
       icon: Info,
       label: "Sobre o Hypou",
       description: "Conheça mais sobre a plataforma",
