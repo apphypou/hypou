@@ -392,9 +392,21 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </>
         )}
 
-        {/* ===== FULL IMAGE ===== */}
+        {/* ===== FULL IMAGE / VIDEO ===== */}
         <div className="absolute inset-0 w-full h-full" onClick={standby ? undefined : handleImageTap}>
-          {currentImage ? (
+          {isVideoSlide && currentVideo ? (
+            <video
+              ref={videoRef}
+              key={`video-${activeImageIndex}`}
+              className="w-full h-full object-cover object-center"
+              src={currentVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              draggable={false}
+            />
+          ) : currentImage ? (
             <img
               key={activeImageIndex}
               alt={item.name}
