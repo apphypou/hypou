@@ -447,16 +447,20 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </div>
         )}
 
-        {/* Image dots — top right */}
-        {imageCount > 1 && !expanded && (
+        {/* Slide dots — top right */}
+        {totalSlides > 1 && !expanded && (
           <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
-            {images.map((_: any, i: number) => (
+            {Array.from({ length: totalSlides }).map((_, i) => (
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-200 ${
                   i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
                 }`}
-              />
+              >
+                {i === images.length && hasVideo && i !== activeImageIndex && (
+                  <Play className="h-1.5 w-1.5 text-white/60 absolute" />
+                )}
+              </div>
             ))}
           </div>
         )}
