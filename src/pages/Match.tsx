@@ -95,7 +95,7 @@ const Match = () => {
         </button>
         <div className="flex items-center gap-1 opacity-50">
           <Zap className="h-4 w-4 text-primary fill-primary" />
-          <span className="text-primary text-xs font-bold tracking-widest uppercase">Troca!</span>
+          <span className="text-primary text-xs font-bold tracking-widest uppercase">Hype!</span>
         </div>
         <div className="h-10 w-10" />
       </div>
