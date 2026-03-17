@@ -95,7 +95,7 @@ const Match = () => {
         </button>
         <div className="flex items-center gap-1 opacity-50">
           <Zap className="h-4 w-4 text-primary fill-primary" />
-          <span className="text-primary text-xs font-bold tracking-widest uppercase">Troca!</span>
+          <span className="text-primary text-xs font-bold tracking-widest uppercase">Hype!</span>
         </div>
         <div className="h-10 w-10" />
       </div>
@@ -138,8 +138,8 @@ const Match = () => {
         {/* Text Content */}
         <div className="text-center space-y-4 mb-8">
           <h1 className="text-4xl font-extrabold text-foreground tracking-tight leading-tight drop-shadow-lg">
-            Troca <br />
-            <span className="text-primary text-glow">Confirmada!</span>
+            Hype <br />
+            <span className="text-primary text-glow">Confirmado!</span>
           </h1>
           <p className="text-foreground/70 text-base font-normal leading-relaxed max-w-xs mx-auto">
             Você e <span className="text-primary font-semibold">{match.other_user.display_name || "alguém"}</span> têm interesse em trocar itens.
@@ -160,17 +160,6 @@ const Match = () => {
         <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" onClick={handleStartChat} className="shadow-[0_0_20px_hsl(184_100%_50%/0.4)] hover:shadow-[0_0_30px_hsl(184_100%_50%/0.6)]">
           Iniciar conversa
         </NeonButton>
-        {match.status === "accepted" && !existingRating && (
-          <NeonButton variant="outline" icon={Star} iconPosition="left" onClick={() => setShowRating(true)}>
-            Avaliar troca
-          </NeonButton>
-        )}
-        {existingRating && (
-          <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
-            <Star className="h-4 w-4 text-primary fill-primary" />
-            <span>Você avaliou com {existingRating.score} estrela{existingRating.score !== 1 ? "s" : ""}</span>
-          </div>
-        )}
         <NeonButton variant="ghost" size="sm" onClick={() => navigate("/explorar")}>
           Ver mais trocas
         </NeonButton>
