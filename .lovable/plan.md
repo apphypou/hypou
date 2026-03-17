@@ -1,25 +1,37 @@
 
 
-## Plano de Melhorias do Hypou — IMPLEMENTADO ✅
+## Problem
 
-### Fase 1 — Críticas ✅
-1. **Busca de itens** — `/busca` com texto, categoria, condição ✅
-2. **Curtir sem item cadastrado** — Like salva como favorito, proposta via MeuPerfil ✅
-3. **Feed vazio melhorado** — CTAs: cadastrar item, vitrine, convidar amigos ✅
+The swipe card uses `object-cover object-center` on images, which crops photos aggressively — especially vertical or oddly-framed photos like the guinea fowl where the subject's head gets cut off.
 
-### Fase 2 — Alta Prioridade ✅
-4. **Sinais de confiança no SwipeCard** — Rating, nº de trocas, tempo na plataforma ✅
-5. **Sugestão automática de preço** — Botão "Sugerir" em NovoItem e EditarItem ✅
-6. **TradeRangeCard simplificado** — Linguagem clara, sem percentagens ✅
+## Strategy
 
-### Fase 3 — Média Prioridade ✅
-7. **Configurações reais** — Alterar senha, excluir conta, gerenciar bloqueios ✅
+Use a **blurred background fill + contained image** approach. This is the standard pattern used by Instagram stories, TikTok, and similar apps for handling arbitrary aspect ratios:
 
-### Fase 4 — Melhorias ✅
-8. **Negociação no chat** — Status da proposta, aceitar/recusar inline ✅
-9. **Sistema de denúncia** — Botão reportar com motivos e descrição ✅
+1. **Background layer**: Show the same image scaled up and heavily blurred to fill the entire card (already partially done for the border effect)
+2. **Foreground layer**: Display the actual image with `object-contain` so it's never cropped, centered within the card
 
-### Tabelas criadas
-- `favorites` (user_id, item_id)
-- `blocked_users` (blocker_id, blocked_id)
-- `reports` (reporter_id, reported_user_id, reason, description)
+This ensures:
+- Portrait photos look great (fill most of the card naturally)
+- Landscape photos are fully visible with a matching blurred background filling empty space
+- Square photos work perfectly
+- No subject gets cut off regardless of format
+
+## Changes in `src/components/SwipeCard.tsx`
+
+**Image display area (~line 299-308)**: Replace the current single `<img>` with a two-layer approach:
+
+```tsx
+{/* Blurred fill background */}
+<img src={currentImage} className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80" />
+{/* Sharp contained image on top */}
+<img src={currentImage} className="relative w-full h-full object-contain z-[1]" />
+```
+
+- Keep `object-cover` for the **blurred background** layer
+- Use `object-contain` for the **sharp foreground** layer
+- Apply same approach to the empty/placeholder state
+- Video slides keep `object-cover` (videos are typically recorded in appropriate aspect ratios)
+
+This is a small, targeted change — only the image rendering inside the card gallery area needs modification.
+
