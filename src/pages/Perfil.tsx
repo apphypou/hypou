@@ -123,9 +123,11 @@ const Perfil = () => {
           display_name: name.trim(),
           location: location.trim() || null,
           onboarding_completed: true,
-        } as any);
+          latitude: locationCoords?.lat ?? null,
+          longitude: locationCoords?.lng ?? null,
+        });
       } else {
-        await updateProfile(user.id, { onboarding_completed: true } as any);
+        await updateProfile(user.id, { onboarding_completed: true });
       }
       if (selected.length > 0) {
         await saveUserCategories(user.id, selected);
