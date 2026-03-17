@@ -115,7 +115,7 @@ const Explorar = () => {
       }
       return getPublicExploreItems();
     },
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 

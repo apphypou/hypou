@@ -94,20 +94,47 @@ const Configuracoes = () => {
     if (!user) return;
     setDeleting(true);
     try {
-      // Delete user data
+      // Delete all user-related data in dependency order
+      // 1. Messages (depends on conversations)
+      const { data: userMatches } = await supabase.from("matches").select("id").or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
+      if (userMatches) {
+        for (const match of userMatches) {
+          const { data: convs } = await supabase.from("conversations").select("id").eq("match_id", match.id);
+          if (convs) {
+            for (const conv of convs) {
+              await supabase.from("messages").delete().eq("conversation_id", conv.id);
+            }
+            await supabase.from("conversations").delete().eq("match_id", match.id);
+          }
+        }
+      }
+
+      // 2. Ratings, reports, notifications, blocked
+      await supabase.from("ratings").delete().or(`rater_id.eq.${user.id},rated_id.eq.${user.id}`);
+      await supabase.from("reports").delete().eq("reporter_id", user.id);
+      await supabase.from("notifications").delete().eq("user_id", user.id);
+      await supabase.from("blocked_users").delete().eq("blocker_id", user.id);
+
+      // 3. Video likes, matches
+      await supabase.from("video_likes").delete().eq("user_id", user.id);
+      await supabase.from("matches").delete().or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
+
+      // 4. Favorites, swipes, categories
       await supabase.from("favorites").delete().eq("user_id", user.id);
       await supabase.from("swipes").delete().eq("swiper_id", user.id);
       await supabase.from("user_categories").delete().eq("user_id", user.id);
-      
-      // Get user items
+
+      // 5. Item videos, images, items
       const { data: userItems } = await supabase.from("items").select("id").eq("user_id", user.id);
       if (userItems) {
         for (const item of userItems) {
+          await supabase.from("item_videos").delete().eq("item_id", item.id);
           await supabase.from("item_images").delete().eq("item_id", item.id);
         }
         await supabase.from("items").delete().eq("user_id", user.id);
       }
 
+      // 6. Profile
       await supabase.from("profiles").delete().eq("user_id", user.id);
       await signOut();
       toast({ title: "Conta excluída. Até logo! 👋" });

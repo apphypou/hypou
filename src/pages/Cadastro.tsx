@@ -12,7 +12,7 @@ const Cadastro = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

@@ -239,16 +239,15 @@ const Perfil = () => {
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">
                     Localização Principal
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Ex: São Paulo, SP"
-                      className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 pl-12 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
-                    />
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/30" />
-                  </div>
+                  <LocationSearch
+                    value={location}
+                    onChange={(val) => setLocation(val)}
+                    onSelect={(val, coords) => {
+                      setLocation(val);
+                      setLocationCoords(coords);
+                    }}
+                    placeholder="Ex: São Paulo, SP"
+                  />
                 </div>
               </div>
             </main>

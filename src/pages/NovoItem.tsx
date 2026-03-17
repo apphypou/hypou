@@ -20,27 +20,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
-const categories = [
-  { emoji: "📱", label: "Celulares" },
-  { emoji: "🚗", label: "Carros & Motos" },
-  { emoji: "👕", label: "Moda" },
-  { emoji: "🛋️", label: "Casa" },
-  { emoji: "🎮", label: "Videogames" },
-  { emoji: "💻", label: "Eletrônicos" },
-  { emoji: "⚽", label: "Esportes" },
-  { emoji: "📚", label: "Livros" },
-  { emoji: "🎸", label: "Instrumentos" },
-  { emoji: "🔧", label: "Ferramentas" },
-  { emoji: "🐾", label: "Animais" },
-  { emoji: "📦", label: "Outros" },
-];
-
-const conditions = [
-  { value: "new", label: "Novo" },
-  { value: "like_new", label: "Seminovo" },
-  { value: "used", label: "Usado" },
-  { value: "worn", label: "Bem usado" },
-];
+import { categories, conditions } from "@/constants/categories";
 
 const formatCurrency = (value: string): string => {
   const digits = value.replace(/\D/g, "");
