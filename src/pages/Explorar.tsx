@@ -23,20 +23,7 @@ import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { useGeolocation } from "@/hooks/useGeolocation";
 
-const allCategories = [
-  { emoji: "📱", label: "Celulares" },
-  { emoji: "🚗", label: "Carros & Motos" },
-  { emoji: "👕", label: "Moda" },
-  { emoji: "🛋️", label: "Casa" },
-  { emoji: "🎮", label: "Videogames" },
-  { emoji: "💻", label: "Eletrônicos" },
-  { emoji: "⚽", label: "Esportes" },
-  { emoji: "📚", label: "Livros" },
-  { emoji: "🎸", label: "Instrumentos" },
-  { emoji: "🔧", label: "Ferramentas" },
-  { emoji: "🐾", label: "Animais" },
-  { emoji: "📦", label: "Outros" },
-];
+import { categories as allCategories } from "@/constants/categories";
 
 const distanceOptions = [
   { label: "5 km", value: 5 },
@@ -128,7 +115,7 @@ const Explorar = () => {
       }
       return getPublicExploreItems();
     },
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 

@@ -1,5 +1,5 @@
 import { type LucideIcon } from "lucide-react";
-import { type ReactNode, type ButtonHTMLAttributes } from "react";
+import { type ReactNode, type ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "outline" | "ghost";
@@ -28,35 +28,43 @@ const sizeStyles: Record<Size, string> = {
   lg: "h-14 px-8 text-lg font-bold",
 };
 
-const NeonButton = ({
-  variant = "primary",
-  size = "md",
-  icon: Icon,
-  iconPosition = "right",
-  children,
-  className,
-  ...props
-}: NeonButtonProps) => {
-  return (
-    <button
-      className={cn(
-        "flex w-full items-center justify-center tracking-wide",
-        variantStyles[variant],
-        sizeStyles[size],
-        className
-      )}
-      {...props}
-    >
-      {variant === "primary" && (
-        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-      )}
-      <span className="relative flex items-center gap-2">
-        {Icon && iconPosition === "left" && <Icon className="h-5 w-5" />}
-        {children}
-        {Icon && iconPosition === "right" && <Icon className="h-5 w-5" />}
-      </span>
-    </button>
-  );
-};
+const NeonButton = forwardRef<HTMLButtonElement, NeonButtonProps>(
+  (
+    {
+      variant = "primary",
+      size = "md",
+      icon: Icon,
+      iconPosition = "right",
+      children,
+      className,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "flex w-full items-center justify-center tracking-wide",
+          variantStyles[variant],
+          sizeStyles[size],
+          className
+        )}
+        {...props}
+      >
+        {variant === "primary" && (
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+        )}
+        <span className="relative flex items-center gap-2">
+          {Icon && iconPosition === "left" && <Icon className="h-5 w-5" />}
+          {children}
+          {Icon && iconPosition === "right" && <Icon className="h-5 w-5" />}
+        </span>
+      </button>
+    );
+  }
+);
+
+NeonButton.displayName = "NeonButton";
 
 export default NeonButton;

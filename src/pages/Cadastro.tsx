@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
@@ -12,7 +12,7 @@ const Cadastro = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

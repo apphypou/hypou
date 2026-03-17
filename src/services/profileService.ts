@@ -1,11 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const updateProfile = async (userId: string, data: {
+interface ProfileUpdate {
   display_name?: string;
-  location?: string;
+  location?: string | null;
   avatar_url?: string;
   onboarding_completed?: boolean;
-}) => {
+  bio?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  phone?: string | null;
+}
+
+export const updateProfile = async (userId: string, data: ProfileUpdate) => {
   const { error } = await supabase
     .from("profiles")
     .update(data)
@@ -27,7 +33,6 @@ export const uploadAvatar = async (userId: string, file: File): Promise<string> 
 };
 
 export const saveUserCategories = async (userId: string, categories: string[]) => {
-  // Delete existing then insert new
   await supabase.from("user_categories").delete().eq("user_id", userId);
   
   if (categories.length === 0) return;

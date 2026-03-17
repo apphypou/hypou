@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 interface LocationSearchProps {
   value: string;
   onChange: (value: string) => void;
+  onSelect?: (value: string, coords: { lat: number; lng: number }) => void;
   placeholder?: string;
 }
 
@@ -22,11 +23,10 @@ interface PhotonFeature {
 const formatFeature = (f: PhotonFeature): string => {
   const { name, city, state } = f.properties;
   const parts = [name, city, state].filter(Boolean);
-  // Deduplicate consecutive equal parts
   return parts.filter((p, i) => i === 0 || p !== parts[i - 1]).join(", ");
 };
 
-const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: LocationSearchProps) => {
+const LocationSearch = ({ value, onChange, onSelect, placeholder = "Cidade, Estado" }: LocationSearchProps) => {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<PhotonFeature[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -83,8 +83,12 @@ const LocationSearch = ({ value, onChange, placeholder = "Cidade, Estado" }: Loc
 
   const handleSelect = (feature: PhotonFeature) => {
     const label = formatFeature(feature);
+    const [lng, lat] = feature.geometry.coordinates;
     setQuery(label);
     onChange(label);
+    if (onSelect) {
+      onSelect(label, { lat, lng });
+    }
     setIsOpen(false);
   };
 

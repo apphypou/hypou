@@ -1,23 +1,12 @@
-import { ArrowLeft, ArrowRight, Camera, Pencil, User, MapPin, Check, Rocket, Loader2, Sparkles, Package } from "lucide-react";
-import { useState, useRef } from "react";
+import { ArrowLeft, ArrowRight, Camera, Pencil, User, Check, Rocket, Loader2, Sparkles, Package } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile, uploadAvatar, saveUserCategories } from "@/services/profileService";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
-
-const categories = [
-  { emoji: "📱", label: "Celulares" },
-  { emoji: "🚗", label: "Carros & Motos" },
-  { emoji: "👕", label: "Moda" },
-  { emoji: "🛋️", label: "Casa" },
-  { emoji: "🎮", label: "Videogames" },
-  { emoji: "💻", label: "Eletrônicos" },
-  { emoji: "⚽", label: "Esportes" },
-  { emoji: "📚", label: "Livros" },
-  { emoji: "🎸", label: "Instrumentos" },
-  { emoji: "🔧", label: "Ferramentas" },
-];
+import { categories } from "@/constants/categories";
+import LocationSearch from "@/components/LocationSearch";
 
 const stepLabels = ["Perfil", "Interesses", "Pronto!"];
 
@@ -41,6 +30,7 @@ const Perfil = () => {
   const [direction, setDirection] = useState(1);
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -83,7 +73,9 @@ const Perfil = () => {
         display_name: name.trim(),
         location: location.trim() || null,
         avatar_url: avatarUrl,
-      } as any);
+        latitude: locationCoords?.lat ?? null,
+        longitude: locationCoords?.lng ?? null,
+      });
       goToStep(2);
     } catch (err: any) {
       toast({ title: "Erro ao salvar perfil", description: err.message, variant: "destructive" });
@@ -112,7 +104,7 @@ const Perfil = () => {
     if (!user) return;
     setSaving(true);
     try {
-      await updateProfile(user.id, { onboarding_completed: true } as any);
+      await updateProfile(user.id, { onboarding_completed: true });
       navigate(goTo === "explorar" ? "/explorar" : "/novo-item");
     } catch (err: any) {
       toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
@@ -131,9 +123,11 @@ const Perfil = () => {
           display_name: name.trim(),
           location: location.trim() || null,
           onboarding_completed: true,
-        } as any);
+          latitude: locationCoords?.lat ?? null,
+          longitude: locationCoords?.lng ?? null,
+        });
       } else {
-        await updateProfile(user.id, { onboarding_completed: true } as any);
+        await updateProfile(user.id, { onboarding_completed: true });
       }
       if (selected.length > 0) {
         await saveUserCategories(user.id, selected);
@@ -245,16 +239,15 @@ const Perfil = () => {
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">
                     Localização Principal
                   </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      placeholder="Ex: São Paulo, SP"
-                      className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 pl-12 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
-                    />
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/30" />
-                  </div>
+                  <LocationSearch
+                    value={location}
+                    onChange={(val) => setLocation(val)}
+                    onSelect={(val, coords) => {
+                      setLocation(val);
+                      setLocationCoords(coords);
+                    }}
+                    placeholder="Ex: São Paulo, SP"
+                  />
                 </div>
               </div>
             </main>

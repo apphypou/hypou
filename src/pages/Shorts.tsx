@@ -17,17 +17,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+import { categories as allCategories } from "@/constants/categories";
+
 const CATEGORIES = [
   { label: "Todos", value: "" },
-  { label: "📱 Celulares", value: "Celulares" },
-  { label: "🎮 Videogames", value: "Videogames" },
-  { label: "💻 Eletrônicos", value: "Eletrônicos" },
-  { label: "👟 Moda", value: "Moda" },
-  { label: "🏠 Casa", value: "Casa" },
-  { label: "🎸 Instrumentos", value: "Instrumentos" },
-  { label: "⚽ Esportes", value: "Esportes" },
-  { label: "📚 Livros", value: "Livros" },
-  { label: "🔧 Ferramentas", value: "Ferramentas" },
+  ...allCategories.map((c) => ({ label: `${c.emoji} ${c.label}`, value: c.label })),
 ];
 
 const Shorts = () => {
