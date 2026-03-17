@@ -196,7 +196,7 @@ const Conversa = () => {
     if (!details?.match_id) return;
     setActionLoading(true);
     try {
-      await rejectProposal(details.match_id);
+      await rejectProposal(details.match_id, user!.id);
       toast({ title: "Proposta recusada" });
       refetchDetails();
     } catch (err: any) {
