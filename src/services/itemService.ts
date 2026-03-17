@@ -219,6 +219,7 @@ export const getNearbyItems = async (
     .map((item: any) => ({
       ...item,
       item_images: imageMap[item.id] || [],
+      item_videos: videoMap[item.id] || [],
       profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
     }));
 };
