@@ -128,7 +128,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
       unread_count: convId ? (unreadCounts[convId] || 0) : 0,
       match_status: m.status,
     };
-  }).filter((c: any) => c.id);
+  }).filter(Boolean) as ConversationWithDetails[];
 };
 
 export const getMessages = async (conversationId: string): Promise<Message[]> => {
