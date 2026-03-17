@@ -218,11 +218,16 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeGlowOpacity = useTransform(x, [0, 60, 140], [0, 0.25, 0.7]);
     const dislikeGlowOpacity = useTransform(x, [-140, -60, 0], [0.7, 0.25, 0]);
 
-    // Image gallery state
+    // Image + video gallery state
     const images = item?.item_images || [];
-    const imageCount = images.length;
+    const videos = item?.item_videos || [];
+    const hasVideo = videos.length > 0;
+    const totalSlides = images.length + (hasVideo ? 1 : 0);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    const currentImage = images[activeImageIndex]?.image_url;
+    const isVideoSlide = hasVideo && activeImageIndex === images.length;
+    const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
+    const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     // Expanded state
     const [expanded, setExpanded] = useState(false);
