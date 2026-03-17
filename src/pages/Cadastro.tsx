@@ -43,36 +43,6 @@ const Cadastro = () => {
     }
   };
 
-  if (emailSent) {
-    return (
-      <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
-        <div className="flex flex-col items-center w-full max-w-sm text-center">
-          <div className="h-20 w-20 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-6">
-            <CheckCircle className="h-10 w-10 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight mb-3">
-            Verifique seu <span className="gradient-text">e-mail</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mb-2">
-            Enviamos um link de confirmação para:
-          </p>
-          <p className="text-foreground font-semibold text-sm mb-6 break-all">{email}</p>
-          <p className="text-muted-foreground text-xs mb-8 leading-relaxed">
-            Clique no link enviado para ativar sua conta. Verifique também a pasta de spam.
-          </p>
-          <NeonButton variant="primary" icon={ArrowRight} onClick={() => navigate("/login")}>
-            Ir para o Login
-          </NeonButton>
-          <button
-            onClick={() => setEmailSent(false)}
-            className="text-muted-foreground text-xs mt-4 hover:text-primary transition-colors"
-          >
-            Tentar com outro e-mail
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
