@@ -510,6 +510,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                       <Package className="h-2.5 w-2.5" /> {conditionLabel}
                     </span>
                   )}
+                  {item.location && (
+                    <span className="text-white/60 text-[9px] font-bold uppercase flex items-center gap-0.5 truncate max-w-[100px]">
+                      <MapPin className="h-2.5 w-2.5 shrink-0" /> {item.location}
+                    </span>
+                  )}
                 </div>
                 <h2 className="text-white text-base font-bold tracking-tight leading-tight drop-shadow-md truncate">
                   {item.name}
