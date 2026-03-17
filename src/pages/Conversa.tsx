@@ -532,25 +532,25 @@ const Conversa = () => {
 
       {/* Report Dialog */}
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="bg-card border-foreground/10">
+        <DialogContent className="bg-background border-foreground/10">
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <Flag className="h-5 w-5 text-destructive" />
               Denunciar Usuário
             </DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="flex flex-col gap-4 mt-2">
             <div>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Motivo</p>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Motivo</p>
               <div className="flex flex-wrap gap-2">
                 {["Golpe", "Conteúdo impróprio", "Assédio", "Perfil falso", "Outro"].map((reason) => (
                   <button
                     key={reason}
                     onClick={() => setReportReason(reason)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
                       reportReason === reason
-                        ? "bg-destructive text-destructive-foreground"
-                        : "bg-card border border-foreground/10 text-foreground/60"
+                        ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                        : "bg-foreground/5 border border-foreground/10 text-foreground/70 hover:border-foreground/20 hover:text-foreground"
                     }`}
                   >
                     {reason}
@@ -565,13 +565,13 @@ const Conversa = () => {
                 onChange={(e) => setReportDesc(e.target.value)}
                 placeholder="Descreva o que aconteceu..."
                 rows={3}
-                className="bg-background border-foreground/10 resize-none"
+                className="bg-foreground/5 border-foreground/10 resize-none focus:border-primary/50"
               />
             </div>
             <button
               onClick={handleReport}
               disabled={!reportReason || reporting}
-              className="w-full py-3 rounded-full bg-destructive text-destructive-foreground font-bold text-sm uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-full bg-destructive text-white font-bold text-sm uppercase tracking-wider disabled:opacity-30 flex items-center justify-center gap-2 hover:bg-destructive/90 transition-all shadow-[0_4px_16px_hsl(var(--destructive)/0.3)]"
             >
               {reporting && <Loader2 className="h-4 w-4 animate-spin" />}
               Enviar Denúncia
