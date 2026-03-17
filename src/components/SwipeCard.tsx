@@ -456,11 +456,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 className={`h-1.5 rounded-full transition-all duration-200 ${
                   i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
                 }`}
-              >
-                {i === images.length && hasVideo && i !== activeImageIndex && (
-                  <Play className="h-1.5 w-1.5 text-white/60 absolute" />
-                )}
-              </div>
+              />
             ))}
           </div>
         )}
