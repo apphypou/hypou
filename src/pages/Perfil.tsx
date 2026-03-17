@@ -73,7 +73,9 @@ const Perfil = () => {
         display_name: name.trim(),
         location: location.trim() || null,
         avatar_url: avatarUrl,
-      } as any);
+        latitude: locationCoords?.lat ?? null,
+        longitude: locationCoords?.lng ?? null,
+      });
       goToStep(2);
     } catch (err: any) {
       toast({ title: "Erro ao salvar perfil", description: err.message, variant: "destructive" });
