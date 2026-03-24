@@ -612,7 +612,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                         <Package className="h-2 w-2 text-primary" />
                       </div>
                     )}
-                    <span className="text-white/60 text-[10px] font-medium truncate max-w-[160px]">
+                    <span className="text-white/60 text-[10px] font-medium">
                       Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
                     </span>
                   </div>
