@@ -42,7 +42,7 @@ const mockCards = [
     width: 160,
     left: "40%",
   },
-  // Row 2 — smaller, behind, partially hidden by text section
+  // Row 2 — smaller, overlapping the badge area
   {
     icon: Gamepad2,
     name: "PS5",
@@ -51,7 +51,7 @@ const mockCards = [
     gradient: "from-blue-500/30 via-indigo-500/20 to-purple-500/15",
     rotate: 4,
     x: -10,
-    y: 240,
+    y: 210,
     delay: 0.7,
     row: 2,
     width: 130,
@@ -65,7 +65,7 @@ const mockCards = [
     gradient: "from-emerald-500/30 via-teal-500/20 to-primary/15",
     rotate: -3,
     x: 15,
-    y: 250,
+    y: 220,
     delay: 0.9,
     row: 2,
     width: 130,
@@ -102,8 +102,8 @@ const Index = () => {
       </div>
 
       {/* Product Preview Cards */}
-      <div className="relative z-10 flex items-start justify-center mb-[-120px]" style={{ paddingTop: "8%" }}>
-        <div className="relative w-[300px] h-[400px]">
+      <div className="relative z-10 flex items-start justify-center mb-[-80px]" style={{ paddingTop: "8%" }}>
+        <div className="relative w-[300px] h-[370px]">
           {mockCards.map((card, i) => (
             <motion.div
               key={i}
