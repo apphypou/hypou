@@ -90,42 +90,30 @@ const Index = () => {
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Product Preview Cards */}
-      <div className="relative z-10 flex items-start justify-center mb-[-60px]" style={{ paddingTop: "6%" }}>
-        <div className="relative w-[300px] h-[280px]" style={{ overflow: "visible" }}>
-          {mockCards.map((card, i) => (
+      {/* Row 1 Product Cards */}
+      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "6%" }}>
+        <div className="relative w-[300px] h-[280px]">
+          {row1Cards.map((card, i) => (
             <motion.div
               key={i}
               className="absolute glass-card rounded-2xl overflow-hidden"
               style={{
-                width: card.width,
+                width: 160,
                 left: card.left,
-                top: card.y,
-                zIndex: card.row === 1 ? 2 : 1,
-                opacity: card.row === 2 ? 0.85 : 1,
+                top: i === 1 ? 16 : 0,
+                zIndex: 2,
               }}
-              initial={{ opacity: 0, x: i % 2 === 0 ? -60 : 60, y: card.y + 30, rotate: card.rotate * 2 }}
-              animate={{ opacity: card.row === 2 ? 0.85 : 1, x: card.x, y: card.y, rotate: card.rotate }}
+              initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
+              animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
               transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              {/* Floating animation wrapper */}
               <motion.div
                 animate={{ y: floatVariants[i].y }}
-                transition={{
-                  duration: floatVariants[i].duration,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: card.delay + 0.7,
-                }}
+                transition={{ duration: floatVariants[i].duration, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
               >
-                {/* Gradient "photo" area */}
-                <div
-                  className={`bg-gradient-to-br ${card.gradient} flex items-center justify-center`}
-                  style={{ height: card.row === 1 ? 120 : 80 }}
-                >
-                  <card.icon className="text-foreground/60" size={card.row === 1 ? 40 : 28} strokeWidth={1.5} />
+                <div className={`h-[120px] bg-gradient-to-br ${card.gradient} flex items-center justify-center`}>
+                  <card.icon className="text-foreground/60" size={40} strokeWidth={1.5} />
                 </div>
-                {/* Card info */}
                 <div className="p-3 space-y-1.5">
                   <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
                   <p className="text-primary text-xs font-bold">{card.price}</p>
@@ -157,8 +145,44 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content — Row 2 cards positioned behind this via relative wrapper */}
       <div className="relative z-20 flex flex-col w-full px-6 pb-10">
+        {/* Row 2 cards — behind text, overlapping badge */}
+        <div className="absolute inset-x-0 top-0 z-0 flex justify-center" style={{ transform: "translateY(-50px)" }}>
+          <div className="relative w-[300px] h-[200px]">
+            {row2Cards.map((card, i) => (
+              <motion.div
+                key={i}
+                className="absolute glass-card rounded-2xl overflow-hidden"
+                style={{
+                  width: 130,
+                  left: card.left,
+                  top: 0,
+                  opacity: 0.7,
+                }}
+                initial={{ opacity: 0, x: i === 0 ? -60 : 60, y: 40, rotate: card.rotate * 2 }}
+                animate={{ opacity: 0.7, x: card.x, y: 0, rotate: card.rotate }}
+                transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <motion.div
+                  animate={{ y: floatVariants[i + 2].y }}
+                  transition={{ duration: floatVariants[i + 2].duration, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
+                >
+                  <div className={`h-[80px] bg-gradient-to-br ${card.gradient} flex items-center justify-center`}>
+                    <card.icon className="text-foreground/60" size={28} strokeWidth={1.5} />
+                  </div>
+                  <div className="p-2.5 space-y-1">
+                    <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
+                    <p className="text-primary text-[11px] font-bold">{card.price}</p>
+                    <span className="inline-block px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] font-medium">
+                      {card.category}
+                    </span>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
         <motion.div
           initial="hidden"
           animate="visible"
