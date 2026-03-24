@@ -574,6 +574,28 @@ export type Database = {
           user_id: string
         }[]
       }
+      recommended_items: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          category: string
+          condition: string
+          created_at: string
+          description: string
+          id: string
+          location: string
+          margin_down: number
+          margin_up: number
+          market_value: number
+          matched_item_id: string
+          matched_item_image: string
+          matched_item_name: string
+          name: string
+          relevance_score: number
+          status: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       toggle_video_like: { Args: { p_video_id: string }; Returns: boolean }
     }
     Enums: {
