@@ -463,25 +463,6 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </div>
         )}
 
-        {/* Matched own item indicator — top right */}
-        {matchedOwnItem && !expanded && (
-          <div className="absolute top-5 right-16 z-30 flex items-center gap-2 px-2 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-primary/30" title={`Compatível com: ${matchedOwnItem.name}`}>
-            {matchedOwnItem.image_url ? (
-              <img
-                src={matchedOwnItem.image_url}
-                alt={matchedOwnItem.name}
-                className="h-7 w-7 rounded-full object-cover border-2 border-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]"
-              />
-            ) : (
-              <div className="h-7 w-7 rounded-full bg-primary/30 flex items-center justify-center border-2 border-primary">
-                <Package className="h-3.5 w-3.5 text-primary" />
-              </div>
-            )}
-            <span className="text-white text-[10px] font-semibold max-w-[80px] truncate drop-shadow-md">
-              Meu item
-            </span>
-          </div>
-        )}
 
         {/* Slide dots + share — top right */}
         {!expanded && (
@@ -598,6 +579,25 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 <span className="text-white text-lg font-extrabold tracking-tighter drop-shadow-md">
                   {formatValue(item.market_value)}
                 </span>
+                {matchedOwnItem && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <Repeat className="h-3 w-3 text-primary shrink-0" />
+                    {matchedOwnItem.image_url ? (
+                      <img
+                        src={matchedOwnItem.image_url}
+                        alt={matchedOwnItem.name}
+                        className="h-4 w-4 rounded-full object-cover border border-primary/50"
+                      />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
+                        <Package className="h-2 w-2 text-primary" />
+                      </div>
+                    )}
+                    <span className="text-white/60 text-[10px] font-medium truncate max-w-[160px]">
+                      Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col items-center gap-0.5 text-white/50">
                 <ChevronUp className="h-4 w-4 animate-bounce" />
