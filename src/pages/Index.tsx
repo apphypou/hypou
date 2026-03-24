@@ -1,8 +1,7 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowLeftRight, Headphones, Shirt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
-import HypouLogo from "@/components/HypouLogo";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -13,23 +12,29 @@ const fadeUp = {
   }),
 };
 
-const orbits = [
-  { size: 200, duration: 25, direction: 1, opacity: 0.15, particles: [0, 180] },
-  { size: 300, duration: 35, direction: -1, opacity: 0.10, particles: [60, 200, 320] },
-  { size: 400, duration: 45, direction: 1, opacity: 0.06, particles: [90, 270] },
-];
-
-const bgParticles = [
-  { x: "10%", y: "8%", size: 3, delay: 0 },
-  { x: "85%", y: "12%", size: 2, delay: 1.2 },
-  { x: "70%", y: "5%", size: 4, delay: 0.5 },
-  { x: "25%", y: "35%", size: 2, delay: 2.0 },
-  { x: "90%", y: "28%", size: 3, delay: 0.8 },
-  { x: "5%", y: "45%", size: 2, delay: 1.5 },
-  { x: "50%", y: "3%", size: 3, delay: 0.3 },
-  { x: "78%", y: "42%", size: 2, delay: 1.8 },
-  { x: "35%", y: "48%", size: 3, delay: 2.5 },
-  { x: "60%", y: "38%", size: 2, delay: 0.7 },
+const mockCards = [
+  {
+    icon: Headphones,
+    name: "Fone Sony",
+    price: "R$ 200",
+    category: "Eletrônicos",
+    gradient: "from-primary/40 via-primary/20 to-secondary/30",
+    rotate: -5,
+    x: -20,
+    y: 0,
+    delay: 0.3,
+  },
+  {
+    icon: Shirt,
+    name: "Camiseta Nike",
+    price: "R$ 180",
+    category: "Moda",
+    gradient: "from-accent/30 via-purple-500/20 to-pink-500/20",
+    rotate: 5,
+    x: 20,
+    y: 16,
+    delay: 0.5,
+  },
 ];
 
 const Index = () => {
@@ -37,96 +42,74 @@ const Index = () => {
 
   return (
     <div className="dark relative min-h-screen flex flex-col justify-between overflow-hidden bg-background">
-      {/* Intensified Mesh Gradient Background */}
+      {/* Mesh Gradient Background */}
       <div className="absolute inset-0 z-0">
         <div
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(ellipse 50% 40% at 50% 25%, hsl(184 100% 50% / 0.28) 0%, transparent 70%),
-              radial-gradient(ellipse 30% 25% at 50% 22%, hsl(184 100% 60% / 0.15) 0%, transparent 50%),
-              radial-gradient(ellipse 60% 50% at 30% 30%, hsl(184 85% 42% / 0.08) 0%, transparent 60%),
-              radial-gradient(ellipse 40% 35% at 70% 20%, hsl(174 60% 40% / 0.06) 0%, transparent 50%)
+              radial-gradient(ellipse 55% 45% at 50% 30%, hsl(184 100% 50% / 0.20) 0%, transparent 70%),
+              radial-gradient(ellipse 35% 30% at 45% 28%, hsl(184 100% 60% / 0.12) 0%, transparent 50%),
+              radial-gradient(ellipse 40% 35% at 60% 25%, hsl(270 60% 50% / 0.06) 0%, transparent 50%)
             `,
           }}
         />
         <div className="absolute bottom-0 h-[45%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Background Particles */}
-      <div className="absolute inset-0 z-[1]">
-        {bgParticles.map((p, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-primary"
-            style={{ left: p.x, top: p.y, width: p.size, height: p.size }}
-            animate={{ opacity: [0.08, 0.25, 0.08] }}
-            transition={{ delay: p.delay, duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          />
-        ))}
-      </div>
-
-      {/* Orbital Composition */}
-      <div className="absolute inset-0 z-[2] flex items-start justify-center" style={{ paddingTop: "12%" }}>
-        <div className="relative" style={{ width: 400, height: 400 }}>
-          {/* Central Logo */}
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <HypouLogo size="lg" className="text-glow" />
-          </div>
-
-          {/* Orbits */}
-          {orbits.map((orbit, i) => (
+      {/* Product Preview Cards */}
+      <div className="relative z-10 flex-1 flex items-start justify-center" style={{ paddingTop: "14%" }}>
+        <div className="relative w-[300px] h-[320px]">
+          {mockCards.map((card, i) => (
             <motion.div
               key={i}
-              className="absolute rounded-full"
+              className="absolute glass-card rounded-2xl w-[160px] overflow-hidden"
               style={{
-                width: orbit.size,
-                height: orbit.size,
-                top: "50%",
-                left: "50%",
-                marginTop: -orbit.size / 2,
-                marginLeft: -orbit.size / 2,
-                border: `1px solid hsl(184 100% 50% / ${orbit.opacity})`,
+                left: i === 0 ? "0%" : "40%",
+                top: card.y,
+                zIndex: i === 0 ? 2 : 1,
               }}
-              animate={{ rotate: 360 * orbit.direction }}
-              transition={{ duration: orbit.duration, repeat: Infinity, ease: "linear" }}
+              initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
+              animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
+              transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              {/* Orbital Particles */}
-              {orbit.particles.map((angle, j) => {
-                const rad = (angle * Math.PI) / 180;
-                const r = orbit.size / 2;
-                const px = r + r * Math.cos(rad);
-                const py = r + r * Math.sin(rad);
-                const particleSize = i === 0 ? 10 : i === 1 ? 8 : 6;
-                return (
-                  <motion.div
-                    key={j}
-                    className="absolute rounded-full bg-primary"
-                    style={{
-                      width: particleSize,
-                      height: particleSize,
-                      left: px - particleSize / 2,
-                      top: py - particleSize / 2,
-                      boxShadow: `0 0 ${particleSize + 4}px hsl(184 100% 50% / 0.6), 0 0 ${particleSize * 2}px hsl(184 100% 50% / 0.3)`,
-                    }}
-                    animate={{
-                      rotate: -360 * orbit.direction,
-                      scale: [1, 1.3, 1],
-                    }}
-                    transition={{
-                      rotate: { duration: orbit.duration, repeat: Infinity, ease: "linear" },
-                      scale: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: j * 0.5 },
-                    }}
-                  />
-                );
-              })}
+              {/* Gradient "photo" area */}
+              <div className={`h-[120px] bg-gradient-to-br ${card.gradient} flex items-center justify-center`}>
+                <card.icon className="text-foreground/60" size={40} strokeWidth={1.5} />
+              </div>
+              {/* Card info */}
+              <div className="p-3 space-y-1.5">
+                <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
+                <p className="text-primary text-xs font-bold">{card.price}</p>
+                <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
+                  {card.category}
+                </span>
+              </div>
             </motion.div>
           ))}
+
+          {/* Swap icon */}
+          <motion.div
+            className="absolute z-10 flex items-center justify-center"
+            style={{ left: "42%", top: "45%" }}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
+          >
+            <div className="w-11 h-11 rounded-full bg-background/90 border border-primary/30 flex items-center justify-center shadow-[0_0_20px_hsl(184_100%_50%/0.25)]">
+              <motion.div
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ArrowLeftRight className="text-primary" size={18} />
+              </motion.div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col w-full px-6 pb-10 mt-auto">
+      <div className="relative z-10 flex flex-col w-full px-6 pb-10">
         <motion.div
           initial="hidden"
           animate="visible"
