@@ -42,7 +42,7 @@ const mockCards = [
     width: 160,
     left: "40%",
   },
-  // Row 2 — smaller, behind, tucked below
+  // Row 2 — smaller, behind, partially hidden by text section
   {
     icon: Gamepad2,
     name: "PS5",
@@ -51,7 +51,7 @@ const mockCards = [
     gradient: "from-blue-500/30 via-indigo-500/20 to-purple-500/15",
     rotate: 4,
     x: -10,
-    y: 195,
+    y: 240,
     delay: 0.7,
     row: 2,
     width: 130,
@@ -65,7 +65,7 @@ const mockCards = [
     gradient: "from-emerald-500/30 via-teal-500/20 to-primary/15",
     rotate: -3,
     x: 15,
-    y: 205,
+    y: 250,
     delay: 0.9,
     row: 2,
     width: 130,
@@ -101,9 +101,9 @@ const Index = () => {
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Product Preview Cards — second row overflows into text area */}
-      <div className="relative z-10 flex items-start justify-center mb-[-60px]" style={{ paddingTop: "8%" }}>
-        <div className="relative w-[300px] h-[340px]">
+      {/* Product Preview Cards */}
+      <div className="relative z-10 flex items-start justify-center mb-[-120px]" style={{ paddingTop: "8%" }}>
+        <div className="relative w-[300px] h-[400px]">
           {mockCards.map((card, i) => (
             <motion.div
               key={i}
