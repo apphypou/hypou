@@ -64,7 +64,7 @@ const Index = () => {
       </div>
 
       {/* Product Cards */}
-      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "12%" }}>
+      <div className="relative z-10 flex items-start justify-center mb-[-20px]" style={{ paddingTop: "12%" }}>
         <div className="relative w-[300px] h-[320px]">
           {cards.map((card, i) => (
             <motion.div
