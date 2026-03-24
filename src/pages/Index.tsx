@@ -101,8 +101,8 @@ const Index = () => {
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Product Preview Cards — overflow into text area */}
-      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "8%" }}>
+      {/* Product Preview Cards — second row overflows into text area */}
+      <div className="relative z-10 flex items-start justify-center mb-[-60px]" style={{ paddingTop: "8%" }}>
         <div className="relative w-[300px] h-[340px]">
           {mockCards.map((card, i) => (
             <motion.div
