@@ -169,7 +169,7 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 flex flex-col w-full px-6 pb-10">
+      <div className="relative z-20 flex flex-col w-full px-6 pb-10">
         <motion.div
           initial="hidden"
           animate="visible"
