@@ -103,35 +103,55 @@ export const validateItemPrice = async (
   }
 };
 
-export const getExploreItems = async (userId: string, page = 0, pageSize = 50) => {
-  const from = page * pageSize;
-  const to = from + pageSize - 1;
-
-  const { data, error } = await supabase
-    .from("items")
-    .select(`*, item_images (id, image_url, position), item_videos (id, video_url, thumbnail_url)`)
-    .eq("status", "active")
-    .neq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .range(from, to);
+/** Fetch recommended items for a logged-in user via RPC */
+export const getRecommendedItems = async (userId: string, limit = 50) => {
+  const { data, error } = await supabase.rpc("recommended_items", {
+    p_user_id: userId,
+    p_limit: limit,
+  });
   if (error) throw error;
 
-  // Fetch profiles for item owners separately
-  const ownerIds = [...new Set((data || []).map((i) => i.user_id))];
+  const rows = (data || []) as any[];
+  const itemIds = rows.map((i) => i.id);
+  const ownerIds = [...new Set(rows.map((i) => i.user_id))];
+
+  let imageMap: Record<string, any[]> = {};
+  let videoMap: Record<string, any[]> = {};
   let profileMap: Record<string, any> = {};
+
+  if (itemIds.length > 0) {
+    const [{ data: images }, { data: videos }] = await Promise.all([
+      supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
+      supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
+    ]);
+    (images || []).forEach((img) => {
+      if (!imageMap[img.item_id]) imageMap[img.item_id] = [];
+      imageMap[img.item_id].push(img);
+    });
+    (videos || []).forEach((vid) => {
+      if (!videoMap[vid.item_id]) videoMap[vid.item_id] = [];
+      videoMap[vid.item_id].push(vid);
+    });
+  }
+
   if (ownerIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, display_name, avatar_url, location, created_at")
-      .in("user_id", ownerIds);
+      .in("user_id", ownerIds as string[]);
     (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
   }
 
-  return (data || [])
-    .filter((item) => item.item_images && item.item_images.length > 0)
+  return rows
+    .filter((item) => imageMap[item.id]?.length > 0)
     .map((item) => ({
       ...item,
+      item_images: imageMap[item.id] || [],
+      item_videos: videoMap[item.id] || [],
       profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
+      matched_own_item: item.matched_item_id
+        ? { id: item.matched_item_id, name: item.matched_item_name, image_url: item.matched_item_image }
+        : null,
     }));
 };
 
@@ -163,63 +183,6 @@ export const getPublicExploreItems = async (page = 0, pageSize = 50) => {
     .map((item) => ({
       ...item,
       profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
-    }));
-};
-
-/** Fetch items near a location using the nearby_items RPC */
-export const getNearbyItems = async (
-  lat: number,
-  lng: number,
-  radiusKm: number,
-  userId?: string,
-  limit = 50
-) => {
-  const { data, error } = await supabase.rpc("nearby_items", {
-    p_lat: lat,
-    p_lng: lng,
-    p_radius_km: radiusKm,
-    p_user_id: userId || null,
-    p_limit: limit,
-  });
-  if (error) throw error;
-
-  // Fetch images and profiles for these items
-  const itemIds = (data || []).map((i: any) => i.id);
-  const ownerIds = [...new Set((data || []).map((i: any) => i.user_id))];
-
-  let imageMap: Record<string, any[]> = {};
-  let videoMap: Record<string, any[]> = {};
-  let profileMap: Record<string, any> = {};
-
-  if (itemIds.length > 0) {
-    const [{ data: images }, { data: videos }] = await Promise.all([
-      supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
-      supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
-    ]);
-    (images || []).forEach((img) => {
-      if (!imageMap[img.item_id]) imageMap[img.item_id] = [];
-      imageMap[img.item_id].push(img);
-    });
-    (videos || []).forEach((vid) => {
-      if (!videoMap[vid.item_id]) videoMap[vid.item_id] = [];
-      videoMap[vid.item_id].push(vid);
-    });
-  }
-
-  if (ownerIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, display_name, avatar_url, location, created_at")
-      .in("user_id", ownerIds as string[]);
-    (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
-  }
-
-  return (data || [])
-    .filter((item: any) => imageMap[item.id]?.length > 0)
-    .map((item: any) => ({
-      ...item,
-      item_images: imageMap[item.id] || [],
-      item_videos: videoMap[item.id] || [],
-      profiles: profileMap[item.user_id] || { display_name: null, avatar_url: null, location: null },
+      matched_own_item: null,
     }));
 };

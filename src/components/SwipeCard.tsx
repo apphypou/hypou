@@ -28,12 +28,19 @@ export interface SwipeCardHandle {
   triggerSwipe: (direction: "like" | "dislike") => void;
 }
 
+interface MatchedOwnItem {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
+
 interface SwipeCardProps {
   item: any;
   onSwipeComplete: (direction: "like" | "dislike") => void;
   onDragDirectionChange?: (rawX: number) => void;
   disabled?: boolean;
   standby?: boolean;
+  matchedOwnItem?: MatchedOwnItem | null;
 }
 
 const formatValue = (cents: number) =>

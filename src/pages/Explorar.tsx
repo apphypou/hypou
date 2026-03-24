@@ -1,14 +1,14 @@
-import { PlusCircle, Clapperboard, Share2, MapPin } from "lucide-react";
+import { PlusCircle, Clapperboard, Share2 } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { getExploreItems, getPublicExploreItems, getNearbyItems } from "@/services/itemService";
+import { getRecommendedItems, getPublicExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
 import { createProposal } from "@/services/matchService";
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import GuestPromptDialog from "@/components/GuestPromptDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -21,17 +21,6 @@ import {
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
-import { useGeolocation } from "@/hooks/useGeolocation";
-
-import { categories as allCategories } from "@/constants/categories";
-
-const distanceOptions = [
-  { label: "5 km", value: 5 },
-  { label: "10 km", value: 10 },
-  { label: "25 km", value: 25 },
-  { label: "50 km", value: 50 },
-  { label: "Todos", value: 0 },
-];
 
 const Explorar = () => {
   const { user } = useAuth();
@@ -39,7 +28,7 @@ const Explorar = () => {
   const navigate = useNavigate();
   const isGuest = !user;
 
-  // Onboarding guard: redirect logged-in users who haven't completed onboarding
+  // Onboarding guard
   const { data: onboardingProfile } = useQuery({
     queryKey: ["onboarding-check", user?.id],
     queryFn: async () => {
@@ -62,19 +51,11 @@ const Explorar = () => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [epoch, setEpoch] = useState(0);
-  const [localItems, setLocalItems] = useState<any[]>([]);
   const swipingRef = useRef(false);
   const cardRef = useRef<SwipeCardHandle>(null);
-  const [prevIndex, setPrevIndex] = useState<number | null>(null);
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
-
-  // Category filter state
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
-
-  // Distance filter
-  const [distanceFilter, setDistanceFilter] = useState(0); // 0 = all
 
   // Guest prompt
   const [showGuestPrompt, setShowGuestPrompt] = useState(false);
@@ -84,33 +65,14 @@ const Explorar = () => {
   const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
   const [proposalLoading, setProposalLoading] = useState(false);
 
-  // Geolocation
-  const { position, requestLocation } = useGeolocation(user?.id);
-
-  // Fetch user's preferred categories
-  const { data: userCategories = [] } = useQuery({
-    queryKey: ["user-categories", user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("user_categories")
-        .select("category")
-        .eq("user_id", user!.id);
-      return (data || []).map((c) => c.category);
-    },
-    enabled: !!user,
-  });
-
   const dragDirectionValue = useMotionValue(0);
 
-  // Fetch items — use nearby if distance filter + position, otherwise standard
+  // Fetch items — recommended for logged-in, public for guests
   const { data: items = [], isLoading } = useQuery({
-    queryKey: ["explore-items", user?.id, distanceFilter, position?.lat, position?.lng],
+    queryKey: ["explore-items", user?.id],
     queryFn: async () => {
-      if (distanceFilter > 0 && position) {
-        return getNearbyItems(position.lat, position.lng, distanceFilter, user?.id || undefined);
-      }
       if (user) {
-        return getExploreItems(user.id);
+        return getRecommendedItems(user.id);
       }
       return getPublicExploreItems();
     },
@@ -118,38 +80,14 @@ const Explorar = () => {
     refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (items.length > 0) {
-      setLocalItems(items);
-    }
-  }, [items]);
-
-  // Filter items by active category
-  const filteredItems = useMemo(() => {
-    if (!activeFilter) return localItems;
-    return localItems.filter((item) => item.category === activeFilter);
-  }, [localItems, activeFilter]);
-
-  // Reset index when filter changes
-  useEffect(() => {
-    setCurrentIndex(0);
-    setEpoch((e) => e + 1);
-    dragDirectionValue.set(0);
-  }, [activeFilter, dragDirectionValue]);
-
-  const currentItem = filteredItems[currentIndex];
-  const nextItem = filteredItems[currentIndex + 1] ?? (filteredItems.length > 1 ? filteredItems[0] : null);
+  const currentItem = items[currentIndex] ?? null;
+  const nextItem = items[currentIndex + 1] ?? null;
 
   const advanceCard = useCallback(() => {
-    setPrevIndex(currentIndex);
     setEpoch((e) => e + 1);
     dragDirectionValue.set(0);
-    if (currentIndex + 1 >= filteredItems.length) {
-      setCurrentIndex(0);
-    } else {
-      setCurrentIndex((i) => i + 1);
-    }
-  }, [currentIndex, filteredItems.length, dragDirectionValue]);
+    setCurrentIndex((i) => i + 1);
+  }, [dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
@@ -196,7 +134,6 @@ const Explorar = () => {
       }
 
       if (isGuest) {
-        // Guest can swipe dislike freely
         advanceCard();
         swipingRef.current = false;
         return;
@@ -248,18 +185,8 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  const handleDistanceChange = (km: number) => {
-    if (km > 0 && !position) {
-      requestLocation();
-    }
-    setDistanceFilter(km);
-    setLocalItems([]);
-    setCurrentIndex(0);
-    setEpoch((e) => e + 1);
-  };
-
   // Preload image after next
-  const afterNextItem = filteredItems[currentIndex + 2] ?? filteredItems[0] ?? null;
+  const afterNextItem = items[currentIndex + 2] ?? null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
@@ -269,9 +196,7 @@ const Explorar = () => {
     }
   }, [afterNextImage]);
 
-  const progressText = filteredItems.length > 0
-    ? `${Math.min(currentIndex + 1, filteredItems.length)}/${filteredItems.length}`
-    : "";
+  const feedEnded = !isLoading && currentIndex >= items.length;
 
   return (
     <ScreenLayout>
@@ -290,14 +215,13 @@ const Explorar = () => {
         </div>
       </header>
 
-
       {/* Main Card Area */}
       <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10 overflow-hidden">
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
           </div>
-        ) : filteredItems.length === 0 ? (
+        ) : feedEnded || items.length === 0 ? (
           /* ===== EMPTY STATE ===== */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
             <motion.span
@@ -306,30 +230,22 @@ const Explorar = () => {
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              {activeFilter ? "🔍" : "🤷‍♂️"}
+              {items.length === 0 ? "🤷‍♂️" : "✅"}
             </motion.span>
             <h2 className="text-xl font-bold text-foreground mb-2">
-              {activeFilter ? `Sem itens em "${activeFilter}"` : "Ainda não há itens por aqui"}
+              {items.length === 0
+                ? "Ainda não há itens por aqui"
+                : "Você já viu tudo!"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              {activeFilter
-                ? "Tente outra categoria ou remova o filtro."
-                : isGuest
-                ? "Crie sua conta e seja o primeiro a cadastrar um item!"
-                : "Seja o primeiro a cadastrar um item ou convide amigos!"}
+              {items.length === 0
+                ? isGuest
+                  ? "Crie sua conta e seja o primeiro a cadastrar um item!"
+                  : "Seja o primeiro a cadastrar um item ou convide amigos!"
+                : "Cadastre mais itens para ampliar suas possibilidades de troca."}
             </p>
 
             <div className="flex flex-col gap-3 w-full max-w-xs">
-              {activeFilter && (
-                <button
-                  onClick={() => setActiveFilter(null)}
-                  className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="h-4 w-4">✕</span>
-                  Limpar filtro
-                </button>
-              )}
-
               {isGuest ? (
                 <>
                   <button
@@ -386,14 +302,6 @@ const Explorar = () => {
         ) : currentItem ? (
           <>
             <div className="relative w-full h-full shrink-0">
-              {/* Distance badge */}
-              {currentItem.distance_km != null && (
-                <div className="absolute top-2 left-2 z-50 flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-md border border-foreground/10 text-xs font-semibold text-foreground">
-                  <MapPin className="h-3 w-3 text-primary" />
-                  {currentItem.distance_km} km
-                </div>
-              )}
-
               {/* Streak indicator */}
               <AnimatePresence>
                 {showStreak && likeStreak >= 3 && (
@@ -428,6 +336,7 @@ const Explorar = () => {
                 onSwipeComplete={handleSwipeComplete}
                 onDragDirectionChange={handleDragDirectionChange}
                 disabled={swipingRef.current}
+                matchedOwnItem={currentItem.matched_own_item}
               />
             </div>
           </>
@@ -435,7 +344,7 @@ const Explorar = () => {
       </main>
 
       {/* Toggle Switch */}
-      {currentItem && !isLoading && filteredItems.length > 0 && (
+      {currentItem && !isLoading && !feedEnded && (
         <div
           className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
