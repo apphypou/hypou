@@ -1,43 +1,31 @@
 
 
-# Critica e Redesign da Welcome Screen
+# Redesign Welcome Screen - Abordagem "Product Preview"
 
-## Critica brutal (como especialista em branding)
+## Problema com as tentativas anteriores
 
-**Problemas graves da tela atual:**
+As orbitas abstratas parecem um app de crypto/fintech, nao um app de trocas. Emojis parecem amadores. Nenhuma das duas comunica visualmente o que o app faz para o publico-alvo (jovens querendo trocar coisas).
 
-1. **Emojis = amadorismo.** Nenhum app milionario (Revolut, Nubank, Cash App, Bumble) usa emojis nativos do sistema como elemento visual principal. Emojis sao renderizados diferente em cada OS, quebram consistencia visual e transmitem "projeto de faculdade", nao "plataforma confiavel".
+## Nova direcao: mostrar o proprio produto
 
-2. **Containers glass quadrados com emojis = visual de widget.** Parecem tiles de um dashboard, nao uma composicao aspiracional. O glass morphism aqui nao agrega -- so adiciona ruido visual.
-
-3. **Icones de Repeat girando = confuso.** O usuario nao sabe o que sao aquelas setas sutis. Nao comunicam "troca" -- comunicam "carregando" ou "refresh".
-
-4. **Distribuicao aleatoria.** Os elementos flutuantes parecem jogados na tela sem hierarquia. Nao ha composicao, nao ha ritmo visual, nao ha ponto focal.
-
-5. **Ausencia total de prova social ou valor.** A tela nao mostra NADA que convenca o usuario a criar conta. Apps milionarios mostram o valor imediatamente.
-
-6. **Gradiente mesh muito sutil.** Quase invisivel -- o fundo parece um cinza morto. Falta personalidade.
-
-## Solucao: Composicao abstrata com orbitas e particulas
-
-Inspiracao: Revolut, Linear, Lemon8, Tinder Gold.
-
-Em vez de emojis literais, criar uma **composicao abstrata com circulos orbitais** que representem conexao e troca de forma elegante:
+Apps como Bumble, Tinder, Depop e Vinted mostram **previews do proprio app** na welcome screen. O usuario entende instantaneamente o que vai encontrar la dentro. A abordagem: exibir **2 cards de itens estilizados sobrepostos** com um icone de troca entre eles, como se fossem um "mini swipe" acontecendo.
 
 ```text
 ┌─────────────────────────┐
 │                         │
-│      ╭─── ○ ───╮       │  Orbitas concentricas
-│    ○ │  HYPOU   │ ○     │  com particulas de luz
-│      ╰─── ○ ───╯       │  girando suavemente
-│         · · ·           │
-│      glow ciano         │  Glow central forte
-│                         │  (hero visual)
+│     ┌──────┐            │
+│     │ 🎧   │ ┌──────┐   │  Cards estilizados
+│     │Fone  │ │ 👟   │   │  sobrepostos com
+│     │Sony  │ │Tênis │   │  rotação leve
+│     │R$200 │ │Nike  │   │  (+3° e -3°)
+│     └──────┘ │R$180 │   │
+│        ⇄     └──────┘   │  Ícone de swap
+│                         │  entre eles
+│   glow ciano sutil      │
 ├─────────────────────────┤
 │ ● TROQUE COM SEGURANÇA  │
 │                         │
-│ Bem-vindo ao            │
-│ Hypou                   │
+│ Bem-vindo ao Hypou      │
 │                         │
 │ Troque o que tá parado  │
 │                         │
@@ -48,28 +36,30 @@ Em vez de emojis literais, criar uma **composicao abstrata com circulos orbitais
 └─────────────────────────┘
 ```
 
-### O que muda
+## O que muda
 
-1. **Remover todos os emojis e containers glass.** Eliminar completamente o array `floatingItems` e `swapIcons`.
+1. **Remover orbitas, particulas e bgParticles** - eliminar toda a composicao abstrata atual.
 
-2. **Hero visual: orbitas concentricas animadas.** Dois ou tres circulos concentricos (apenas `border`, sem fill) com opacidade variavel, girando lentamente em direcoes opostas. Representam conexao, match, orbita de itens. Sao elegantes, abstratos e universais.
+2. **Criar 2 mock item cards** sobrepostos no centro-topo da tela. Cada card tera:
+   - Um gradiente colorido no topo simulando a foto do item (sem imagem real, apenas gradiente abstrato com um icone Lucide representando a categoria)
+   - Nome do item, faixa de preco e um badge de categoria
+   - Estilo glass-card com `rounded-2xl`, border sutil, sombra
+   - Rotacao leve: card esquerdo `-4deg`, card direito `+4deg`, levemente deslocados
 
-3. **Particulas de luz nas orbitas.** 4-6 pequenos circulos solidos (8-12px) de cor primaria posicionados nas orbitas, girando junto. Representam "itens" de forma abstrata sem ser literal.
+3. **Icone de swap central** - Um `ArrowLeftRight` com glow ciano entre os dois cards, com animacao de pulse sutil.
 
-4. **Glow central intensificado.** Radial gradient ciano muito mais presente no centro-topo da tela, criando um ponto focal forte que puxa o olhar. Opacidade de 0.25-0.30 em vez dos 0.15 atuais.
+4. **Manter o glow de fundo** - O mesh gradient ciano fica, mas mais concentrado atras dos cards para dar destaque.
 
-5. **Texto "Hypou" no centro das orbitas.** Usar o `HypouLogo` component (tamanho `lg`) posicionado no centro visual das orbitas como ancora da composicao, com `text-glow` ativo.
+5. **Animacao de entrada** - Cards entram com stagger: o esquerdo desliza da esquerda, o direito da direita, e o icone de swap aparece por ultimo com um leve bounce.
 
-6. **Particulas de fundo sutis.** 8-12 pontos pequenos (2-4px) espalhados com opacidade muito baixa (0.1-0.2) e animacao de pulse lenta, adicionando profundidade sem poluir.
+6. **Texto e botoes** - Inalterados, apenas mantidos.
 
-### Detalhes tecnicos
+## Detalhes tecnicos
 
-- **Arquivo**: apenas `src/pages/Index.tsx`
-- **Dependencias**: nenhuma nova (framer-motion ja instalado)
-- **Orbitas**: 3 `motion.div` com `border-radius: 50%`, `border: 1px solid hsl(184 100% 50% / opacity)`, animados com `rotate: 360` em loop infinito com duracoes diferentes (20s, 30s, 40s)
-- **Particulas nas orbitas**: Posicionadas com `absolute` dentro de cada orbita, herdam a rotacao do pai
-- **Logo central**: Importar `HypouLogo` com `size="lg"`, posicionar `absolute` no centro do grupo de orbitas
-- **Background glow**: Intensificar o radial-gradient existente para opacidade 0.25-0.30 e adicionar um segundo glow mais concentrado
-- **Particulas de fundo**: Array de `{ x, y, size, delay }` mapeados como `motion.div` com `animate={{ opacity: [0.1, 0.3, 0.1] }}`
-- **Remover**: arrays `floatingItems`, `swapIcons` e todo o bloco "Floating Category Icons"
+- **Arquivo**: `src/pages/Index.tsx` apenas
+- **Icones**: `Headphones`, `Footprints` (ou `Shirt`) e `ArrowLeftRight` do Lucide (ja disponivel)
+- **Cards mock**: Componentes inline, nao reutilizaveis - sao apenas para a welcome screen
+- **Gradientes dos cards**: Cada card usa um gradiente diferente (um ciano/teal, outro roxo/magenta) para simular fotos de produto de forma abstrata e premium
+- **Layout**: Cards posicionados com `absolute` dentro de um container centralizado, com `transform: rotate()` e `translateX()` para o efeito de sobreposicao
+- **Animacoes**: `framer-motion` com `initial={{ x: -60, opacity: 0, rotate: -8 }}` e `animate={{ x: 0, opacity: 1, rotate: -4 }}` para entrada natural
 
