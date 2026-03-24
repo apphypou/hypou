@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowLeftRight, Headphones, Shirt, Gamepad2, Laptop } from "lucide-react";
+import { ArrowRight, ArrowLeftRight, Headphones, Shirt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
@@ -12,7 +12,7 @@ const fadeUp = {
   }),
 };
 
-const row1Cards = [
+const cards = [
   {
     icon: Headphones,
     name: "Fone Sony",
@@ -37,36 +37,9 @@ const row1Cards = [
   },
 ];
 
-const row2Cards = [
-  {
-    icon: Gamepad2,
-    name: "PS5",
-    price: "R$ 2.500",
-    category: "Games",
-    gradient: "from-blue-500/30 via-indigo-500/20 to-purple-500/15",
-    rotate: 4,
-    x: -10,
-    delay: 0.7,
-    left: "2%",
-  },
-  {
-    icon: Laptop,
-    name: "Notebook Dell",
-    price: "R$ 3.200",
-    category: "Eletrônicos",
-    gradient: "from-emerald-500/30 via-teal-500/20 to-primary/15",
-    rotate: -3,
-    x: 15,
-    delay: 0.9,
-    left: "50%",
-  },
-];
-
 const floatVariants = [
   { y: [0, -6, 0], duration: 3 },
   { y: [0, -5, 0], duration: 3.5 },
-  { y: [0, -7, 0], duration: 4 },
-  { y: [0, -4, 0], duration: 3.2 },
 ];
 
 const Index = () => {
@@ -90,10 +63,10 @@ const Index = () => {
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Row 1 Product Cards */}
-      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "6%" }}>
-        <div className="relative w-[300px] h-[280px]">
-          {row1Cards.map((card, i) => (
+      {/* Product Cards */}
+      <div className="relative z-10 flex items-start justify-center mb-[-20px]" style={{ paddingTop: "12%" }}>
+        <div className="relative w-[300px] h-[320px]">
+          {cards.map((card, i) => (
             <motion.div
               key={i}
               className="absolute glass-card rounded-2xl overflow-hidden"
@@ -101,7 +74,7 @@ const Index = () => {
                 width: 160,
                 left: card.left,
                 top: i === 1 ? 16 : 0,
-                zIndex: 2,
+                zIndex: i === 0 ? 2 : 1,
               }}
               initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
               animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
@@ -145,44 +118,8 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Main Content — Row 2 cards positioned behind this via relative wrapper */}
+      {/* Main Content */}
       <div className="relative z-20 flex flex-col w-full px-6 pb-10">
-        {/* Row 2 cards — behind text, overlapping badge */}
-        <div className="absolute inset-x-0 top-0 z-0 flex justify-center" style={{ transform: "translateY(-90px)" }}>
-          <div className="relative w-[300px] h-[200px]">
-            {row2Cards.map((card, i) => (
-              <motion.div
-                key={i}
-                className="absolute glass-card rounded-2xl overflow-hidden"
-                style={{
-                  width: 130,
-                  left: card.left,
-                  top: 0,
-                  opacity: 0.7,
-                }}
-                initial={{ opacity: 0, x: i === 0 ? -60 : 60, y: 40, rotate: card.rotate * 2 }}
-                animate={{ opacity: 0.7, x: card.x, y: 0, rotate: card.rotate }}
-                transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-              >
-                <motion.div
-                  animate={{ y: floatVariants[i + 2].y }}
-                  transition={{ duration: floatVariants[i + 2].duration, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
-                >
-                  <div className={`h-[80px] bg-gradient-to-br ${card.gradient} flex items-center justify-center`}>
-                    <card.icon className="text-foreground/60" size={28} strokeWidth={1.5} />
-                  </div>
-                  <div className="p-2.5 space-y-1">
-                    <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
-                    <p className="text-primary text-[11px] font-bold">{card.price}</p>
-                    <span className="inline-block px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] font-medium">
-                      {card.category}
-                    </span>
-                  </div>
-                </motion.div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
         <motion.div
           initial="hidden"
           animate="visible"
