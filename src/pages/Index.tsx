@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowLeftRight, Headphones, Shirt } from "lucide-react";
+import { ArrowRight, Handshake, Headphones, Shirt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
@@ -111,7 +111,7 @@ const Index = () => {
                 animate={{ rotate: [0, 0, 180, 180, 360, 360], scale: [1, 1.15, 1.15, 1, 1, 1] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
               >
-                <ArrowLeftRight className="text-primary" size={18} />
+                <Handshake className="text-primary" size={20} />
               </motion.div>
             </div>
           </motion.div>
