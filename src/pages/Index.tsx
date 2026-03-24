@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowLeftRight, Headphones, Shirt } from "lucide-react";
+import { ArrowRight, Handshake, Headphones, Shirt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
