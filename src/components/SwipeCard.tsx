@@ -492,7 +492,6 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </button>
           </div>
         )}
-        )}
 
         {/* Top gradient for readability */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
