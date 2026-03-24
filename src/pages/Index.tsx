@@ -102,8 +102,8 @@ const Index = () => {
       </div>
 
       {/* Product Preview Cards */}
-      <div className="relative z-10 flex items-start justify-center mb-[-40px]" style={{ paddingTop: "6%" }}>
-        <div className="relative w-[300px] h-[340px]">
+      <div className="relative z-20 flex items-start justify-center mb-[-50px]" style={{ paddingTop: "6%" }}>
+        <div className="relative w-[300px] h-[300px]" style={{ overflow: "visible" }}>
           {mockCards.map((card, i) => (
             <motion.div
               key={i}
