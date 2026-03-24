@@ -148,7 +148,7 @@ const Index = () => {
       {/* Main Content — Row 2 cards positioned behind this via relative wrapper */}
       <div className="relative z-20 flex flex-col w-full px-6 pb-10">
         {/* Row 2 cards — behind text, overlapping badge */}
-        <div className="absolute inset-x-0 top-0 z-0 flex justify-center" style={{ transform: "translateY(-50px)" }}>
+        <div className="absolute inset-x-0 top-0 z-0 flex justify-center" style={{ transform: "translateY(-70px)" }}>
           <div className="relative w-[300px] h-[200px]">
             {row2Cards.map((card, i) => (
               <motion.div
