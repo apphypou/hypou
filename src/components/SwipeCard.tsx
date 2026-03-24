@@ -556,6 +556,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                       )}
                       <span className="text-white/70 text-xs font-medium">
                         Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                        {(matchedOwnItem.count ?? 0) > 1 && (
+                          <span className="text-white/40"> e +{(matchedOwnItem.count ?? 0) - 1} {(matchedOwnItem.count ?? 0) - 1 === 1 ? 'item seu' : 'itens seus'}</span>
+                        )}
                       </span>
                     </div>
                   )}
@@ -615,6 +618,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                     )}
                     <span className="text-white/60 text-[10px] font-medium">
                       Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                      {(matchedOwnItem.count ?? 0) > 1 && (
+                        <span className="text-white/40"> e +{(matchedOwnItem.count ?? 0) - 1} {(matchedOwnItem.count ?? 0) - 1 === 1 ? 'item seu' : 'itens seus'}</span>
+                      )}
                     </span>
                   </div>
                 )}
