@@ -1,0 +1,1 @@
+DELETE FROM swipes WHERE swiper_id = '0e7bb54b-166d-492b-8586-7da454c3fa8a';
