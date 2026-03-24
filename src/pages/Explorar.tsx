@@ -1,4 +1,4 @@
-import { Filter, Search, Share2, PlusCircle, Clapperboard, Heart, MapPin } from "lucide-react";
+import { PlusCircle, Clapperboard, Share2, MapPin } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -287,88 +287,10 @@ const Explorar = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          {!isGuest && (
-            <button
-              onClick={() => navigate("/busca")}
-              className="h-9 w-9 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/50 hover:text-foreground transition-all"
-            >
-              <Search className="h-4 w-4" />
-            </button>
-          )}
           {!isGuest && <NotificationBell />}
-          <button
-            onClick={() => setShowFilters((v) => !v)}
-            className={`h-9 w-9 rounded-full flex items-center justify-center transition-all ${
-              showFilters || activeFilter || distanceFilter > 0 ? "bg-primary text-primary-foreground" : "bg-card border border-foreground/10 text-foreground/50"
-            }`}
-          >
-            <Filter className="h-4 w-4" />
-          </button>
         </div>
       </header>
 
-      {/* Category + Distance filter chips */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden px-6 shrink-0 z-30"
-          >
-            {/* Distance chips */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-              <MapPin className="h-4 w-4 text-primary shrink-0 mt-1" />
-              {distanceOptions.map((d) => (
-                <button
-                  key={d.value}
-                  onClick={() => handleDistanceChange(d.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                    distanceFilter === d.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-foreground/10 text-foreground/50"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Category chips */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-              <button
-                onClick={() => setActiveFilter(null)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                  !activeFilter
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-foreground/10 text-foreground/50"
-                }`}
-              >
-                Todos
-              </button>
-              {allCategories.map((cat) => {
-                const isUserPref = userCategories.includes(cat.label);
-                return (
-                  <button
-                    key={cat.label}
-                    onClick={() => setActiveFilter(activeFilter === cat.label ? null : cat.label)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                      activeFilter === cat.label
-                        ? "bg-primary text-primary-foreground"
-                        : isUserPref
-                        ? "bg-primary/10 border border-primary/30 text-primary"
-                        : "bg-card border border-foreground/10 text-foreground/50"
-                    }`}
-                  >
-                    {cat.emoji} {cat.label}
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Main Card Area */}
       <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10 overflow-hidden">
