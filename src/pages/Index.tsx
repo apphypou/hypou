@@ -132,9 +132,9 @@ const Index = () => {
                 {/* Gradient "photo" area */}
                 <div
                   className={`bg-gradient-to-br ${card.gradient} flex items-center justify-center`}
-                  style={{ height: card.row === 1 ? 120 : 100 }}
+                  style={{ height: card.row === 1 ? 120 : 80 }}
                 >
-                  <card.icon className="text-foreground/60" size={card.row === 1 ? 40 : 32} strokeWidth={1.5} />
+                  <card.icon className="text-foreground/60" size={card.row === 1 ? 40 : 28} strokeWidth={1.5} />
                 </div>
                 {/* Card info */}
                 <div className="p-3 space-y-1.5">
