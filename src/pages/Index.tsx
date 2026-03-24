@@ -1,7 +1,9 @@
-import { ArrowRight, Handshake, Headphones, Shirt } from "lucide-react";
+import { ArrowRight, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
+import ps5Image from "@/assets/ps5-hero.jpg";
+import notebookImage from "@/assets/notebook-hero.jpg";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -11,36 +13,6 @@ const fadeUp = {
     transition: { delay: 0.15 + i * 0.12, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const },
   }),
 };
-
-const cards = [
-  {
-    icon: Headphones,
-    name: "Fone Sony",
-    price: "R$ 200",
-    category: "Eletrônicos",
-    gradient: "from-primary/40 via-primary/20 to-secondary/30",
-    rotate: -5,
-    x: -20,
-    delay: 0.3,
-    left: "0%",
-  },
-  {
-    icon: Shirt,
-    name: "Camiseta Nike",
-    price: "R$ 180",
-    category: "Moda",
-    gradient: "from-accent/30 via-purple-500/20 to-pink-500/20",
-    rotate: 5,
-    x: 20,
-    delay: 0.5,
-    left: "40%",
-  },
-];
-
-const floatVariants = [
-  { y: [0, -6, 0], duration: 3 },
-  { y: [0, -5, 0], duration: 3.5 },
-];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -55,65 +27,68 @@ const Index = () => {
             background: `
               radial-gradient(ellipse 60% 50% at 50% 35%, hsl(184 100% 50% / 0.18) 0%, transparent 70%),
               radial-gradient(ellipse 40% 35% at 45% 32%, hsl(184 100% 60% / 0.10) 0%, transparent 50%),
-              radial-gradient(ellipse 45% 40% at 55% 45%, hsl(270 60% 50% / 0.06) 0%, transparent 50%),
-              radial-gradient(ellipse 35% 25% at 40% 55%, hsl(220 70% 50% / 0.05) 0%, transparent 50%)
+              radial-gradient(ellipse 45% 40% at 55% 45%, hsl(270 60% 50% / 0.06) 0%, transparent 50%)
             `,
           }}
         />
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Product Cards */}
-      <div className="relative z-10 flex items-start justify-center mb-[-20px]" style={{ paddingTop: "12%" }}>
-        <div className="relative w-[300px] h-[320px]">
-          {cards.map((card, i) => (
-            <motion.div
-              key={i}
-              className="absolute glass-card rounded-2xl overflow-hidden"
-              style={{
-                width: 160,
-                left: card.left,
-                top: i === 1 ? 16 : 0,
-                zIndex: i === 0 ? 2 : 1,
-              }}
-              initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
-              animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
-              transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-            >
-              <motion.div
-                animate={{ y: floatVariants[i].y }}
-                transition={{ duration: floatVariants[i].duration, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
-              >
-                <div className={`h-[120px] bg-gradient-to-br ${card.gradient} flex items-center justify-center`}>
-                  <card.icon className="text-foreground/60" size={40} strokeWidth={1.5} />
-                </div>
-                <div className="p-3 space-y-1.5">
-                  <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
-                  <p className="text-primary text-xs font-bold">{card.price}</p>
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
-                    {card.category}
-                  </span>
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
+      {/* Circular Product Images — like Match screen */}
+      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "18%" }}>
+        <div className="relative flex justify-center items-center h-48 w-full">
+          {/* Glow behind */}
+          <div className="absolute w-48 h-48 bg-primary/20 rounded-full blur-[60px]" />
 
-          {/* Swap icon */}
+          {/* Left circle — PS5 */}
           <motion.div
-            className="absolute z-10 flex items-center justify-center"
-            style={{ left: "42%", top: "38%" }}
+            className="relative z-10"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="w-36 h-36 rounded-full border-[5px] border-background overflow-hidden shadow-2xl ring-2 ring-primary/40 translate-x-4">
+                <img src={ps5Image} alt="PS5" className="w-full h-full object-cover" width={512} height={512} />
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Center Handshake Icon */}
+          <motion.div
+            className="absolute z-30"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
           >
-            <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-[0_0_20px_hsl(184_100%_50%/0.25)]">
-              <motion.div
-                animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Handshake className="text-primary-foreground" size={20} />
-              </motion.div>
-            </div>
+            <motion.div
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <div className="bg-primary text-primary-foreground rounded-full p-2.5 border-[5px] border-background shadow-lg shadow-primary/30">
+                <Handshake className="h-6 w-6" />
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Right circle — Notebook */}
+          <motion.div
+            className="relative z-20"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <motion.div
+              animate={{ y: [0, -5, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            >
+              <div className="w-36 h-36 rounded-full border-[5px] border-background overflow-hidden shadow-2xl ring-2 ring-primary/40 -translate-x-4">
+                <img src={notebookImage} alt="Notebook" className="w-full h-full object-cover" width={512} height={512} />
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
