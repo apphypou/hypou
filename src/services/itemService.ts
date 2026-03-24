@@ -152,6 +152,7 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
       matched_own_item: item.matched_item_id
         ? { id: item.matched_item_id, name: item.matched_item_name, image_url: item.matched_item_image }
         : null,
+      matched_items_count: item.matched_items_count ?? 0,
     }));
 };
 

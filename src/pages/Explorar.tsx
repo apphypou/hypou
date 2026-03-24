@@ -329,7 +329,7 @@ const Explorar = () => {
                 onSwipeComplete={handleSwipeComplete}
                 onDragDirectionChange={handleDragDirectionChange}
                 disabled={swipingRef.current}
-                matchedOwnItem={currentItem.matched_own_item}
+                matchedOwnItem={currentItem.matched_own_item ? { ...currentItem.matched_own_item, count: currentItem.matched_items_count } : null}
               />
             </div>
           </>

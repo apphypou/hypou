@@ -589,6 +589,7 @@ export type Database = {
           matched_item_id: string
           matched_item_image: string
           matched_item_name: string
+          matched_items_count: number
           name: string
           relevance_score: number
           status: string
