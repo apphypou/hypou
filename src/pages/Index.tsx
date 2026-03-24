@@ -106,12 +106,12 @@ const Index = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
           >
-            <div className="w-11 h-11 rounded-full bg-background/90 border border-primary/30 flex items-center justify-center shadow-[0_0_20px_hsl(184_100%_50%/0.25)]">
+            <div className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-[0_0_20px_hsl(184_100%_50%/0.25)]">
               <motion.div
-                animate={{ rotate: [0, 0, 180, 180, 360, 360], scale: [1, 1.15, 1.15, 1, 1, 1] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Handshake className="text-primary" size={20} />
+                <Handshake className="text-primary-foreground" size={20} />
               </motion.div>
             </div>
           </motion.div>
