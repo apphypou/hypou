@@ -55,8 +55,8 @@ const Index = () => {
                 animate={{ y: [0, i === 0 ? -6 : -5, 0] }}
                 transition={{ duration: i === 0 ? 3 : 3.5, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
               >
-                <div className="h-[120px] bg-muted/30 flex items-center justify-center overflow-hidden">
-                  <img src={card.image} alt={card.name} className="w-full h-full object-cover" width={512} height={512} />
+                <div className="h-[130px] bg-white flex items-center justify-center overflow-hidden p-2">
+                  <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
                 </div>
                 <div className="p-3 space-y-1.5">
                   <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
