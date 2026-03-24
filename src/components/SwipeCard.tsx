@@ -539,6 +539,25 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                   <h2 className="text-white text-xl font-bold tracking-tight drop-shadow-md">
                     {item.name}
                   </h2>
+                  {matchedOwnItem && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <Repeat className="h-3 w-3 text-primary shrink-0" />
+                      {matchedOwnItem.image_url ? (
+                        <img
+                          src={matchedOwnItem.image_url}
+                          alt={matchedOwnItem.name}
+                          className="h-5 w-5 rounded-full object-cover border border-primary/50"
+                        />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
+                          <Package className="h-2.5 w-2.5 text-primary" />
+                        </div>
+                      )}
+                      <span className="text-white/70 text-xs font-medium">
+                        Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <CardDetailContent item={item} />
               </div>
