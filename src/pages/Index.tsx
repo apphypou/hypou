@@ -42,7 +42,7 @@ const mockCards = [
     width: 160,
     left: "40%",
   },
-  // Row 2
+  // Row 2 — smaller, behind, tucked below
   {
     icon: Gamepad2,
     name: "PS5",
@@ -51,11 +51,11 @@ const mockCards = [
     gradient: "from-blue-500/30 via-indigo-500/20 to-purple-500/15",
     rotate: 4,
     x: -10,
-    y: 220,
+    y: 195,
     delay: 0.7,
     row: 2,
-    width: 140,
-    left: "5%",
+    width: 130,
+    left: "8%",
   },
   {
     icon: Laptop,
@@ -65,11 +65,11 @@ const mockCards = [
     gradient: "from-emerald-500/30 via-teal-500/20 to-primary/15",
     rotate: -3,
     x: 15,
-    y: 230,
+    y: 205,
     delay: 0.9,
     row: 2,
-    width: 140,
-    left: "45%",
+    width: 130,
+    left: "48%",
   },
 ];
 
@@ -102,8 +102,8 @@ const Index = () => {
       </div>
 
       {/* Product Preview Cards */}
-      <div className="relative z-10 flex-1 flex items-start justify-center" style={{ paddingTop: "10%" }}>
-        <div className="relative w-[300px] h-[440px]">
+      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "8%", minHeight: "46%" }}>
+        <div className="relative w-[300px] h-[380px]">
           {mockCards.map((card, i) => (
             <motion.div
               key={i}
@@ -132,9 +132,9 @@ const Index = () => {
                 {/* Gradient "photo" area */}
                 <div
                   className={`bg-gradient-to-br ${card.gradient} flex items-center justify-center`}
-                  style={{ height: card.row === 1 ? 120 : 100 }}
+                  style={{ height: card.row === 1 ? 120 : 80 }}
                 >
-                  <card.icon className="text-foreground/60" size={card.row === 1 ? 40 : 32} strokeWidth={1.5} />
+                  <card.icon className="text-foreground/60" size={card.row === 1 ? 40 : 28} strokeWidth={1.5} />
                 </div>
                 {/* Card info */}
                 <div className="p-3 space-y-1.5">
