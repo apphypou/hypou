@@ -272,13 +272,6 @@ const Explorar = () => {
                     Cadastrar meu item
                   </button>
 
-                  <button
-                    onClick={() => navigate("/shorts")}
-                    className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Clapperboard className="h-4 w-4" />
-                    Explorar a Vitrine
-                  </button>
 
                   {typeof navigator.share === "function" && (
                     <button
