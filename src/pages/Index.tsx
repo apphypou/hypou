@@ -1,7 +1,8 @@
-import { ArrowRight, Repeat } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
+import HypouLogo from "@/components/HypouLogo";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -12,96 +13,116 @@ const fadeUp = {
   }),
 };
 
-const floatingItems = [
-  { emoji: "📱", x: "12%", y: "8%", size: 56, delay: 0, duration: 5, rotate: 6 },
-  { emoji: "🎧", x: "72%", y: "5%", size: 48, delay: 0.8, duration: 6, rotate: -5 },
-  { emoji: "👟", x: "55%", y: "22%", size: 52, delay: 1.2, duration: 4.5, rotate: 8 },
-  { emoji: "🎮", x: "20%", y: "28%", size: 60, delay: 0.4, duration: 5.5, rotate: -4 },
-  { emoji: "👜", x: "82%", y: "30%", size: 44, delay: 1.6, duration: 6.5, rotate: 5 },
-  { emoji: "📷", x: "42%", y: "12%", size: 50, delay: 0.6, duration: 5, rotate: -7 },
-  { emoji: "🎸", x: "8%", y: "42%", size: 46, delay: 1.0, duration: 5.8, rotate: 4 },
-  { emoji: "⚽", x: "68%", y: "42%", size: 42, delay: 1.4, duration: 4.8, rotate: -6 },
+const orbits = [
+  { size: 200, duration: 25, direction: 1, opacity: 0.15, particles: [0, 180] },
+  { size: 300, duration: 35, direction: -1, opacity: 0.10, particles: [60, 200, 320] },
+  { size: 400, duration: 45, direction: 1, opacity: 0.06, particles: [90, 270] },
 ];
 
-const swapIcons = [
-  { x: "36%", y: "18%", delay: 0.3, duration: 7 },
-  { x: "62%", y: "36%", delay: 1.0, duration: 6 },
-  { x: "25%", y: "48%", delay: 1.8, duration: 5.5 },
+const bgParticles = [
+  { x: "10%", y: "8%", size: 3, delay: 0 },
+  { x: "85%", y: "12%", size: 2, delay: 1.2 },
+  { x: "70%", y: "5%", size: 4, delay: 0.5 },
+  { x: "25%", y: "35%", size: 2, delay: 2.0 },
+  { x: "90%", y: "28%", size: 3, delay: 0.8 },
+  { x: "5%", y: "45%", size: 2, delay: 1.5 },
+  { x: "50%", y: "3%", size: 3, delay: 0.3 },
+  { x: "78%", y: "42%", size: 2, delay: 1.8 },
+  { x: "35%", y: "48%", size: 3, delay: 2.5 },
+  { x: "60%", y: "38%", size: 2, delay: 0.7 },
 ];
 
 const Index = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="dark relative min-h-screen flex flex-col justify-between overflow-hidden bg-[hsl(0,0%,11%)]">
-      {/* Mesh Gradient Background */}
+    <div className="dark relative min-h-screen flex flex-col justify-between overflow-hidden bg-background">
+      {/* Intensified Mesh Gradient Background */}
       <div className="absolute inset-0 z-0">
         <div
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(ellipse 60% 50% at 50% 20%, hsl(184 100% 50% / 0.15) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 30% at 25% 35%, hsl(184 85% 42% / 0.08) 0%, transparent 60%),
-              radial-gradient(ellipse 35% 25% at 75% 15%, hsl(174 60% 40% / 0.06) 0%, transparent 50%)
+              radial-gradient(ellipse 50% 40% at 50% 25%, hsl(184 100% 50% / 0.28) 0%, transparent 70%),
+              radial-gradient(ellipse 30% 25% at 50% 22%, hsl(184 100% 60% / 0.15) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 50% at 30% 30%, hsl(184 85% 42% / 0.08) 0%, transparent 60%),
+              radial-gradient(ellipse 40% 35% at 70% 20%, hsl(174 60% 40% / 0.06) 0%, transparent 50%)
             `,
           }}
         />
-        {/* Bottom fade to solid */}
-        <div className="absolute bottom-0 h-[45%] w-full bg-gradient-to-t from-[hsl(0,0%,11%)] via-[hsl(0,0%,11%)]/90 to-transparent" />
+        <div className="absolute bottom-0 h-[45%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Floating Category Icons */}
+      {/* Background Particles */}
       <div className="absolute inset-0 z-[1]">
-        {floatingItems.map((item, i) => (
+        {bgParticles.map((p, i) => (
           <motion.div
             key={i}
-            className="absolute flex items-center justify-center rounded-2xl bg-white/[0.06] backdrop-blur-sm border border-white/[0.08]"
-            style={{
-              left: item.x,
-              top: item.y,
-              width: item.size,
-              height: item.size,
-              fontSize: item.size * 0.45,
-            }}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{
-              opacity: [0, 1, 1, 1],
-              scale: 1,
-              y: [0, -12, 0],
-              rotate: [0, item.rotate, 0],
-            }}
-            transition={{
-              opacity: { delay: item.delay + 0.3, duration: 0.6 },
-              scale: { delay: item.delay + 0.3, duration: 0.4 },
-              y: { delay: item.delay + 0.8, duration: item.duration, repeat: Infinity, ease: "easeInOut" },
-              rotate: { delay: item.delay + 0.8, duration: item.duration, repeat: Infinity, ease: "easeInOut" },
-            }}
-          >
-            {item.emoji}
-          </motion.div>
+            className="absolute rounded-full bg-primary"
+            style={{ left: p.x, top: p.y, width: p.size, height: p.size }}
+            animate={{ opacity: [0.08, 0.25, 0.08] }}
+            transition={{ delay: p.delay, duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
         ))}
+      </div>
 
-        {/* Swap/Repeat Icons */}
-        {swapIcons.map((icon, i) => (
-          <motion.div
-            key={`swap-${i}`}
-            className="absolute text-primary/20"
-            style={{ left: icon.x, top: icon.y }}
-            initial={{ opacity: 0 }}
-            animate={{
-              opacity: [0.15, 0.35, 0.15],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              delay: icon.delay + 1,
-              duration: icon.duration,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <Repeat size={20} />
-          </motion.div>
-        ))}
+      {/* Orbital Composition */}
+      <div className="absolute inset-0 z-[2] flex items-start justify-center" style={{ paddingTop: "12%" }}>
+        <div className="relative" style={{ width: 400, height: 400 }}>
+          {/* Central Logo */}
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <HypouLogo size="lg" className="text-glow" />
+          </div>
+
+          {/* Orbits */}
+          {orbits.map((orbit, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: orbit.size,
+                height: orbit.size,
+                top: "50%",
+                left: "50%",
+                marginTop: -orbit.size / 2,
+                marginLeft: -orbit.size / 2,
+                border: `1px solid hsl(184 100% 50% / ${orbit.opacity})`,
+              }}
+              animate={{ rotate: 360 * orbit.direction }}
+              transition={{ duration: orbit.duration, repeat: Infinity, ease: "linear" }}
+            >
+              {/* Orbital Particles */}
+              {orbit.particles.map((angle, j) => {
+                const rad = (angle * Math.PI) / 180;
+                const r = orbit.size / 2;
+                const px = r + r * Math.cos(rad);
+                const py = r + r * Math.sin(rad);
+                const particleSize = i === 0 ? 10 : i === 1 ? 8 : 6;
+                return (
+                  <motion.div
+                    key={j}
+                    className="absolute rounded-full bg-primary"
+                    style={{
+                      width: particleSize,
+                      height: particleSize,
+                      left: px - particleSize / 2,
+                      top: py - particleSize / 2,
+                      boxShadow: `0 0 ${particleSize + 4}px hsl(184 100% 50% / 0.6), 0 0 ${particleSize * 2}px hsl(184 100% 50% / 0.3)`,
+                    }}
+                    animate={{
+                      rotate: -360 * orbit.direction,
+                      scale: [1, 1.3, 1],
+                    }}
+                    transition={{
+                      rotate: { duration: orbit.duration, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 3, repeat: Infinity, ease: "easeInOut", delay: j * 0.5 },
+                    }}
+                  />
+                );
+              })}
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Main Content */}
