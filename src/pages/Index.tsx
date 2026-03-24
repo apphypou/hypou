@@ -12,8 +12,7 @@ const fadeUp = {
   }),
 };
 
-const mockCards = [
-  // Row 1
+const row1Cards = [
   {
     icon: Headphones,
     name: "Fone Sony",
@@ -22,10 +21,7 @@ const mockCards = [
     gradient: "from-primary/40 via-primary/20 to-secondary/30",
     rotate: -5,
     x: -20,
-    y: 0,
     delay: 0.3,
-    row: 1,
-    width: 160,
     left: "0%",
   },
   {
@@ -36,13 +32,12 @@ const mockCards = [
     gradient: "from-accent/30 via-purple-500/20 to-pink-500/20",
     rotate: 5,
     x: 20,
-    y: 16,
     delay: 0.5,
-    row: 1,
-    width: 160,
     left: "40%",
   },
-  // Row 2 — smaller, overlapping the badge area
+];
+
+const row2Cards = [
   {
     icon: Gamepad2,
     name: "PS5",
@@ -51,11 +46,8 @@ const mockCards = [
     gradient: "from-blue-500/30 via-indigo-500/20 to-purple-500/15",
     rotate: 4,
     x: -10,
-    y: 185,
     delay: 0.7,
-    row: 2,
-    width: 130,
-    left: "8%",
+    left: "2%",
   },
   {
     icon: Laptop,
@@ -65,11 +57,8 @@ const mockCards = [
     gradient: "from-emerald-500/30 via-teal-500/20 to-primary/15",
     rotate: -3,
     x: 15,
-    y: 195,
     delay: 0.9,
-    row: 2,
-    width: 130,
-    left: "48%",
+    left: "50%",
   },
 ];
 
