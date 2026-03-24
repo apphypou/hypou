@@ -2,8 +2,8 @@ import { ArrowRight, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import NeonButton from "@/components/NeonButton";
-import ps5Image from "@/assets/ps5-hero.jpg";
-import notebookImage from "@/assets/notebook-hero.jpg";
+import ps5Image from "@/assets/ps5-hero.png";
+import notebookImage from "@/assets/notebook-hero.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -13,6 +13,11 @@ const fadeUp = {
     transition: { delay: 0.15 + i * 0.12, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const },
   }),
 };
+
+const cards = [
+  { image: ps5Image, name: "PS5 Pro", price: "R$ 4.500", category: "Games", rotate: -5, x: -20, delay: 0.3, left: "0%" },
+  { image: notebookImage, name: "Notebook Samsung", price: "R$ 3.200", category: "Eletrônicos", rotate: 5, x: 20, delay: 0.5, left: "40%" },
+];
 
 const Index = () => {
   const navigate = useNavigate();
@@ -34,32 +39,40 @@ const Index = () => {
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Circular Product Images — like Match screen */}
-      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "18%" }}>
-        <div className="relative flex justify-center items-center h-48 w-full">
-          {/* Glow behind */}
-          <div className="absolute w-48 h-48 bg-primary/20 rounded-full blur-[60px]" />
-
-          {/* Left circle — PS5 */}
-          <motion.div
-            className="relative z-10"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
+      {/* Product Cards */}
+      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "12%" }}>
+        <div className="relative w-[300px] h-[300px]">
+          {cards.map((card, i) => (
             <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              key={i}
+              className="absolute glass-card rounded-2xl overflow-hidden"
+              style={{ width: 160, left: card.left, top: i === 1 ? 16 : 0, zIndex: i === 0 ? 2 : 1 }}
+              initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
+              animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
+              transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-              <div className="w-36 h-36 rounded-full border-[5px] border-background overflow-hidden shadow-2xl ring-2 ring-primary/40 translate-x-4">
-                <img src={ps5Image} alt="PS5" className="w-full h-full object-cover" width={512} height={512} />
-              </div>
+              <motion.div
+                animate={{ y: [0, i === 0 ? -6 : -5, 0] }}
+                transition={{ duration: i === 0 ? 3 : 3.5, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
+              >
+                <div className="h-[130px] bg-white flex items-center justify-center overflow-hidden p-2">
+                  <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
+                </div>
+                <div className="p-3 space-y-1.5">
+                  <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
+                  <p className="text-primary text-xs font-bold">{card.price}</p>
+                  <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
+                    {card.category}
+                  </span>
+                </div>
+              </motion.div>
             </motion.div>
-          </motion.div>
+          ))}
 
-          {/* Center Handshake Icon */}
+          {/* Handshake icon */}
           <motion.div
-            className="absolute z-30"
+            className="absolute z-10 flex items-center justify-center"
+            style={{ left: "42%", top: "35%" }}
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
@@ -69,24 +82,7 @@ const Index = () => {
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
             >
               <div className="bg-primary text-primary-foreground rounded-full p-2.5 border-[5px] border-background shadow-lg shadow-primary/30">
-                <Handshake className="h-6 w-6" />
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right circle — Notebook */}
-          <motion.div
-            className="relative z-20"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          >
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            >
-              <div className="w-36 h-36 rounded-full border-[5px] border-background overflow-hidden shadow-2xl ring-2 ring-primary/40 -translate-x-4">
-                <img src={notebookImage} alt="Notebook" className="w-full h-full object-cover" width={512} height={512} />
+                <Handshake className="h-5 w-5" />
               </div>
             </motion.div>
           </motion.div>
