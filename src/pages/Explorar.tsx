@@ -1,4 +1,4 @@
-import { PlusCircle, Clapperboard, Share2 } from "lucide-react";
+import { PlusCircle, Share2 } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
