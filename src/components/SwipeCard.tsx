@@ -32,6 +32,7 @@ interface MatchedOwnItem {
   id: string;
   name: string;
   image_url: string | null;
+  count?: number;
 }
 
 interface SwipeCardProps {
