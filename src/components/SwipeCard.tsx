@@ -211,7 +211,7 @@ const CardDetailContent = ({ item }: { item: any }) => {
 };
 
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby }, ref) => {
+  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby, matchedOwnItem }, ref) => {
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
@@ -460,6 +460,26 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 <span className="text-yellow-400 text-[10px] font-bold">{rating.average}</span>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Matched own item indicator — top right */}
+        {matchedOwnItem && !expanded && (
+          <div className="absolute top-5 right-16 z-30 flex items-center gap-2 px-2 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-primary/30" title={`Compatível com: ${matchedOwnItem.name}`}>
+            {matchedOwnItem.image_url ? (
+              <img
+                src={matchedOwnItem.image_url}
+                alt={matchedOwnItem.name}
+                className="h-7 w-7 rounded-full object-cover border-2 border-primary shadow-[0_0_8px_hsl(var(--primary)/0.4)]"
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-primary/30 flex items-center justify-center border-2 border-primary">
+                <Package className="h-3.5 w-3.5 text-primary" />
+              </div>
+            )}
+            <span className="text-white text-[10px] font-semibold max-w-[80px] truncate drop-shadow-md">
+              Meu item
+            </span>
           </div>
         )}
 
