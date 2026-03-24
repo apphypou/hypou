@@ -15,7 +15,7 @@ import {
   AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { useQuery } from "@tanstack/react-query";
@@ -386,7 +386,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
                 style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
               >
-                PASSAR
+                FLOPOU
               </motion.span>
             </motion.div>
           </>
@@ -456,17 +456,40 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </div>
         )}
 
-        {/* Slide dots — top right */}
-        {totalSlides > 1 && !expanded && (
-          <div className="absolute top-5 right-5 z-30 flex items-center gap-1.5">
-            {Array.from({ length: totalSlides }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
-                }`}
-              />
-            ))}
+        {/* Slide dots + share — top right */}
+        {!expanded && (
+          <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
+            {totalSlides > 1 && (
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: totalSlides }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-200 ${
+                      i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const shareUrl = `https://hypou.lovable.app/explorar`;
+                const shareData = {
+                  title: `${item.name} — Hypou`,
+                  text: `Olha esse item no Hypou: ${item.name} por ${formatValue(item.market_value)}! Quer trocar?`,
+                  url: shareUrl,
+                };
+                if (navigator.share) {
+                  navigator.share(shareData).catch(() => {});
+                } else {
+                  navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`);
+                }
+              }}
+              className="h-8 w-8 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 flex items-center justify-center"
+            >
+              <Share2 className="h-3.5 w-3.5 text-white" />
+            </button>
           </div>
         )}
 
