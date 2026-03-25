@@ -51,7 +51,7 @@ const Index = () => {
             <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/5 border border-primary/15 backdrop-blur-md w-fit">
               <span className="w-1 h-1 rounded-full bg-primary/60 mr-1.5 animate-pulse" />
               <span className="text-primary/70 text-[9px] font-medium tracking-widest uppercase">
-                Troque com segurança: troque, economize e conquiste
+                Troque, economize e conquiste
               </span>
             </div>
           </motion.div>
