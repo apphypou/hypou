@@ -69,12 +69,12 @@ const Index = () => {
 
         {/* Product Cards */}
         <div className="relative z-10 flex items-start justify-center mb-4">
-          <div className="relative w-[300px] h-[260px]">
+          <div className="relative w-[260px] h-[220px]">
             {cards.map((card, i) => (
               <motion.div
                 key={i}
                 className="absolute glass-card rounded-2xl overflow-hidden"
-                style={{ width: 160, left: card.left, top: i === 1 ? 16 : 0, zIndex: i === 0 ? 2 : 1 }}
+                style={{ width: 136, left: card.left, top: i === 1 ? 12 : 0, zIndex: i === 0 ? 2 : 1 }}
                 initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
                 animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
                 transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -83,12 +83,12 @@ const Index = () => {
                   animate={{ y: [0, i === 0 ? -6 : -5, 0] }}
                   transition={{ duration: i === 0 ? 3 : 3.5, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
                 >
-                  <div className="h-[130px] bg-white flex items-center justify-center overflow-hidden p-2">
+                  <div className="h-[100px] bg-white flex items-center justify-center overflow-hidden p-2">
                     <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
                   </div>
-                  <div className="p-3 space-y-1.5">
-                    <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
-                    <p className="text-primary text-xs font-bold">{card.price}</p>
+                  <div className="p-2 space-y-1">
+                    <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
+                    <p className="text-primary text-[11px] font-bold">{card.price}</p>
                     <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
                       {card.category}
                     </span>
