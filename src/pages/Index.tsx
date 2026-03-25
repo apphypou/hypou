@@ -48,9 +48,9 @@ const Index = () => {
         >
           {/* Badge */}
           <motion.div custom={0} variants={fadeUp}>
-            <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 animate-pulse" />
-              <span className="text-primary text-[11px] font-semibold tracking-widest uppercase">
+            <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-primary/5 border border-primary/15 backdrop-blur-md w-fit">
+              <span className="w-1 h-1 rounded-full bg-primary/60 mr-1.5 animate-pulse" />
+              <span className="text-primary/70 text-[9px] font-medium tracking-widest uppercase">
                 Troque com segurança
               </span>
             </div>
