@@ -127,39 +127,13 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    // Initial delay before starting the cycle
-    const initialDelay = setTimeout(() => {
-      nextPair();
-    }, CYCLE_MS);
-
-    return () => clearTimeout(initialDelay);
-  }, []);
-
-  useEffect(() => {
-    if (pairIndex === 0) return; // skip first render
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) return;
-    };
-
-    const timer = setInterval(nextPair, CYCLE_MS);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [pairIndex, nextPair]);
-
-  // Restart cycle properly with visibility
-  useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;
 
     const start = () => {
       timer = setInterval(nextPair, CYCLE_MS);
     };
     const stop = () => {
-      if (timer) clearInterval(timer);
+      if (timer) { clearInterval(timer); timer = null; }
     };
 
     const onVisChange = () => {
