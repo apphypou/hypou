@@ -124,7 +124,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Description */}
+        {/* Description - extra top margin */}
         <motion.p
           initial="hidden"
           animate="visible"
