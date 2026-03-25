@@ -71,7 +71,7 @@ const cardVariants = {
     rotateZ: -5,
     rotateY: 8,
     rotateX: 2,
-    transition: { type: "spring", stiffness: 180, damping: 22, mass: 0.8 },
+    transition: { type: "spring" as const, stiffness: 180, damping: 22, mass: 0.8 },
   },
   centerRight: {
     opacity: 1,
@@ -81,21 +81,21 @@ const cardVariants = {
     rotateZ: 5,
     rotateY: -8,
     rotateX: 2,
-    transition: { type: "spring", stiffness: 180, damping: 22, mass: 0.8, delay: 0.08 },
+    transition: { type: "spring" as const, stiffness: 180, damping: 22, mass: 0.8, delay: 0.08 },
   },
   exitLeft: {
     opacity: 0,
     x: -200,
     rotateZ: -18,
     scale: 0.85,
-    transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] },
+    transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] as const },
   },
   exitRight: {
     opacity: 0,
     x: 200,
     rotateZ: 18,
     scale: 0.85,
-    transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] },
+    transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] as const },
   },
 };
 
