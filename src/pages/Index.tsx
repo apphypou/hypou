@@ -39,62 +39,12 @@ const Index = () => {
         <div className="absolute bottom-0 h-[40%] w-full bg-gradient-to-t from-background via-background/90 to-transparent" />
       </div>
 
-      {/* Product Cards */}
-      <div className="relative z-10 flex items-start justify-center" style={{ paddingTop: "12%" }}>
-        <div className="relative w-[300px] h-[300px]">
-          {cards.map((card, i) => (
-            <motion.div
-              key={i}
-              className="absolute glass-card rounded-2xl overflow-hidden"
-              style={{ width: 160, left: card.left, top: i === 1 ? 16 : 0, zIndex: i === 0 ? 2 : 1 }}
-              initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
-              animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
-              transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-            >
-              <motion.div
-                animate={{ y: [0, i === 0 ? -6 : -5, 0] }}
-                transition={{ duration: i === 0 ? 3 : 3.5, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
-              >
-                <div className="h-[130px] bg-white flex items-center justify-center overflow-hidden p-2">
-                  <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
-                </div>
-                <div className="p-3 space-y-1.5">
-                  <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
-                  <p className="text-primary text-xs font-bold">{card.price}</p>
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
-                    {card.category}
-                  </span>
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
-
-          {/* Handshake icon */}
-          <motion.div
-            className="absolute z-10 flex items-center justify-center"
-            style={{ left: "42%", top: "35%" }}
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.08, 1] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="bg-primary text-primary-foreground rounded-full p-2.5 border-[5px] border-background shadow-lg shadow-primary/30">
-                <Handshake className="h-5 w-5" />
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="relative z-20 flex flex-col items-center w-full px-6 pb-10 text-center">
+      <div className="relative z-20 flex flex-col items-center w-full px-6 pb-10 text-center pt-[12%]">
         <motion.div
           initial="hidden"
           animate="visible"
-          className="mb-8 space-y-5 flex flex-col items-center"
+          className="mb-4 space-y-5 flex flex-col items-center"
         >
           {/* Badge */}
           <motion.div custom={0} variants={fadeUp}>
@@ -115,16 +65,68 @@ const Index = () => {
             Bem-vindo ao{" "}
             <span className="gradient-text">Hypou</span>
           </motion.h1>
-
-          {/* Description */}
-          <motion.p
-            custom={2}
-            variants={fadeUp}
-            className="text-muted-foreground text-[17px] font-light leading-relaxed max-w-xs"
-          >
-            Troque o que tá parado por algo que você quer. Dê match, negocie e faça trocas de forma segura.
-          </motion.p>
         </motion.div>
+
+        {/* Product Cards */}
+        <div className="relative z-10 flex items-start justify-center mb-4">
+          <div className="relative w-[300px] h-[260px]">
+            {cards.map((card, i) => (
+              <motion.div
+                key={i}
+                className="absolute glass-card rounded-2xl overflow-hidden"
+                style={{ width: 160, left: card.left, top: i === 1 ? 16 : 0, zIndex: i === 0 ? 2 : 1 }}
+                initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotate: card.rotate * 2 }}
+                animate={{ opacity: 1, x: card.x, rotate: card.rotate }}
+                transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <motion.div
+                  animate={{ y: [0, i === 0 ? -6 : -5, 0] }}
+                  transition={{ duration: i === 0 ? 3 : 3.5, repeat: Infinity, ease: "easeInOut", delay: card.delay + 0.7 }}
+                >
+                  <div className="h-[130px] bg-white flex items-center justify-center overflow-hidden p-2">
+                    <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
+                  </div>
+                  <div className="p-3 space-y-1.5">
+                    <p className="text-foreground text-sm font-semibold leading-tight">{card.name}</p>
+                    <p className="text-primary text-xs font-bold">{card.price}</p>
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
+                      {card.category}
+                    </span>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ))}
+
+            {/* Handshake icon */}
+            <motion.div
+              className="absolute z-10 flex items-center justify-center"
+              style={{ left: "42%", top: "35%" }}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="bg-primary text-primary-foreground rounded-full p-2.5 border-[5px] border-background shadow-lg shadow-primary/30">
+                  <Handshake className="h-5 w-5" />
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <motion.p
+          initial="hidden"
+          animate="visible"
+          custom={2}
+          variants={fadeUp}
+          className="text-muted-foreground text-[17px] font-light leading-relaxed max-w-xs mb-8"
+        >
+          Troque o que tá parado por algo que você quer. Dê match, negocie e faça trocas de forma segura.
+        </motion.p>
 
         {/* Buttons */}
         <motion.div
