@@ -1,6 +1,7 @@
-import { ArrowRight, Handshake } from "lucide-react";
+import { ArrowRight, Handshake, Headphones, Shirt, Bike, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 import NeonButton from "@/components/NeonButton";
 import ps5Image from "@/assets/ps5-hero.png";
 import notebookImage from "@/assets/notebook-hero.png";
@@ -14,13 +15,141 @@ const fadeUp = {
   }),
 };
 
-const cards = [
-  { image: ps5Image, name: "PS5 Pro", price: "R$ 4.500", category: "Games", rotate: -5, x: -20, delay: 0.3, left: "0%" },
-  { image: notebookImage, name: "Notebook Samsung", price: "R$ 3.200", category: "Eletrônicos", rotate: 5, x: 20, delay: 0.5, left: "40%" },
+type ProductCard = {
+  type: "image" | "icon";
+  image?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  gradient?: string;
+  name: string;
+  price: string;
+  category: string;
+};
+
+type ProductPair = [ProductCard, ProductCard];
+
+const productPairs: ProductPair[] = [
+  [
+    { type: "image", image: ps5Image, name: "PS5 Pro", price: "R$ 4.500", category: "Games" },
+    { type: "image", image: notebookImage, name: "Notebook Samsung", price: "R$ 3.200", category: "Eletrônicos" },
+  ],
+  [
+    { type: "icon", icon: Headphones, gradient: "linear-gradient(135deg, hsl(270 60% 55%), hsl(300 50% 45%))", name: "Fone Bluetooth", price: "R$ 890", category: "Áudio" },
+    { type: "icon", icon: Shirt, gradient: "linear-gradient(135deg, hsl(340 70% 50%), hsl(20 80% 55%))", name: "Camiseta Nike", price: "R$ 250", category: "Moda" },
+  ],
+  [
+    { type: "icon", icon: Bike, gradient: "linear-gradient(135deg, hsl(150 60% 40%), hsl(180 70% 45%))", name: "Bike Caloi", price: "R$ 1.800", category: "Esportes" },
+    { type: "icon", icon: Camera, gradient: "linear-gradient(135deg, hsl(35 80% 50%), hsl(45 90% 55%))", name: "Câmera Canon", price: "R$ 2.100", category: "Fotografia" },
+  ],
+  [
+    { type: "image", image: notebookImage, name: "MacBook Air", price: "R$ 7.500", category: "Eletrônicos" },
+    { type: "icon", icon: Headphones, gradient: "linear-gradient(135deg, hsl(200 80% 50%), hsl(220 70% 45%))", name: "AirPods Pro", price: "R$ 1.900", category: "Áudio" },
+  ],
 ];
+
+const CYCLE_MS = 3500;
+
+const cardVariants = {
+  enterLeft: {
+    opacity: 0,
+    x: -60,
+    y: 30,
+    scale: 0.88,
+    rotateZ: 8,
+  },
+  enterRight: {
+    opacity: 0,
+    x: 60,
+    y: 30,
+    scale: 0.88,
+    rotateZ: -8,
+  },
+  centerLeft: {
+    opacity: 1,
+    x: -20,
+    y: 0,
+    scale: 1,
+    rotateZ: -5,
+    rotateY: 8,
+    rotateX: 2,
+    transition: { type: "spring" as const, stiffness: 180, damping: 22, mass: 0.8 },
+  },
+  centerRight: {
+    opacity: 1,
+    x: 20,
+    y: 0,
+    scale: 1,
+    rotateZ: 5,
+    rotateY: -8,
+    rotateX: 2,
+    transition: { type: "spring" as const, stiffness: 180, damping: 22, mass: 0.8, delay: 0.08 },
+  },
+  exitLeft: {
+    opacity: 0,
+    x: -200,
+    rotateZ: -18,
+    scale: 0.85,
+    transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] as const },
+  },
+  exitRight: {
+    opacity: 0,
+    x: 200,
+    rotateZ: 18,
+    scale: 0.85,
+    transition: { duration: 0.55, ease: [0.4, 0, 0.2, 1] as const },
+  },
+};
+
+const ProductCardEl = ({ card }: { card: ProductCard }) => (
+  <div className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
+    <div className="h-[145px] flex items-center justify-center overflow-hidden" style={card.type === "icon" ? { background: card.gradient } : { background: "white" }}>
+      {card.type === "image" ? (
+        <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
+      ) : (
+        card.icon && <card.icon className="h-14 w-14 text-white/90 drop-shadow-lg" />
+      )}
+    </div>
+    <div className="p-2 space-y-1">
+      <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
+      <p className="text-primary text-[11px] font-bold">{card.price}</p>
+      <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
+        {card.category}
+      </span>
+    </div>
+  </div>
+);
 
 const Index = () => {
   const navigate = useNavigate();
+  const [pairIndex, setPairIndex] = useState(0);
+
+  const nextPair = useCallback(() => {
+    setPairIndex((prev) => (prev + 1) % productPairs.length);
+  }, []);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => {
+      timer = setInterval(nextPair, CYCLE_MS);
+    };
+    const stop = () => {
+      if (timer) { clearInterval(timer); timer = null; }
+    };
+
+    const onVisChange = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    start();
+    document.addEventListener("visibilitychange", onVisChange);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisChange);
+    };
+  }, [nextPair]);
+
+  const currentPair = productPairs[pairIndex];
 
   return (
     <div className="dark relative min-h-screen flex flex-col justify-between overflow-hidden bg-background">
@@ -67,44 +196,56 @@ const Index = () => {
           </motion.h1>
         </motion.div>
 
-        {/* Product Cards */}
+        {/* Product Cards - Animated Swipe Showcase */}
         <div className="relative z-10 flex items-start justify-center mb-4 mt-4" style={{ perspective: "800px" }}>
           <div className="relative w-[260px] h-[220px]">
-            {cards.map((card, i) => (
+            <AnimatePresence mode="wait">
               <motion.div
-                key={i}
-                className="absolute glass-card rounded-2xl overflow-hidden shadow-2xl"
-                style={{
-                  width: 136,
-                  left: card.left,
-                  top: i === 1 ? 12 : 0,
-                  zIndex: i === 0 ? 2 : 1,
-                  transformStyle: "preserve-3d",
-                }}
-                initial={{ opacity: 0, x: i === 0 ? -60 : 60, rotateY: i === 0 ? 15 : -15 }}
-                animate={{
-                  opacity: 1,
-                  x: card.x,
-                  rotateY: i === 0 ? 8 : -8,
-                  rotateX: 2,
-                  rotateZ: card.rotate,
-                }}
-                transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+                key={pairIndex}
+                className="absolute inset-0"
+                initial="enter"
+                animate="center"
+                exit="exit"
               >
-                <div className="h-[145px] bg-white flex items-center justify-center overflow-hidden">
-                  <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
-                </div>
-                <div className="p-2 space-y-1">
-                  <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
-                  <p className="text-primary text-[11px] font-bold">{card.price}</p>
-                  <span className="inline-block px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-medium">
-                    {card.category}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+                {/* Left card */}
+                <motion.div
+                  className="absolute"
+                  style={{
+                    left: "0%",
+                    top: 0,
+                    zIndex: 2,
+                    transformStyle: "preserve-3d",
+                  }}
+                  variants={{
+                    enter: cardVariants.enterLeft,
+                    center: cardVariants.centerLeft,
+                    exit: cardVariants.exitLeft,
+                  }}
+                >
+                  <ProductCardEl card={currentPair[0]} />
+                </motion.div>
 
-            {/* Handshake icon */}
+                {/* Right card */}
+                <motion.div
+                  className="absolute"
+                  style={{
+                    left: "40%",
+                    top: 12,
+                    zIndex: 1,
+                    transformStyle: "preserve-3d",
+                  }}
+                  variants={{
+                    enter: cardVariants.enterRight,
+                    center: cardVariants.centerRight,
+                    exit: cardVariants.exitRight,
+                  }}
+                >
+                  <ProductCardEl card={currentPair[1]} />
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Handshake icon - pulses on transition */}
             <motion.div
               className="absolute z-10 flex items-center justify-center"
               style={{ left: "42%", top: "35%" }}
@@ -113,8 +254,16 @@ const Index = () => {
               transition={{ delay: 0.8, duration: 0.5, type: "spring", stiffness: 200 }}
             >
               <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                key={`shake-${pairIndex}`}
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 15, -15, 0],
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: "easeInOut",
+                  times: [0, 0.3, 0.6, 1],
+                }}
               >
                 <div className="bg-primary text-primary-foreground rounded-full p-2.5 border-[5px] border-background shadow-lg shadow-primary/30">
                   <Handshake className="h-5 w-5" />
@@ -124,7 +273,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Description - extra top margin */}
+        {/* Description */}
         <motion.p
           initial="hidden"
           animate="visible"
