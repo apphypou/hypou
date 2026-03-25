@@ -248,7 +248,7 @@ const Index = () => {
             {/* Handshake icon - pulses on transition */}
             <motion.div
               className="absolute z-10 flex items-center justify-center"
-              style={{ left: "50%", top: "35%" }}
+              style={{ left: "46%", top: "35%" }}
               initial={{ opacity: 0, scale: 0.5, x: "-50%" }}
               animate={{ opacity: 1, scale: 1, x: "-50%" }}
               transition={{ delay: 0.8, duration: 0.5, type: "spring" as const, stiffness: 200 }}
