@@ -124,13 +124,13 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Description */}
+        {/* Description - extra top margin */}
         <motion.p
           initial="hidden"
           animate="visible"
           custom={2}
           variants={fadeUp}
-          className="text-muted-foreground text-[14px] font-light leading-relaxed max-w-xs mb-8"
+          className="text-muted-foreground text-[14px] font-light leading-relaxed max-w-xs mb-8 mt-4"
         >
           Troque o que tá parado por algo que você quer. Dê match, negocie e faça trocas de forma segura.
         </motion.p>
