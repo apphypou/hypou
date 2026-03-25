@@ -68,7 +68,7 @@ const Index = () => {
         </motion.div>
 
         {/* Product Cards */}
-        <div className="relative z-10 flex items-start justify-center mb-4" style={{ perspective: "800px" }}>
+        <div className="relative z-10 flex items-start justify-center mb-4 mt-4" style={{ perspective: "800px" }}>
           <div className="relative w-[260px] h-[220px]">
             {cards.map((card, i) => (
               <motion.div
