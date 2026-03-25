@@ -91,7 +91,7 @@ const Index = () => {
                 }}
                 transition={{ delay: card.delay, duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <div className="h-[100px] bg-white flex items-center justify-center overflow-hidden p-2">
+                <div className="h-[120px] bg-white flex items-center justify-center overflow-hidden p-1">
                   <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
                 </div>
                 <div className="p-2 space-y-1">
