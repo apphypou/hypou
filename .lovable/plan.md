@@ -1,53 +1,41 @@
 
 
-# Adicionar segunda fileira de cards + animacoes premium
+# Animacao de Swipe Automatico nos Cards da Welcome Screen
 
-## O que muda
+## Conceito
 
-Adicionar **2 cards extras** (PS5 e Notebook) em uma segunda fileira abaixo dos atuais, preenchendo o espaco vazio. Alem disso, adicionar animacoes que elevam a composicao visual.
+Transformar a area de cards estaticos em uma **vitrine animada** que simula swipes automaticos, mostrando diferentes produtos em loop. Dois cards empilhados fazem swipe simultaneo — o da frente sai pela lateral com rotacao enquanto o de tras sobe e assume a posicao principal, e um novo card entra por baixo. Isso comunica visualmente a mecanica core do app (trocar produtos) antes mesmo do usuario entrar.
 
 ```text
-┌─────────────────────────┐
-│     ┌──────┐ ┌──────┐   │  Fileira 1: Fone + Camiseta
-│     │ 🎧   │ │ 👕   │   │  (existentes)
-│     │Fone  │ │Camis │   │
-│     └──────┘ └──────┘   │
-│         ⇄               │
-│     ┌──────┐ ┌──────┐   │  Fileira 2: PS5 + Notebook
-│     │ 🎮   │ │ 💻   │   │  (novos, menores, mais sutis)
-│     │PS5   │ │Note  │   │
-│     └──────┘ └──────┘   │
-│                         │
-├─────────────────────────┤
-│ ● TROQUE COM SEGURANÇA  │
-│ Bem-vindo ao Hypou      │
-│ ...                     │
-└─────────────────────────┘
+Estado 1:          Swipe:              Estado 2:
+┌──────┐ ┌──────┐   ──────┐ ┌──────┐   ┌──────┐ ┌──────┐
+│ PS5  │ │ Note │   │sai→ │ │ sobe │   │ Note │ │ Fone │
+└──────┘ └──────┘   ──────┘ └──────┘   └──────┘ └──────┘
+     🤝                  🤝                  🤝
+                    ← novo entra
 ```
 
-## Cards novos
+## Mecanica da Animacao
 
-1. **PS5** - icone `Gamepad2`, gradiente azul/indigo, preco "R$ 2.500", categoria "Games"
-2. **Notebook Dell** - icone `Laptop`, gradiente verde-esmeralda/teal, preco "R$ 3.200", categoria "Eletrônicos"
+1. **Array expandido de produtos** — 4-5 pares de produtos (usando as 2 imagens reais + cards com icones/gradientes para os demais: Fone, Camiseta, Bicicleta, Camera)
+2. **Ciclo a cada ~3.5s** — O par atual faz swipe out (card esquerdo sai pela esquerda com rotacao, card direito sai pela direita), enquanto o proximo par entra de baixo com fade+scale
+3. **AnimatePresence** do Framer Motion para orquestrar exit/enter com transicoes suaves
+4. **Handshake icon** faz um pulse + rotate sutil durante a transicao, reforçando a ideia de troca
+5. **Loop infinito** — volta ao primeiro par apos o ultimo
 
-Os cards da segunda fileira serao **ligeiramente menores** (140px largura vs 160px) e com **opacidade levemente reduzida** (0.85) para criar hierarquia visual e profundidade — a fileira de tras parecendo "mais distante".
+## Detalhes Visuais Premium
 
-## Ideias de animacao (frontend senior)
+- **Exit animation**: translateX(+-200) + rotateZ(+-15deg) + opacity 0, duração 0.6s com ease-out
+- **Enter animation**: translateY(40) + scale(0.9) + opacity 0 → posicao final, duração 0.5s com spring
+- **Cards sem imagem real**: usam gradiente colorido + icone Lucide centralizado (Headphones, Shirt, Bike, Camera) para manter variedade visual sem precisar de assets
+- **Micro-interacao**: leve glow cyan pulsa no momento da transicao
 
-1. **Floating sutil nos cards** - Apos a animacao de entrada, os 4 cards ganham um micro-float continuo (`translateY: [0, -6, 0]`) com duracao e delay diferentes, criando um efeito "respirando" organico. Os cards nunca ficam estaticos.
-
-2. **Stagger cascata** - Os cards da segunda fileira entram 0.3s depois dos primeiros, vindos de baixo com fade, criando uma cascata natural de cima pra baixo.
-
-3. **Swap icon com rotacao** - O icone de swap ganha uma rotacao de 180° a cada 3s alem do pulse, simulando uma troca acontecendo.
-
-4. **Glow que acompanha** - Intensificar o radial gradient para cobrir a area das 2 fileiras, nao so a primeira.
-
-## Detalhes tecnicos
+## Detalhes Tecnicos
 
 - **Arquivo**: `src/pages/Index.tsx`
-- **Icones novos**: `Gamepad2` e `Laptop` do lucide-react
-- **Container**: Aumentar altura do container de `h-[320px]` para `h-[440px]` para acomodar a segunda fileira
-- **Segunda fileira**: Posicionada com `top: 220px`, cards com rotacao invertida em relacao a primeira fileira (direito -3°, esquerdo +3°) para variar
-- **Floating animation**: `motion.div` com `animate={{ y: [0, -6, 0] }}` e `transition={{ duration: 3+i*0.5, repeat: Infinity }}`
-- **Swap icon rotation**: Adicionar `animate={{ rotate: [0, 180, 180, 360], scale: [1, 1.15, 1] }}`
+- **Deps**: `framer-motion` (AnimatePresence, ja instalado), `lucide-react` (icones extras)
+- **State**: `useState` para indice do par atual, `useEffect` com `setInterval` de 3500ms para ciclar
+- **Estrutura**: Array de pares `[{left, right}, ...]`, cada item tem `image | icon + gradient`, nome, preco, categoria
+- **AnimatePresence mode="wait"** envolvendo o par de cards, com key baseada no indice
+- **Pausa ao sair da aba**: usar `document.hidden` para pausar o intervalo e evitar consumo desnecessario
 
