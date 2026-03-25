@@ -90,11 +90,11 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-20 flex flex-col w-full px-6 pb-10">
+      <div className="relative z-20 flex flex-col items-center w-full px-6 pb-10 text-center">
         <motion.div
           initial="hidden"
           animate="visible"
-          className="mb-8 space-y-5"
+          className="mb-8 space-y-5 flex flex-col items-center"
         >
           {/* Badge */}
           <motion.div custom={0} variants={fadeUp}>
