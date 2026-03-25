@@ -132,7 +132,7 @@ const Index = () => {
         <motion.div
           initial="hidden"
           animate="visible"
-          className="flex flex-col gap-3.5"
+          className="flex flex-col gap-3.5 w-full max-w-xs"
         >
           <motion.div custom={3} variants={fadeUp}>
             <NeonButton variant="primary" icon={ArrowRight} onClick={() => navigate("/cadastro")}>
