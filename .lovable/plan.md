@@ -1,41 +1,78 @@
 
 
-# Animacao de Swipe Automatico nos Cards da Welcome Screen
+# Pagina de Lista de Espera — Pre-Lancamento Hypou
 
-## Conceito
+## Conceito de Marketing
 
-Transformar a area de cards estaticos em uma **vitrine animada** que simula swipes automaticos, mostrando diferentes produtos em loop. Dois cards empilhados fazem swipe simultaneo — o da frente sai pela lateral com rotacao enquanto o de tras sobe e assume a posicao principal, e um novo card entra por baixo. Isso comunica visualmente a mecanica core do app (trocar produtos) antes mesmo do usuario entrar.
+Uma landing page de pre-lancamento que gera **FOMO e curiosidade**. A estrategia e criar uma atmosfera de **clube exclusivo** — quem entra na lista esta "por dentro" antes de todo mundo. Elementos-chave:
+
+- **Contagem regressiva** com timer animado (gera urgencia)
+- **Revelacao parcial** — mostrar fragments do app com blur/glitch, como se estivesse "vazando"
+- **Contador social** — mostrar quantas pessoas ja estao na fila (prova social)
+- **Posicao na fila** — apos cadastro, mostrar "Voce e o #247" (gamificacao)
+- **Micro-animacoes** de particulas/glow que reforçam a estetica neon/cyberpunk da marca
+
+## Estrutura da Pagina
 
 ```text
-Estado 1:          Swipe:              Estado 2:
-┌──────┐ ┌──────┐   ──────┐ ┌──────┐   ┌──────┐ ┌──────┐
-│ PS5  │ │ Note │   │sai→ │ │ sobe │   │ Note │ │ Fone │
-└──────┘ └──────┘   ──────┘ └──────┘   └──────┘ └──────┘
-     🤝                  🤝                  🤝
-                    ← novo entra
+┌─────────────────────────────────┐
+│  ✦ Algo grande esta chegando    │  ← badge animado com pulse
+│                                 │
+│      H Y P O U                  │  ← logo grande com glow intenso
+│   A nova forma de trocar        │  ← tagline com typing effect
+│                                 │
+│  ┌─ 12 : 05 : 33 : 07 ──┐     │  ← countdown timer neon
+│  │ dias  hrs  min  seg   │     │
+│  └───────────────────────┘     │
+│                                 │
+│  ┌──────────────────────┐      │
+│  │ 📧 Seu melhor email  │      │  ← input com glow on focus
+│  └──────────────────────┘      │
+│  [ GARANTIR MINHA VAGA →]      │  ← CTA neon pulsante
+│                                 │
+│  🔥 1.247 pessoas na fila      │  ← contador social animado
+│                                 │
+│  ┌─────┐ ┌─────┐ ┌─────┐      │  ← preview cards com blur
+│  │░░░░░│ │░░░░░│ │░░░░░│      │     efeito "leak" do app
+│  └─────┘ └─────┘ └─────┘      │
+│                                 │
+│  "Troque. Economize. Conquiste" │
+│                                 │
+│   IG  •  TT  •  X              │  ← redes sociais
+└─────────────────────────────────┘
 ```
 
-## Mecanica da Animacao
+**Pos-cadastro**: a pagina transiciona (sem reload) para um estado de confirmacao mostrando posicao na fila, opcao de compartilhar para "subir na fila", e um teaser animado do app.
 
-1. **Array expandido de produtos** — 4-5 pares de produtos (usando as 2 imagens reais + cards com icones/gradientes para os demais: Fone, Camiseta, Bicicleta, Camera)
-2. **Ciclo a cada ~3.5s** — O par atual faz swipe out (card esquerdo sai pela esquerda com rotacao, card direito sai pela direita), enquanto o proximo par entra de baixo com fade+scale
-3. **AnimatePresence** do Framer Motion para orquestrar exit/enter com transicoes suaves
-4. **Handshake icon** faz um pulse + rotate sutil durante a transicao, reforçando a ideia de troca
-5. **Loop infinito** — volta ao primeiro par apos o ultimo
+## Detalhes de UX/UI
 
-## Detalhes Visuais Premium
-
-- **Exit animation**: translateX(+-200) + rotateZ(+-15deg) + opacity 0, duração 0.6s com ease-out
-- **Enter animation**: translateY(40) + scale(0.9) + opacity 0 → posicao final, duração 0.5s com spring
-- **Cards sem imagem real**: usam gradiente colorido + icone Lucide centralizado (Headphones, Shirt, Bike, Camera) para manter variedade visual sem precisar de assets
-- **Micro-interacao**: leve glow cyan pulsa no momento da transicao
+1. **Background**: mesh gradient escuro com particulas flutuantes sutis (dots cyan com opacity baixa, animados com CSS)
+2. **Logo**: versao oversized do HypouLogo com text-glow intensificado e animacao de "respiro" (scale pulse suave)
+3. **Countdown**: 4 blocos glass-card com numeros grandes, separados por ":", cada digito faz flip animation ao mudar
+4. **Input de email**: borda transparente que ganha glow cyan ao focar, estilo glassmorphism
+5. **CTA**: NeonButton "primary" com texto "Garantir minha vaga" e shimmer effect continuo
+6. **Contador social**: numero que incrementa com animacao (contagem falsa local que sobe lentamente para criar urgencia)
+7. **Preview leak**: 3 mini-cards do app com heavy blur (backdrop-blur-xl) + overlay "Em breve", sugere o conteudo sem revelar
+8. **Particulas**: 15-20 circulos pequenos com opacity 0.1-0.3 flutuando com CSS animation (sem lib extra)
 
 ## Detalhes Tecnicos
 
-- **Arquivo**: `src/pages/Index.tsx`
-- **Deps**: `framer-motion` (AnimatePresence, ja instalado), `lucide-react` (icones extras)
-- **State**: `useState` para indice do par atual, `useEffect` com `setInterval` de 3500ms para ciclar
-- **Estrutura**: Array de pares `[{left, right}, ...]`, cada item tem `image | icon + gradient`, nome, preco, categoria
-- **AnimatePresence mode="wait"** envolvendo o par de cards, com key baseada no indice
-- **Pausa ao sair da aba**: usar `document.hidden` para pausar o intervalo e evitar consumo desnecessario
+- **Nova pagina**: `src/pages/ListaEspera.tsx`
+- **Nova rota**: `/lista-espera` em `App.tsx` (publica)
+- **Rota index**: substituir temporariamente a rota `/` para apontar para ListaEspera (ou adicionar redirect)
+- **Tabela Supabase**: `waitlist` com colunas `id`, `email`, `position`, `referral_code`, `referred_by`, `created_at`
+- **Migracao**: criar tabela + RLS (insert publico, select apenas pelo proprio email)
+- **Deps**: apenas framer-motion (ja instalado) + lucide-react
+- **Countdown target**: data configuravel como constante (ex: 30 dias a partir de hoje)
+- **Estado pos-registro**: useState local alterna entre formulario e tela de confirmacao
+- **Animacoes**: framer-motion para entrada dos elementos, CSS keyframes para particulas e shimmer
+
+## Fluxo do Usuario
+
+1. Usuario acessa `/lista-espera`
+2. Ve a contagem regressiva e o hype visual
+3. Insere email e clica "Garantir minha vaga"
+4. Email e salvo na tabela `waitlist` no Supabase
+5. Tela transiciona para confirmacao com posicao na fila
+6. Opcao de compartilhar link com referral code para "furar a fila"
 
