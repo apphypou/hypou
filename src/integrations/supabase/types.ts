@@ -537,11 +537,39 @@ export type Database = {
           },
         ]
       }
+      waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          position: number
+          referral_code: string
+          referred_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          position: number
+          referral_code?: string
+          referred_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          position?: number
+          referral_code?: string
+          referred_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_waitlist_position: { Args: never; Returns: number }
       increment_video_view: { Args: { p_video_id: string }; Returns: undefined }
       is_conversation_participant: {
         Args: { _conversation_id: string }
