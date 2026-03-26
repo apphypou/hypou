@@ -245,10 +245,9 @@ const ListaEspera = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-lg sm:text-xl text-slate-400 font-medium h-7"
+          className="text-base text-slate-400 font-medium"
         >
-          {tagline}
-          <span className="animate-pulse text-primary">|</span>
+          Troque, economize e conquiste.
         </motion.p>
 
         {/* Countdown */}
@@ -346,39 +345,14 @@ const ListaEspera = () => {
           </span>
         </motion.div>
 
-        {/* Leak preview cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.8 }}
-          className="flex items-center gap-3 w-full justify-center"
-        >
-          {leakCards.map((card, i) => (
-            <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2 + i * 0.15 }}
-              className="relative w-24 h-32 sm:w-28 sm:h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm"
-            >
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient}`} />
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <card.icon className="w-6 h-6 text-primary/70" />
-                <span className="text-[10px] font-bold text-primary/50 tracking-widest uppercase">Em breve</span>
-                <span className="text-[10px] font-semibold text-slate-500">{card.label}</span>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
         {/* Footer tagline */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 2.5 }}
-          className="text-sm text-slate-400 font-medium tracking-wide"
+          transition={{ delay: 1.8 }}
+          className="text-xs text-slate-300 font-medium tracking-wide"
         >
-          Troque. Economize. Conquiste.
+          Em breve para todos.
         </motion.p>
       </div>
 
