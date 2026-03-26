@@ -67,8 +67,8 @@ const useCountdown = (target: Date) => {
 };
 
 const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
-  <div className="flex flex-col items-center gap-1">
-    <div className="glass-card rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center border border-primary/20">
+  <div className="flex flex-col items-center gap-1.5">
+    <div className="rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-slate-50 border border-slate-200 shadow-sm">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
@@ -82,7 +82,7 @@ const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
         </motion.span>
       </AnimatePresence>
     </div>
-    <span className="text-[10px] sm:text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+    <span className="text-[10px] sm:text-xs uppercase tracking-widest text-slate-400 font-semibold">
       {label}
     </span>
   </div>
@@ -211,8 +211,8 @@ const ListaEspera = () => {
 
       {/* Mesh gradient bg */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full bg-primary/5 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-15%] w-[60%] h-[60%] rounded-full bg-primary/8 blur-[100px]" />
+        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full bg-primary/[0.04] blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-15%] w-[60%] h-[60%] rounded-full bg-primary/[0.06] blur-[100px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-lg mx-auto px-6 py-12 flex flex-col items-center gap-8">
@@ -221,7 +221,7 @@ const ListaEspera = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5"
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/[0.06]"
         >
           <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
           <span className="text-xs font-semibold text-primary tracking-wide">Algo grande está chegando</span>
@@ -237,8 +237,7 @@ const ListaEspera = () => {
           <div className="animate-pulse-slow">
             <HypouLogo size="lg" className="text-5xl sm:text-6xl" />
           </div>
-          {/* Glow behind logo */}
-          <div className="absolute inset-0 -z-10 blur-3xl bg-primary/20 rounded-full scale-150" />
+          <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
         </motion.div>
 
         {/* Tagline with typing */}
@@ -246,7 +245,7 @@ const ListaEspera = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-lg sm:text-xl text-muted-foreground font-medium h-7"
+          className="text-lg sm:text-xl text-slate-400 font-medium h-7"
         >
           {tagline}
           <span className="animate-pulse text-primary">|</span>
@@ -260,11 +259,11 @@ const ListaEspera = () => {
           className="flex items-center gap-3 sm:gap-4"
         >
           <CountdownBlock value={countdown.days} label="dias" />
-          <span className="text-2xl text-primary/40 font-bold mt-[-20px]">:</span>
+          <span className="text-2xl text-primary/50 font-bold mt-[-20px]">:</span>
           <CountdownBlock value={countdown.hours} label="hrs" />
-          <span className="text-2xl text-primary/40 font-bold mt-[-20px]">:</span>
+          <span className="text-2xl text-primary/50 font-bold mt-[-20px]">:</span>
           <CountdownBlock value={countdown.minutes} label="min" />
-          <span className="text-2xl text-primary/40 font-bold mt-[-20px]">:</span>
+          <span className="text-2xl text-primary/50 font-bold mt-[-20px]">:</span>
           <CountdownBlock value={countdown.seconds} label="seg" />
         </motion.div>
 
@@ -287,7 +286,7 @@ const ListaEspera = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Seu melhor email"
-                  className="w-full h-14 pl-12 pr-4 rounded-2xl bg-card/50 border border-border/50 text-foreground placeholder:text-muted-foreground font-medium focus:outline-none focus:border-primary/50 focus:shadow-[0_0_20px_hsl(var(--primary)/0.15)] transition-all duration-300"
+                  className="w-full h-14 pl-12 pr-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
                 />
               </div>
               <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
@@ -301,8 +300,8 @@ const ListaEspera = () => {
               animate={{ opacity: 1, scale: 1 }}
               className="w-full flex flex-col items-center gap-5"
             >
-              <div className="glass-card rounded-3xl p-6 w-full text-center border border-primary/20">
-                <p className="text-muted-foreground text-sm mb-1">Sua posição na fila</p>
+              <div className="rounded-3xl p-6 w-full text-center border border-slate-200 bg-slate-50 shadow-sm">
+                <p className="text-slate-400 text-sm mb-1">Sua posição na fila</p>
                 <motion.p
                   initial={{ scale: 0.5 }}
                   animate={{ scale: 1 }}
@@ -311,13 +310,13 @@ const ListaEspera = () => {
                 >
                   #{position}
                 </motion.p>
-                <p className="text-xs text-muted-foreground mt-2">Compartilhe para subir na fila!</p>
+                <p className="text-xs text-slate-400 mt-2">Compartilhe para subir na fila!</p>
               </div>
 
               <div className="w-full flex gap-3">
                 <button
                   onClick={handleCopy}
-                  className="flex-1 h-12 rounded-xl bg-card/50 border border-border/50 flex items-center justify-center gap-2 text-sm font-semibold text-foreground hover:border-primary/30 transition-all"
+                  className="flex-1 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700 hover:border-primary/40 transition-all"
                 >
                   {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
                   {copied ? "Copiado!" : "Copiar link"}
@@ -339,11 +338,11 @@ const ListaEspera = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.5 }}
-          className="flex items-center gap-2 text-muted-foreground"
+          className="flex items-center gap-2 text-slate-400"
         >
           <Flame className="w-4 h-4 text-orange-400" />
           <span className="text-sm font-semibold">
-            <span className="text-foreground">{socialCount.toLocaleString("pt-BR")}</span> pessoas na fila
+            <span className="text-slate-600">{socialCount.toLocaleString("pt-BR")}</span> pessoas na fila
           </span>
         </motion.div>
 
@@ -360,15 +359,13 @@ const ListaEspera = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 2 + i * 0.15 }}
-              className="relative w-24 h-32 sm:w-28 sm:h-36 rounded-2xl overflow-hidden border border-border/30"
+              className="relative w-24 h-32 sm:w-28 sm:h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-sm"
             >
-              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} backdrop-blur-xl`} />
-              <div className="absolute inset-0 backdrop-blur-xl bg-background/40 flex flex-col items-center justify-center gap-2">
-                <card.icon className="w-6 h-6 text-primary/60" />
-                <span className="text-[10px] font-semibold text-muted-foreground">{card.label}</span>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-primary/40 tracking-widest uppercase">Em breve</span>
+              <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient}`} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <card.icon className="w-6 h-6 text-primary/70" />
+                <span className="text-[10px] font-bold text-primary/50 tracking-widest uppercase">Em breve</span>
+                <span className="text-[10px] font-semibold text-slate-500">{card.label}</span>
               </div>
             </motion.div>
           ))}
@@ -379,7 +376,7 @@ const ListaEspera = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.5 }}
-          className="text-sm text-muted-foreground font-medium tracking-wide"
+          className="text-sm text-slate-400 font-medium tracking-wide"
         >
           Troque. Economize. Conquiste.
         </motion.p>
