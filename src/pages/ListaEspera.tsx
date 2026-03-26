@@ -22,7 +22,7 @@ const Particles = () => {
         size: 2 + Math.random() * 4,
         duration: 12 + Math.random() * 18,
         delay: Math.random() * 8,
-        opacity: 0.08 + Math.random() * 0.18,
+        opacity: 0.04 + Math.random() * 0.08,
       })),
     []
   );
@@ -102,9 +102,9 @@ const useFakeCounter = (base: number) => {
 
 // ── PREVIEW LEAK CARDS ──────────────────────────────────────────────
 const leakCards = [
-  { icon: Gamepad2, label: "Console", gradient: "from-purple-500/30 to-indigo-500/30" },
-  { icon: Headphones, label: "Fone BT", gradient: "from-cyan-500/30 to-blue-500/30" },
-  { icon: Watch, label: "Smartwatch", gradient: "from-emerald-500/30 to-teal-500/30" },
+  { icon: Gamepad2, label: "Console", gradient: "from-primary/10 to-primary/5" },
+  { icon: Headphones, label: "Fone BT", gradient: "from-primary/8 to-slate-100" },
+  { icon: Watch, label: "Smartwatch", gradient: "from-slate-100 to-primary/10" },
 ];
 
 // ── TYPING EFFECT ───────────────────────────────────────────────────
@@ -280,7 +280,7 @@ const ListaEspera = () => {
               className="w-full flex flex-col gap-4"
             >
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
                   value={email}
