@@ -235,7 +235,7 @@ const ListaEspera = () => {
           className="relative"
         >
           <div className="animate-pulse-slow">
-            <HypouLogo size="lg" className="text-5xl sm:text-6xl" />
+            <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:text-slate-800" />
           </div>
           <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
         </motion.div>
