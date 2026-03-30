@@ -1,13 +1,16 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, ShieldAlert, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const AdminReports = () => {
+  const [search, setSearch] = useState("");
   const { data: reports, isLoading } = useQuery({
     queryKey: ["admin-reports"],
     queryFn: async () => {
@@ -28,36 +31,56 @@ const AdminReports = () => {
     );
   }
 
+  const filtered = (reports || []).filter(
+    (r) =>
+      r.reason.toLowerCase().includes(search.toLowerCase()) ||
+      (r.description || "").toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <ShieldAlert className="h-5 w-5 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Reports / Moderação</h1>
-        <Badge variant="secondary" className="ml-2">{reports?.length || 0}</Badge>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <div className="rounded-lg bg-red-500/10 p-2">
+            <ShieldAlert className="h-5 w-5 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Reports / Moderação</h1>
+          <Badge variant="secondary" className="ml-1 rounded-full">{reports?.length || 0}</Badge>
+        </div>
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar report..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 rounded-xl border-border/50"
+          />
+        </div>
       </div>
 
-      <Card>
+      <Card className="border-border/50 overflow-hidden">
         <CardContent className="p-0">
-          {(reports?.length || 0) === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm">
-              Nenhum report encontrado.
+          {filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <ShieldAlert className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">Nenhum report encontrado</p>
             </div>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Reporter</TableHead>
-                  <TableHead>Reportado</TableHead>
-                  <TableHead>Data</TableHead>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Motivo</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Descrição</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Reporter</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Reportado</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Data</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(reports || []).map((report) => (
-                  <TableRow key={report.id}>
+                {filtered.map((report) => (
+                  <TableRow key={report.id} className="transition-colors duration-150">
                     <TableCell>
-                      <Badge variant="destructive">{report.reason}</Badge>
+                      <Badge variant="destructive" className="rounded-full text-[11px]">{report.reason}</Badge>
                     </TableCell>
                     <TableCell className="text-sm max-w-[200px] truncate text-muted-foreground">
                       {report.description || "—"}
