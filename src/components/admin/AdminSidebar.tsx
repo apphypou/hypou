@@ -23,7 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { HypouLogo } from "@/components/HypouLogo";
+import HypouLogo from "@/components/HypouLogo";
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
