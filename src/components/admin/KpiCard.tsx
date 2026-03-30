@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface KpiCardProps {
   title: string;
@@ -7,20 +8,35 @@ interface KpiCardProps {
   icon: LucideIcon;
   description?: string;
   trend?: "up" | "down" | "neutral";
+  colorClass?: string;
 }
 
-export function KpiCard({ title, value, icon: Icon, description }: KpiCardProps) {
+const defaultColorClass = "bg-primary/10 text-primary";
+
+export function KpiCard({ title, value, icon: Icon, description, trend, colorClass = defaultColorClass }: KpiCardProps) {
   return (
-    <Card>
-      <CardContent className="p-4 flex items-center gap-4">
-        <div className="rounded-lg bg-primary/10 p-3">
-          <Icon className="h-5 w-5 text-primary" />
+    <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 overflow-hidden">
+      <CardContent className="p-5 flex items-start gap-4">
+        <div className={cn("rounded-xl p-3 transition-transform duration-300 group-hover:scale-110", colorClass)}>
+          <Icon className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground font-medium truncate">{title}</p>
-          <p className="text-2xl font-bold text-foreground">{typeof value === "number" ? value.toLocaleString("pt-BR") : value}</p>
+          <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider truncate">{title}</p>
+          <div className="flex items-baseline gap-2 mt-1">
+            <p className="text-2xl font-bold text-foreground tabular-nums">
+              {typeof value === "number" ? value.toLocaleString("pt-BR") : value}
+            </p>
+            {trend && trend !== "neutral" && (
+              <span className={cn(
+                "inline-flex items-center text-xs font-medium",
+                trend === "up" ? "text-emerald-500" : "text-red-500"
+              )}>
+                {trend === "up" ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
+              </span>
+            )}
+          </div>
           {description && (
-            <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">{description}</p>
           )}
         </div>
       </CardContent>

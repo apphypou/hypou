@@ -1,14 +1,17 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, ListOrdered, Download } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, ListOrdered, Download, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const AdminWaitlist = () => {
+  const [search, setSearch] = useState("");
   const { data: entries, isLoading } = useQuery({
     queryKey: ["admin-waitlist"],
     queryFn: async () => {
@@ -44,46 +47,72 @@ const AdminWaitlist = () => {
     );
   }
 
+  const filtered = (entries || []).filter(
+    (e) =>
+      e.email.toLowerCase().includes(search.toLowerCase()) ||
+      e.referral_code.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <ListOrdered className="h-5 w-5 text-primary" />
+          <div className="rounded-lg bg-orange-500/10 p-2">
+            <ListOrdered className="h-5 w-5 text-orange-500" />
+          </div>
           <h1 className="text-2xl font-bold text-foreground">Waitlist</h1>
-          <Badge variant="secondary" className="ml-2">{entries?.length || 0}</Badge>
+          <Badge variant="secondary" className="ml-1 rounded-full">{entries?.length || 0}</Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCSV}>
-          <Download className="h-4 w-4 mr-2" />
-          Exportar CSV
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar email..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 rounded-xl border-border/50"
+            />
+          </div>
+          <Button variant="outline" size="sm" onClick={exportCSV} className="rounded-xl">
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
+        </div>
       </div>
 
-      <Card>
+      <Card className="border-border/50 overflow-hidden">
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>#</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Código Referral</TableHead>
-                <TableHead>Indicado por</TableHead>
-                <TableHead>Data</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(entries || []).map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="font-bold">{entry.position}</TableCell>
-                  <TableCell className="font-medium">{entry.email}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{entry.referral_code}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{entry.referred_by || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
-                  </TableCell>
+          {filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <ListOrdered className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">Nenhum registro encontrado</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">#</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Email</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Código Referral</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Indicado por</TableHead>
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold">Data</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((entry) => (
+                  <TableRow key={entry.id} className="transition-colors duration-150">
+                    <TableCell className="font-bold tabular-nums">{entry.position}</TableCell>
+                    <TableCell className="font-medium text-sm">{entry.email}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{entry.referral_code}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">{entry.referred_by || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatDistanceToNow(new Date(entry.created_at), { addSuffix: true, locale: ptBR })}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
