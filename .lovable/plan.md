@@ -1,135 +1,74 @@
 
 
-# Painel Administrativo Hypou — Plano de Arquitetura
+# Redesign Estetico do Painel Admin Hypou
 
-## Visao Geral
+## Diagnostico Atual
 
-Um painel admin completo acessivel via `/admin`, protegido por roles (tabela `user_roles`), com dashboard de monitoracao em tempo real, gestao de usuarios, itens, matches, waitlist e moderacao.
+O painel esta funcional mas visualmente generico — cards sem hierarquia visual, sidebar basica, header plano, tabelas sem polish, graficos sem refinamento. Falta identidade visual alinhada com a marca Hypou.
 
-## 1. Modulos Necessarios
+## Mudancas Propostas
 
-### 1.1 Dashboard Principal (Monitoracao em Tempo Real)
-- **KPIs em cards**: total de usuarios, itens ativos, matches do dia, taxa de conversao, usuarios online
-- **Graficos (Recharts)**: cadastros por dia (ultimos 30d), matches por dia, itens por categoria (pizza), crescimento da waitlist
-- **Feed de atividade em tempo real**: novos cadastros, novos matches, novos itens, novas mensagens — via Supabase Realtime (subscribe em `profiles`, `matches`, `items`, `messages`)
-- **Metricas de engajamento**: swipes/dia, mensagens/dia, tempo medio de resposta no chat
+### 1. Sidebar Premium
+**Arquivo**: `AdminSidebar.tsx`
+- Fundo com gradiente sutil (de sidebar-background para um tom levemente mais escuro)
+- Logo Hypou centralizada no topo com separador elegante abaixo
+- Menu items com border-radius maior (rounded-xl), transicao suave, e indicador lateral ciano (barra de 3px na esquerda) no item ativo em vez de apenas bg-primary/10
+- Icones com tamanho levemente maior (h-5 w-5) e spacing refinado
+- Hover com efeito de glow sutil no modo escuro
+- Footer com avatar do admin + nome truncado ao lado do botao sair
 
-### 1.2 Gestao de Usuarios
-- Tabela com lista de usuarios (nome, email via auth admin, localizacao, data de cadastro, status)
-- Detalhes do usuario: itens, matches, avaliacoes, reports
-- Acoes: bloquear/desbloquear, ver atividade
+### 2. Header Contextual
+**Arquivo**: `AdminLayout.tsx`
+- Remover texto generico "Painel Administrativo"
+- Adicionar breadcrumb dinamico baseado na rota atual (ex: "Admin / Dashboard")
+- Adicionar avatar do usuario logado + nome no canto direito do header
+- Adicionar toggle de tema (light/dark) no header
+- Background com `backdrop-blur-lg` e borda inferior mais sutil
 
-### 1.3 Gestao de Itens
-- Tabela com todos os itens (nome, categoria, valor, status, dono)
-- Filtros por categoria, status, faixa de valor
-- Acoes: desativar item, ver detalhes
+### 3. KPI Cards Redesign
+**Arquivo**: `KpiCard.tsx`
+- Cada card com gradiente de fundo unico e sutil baseado na cor semantica do KPI (azul para usuarios, verde para itens, amber para matches, etc.)
+- Icone dentro de circulo com gradiente (nao apenas bg-primary/10 para todos)
+- Adicionar indicador de trend (seta para cima/baixo com cor verde/vermelho) usando a prop `trend` que ja existe mas nao e usada
+- Tipografia do valor com `tabular-nums` para alinhamento numerico
+- Hover com leve elevacao (shadow transition)
 
-### 1.4 Gestao de Matches/Propostas
-- Lista de matches com status (pending, accepted, rejected)
-- Metricas: taxa de aceitacao, tempo medio de resposta
+### 4. Graficos com Mais Polish
+**Arquivo**: `AdminDashboard.tsx`
+- Cards de graficos com header mais elaborado: icone + titulo + badge com periodo
+- Gradientes nos fills dos graficos (linearGradient SVG em vez de cor solida com opacity)
+- Grid lines mais sutis (stroke-dasharray, cor muted)
+- Tooltips customizados com border-radius maior e sombra
+- Pie chart como donut (innerRadius) com label central mostrando total
 
-### 1.5 Moderacao
-- Reports pendentes com detalhes
-- Acoes: resolver report, bloquear usuario reportado
-- Fila de moderacao com prioridade
+### 5. Tabelas Refinadas
+**Arquivos**: `AdminUsuarios.tsx`, `AdminItens.tsx`, `AdminMatches.tsx`, `AdminReports.tsx`, `AdminWaitlist.tsx`
+- Header da tabela com bg-muted/30 e texto uppercase tracking-wider
+- Rows com hover mais pronunciado e transicao suave
+- Avatares maiores (h-10 w-10) com ring de borda sutil
+- Badges com cores semanticas mais vibrantes e rounded-full
+- Adicionar barra de busca/filtro no topo de cada tabela (input com icone Search)
+- Empty state com ilustracao (icone grande + texto) em vez de tabela vazia
 
-### 1.6 Waitlist
-- Total de inscritos, crescimento diario
-- Tabela com emails, posicao, referral code, data
-- Exportar CSV
+### 6. Feed de Atividade
+**Arquivo**: `RealtimeActivityFeed.tsx`
+- Timeline vertical com linha conectora entre eventos (border-l)
+- Icones de evento dentro de circulos com borda, posicionados sobre a linha
+- Animacao de entrada (fade-in slide-up) para novos eventos
+- Separacao visual por "agora", "5 min atras", "1h atras" com headers de tempo
 
-### 1.7 Configuracoes do Sistema
-- Parametros globais (raio de busca padrao, limites)
-- Gestao de categorias
+### 7. Espacamento e Hierarquia Global
+**Arquivo**: `AdminDashboard.tsx` + `AdminLayout.tsx`
+- Secoes do dashboard com titulos de secao (ex: "Visao Geral", "Atividade", "Graficos") com icone e linha separadora
+- Main area com max-width para nao esticar demais em telas largas (max-w-7xl mx-auto)
+- Gap entre secoes aumentado para 8 (space-y-8)
+- Background do main area levemente diferente do sidebar (bg-muted/20 ou padrao sutil)
 
-## 2. Arquitetura Tecnica
+## Detalhes Tecnicos
 
-### 2.1 Autenticacao Admin (Seguranca)
-
-**Tabela `user_roles`** seguindo o padrao do sistema:
-
-```sql
-CREATE TYPE public.app_role AS ENUM ('admin', 'moderator', 'user');
-
-CREATE TABLE public.user_roles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role app_role NOT NULL,
-  UNIQUE (user_id, role)
-);
-
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-
--- Funcao security definer para checar role
-CREATE FUNCTION public.has_role(_user_id uuid, _role app_role) ...
-```
-
-### 2.2 Estrutura de Arquivos
-
-```text
-src/
-├── pages/
-│   └── admin/
-│       ├── AdminDashboard.tsx      ← Dashboard com KPIs e graficos
-│       ├── AdminUsuarios.tsx       ← Gestao de usuarios
-│       ├── AdminItens.tsx          ← Gestao de itens
-│       ├── AdminMatches.tsx        ← Gestao de matches
-│       ├── AdminReports.tsx        ← Moderacao
-│       ├── AdminWaitlist.tsx       ← Gestao da waitlist
-│       └── AdminLayout.tsx         ← Layout com sidebar
-├── components/admin/
-│       ├── AdminSidebar.tsx        ← Sidebar com navegacao
-│       ├── AdminProtectedRoute.tsx ← Guard que verifica role admin
-│       ├── RealtimeActivityFeed.tsx← Feed de atividade ao vivo
-│       ├── KpiCard.tsx             ← Card de metrica
-│       └── AdminDataTable.tsx      ← Tabela reutilizavel com paginacao
-├── hooks/
-│       ├── useAdminStats.ts        ← Query de estatisticas agregadas
-│       └── useRealtimeActivity.ts  ← Subscribe Realtime para feed
-```
-
-### 2.3 Rotas
-
-```text
-/admin              → Dashboard
-/admin/usuarios     → Gestao de usuarios
-/admin/itens        → Gestao de itens
-/admin/matches      → Matches e propostas
-/admin/reports      → Moderacao
-/admin/waitlist     → Lista de espera
-```
-
-Todas protegidas por `AdminProtectedRoute` que verifica `has_role(uid, 'admin')`.
-
-### 2.4 Monitoracao em Tempo Real (Detalhe)
-
-- **Supabase Realtime channels** em `profiles`, `items`, `matches`, `messages` para o feed de atividade
-- **Polling a cada 30s** para KPIs agregados (COUNT queries via edge function com service role)
-- **Edge Function `admin-stats`**: retorna contagens agregadas (usa service role key para bypassar RLS)
-- **Graficos com Recharts** (ja disponivel no projeto via `chart.tsx`)
-
-### 2.5 Edge Function para Dados Admin
-
-Uma edge function `admin-stats` que valida JWT + role admin e retorna:
-- Total usuarios, itens ativos, matches, mensagens
-- Dados agrupados por dia para graficos
-- Reports pendentes count
-
-Necessaria porque RLS nao permite SELECT global para dados de outros usuarios.
-
-## 3. Ordem de Implementacao
-
-1. Migration: criar `user_roles` + `has_role()` + atribuir role admin ao seu usuario
-2. `AdminProtectedRoute` + `AdminLayout` com sidebar
-3. Edge function `admin-stats`
-4. Dashboard com KPIs + graficos
-5. Feed de atividade em tempo real
-6. Paginas de gestao (usuarios, itens, matches, reports, waitlist)
-
-## 4. Stack
-
-- **UI**: Shadcn components existentes (Table, Card, Tabs, Badge, Button) + Recharts (Chart)
-- **Layout**: Sidebar desktop com `SidebarProvider` do shadcn
-- **Realtime**: `supabase.channel().on('postgres_changes', ...)` 
-- **Seguranca**: role check via security definer function, edge function com service role
+- **Arquivos editados**: `AdminLayout.tsx`, `AdminSidebar.tsx`, `KpiCard.tsx`, `AdminDashboard.tsx`, `RealtimeActivityFeed.tsx`, `AdminUsuarios.tsx`, `AdminItens.tsx`, `AdminMatches.tsx`, `AdminReports.tsx`, `AdminWaitlist.tsx`
+- **Nenhuma dependencia nova** — tudo com Tailwind, shadcn e Recharts existentes
+- **Cores**: usar variantes com opacidade dos tokens existentes (primary, accent, success, destructive) + cores semanticas pontuais (blue-500, amber-500, etc.)
+- **Animacoes**: transicoes CSS (transition-all duration-200) + framer-motion apenas no feed de atividade
+- **Responsivo**: manter mobile-friendly, sidebar collapsa normalmente
 
