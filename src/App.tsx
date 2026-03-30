@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -26,6 +27,13 @@ import MeuPerfil from "./pages/MeuPerfil";
 import PerfilUsuario from "./pages/PerfilUsuario";
 import NotFound from "./pages/NotFound";
 import ListaEspera from "./pages/ListaEspera";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsuarios from "./pages/admin/AdminUsuarios";
+import AdminItens from "./pages/admin/AdminItens";
+import AdminMatches from "./pages/admin/AdminMatches";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminWaitlist from "./pages/admin/AdminWaitlist";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +97,20 @@ const App = () => (
             <Route path="/usuario/:userId" element={
               <ProtectedRoute><PerfilUsuario /></ProtectedRoute>
             } />
+
+            {/* Admin routes */}
+            <Route path="/admin" element={
+              <AdminProtectedRoute>
+                <AdminLayout />
+              </AdminProtectedRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="usuarios" element={<AdminUsuarios />} />
+              <Route path="itens" element={<AdminItens />} />
+              <Route path="matches" element={<AdminMatches />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="waitlist" element={<AdminWaitlist />} />
+            </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
