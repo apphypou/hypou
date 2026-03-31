@@ -51,12 +51,20 @@ const Chat = () => {
               <SkeletonConversation />
             </div>
         ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-6xl mb-4">💬</span>
-            <h2 className="text-xl font-bold text-foreground mb-2">Nenhuma conversa ainda</h2>
-            <p className="text-muted-foreground text-sm max-w-xs">
-              Faça um match para começar a negociar trocas!
+          <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+            <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              <MessageSquare className="h-10 w-10 text-primary/50" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground mb-2">Nenhuma conversa ainda</h2>
+            <p className="text-muted-foreground text-sm max-w-xs mb-6 leading-relaxed">
+              Quando alguém aceitar sua proposta de troca, a conversa aparecerá aqui para vocês combinarem a entrega.
             </p>
+            <button
+              onClick={() => navigate("/explorar")}
+              className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold transition-all hover:opacity-90"
+            >
+              Explorar itens
+            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-2">
