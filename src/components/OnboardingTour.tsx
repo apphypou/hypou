@@ -11,21 +11,22 @@ interface TourStep {
 
 const STEPS: TourStep[] = [
   {
-    title: "Bem-vindo ao Explorar! 👋",
+    title: "Bem-vindo ao Explorar!",
     description: "Aqui você descobre itens de outros usuários e pode propor trocas.",
-    icon: <span className="text-3xl">🔍</span>,
+    icon: <Search className="h-7 w-7 text-primary" />,
     position: "center",
   },
   {
     title: "Arraste para os lados",
     description: "Arraste o card para a direita para curtir ou para a esquerda para passar.",
     icon: (
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1 text-destructive">
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-1.5 text-destructive/80">
           <ArrowLeft className="h-5 w-5" />
-          <ThumbsDown className="h-5 w-5" />
+          <X className="h-5 w-5" />
         </div>
-        <div className="flex items-center gap-1 text-primary">
+        <div className="h-6 w-px bg-foreground/10" />
+        <div className="flex items-center gap-1.5 text-primary">
           <Heart className="h-5 w-5" />
           <ArrowRight className="h-5 w-5" />
         </div>
@@ -36,13 +37,13 @@ const STEPS: TourStep[] = [
   {
     title: "Veja os detalhes",
     description: "Arraste o card para cima ou toque em 'Detalhes' para ver mais informações do item.",
-    icon: <ChevronUp className="h-8 w-8 text-primary" />,
+    icon: <ChevronUp className="h-7 w-7 text-primary" />,
     position: "bottom",
   },
   {
     title: "Proponha uma troca",
     description: "Ao curtir, escolha um dos seus itens para enviar uma proposta de troca!",
-    icon: <span className="text-3xl">🤝</span>,
+    icon: <Repeat className="h-7 w-7 text-primary" />,
     position: "center",
   },
 ];
