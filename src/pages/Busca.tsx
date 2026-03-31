@@ -1,4 +1,4 @@
-import { ArrowLeft, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowLeft, Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,12 @@ import { categories, conditions } from "@/constants/categories";
 const formatValue = (cents: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
+const SORT_OPTIONS = [
+  { value: "recent" as const, label: "Mais recentes" },
+  { value: "price_asc" as const, label: "Menor preço" },
+  { value: "price_desc" as const, label: "Maior preço" },
+];
+
 const Busca = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -21,6 +27,7 @@ const Busca = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [category, setCategory] = useState<string | null>(null);
   const [condition, setCondition] = useState<string | null>(null);
+  const [sort, setSort] = useState<"recent" | "price_asc" | "price_desc">("recent");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const debounceRef = useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -35,7 +42,8 @@ const Busca = () => {
     query: debouncedQuery,
     category: category || undefined,
     condition: condition || undefined,
-  }), [debouncedQuery, category, condition]);
+    sort,
+  }), [debouncedQuery, category, condition, sort]);
 
   const hasFilters = !!debouncedQuery || !!category || !!condition;
 
@@ -51,6 +59,7 @@ const Busca = () => {
     setDebouncedQuery("");
     setCategory(null);
     setCondition(null);
+    setSort("recent");
   };
 
   const activeFilterCount = [category, condition].filter(Boolean).length;
@@ -147,6 +156,25 @@ const Busca = () => {
                   ))}
                 </div>
               </div>
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Ordenar por</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SORT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSort(opt.value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                        sort === opt.value
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card border border-foreground/10 text-foreground/50"
+                      }`}
+                    >
+                      <ArrowUpDown className="h-3 w-3" />
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {(category || condition) && (
                 <button
                   onClick={clearFilters}
@@ -164,7 +192,14 @@ const Busca = () => {
       <main className="flex-1 w-full px-5 overflow-y-auto no-scrollbar pb-28">
         {!hasFilters ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-5xl mb-4">🔍</span>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"
+            >
+              <Search className="h-10 w-10 text-primary/50" />
+            </motion.div>
             <h2 className="text-lg font-bold text-foreground mb-1">Busque por itens</h2>
             <p className="text-muted-foreground text-sm max-w-xs">
               Digite o nome do item ou use os filtros para encontrar o que procura.
@@ -178,7 +213,14 @@ const Busca = () => {
           </div>
         ) : results.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <span className="text-5xl mb-4">😕</span>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="h-20 w-20 rounded-2xl bg-foreground/5 flex items-center justify-center mb-4"
+            >
+              <span className="text-4xl">😕</span>
+            </motion.div>
             <h2 className="text-lg font-bold text-foreground mb-1">Nenhum resultado</h2>
             <p className="text-muted-foreground text-sm max-w-xs">
               Tente buscar com outros termos ou remova os filtros.
@@ -188,53 +230,56 @@ const Busca = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 mt-3">
-            {results.map((item: any) => {
-              const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
-              return (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-2xl bg-card border border-foreground/5 overflow-hidden cursor-pointer hover:border-primary/30 transition-all"
-                  onClick={() => navigate(`/explorar`)}
-                >
-                  <div className="aspect-square relative">
-                    {mainImage ? (
-                      <img
-                        src={mainImage.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted flex items-center justify-center text-foreground/10 text-xs">
-                        Sem foto
+          <>
+            <p className="text-xs text-muted-foreground mt-3 mb-2">{results.length} resultado{results.length !== 1 ? "s" : ""}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {results.map((item: any) => {
+                const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl bg-card border border-foreground/5 overflow-hidden cursor-pointer hover:border-primary/30 transition-all"
+                    onClick={() => navigate(`/explorar`)}
+                  >
+                    <div className="aspect-square relative">
+                      {mainImage ? (
+                        <img
+                          src={mainImage.image_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-foreground/10 text-xs">
+                          Sem foto
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                        <span className="text-white text-xs font-bold">
+                          {formatValue(item.market_value)}
+                        </span>
                       </div>
-                    )}
-                    <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                      <span className="text-white text-xs font-bold">
-                        {formatValue(item.market_value)}
-                      </span>
                     </div>
-                  </div>
-                  <div className="p-3">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">
-                      {item.category}
-                    </p>
-                    <h3 className="text-sm font-bold text-foreground leading-tight truncate">
-                      {item.name}
-                    </h3>
-                    {item.profiles?.display_name && (
-                      <p className="text-[10px] text-muted-foreground mt-1 truncate">
-                        por {item.profiles.display_name}
+                    <div className="p-3">
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">
+                        {item.category}
                       </p>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
+                      <h3 className="text-sm font-bold text-foreground leading-tight truncate">
+                        {item.name}
+                      </h3>
+                      {item.profiles?.display_name && (
+                        <p className="text-[10px] text-muted-foreground mt-1 truncate">
+                          por {item.profiles.display_name}
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </>
         )}
       </main>
 
