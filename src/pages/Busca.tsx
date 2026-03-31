@@ -286,9 +286,9 @@ const Busca = () => {
           </div>
         ) : (
           <>
-            <p className="text-xs text-muted-foreground mt-3 mb-2">{results.length} resultado{results.length !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-muted-foreground mt-3 mb-2">{allResults.length}+ resultado{allResults.length !== 1 ? "s" : ""}</p>
             <div className="grid grid-cols-2 gap-3">
-              {results.map((item: any) => {
+              {allResults.map((item: any) => {
                 const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
                 return (
                   <motion.div
@@ -334,6 +334,13 @@ const Busca = () => {
                 );
               })}
             </div>
+
+            {/* Infinite scroll sentinel */}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-6">
+                {loadingMore && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+              </div>
+            )}
           </>
         )}
       </main>
