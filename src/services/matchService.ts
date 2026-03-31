@@ -4,6 +4,8 @@ export interface MatchWithDetails {
   id: string;
   status: string;
   created_at: string;
+  confirmed_by_a?: boolean;
+  confirmed_by_b?: boolean;
   item_a: {
     id: string;
     name: string;
@@ -33,7 +35,7 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
   const { data, error } = await supabase
     .from("matches")
     .select(`
-      id, status, created_at, updated_at, user_a_id, user_b_id,
+      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
       item_a:item_a_id (id, name, market_value, category, location, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, category, location, item_images (image_url, position))
     `)
@@ -42,7 +44,6 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 
   if (error) throw error;
 
-  // Fetch profiles for the other users
   const otherUserIds = (data || []).map((m: any) =>
     m.user_a_id === userId ? m.user_b_id : m.user_a_id
   ).filter(Boolean);
@@ -68,6 +69,8 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
       id: m.id,
       status: m.status,
       created_at: m.created_at,
+      confirmed_by_a: m.confirmed_by_a,
+      confirmed_by_b: m.confirmed_by_b,
       item_a: m.item_a,
       item_b: m.item_b,
       other_user: profilesMap[otherUserId] || { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
@@ -98,7 +101,6 @@ export const createProposal = async (
 };
 
 export const acceptProposal = async (matchId: string, currentUserId: string) => {
-  // Fetch match to validate user_b and status
   const { data: match, error: fetchErr } = await supabase
     .from("matches")
     .select("user_b_id, status")
@@ -109,7 +111,6 @@ export const acceptProposal = async (matchId: string, currentUserId: string) => 
   if (match.user_b_id !== currentUserId) throw new Error("Apenas o dono do item pode aceitar a proposta");
   if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
 
-  // Update status to accepted
   const { error: updateError } = await supabase
     .from("matches")
     .update({ status: "accepted" })
@@ -117,7 +118,6 @@ export const acceptProposal = async (matchId: string, currentUserId: string) => 
     .eq("status", "proposal");
   if (updateError) throw updateError;
 
-  // Create conversation (UNIQUE constraint prevents duplicates)
   const { error: convError } = await supabase
     .from("conversations")
     .insert({ match_id: matchId });
@@ -125,7 +125,6 @@ export const acceptProposal = async (matchId: string, currentUserId: string) => 
 };
 
 export const rejectProposal = async (matchId: string, currentUserId: string) => {
-  // Validate status before rejecting
   const { data: match, error: fetchErr } = await supabase
     .from("matches")
     .select("user_b_id, status")
@@ -144,11 +143,34 @@ export const rejectProposal = async (matchId: string, currentUserId: string) => 
   if (error) throw error;
 };
 
+export const confirmTrade = async (matchId: string, userId: string) => {
+  const { data: match, error: fetchErr } = await supabase
+    .from("matches")
+    .select("user_a_id, user_b_id, status")
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !match) throw new Error("Troca não encontrada");
+  if (match.status !== "accepted") throw new Error("Esta troca não pode ser confirmada");
+
+  const isUserA = match.user_a_id === userId;
+  const isUserB = match.user_b_id === userId;
+  if (!isUserA && !isUserB) throw new Error("Você não faz parte desta troca");
+
+  const updateField = isUserA ? "confirmed_by_a" : "confirmed_by_b";
+
+  const { error } = await supabase
+    .from("matches")
+    .update({ [updateField]: true })
+    .eq("id", matchId);
+  if (error) throw error;
+};
+
 export const getMatch = async (matchId: string, userId: string): Promise<MatchWithDetails | null> => {
   const { data, error } = await supabase
     .from("matches")
     .select(`
-      id, status, created_at, updated_at, user_a_id, user_b_id,
+      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
       item_a:item_a_id (id, name, market_value, category, location, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, category, location, item_images (image_url, position))
     `)
@@ -170,6 +192,8 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
     id: data.id,
     status: data.status,
     created_at: data.created_at,
+    confirmed_by_a: (data as any).confirmed_by_a,
+    confirmed_by_b: (data as any).confirmed_by_b,
     item_a: data.item_a as any,
     item_b: data.item_b as any,
     other_user: profile || { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
