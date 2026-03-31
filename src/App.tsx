@@ -50,9 +50,8 @@ const App = () => (
           <AuthProvider>
             <Routes>
             {/* Public routes */}
-            <Route path="/" element={<ListaEspera />} />
+            <Route path="/" element={<Index />} />
             <Route path="/lista-espera" element={<ListaEspera />} />
-            <Route path="/welcome" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/recuperar-senha" element={<RecuperarSenha />} />
