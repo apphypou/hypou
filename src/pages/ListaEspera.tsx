@@ -359,7 +359,7 @@ const ListaEspera = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Seu melhor email"
-                    className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-300 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-white border border-slate-200 text-sm sm:text-base text-slate-800 placeholder:text-slate-300 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
