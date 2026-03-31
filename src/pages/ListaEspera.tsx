@@ -461,7 +461,7 @@ const ListaEspera = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2 }}
-        className="lg:hidden relative z-10 px-6 pb-10 flex justify-center"
+        className="lg:hidden relative z-10 px-4 pb-6 sm:pb-10 flex justify-center"
       >
         <div className="w-48">
           <BlurredPreview />
