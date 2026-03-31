@@ -67,8 +67,8 @@ const useCountdown = (target: Date) => {
 };
 
 const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
-  <div className="flex flex-col items-center gap-1.5">
-    <div className="rounded-2xl w-[4.2rem] h-[4.2rem] sm:w-20 sm:h-20 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/80 shadow-sm">
+  <div className="flex flex-col items-center gap-1">
+    <div className="rounded-xl sm:rounded-2xl w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/80 shadow-sm">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
@@ -76,13 +76,13 @@ const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
           animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
           exit={{ y: 16, opacity: 0, filter: "blur(4px)" }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="text-2xl sm:text-3xl font-extrabold text-primary font-display tabular-nums"
+          className="text-xl sm:text-3xl font-extrabold text-primary font-display tabular-nums"
         >
           {String(value).padStart(2, "0")}
         </motion.span>
       </AnimatePresence>
     </div>
-    <span className="text-[10px] sm:text-xs uppercase tracking-widest text-slate-400 font-semibold">
+    <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-slate-400 font-semibold">
       {label}
     </span>
   </div>
@@ -243,10 +243,10 @@ const ListaEspera = () => {
         <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-500/[0.02] blur-[80px]" />
       </div>
 
-      <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto px-6 py-10 gap-8 lg:gap-16">
+      <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 gap-6 sm:gap-8 lg:gap-16">
         
         {/* LEFT SIDE - Content */}
-        <div className="flex flex-col items-center lg:items-start gap-6 max-w-md w-full">
+        <div className="flex flex-col items-center lg:items-start gap-4 sm:gap-6 max-w-md w-full">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -276,7 +276,7 @@ const ListaEspera = () => {
             transition={{ delay: 0.7 }}
             className="text-center lg:text-left"
           >
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
               Uma nova forma de{" "}
               <AnimatePresence mode="wait">
                 <motion.span
@@ -329,13 +329,13 @@ const ListaEspera = () => {
             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 text-center lg:text-left">
               As portas abrem em
             </p>
-            <div className="flex items-center gap-2.5 sm:gap-3 justify-center lg:justify-start">
+            <div className="flex items-center gap-1.5 sm:gap-3 justify-center lg:justify-start">
               <CountdownBlock value={countdown.days} label="dias" />
-              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
               <CountdownBlock value={countdown.hours} label="hrs" />
-              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
               <CountdownBlock value={countdown.minutes} label="min" />
-              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
               <CountdownBlock value={countdown.seconds} label="seg" />
             </div>
           </motion.div>
@@ -359,7 +359,7 @@ const ListaEspera = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Seu melhor email"
-                    className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-300 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-white border border-slate-200 text-sm sm:text-base text-slate-800 placeholder:text-slate-300 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
@@ -461,7 +461,7 @@ const ListaEspera = () => {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2 }}
-        className="lg:hidden relative z-10 px-6 pb-10 flex justify-center"
+        className="lg:hidden relative z-10 px-4 pb-6 sm:pb-10 flex justify-center"
       >
         <div className="w-48">
           <BlurredPreview />
