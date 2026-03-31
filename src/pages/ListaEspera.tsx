@@ -112,37 +112,6 @@ const useMysteryWord = () => {
   return mysteryWords[idx];
 };
 
-// ── BLURRED PREVIEW ─────────────────────────────────────────────────
-const BlurredPreview = () => (
-  <div className="relative w-full max-w-xs mx-auto">
-    {/* Fake app mockup - blurred */}
-    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-50 border border-slate-200/60 shadow-lg p-4 aspect-[9/14]">
-      {/* Blurred content */}
-      <div className="blur-[6px] opacity-60 space-y-3">
-        <div className="h-3 w-20 bg-slate-300 rounded-full mx-auto" />
-        <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 h-[55%] w-full" />
-        <div className="flex gap-2 justify-center">
-          <div className="h-10 w-10 rounded-full bg-red-200" />
-          <div className="h-10 w-10 rounded-full bg-primary/30" />
-        </div>
-        <div className="h-3 w-32 bg-slate-200 rounded-full mx-auto" />
-        <div className="h-3 w-24 bg-slate-200 rounded-full mx-auto" />
-      </div>
-      {/* Lock overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-          className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center justify-center"
-        >
-          <EyeOff className="w-6 h-6 text-slate-400" />
-        </motion.div>
-        <p className="text-xs font-bold text-slate-500 mt-3 tracking-wide uppercase">Preview bloqueado</p>
-        <p className="text-[10px] text-slate-400 mt-1">Entre na fila para desbloquear</p>
-      </div>
-    </div>
-  </div>
-);
 
 // ── MYSTERY FEATURES ────────────────────────────────────────────────
 const features = [
@@ -445,28 +414,7 @@ const ListaEspera = () => {
           </motion.div>
         </div>
 
-        {/* RIGHT SIDE - Blurred Preview (desktop) */}
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
-          className="hidden lg:block w-full max-w-xs"
-        >
-          <BlurredPreview />
-        </motion.div>
       </div>
-
-      {/* Mobile blurred preview - smaller */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2 }}
-        className="lg:hidden relative z-10 px-4 pb-6 sm:pb-10 flex justify-center"
-      >
-        <div className="w-48">
-          <BlurredPreview />
-        </div>
-      </motion.div>
 
       {/* CSS */}
       <style>{`
