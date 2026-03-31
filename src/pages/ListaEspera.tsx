@@ -332,7 +332,7 @@ const ListaEspera = () => {
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
-                  {loading ? "Entrando..." : "Quero entrar antes de todo mundo"}
+                  {loading ? "Entrando..." : "Garantir minha vaga"}
                 </NeonButton>
                 <p className="text-[10px] text-slate-300 text-center">
                   Vagas limitadas. Sem spam. Só acesso antecipado.
