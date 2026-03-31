@@ -414,6 +414,7 @@ const ListaEspera = () => {
           </motion.div>
         </div>
 
+      </div>
 
       {/* CSS */}
       <style>{`
