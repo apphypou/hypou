@@ -5,6 +5,7 @@ import {
   Handshake,
   ShieldAlert,
   ListOrdered,
+  Activity,
   LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
