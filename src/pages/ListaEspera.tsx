@@ -414,28 +414,6 @@ const ListaEspera = () => {
           </motion.div>
         </div>
 
-        {/* RIGHT SIDE - Blurred Preview (desktop) */}
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
-          className="hidden lg:block w-full max-w-xs"
-        >
-          <BlurredPreview />
-        </motion.div>
-      </div>
-
-      {/* Mobile blurred preview - smaller */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 2 }}
-        className="lg:hidden relative z-10 px-4 pb-6 sm:pb-10 flex justify-center"
-      >
-        <div className="w-48">
-          <BlurredPreview />
-        </div>
-      </motion.div>
 
       {/* CSS */}
       <style>{`
