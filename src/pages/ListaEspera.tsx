@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ArrowRight, Flame, Copy, Check, Share2, Sparkles, Gamepad2, Headphones, Watch, Camera, Bike } from "lucide-react";
+import { Mail, ArrowRight, Flame, Copy, Check, Share2, Sparkles, Lock, Zap, Shield, Eye, EyeOff } from "lucide-react";
 import HypouLogo from "@/components/HypouLogo";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,14 +15,14 @@ LAUNCH_DATE.setDate(LAUNCH_DATE.getDate() + 30);
 const Particles = () => {
   const dots = useMemo(
     () =>
-      Array.from({ length: 18 }, (_, i) => ({
+      Array.from({ length: 22 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
-        size: 2 + Math.random() * 4,
-        duration: 12 + Math.random() * 18,
+        size: 2 + Math.random() * 3,
+        duration: 14 + Math.random() * 20,
         delay: Math.random() * 8,
-        opacity: 0.04 + Math.random() * 0.08,
+        opacity: 0.03 + Math.random() * 0.06,
       })),
     []
   );
@@ -68,15 +68,15 @@ const useCountdown = (target: Date) => {
 
 const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center gap-1.5">
-    <div className="rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center bg-slate-50 border border-slate-200 shadow-sm">
+    <div className="rounded-2xl w-[4.2rem] h-[4.2rem] sm:w-20 sm:h-20 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/80 shadow-sm">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 20, opacity: 0 }}
+          initial={{ y: -16, opacity: 0, filter: "blur(4px)" }}
+          animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+          exit={{ y: 16, opacity: 0, filter: "blur(4px)" }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="text-2xl sm:text-3xl font-extrabold text-primary font-display"
+          className="text-2xl sm:text-3xl font-extrabold text-primary font-display tabular-nums"
         >
           {String(value).padStart(2, "0")}
         </motion.span>
@@ -100,27 +100,56 @@ const useFakeCounter = (base: number) => {
   return count;
 };
 
-// ── PREVIEW LEAK CARDS ──────────────────────────────────────────────
-const leakCards = [
-  { icon: Gamepad2, label: "Console", gradient: "from-primary/10 to-primary/5" },
-  { icon: Headphones, label: "Fone BT", gradient: "from-primary/8 to-slate-100" },
-  { icon: Watch, label: "Smartwatch", gradient: "from-slate-100 to-primary/10" },
-];
+// ── MYSTERY WORDS ───────────────────────────────────────────────────
+const mysteryWords = ["trocar.", "descobrir.", "conquistar.", "evoluir."];
 
-// ── TYPING EFFECT ───────────────────────────────────────────────────
-const useTyping = (text: string, speed = 60) => {
-  const [displayed, setDisplayed] = useState("");
-  const idx = useRef(0);
+const useMysteryWord = () => {
+  const [idx, setIdx] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => {
-      idx.current++;
-      setDisplayed(text.slice(0, idx.current));
-      if (idx.current >= text.length) clearInterval(id);
-    }, speed);
+    const id = setInterval(() => setIdx((i) => (i + 1) % mysteryWords.length), 2800);
     return () => clearInterval(id);
-  }, [text, speed]);
-  return displayed;
+  }, []);
+  return mysteryWords[idx];
 };
+
+// ── BLURRED PREVIEW ─────────────────────────────────────────────────
+const BlurredPreview = () => (
+  <div className="relative w-full max-w-xs mx-auto">
+    {/* Fake app mockup - blurred */}
+    <div className="relative rounded-3xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-50 border border-slate-200/60 shadow-lg p-4 aspect-[9/14]">
+      {/* Blurred content */}
+      <div className="blur-[6px] opacity-60 space-y-3">
+        <div className="h-3 w-20 bg-slate-300 rounded-full mx-auto" />
+        <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 h-[55%] w-full" />
+        <div className="flex gap-2 justify-center">
+          <div className="h-10 w-10 rounded-full bg-red-200" />
+          <div className="h-10 w-10 rounded-full bg-primary/30" />
+        </div>
+        <div className="h-3 w-32 bg-slate-200 rounded-full mx-auto" />
+        <div className="h-3 w-24 bg-slate-200 rounded-full mx-auto" />
+      </div>
+      {/* Lock overlay */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+          className="w-14 h-14 rounded-2xl bg-white border border-slate-200 shadow-md flex items-center justify-center"
+        >
+          <EyeOff className="w-6 h-6 text-slate-400" />
+        </motion.div>
+        <p className="text-xs font-bold text-slate-500 mt-3 tracking-wide uppercase">Preview bloqueado</p>
+        <p className="text-[10px] text-slate-400 mt-1">Entre na fila para desbloquear</p>
+      </div>
+    </div>
+  </div>
+);
+
+// ── MYSTERY FEATURES ────────────────────────────────────────────────
+const features = [
+  { icon: Zap, text: "Sem dinheiro. Sem complicação.", delay: 0.1 },
+  { icon: Shield, text: "100% seguro e verificado.", delay: 0.2 },
+  { icon: Eye, text: "Descubra o que ninguém viu.", delay: 0.3 },
+];
 
 // ── MAIN PAGE ───────────────────────────────────────────────────────
 const ListaEspera = () => {
@@ -134,7 +163,7 @@ const ListaEspera = () => {
 
   const countdown = useCountdown(LAUNCH_DATE);
   const socialCount = useFakeCounter(1247);
-  const tagline = useTyping("A nova forma de trocar", 70);
+  const mysteryWord = useMysteryWord();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,7 +174,6 @@ const ListaEspera = () => {
 
     setLoading(true);
     try {
-      // Get next position
       const { data: posData } = await supabase.rpc("get_waitlist_position");
       const nextPos = (posData as number) ?? 1;
 
@@ -157,7 +185,6 @@ const ListaEspera = () => {
 
       if (error) {
         if (error.code === "23505") {
-          // Already registered - fetch existing
           const { data: existing } = await supabase
             .from("waitlist" as any)
             .select("position, referral_code")
@@ -196,8 +223,8 @@ const ListaEspera = () => {
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({
-        title: "Hypou — Lista de Espera",
-        text: "Garanta sua vaga na nova forma de trocar!",
+        title: "Hypou — Algo grande está chegando",
+        text: "Entra na fila antes que acabe. Você não vai querer ficar de fora.",
         url: shareUrl,
       });
     } else {
@@ -206,169 +233,247 @@ const ListaEspera = () => {
   };
 
   return (
-    <div className="relative min-h-[100dvh] bg-white overflow-hidden flex flex-col items-center justify-center">
+    <div className="relative min-h-[100dvh] bg-white overflow-hidden flex flex-col">
       <Particles />
 
       {/* Mesh gradient bg */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full bg-primary/[0.04] blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-15%] w-[60%] h-[60%] rounded-full bg-primary/[0.06] blur-[100px]" />
+        <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full bg-primary/[0.03] blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-15%] w-[60%] h-[60%] rounded-full bg-primary/[0.05] blur-[100px]" />
+        <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-500/[0.02] blur-[80px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg mx-auto px-6 py-12 flex flex-col items-center gap-8">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/30 bg-primary/[0.06]"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-primary animate-pulse" />
-          <span className="text-xs font-semibold text-primary tracking-wide">Algo grande está chegando</span>
-        </motion.div>
+      <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto px-6 py-10 gap-8 lg:gap-16">
+        
+        {/* LEFT SIDE - Content */}
+        <div className="flex flex-col items-center lg:items-start gap-6 max-w-md w-full">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/[0.04]"
+          >
+            <Lock className="w-3 h-3 text-primary" />
+            <span className="text-xs font-semibold text-primary tracking-wide">Acesso limitado • Apenas por convite</span>
+          </motion.div>
 
-        {/* Logo breathing */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-          className="relative"
-        >
-          <div className="animate-pulse-slow">
+          {/* Logo */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
+            className="relative"
+          >
             <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:text-slate-800" />
-          </div>
-          <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
-        </motion.div>
+            <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
+          </motion.div>
 
-        {/* Tagline with typing */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-base text-slate-400 font-medium"
-        >
-          Troque, economize e conquiste.
-        </motion.p>
+          {/* Dynamic headline */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="text-center lg:text-left"
+          >
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">
+              Uma nova forma de{" "}
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={mysteryWord}
+                  initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+                  transition={{ duration: 0.4 }}
+                  className="text-primary inline-block"
+                >
+                  {mysteryWord}
+                </motion.span>
+              </AnimatePresence>
+            </h1>
+            <p className="text-sm text-slate-400 mt-2">
+              Ninguém sabe exatamente o que é. Mas quem entrou, não quer sair.
+            </p>
+          </motion.div>
 
-        {/* Countdown */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-          className="flex items-center gap-3 sm:gap-4"
-        >
-          <CountdownBlock value={countdown.days} label="dias" />
-          <span className="text-2xl text-primary/50 font-bold mt-[-20px]">:</span>
-          <CountdownBlock value={countdown.hours} label="hrs" />
-          <span className="text-2xl text-primary/50 font-bold mt-[-20px]">:</span>
-          <CountdownBlock value={countdown.minutes} label="min" />
-          <span className="text-2xl text-primary/50 font-bold mt-[-20px]">:</span>
-          <CountdownBlock value={countdown.seconds} label="seg" />
-        </motion.div>
+          {/* Mystery features */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="flex flex-col gap-2.5 w-full"
+          >
+            {features.map((f, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1 + f.delay }}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-100"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <f.icon className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm font-medium text-slate-600">{f.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
 
-        {/* Form / Confirmation */}
-        <AnimatePresence mode="wait">
-          {!registered ? (
-            <motion.form
-              key="form"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ delay: 1.2 }}
-              onSubmit={handleSubmit}
-              className="w-full flex flex-col gap-4"
-            >
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Seu melhor email"
-                  className="w-full h-14 pl-12 pr-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 placeholder:text-slate-400 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
+          {/* Countdown */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.4 }}
+            className="w-full"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 text-center lg:text-left">
+              As portas abrem em
+            </p>
+            <div className="flex items-center gap-2.5 sm:gap-3 justify-center lg:justify-start">
+              <CountdownBlock value={countdown.days} label="dias" />
+              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <CountdownBlock value={countdown.hours} label="hrs" />
+              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <CountdownBlock value={countdown.minutes} label="min" />
+              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <CountdownBlock value={countdown.seconds} label="seg" />
+            </div>
+          </motion.div>
+
+          {/* Form / Confirmation */}
+          <AnimatePresence mode="wait">
+            {!registered ? (
+              <motion.form
+                key="form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 1.6 }}
+                onSubmit={handleSubmit}
+                className="w-full flex flex-col gap-3"
+              >
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Seu melhor email"
+                    className="w-full h-14 pl-12 pr-4 rounded-2xl bg-white border border-slate-200 text-slate-800 placeholder:text-slate-300 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                  />
+                </div>
+                <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
+                  {loading ? "Entrando..." : "Quero entrar antes de todo mundo"}
+                </NeonButton>
+                <p className="text-[10px] text-slate-300 text-center">
+                  Vagas limitadas. Sem spam. Só acesso antecipado.
+                </p>
+              </motion.form>
+            ) : (
+              <motion.div
+                key="confirmation"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full flex flex-col items-center gap-4"
+              >
+                <div className="rounded-3xl p-6 w-full text-center border border-primary/20 bg-gradient-to-b from-primary/[0.03] to-transparent">
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">Você está na fila</p>
+                  <motion.p
+                    initial={{ scale: 0.5 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    className="text-5xl font-extrabold text-primary text-glow"
+                  >
+                    #{position}
+                  </motion.p>
+                  <p className="text-xs text-slate-400 mt-3">
+                    Cada amigo que entra pelo seu link = <span className="text-primary font-bold">você sobe na fila</span>
+                  </p>
+                </div>
+
+                {/* Referral share */}
+                <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Seu link exclusivo</p>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-400 font-mono overflow-hidden">
+                    <span className="truncate flex-1">{shareUrl}</span>
+                  </div>
+                </div>
+
+                <div className="w-full flex gap-3">
+                  <button
+                    onClick={handleCopy}
+                    className="flex-1 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:border-primary/40 transition-all"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+                    {copied ? "Copiado!" : "Copiar"}
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="flex-1 h-12 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Compartilhar
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Social counter */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.8 }}
+            className="flex items-center gap-2"
+          >
+            <div className="flex -space-x-2">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-br from-slate-200 to-slate-300"
+                  style={{ zIndex: 4 - i }}
                 />
-              </div>
-              <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
-                {loading ? "Entrando..." : "Garantir minha vaga"}
-              </NeonButton>
-            </motion.form>
-          ) : (
-            <motion.div
-              key="confirmation"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="w-full flex flex-col items-center gap-5"
-            >
-              <div className="rounded-3xl p-6 w-full text-center border border-slate-200 bg-slate-50 shadow-sm">
-                <p className="text-slate-400 text-sm mb-1">Sua posição na fila</p>
-                <motion.p
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                  className="text-5xl font-extrabold text-primary text-glow"
-                >
-                  #{position}
-                </motion.p>
-                <p className="text-xs text-slate-400 mt-2">Compartilhe para subir na fila!</p>
-              </div>
+              ))}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-700">
+                {socialCount.toLocaleString("pt-BR")}+
+              </span>
+              <span className="text-[10px] text-slate-400">já garantiram vaga</span>
+            </div>
+            <Flame className="w-4 h-4 text-orange-400 ml-1 animate-pulse" />
+          </motion.div>
+        </div>
 
-              <div className="w-full flex gap-3">
-                <button
-                  onClick={handleCopy}
-                  className="flex-1 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700 hover:border-primary/40 transition-all"
-                >
-                  {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-                  {copied ? "Copiado!" : "Copiar link"}
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="flex-1 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center gap-2 text-sm font-semibold text-primary hover:bg-primary/20 transition-all"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Compartilhar
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Social counter */}
+        {/* RIGHT SIDE - Blurred Preview (desktop) */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="flex items-center gap-2 text-slate-400"
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1.2, duration: 0.8 }}
+          className="hidden lg:block w-full max-w-xs"
         >
-          <Flame className="w-4 h-4 text-orange-400" />
-          <span className="text-sm font-semibold">
-            <span className="text-slate-600">{socialCount.toLocaleString("pt-BR")}</span> pessoas na fila
-          </span>
+          <BlurredPreview />
         </motion.div>
-
-        {/* Footer tagline */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.8 }}
-          className="text-xs text-slate-300 font-medium tracking-wide"
-        >
-          Em breve para todos.
-        </motion.p>
       </div>
 
-      {/* Shimmer + particle CSS */}
+      {/* Mobile blurred preview - smaller */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 2 }}
+        className="lg:hidden relative z-10 px-6 pb-10 flex justify-center"
+      >
+        <div className="w-48">
+          <BlurredPreview />
+        </div>
+      </motion.div>
+
+      {/* CSS */}
       <style>{`
         @keyframes floatParticle {
           0% { transform: translateY(0) translateX(0); }
           50% { transform: translateY(-30px) translateX(15px); }
           100% { transform: translateY(5px) translateX(-10px); }
-        }
-        .animate-pulse-slow {
-          animation: pulseSlow 4s ease-in-out infinite;
-        }
-        @keyframes pulseSlow {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.04); }
         }
       `}</style>
     </div>
