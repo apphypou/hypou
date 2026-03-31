@@ -27,6 +27,8 @@ import MeuPerfil from "./pages/MeuPerfil";
 import PerfilUsuario from "./pages/PerfilUsuario";
 import NotFound from "./pages/NotFound";
 import ListaEspera from "./pages/ListaEspera";
+import Termos from "./pages/Termos";
+import Privacidade from "./pages/Privacidade";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsuarios from "./pages/admin/AdminUsuarios";
@@ -55,6 +57,8 @@ const App = () => (
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/recuperar-senha" element={<RecuperarSenha />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/termos" element={<Termos />} />
+            <Route path="/privacidade" element={<Privacidade />} />
 
             {/* Onboarding (requires auth but NOT onboarding check) */}
             <Route path="/onboarding" element={

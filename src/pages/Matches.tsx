@@ -1,4 +1,4 @@
-import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send } from "lucide-react";
+import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send, CheckCircle2, History } from "lucide-react";
 import { useMemo } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -7,7 +7,7 @@ import GlassCard from "@/components/GlassCard";
 import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
-import { acceptProposal, rejectProposal } from "@/services/matchService";
+import { acceptProposal, rejectProposal, confirmTrade } from "@/services/matchService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +28,9 @@ const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<MatchWithDetails | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
 
   const handleRejectMatch = useCallback(async () => {
     if (!selectedMatch || rejecting) return;
@@ -45,13 +47,29 @@ const Matches = () => {
     }
   }, [selectedMatch, rejecting, queryClient, toast]);
 
+  const handleConfirmTrade = useCallback(async () => {
+    if (!selectedMatch || confirmingTrade) return;
+    setConfirmingTrade(true);
+    try {
+      await confirmTrade(selectedMatch.id, user!.id);
+      await queryClient.invalidateQueries({ queryKey: ["matches"] });
+      toast({ title: "Troca confirmada! ✅", description: "Quando ambos confirmarem, a troca será concluída." });
+      setSelectedMatch(null);
+    } catch (err: any) {
+      toast({ title: "Erro ao confirmar troca", description: err.message, variant: "destructive" });
+    } finally {
+      setConfirmingTrade(false);
+    }
+  }, [selectedMatch, confirmingTrade, queryClient, toast, user]);
+
   const isReceivedProposal = (match: MatchWithDetails) =>
     match.status === "proposal" && match.my_item_side === "b";
 
   const isSentProposal = (match: MatchWithDetails) =>
     match.status === "proposal" && match.my_item_side === "a";
 
-  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" } | null => {
+  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" } | null => {
+    if (match.status === "completed") return { label: "Concluída", color: "completed" };
     if (match.status === "accepted") return { label: "Aceita", color: "accepted" };
     if (isSentProposal(match)) return { label: "Enviada", color: "sent" };
     const age = Date.now() - new Date(match.created_at).getTime();
@@ -64,6 +82,7 @@ const Matches = () => {
     accepted: "bg-success text-white border-success/50",
     pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
     sent: "bg-amber-500/20 text-amber-600 border-amber-500/30",
+    completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
   };
 
   const handleConfirmMatch = useCallback(async () => {
@@ -92,12 +111,22 @@ const Matches = () => {
   const otherImages = otherItem?.item_images || [];
   const myImages = myItem?.item_images || [];
 
-  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected"), [matches]);
+  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed"), [matches]);
+  const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected"), [matches]);
+  const displayedMatches = activeTab === "active" ? activeMatches : historyMatches;
+
+  // Check if I already confirmed
+  const myConfirmed = selectedMatch
+    ? selectedMatch.my_item_side === "a" ? selectedMatch.confirmed_by_a : selectedMatch.confirmed_by_b
+    : false;
+  const otherConfirmed = selectedMatch
+    ? selectedMatch.my_item_side === "a" ? selectedMatch.confirmed_by_b : selectedMatch.confirmed_by_a
+    : false;
 
   return (
     <ScreenLayout>
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4 shrink-0">
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-2 shrink-0">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
             Suas Trocas
@@ -112,6 +141,31 @@ const Matches = () => {
         </div>
       </header>
 
+      {/* Tabs */}
+      <div className="flex gap-2 px-6 pb-3 shrink-0">
+        <button
+          onClick={() => setActiveTab("active")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+            activeTab === "active"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-foreground/10 text-foreground/50"
+          }`}
+        >
+          Ativas ({activeMatches.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("history")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+            activeTab === "history"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-foreground/10 text-foreground/50"
+          }`}
+        >
+          <History className="h-3.5 w-3.5" />
+          Histórico ({historyMatches.length})
+        </button>
+      </div>
+
       {/* Main Content */}
       <main className="relative flex-1 w-full px-4 overflow-y-auto no-scrollbar z-10 pb-28">
 
@@ -120,20 +174,32 @@ const Matches = () => {
             <SkeletonMatchCard />
             <SkeletonMatchCard />
           </div>
-        ) : activeMatches.length === 0 ? (
+        ) : displayedMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              <Repeat2 className="h-8 w-8 text-primary" />
+            <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+              {activeTab === "active" ? (
+                <Repeat2 className="h-10 w-10 text-primary" />
+              ) : (
+                <History className="h-10 w-10 text-primary/50" />
+              )}
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-1">Nenhuma proposta ainda</h2>
-            <p className="text-muted-foreground text-sm mb-6">Explore itens e faça sua primeira troca!</p>
-            <Button onClick={() => navigate("/explorar")} className="rounded-full px-6">
-              Explorar itens
-            </Button>
+            <h2 className="text-lg font-bold text-foreground mb-1">
+              {activeTab === "active" ? "Nenhuma proposta ativa" : "Nenhuma troca no histórico"}
+            </h2>
+            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+              {activeTab === "active"
+                ? "Explore itens e faça sua primeira troca!"
+                : "Suas trocas concluídas e recusadas aparecerão aqui."}
+            </p>
+            {activeTab === "active" && (
+              <Button onClick={() => navigate("/explorar")} className="rounded-full px-6">
+                Explorar itens
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 pb-6">
-            {activeMatches.map((match) => {
+            {displayedMatches.map((match) => {
               const otherItemCard = match.my_item_side === "a" ? match.item_b : match.item_a;
               const mainImage = otherItemCard?.item_images?.[0]?.image_url;
               const badge = getBadge(match);
@@ -191,7 +257,7 @@ const Matches = () => {
                           {match.other_user.display_name || "Usuário"}
                         </span>
                       </div>
-                      {match.status === "accepted" && (
+                      {(match.status === "accepted" || match.status === "completed") && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -245,7 +311,6 @@ const Matches = () => {
                     <Repeat2 className="h-16 w-16 text-foreground/10" />
                   </div>
                 )}
-                {/* Scrim sutil só na base para transição suave */}
                 <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
               </div>
 
@@ -293,10 +358,10 @@ const Matches = () => {
                   )}
                 </div>
 
-              {/* Exchange visualization */}
+                {/* Exchange visualization */}
                 <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-4 mb-6 overflow-hidden">
                   <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-3 text-center">
-                    Proposta de Troca
+                    {selectedMatch.status === "completed" ? "Troca Concluída ✅" : "Proposta de Troca"}
                   </p>
                   <div className="flex items-center gap-2">
                     {/* My item */}
@@ -332,6 +397,29 @@ const Matches = () => {
                       <p className="text-foreground/30 text-[9px] mt-0.5">Item deles</p>
                     </div>
                   </div>
+
+                  {/* Trade confirmation status */}
+                  {selectedMatch.status === "accepted" && (
+                    <div className="mt-4 pt-3 border-t border-foreground/10">
+                      <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-2 text-center">
+                        Confirmação de entrega
+                      </p>
+                      <div className="flex justify-center gap-4">
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className={`h-4 w-4 ${myConfirmed ? "text-success" : "text-foreground/20"}`} />
+                          <span className={`text-xs font-semibold ${myConfirmed ? "text-success" : "text-foreground/40"}`}>
+                            Você
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className={`h-4 w-4 ${otherConfirmed ? "text-success" : "text-foreground/20"}`} />
+                          <span className={`text-xs font-semibold ${otherConfirmed ? "text-success" : "text-foreground/40"}`}>
+                            {selectedMatch.other_user.display_name || "Outro"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Additional images */}
@@ -355,17 +443,45 @@ const Matches = () => {
               className="fixed bottom-0 left-0 right-0 z-[110] px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent"
               style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             >
-              {selectedMatch.status === "accepted" ? (
-                <button
-                  onClick={() => {
-                    setSelectedMatch(null);
-                    navigate(`/match/${selectedMatch.id}`);
-                  }}
-                  className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-lg flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.4)]"
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  Iniciar Conversa
-                </button>
+              {selectedMatch.status === "completed" ? (
+                <div className="w-full h-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 font-bold text-base flex items-center justify-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Troca Concluída
+                </div>
+              ) : selectedMatch.status === "accepted" ? (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setSelectedMatch(null);
+                      navigate(`/match/${selectedMatch.id}`);
+                    }}
+                    className="flex-1 h-14 rounded-2xl bg-card border border-foreground/10 text-foreground font-bold text-base flex items-center justify-center gap-2"
+                  >
+                    <MessageSquare className="h-5 w-5" />
+                    Chat
+                  </button>
+                  {!myConfirmed ? (
+                    <button
+                      onClick={handleConfirmTrade}
+                      disabled={confirmingTrade}
+                      className="flex-[2] h-14 rounded-2xl bg-success text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(142_71%_45%/0.3)] disabled:opacity-50"
+                    >
+                      {confirmingTrade ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-5 w-5" />
+                          Confirmar Entrega
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="flex-[2] h-14 rounded-2xl bg-success/10 border border-success/20 text-success font-bold text-sm flex items-center justify-center gap-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      Aguardando outro confirmar
+                    </div>
+                  )}
+                </div>
               ) : selectedMatch.status === "rejected" ? (
                 <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-lg flex items-center justify-center">
                   Proposta Recusada

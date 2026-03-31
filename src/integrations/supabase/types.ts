@@ -216,6 +216,8 @@ export type Database = {
       }
       matches: {
         Row: {
+          confirmed_by_a: boolean | null
+          confirmed_by_b: boolean | null
           created_at: string
           id: string
           item_a_id: string
@@ -226,6 +228,8 @@ export type Database = {
           user_b_id: string
         }
         Insert: {
+          confirmed_by_a?: boolean | null
+          confirmed_by_b?: boolean | null
           created_at?: string
           id?: string
           item_a_id: string
@@ -236,6 +240,8 @@ export type Database = {
           user_b_id: string
         }
         Update: {
+          confirmed_by_a?: boolean | null
+          confirmed_by_b?: boolean | null
           created_at?: string
           id?: string
           item_a_id?: string
@@ -351,6 +357,7 @@ export type Database = {
           phone: string | null
           subscription_expires_at: string | null
           subscription_tier: string
+          terms_accepted_at: string | null
           updated_at: string
           user_id: string
         }
@@ -368,6 +375,7 @@ export type Database = {
           phone?: string | null
           subscription_expires_at?: string | null
           subscription_tier?: string
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -385,6 +393,7 @@ export type Database = {
           phone?: string | null
           subscription_expires_at?: string | null
           subscription_tier?: string
+          terms_accepted_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -436,6 +445,9 @@ export type Database = {
           reason: string
           reported_user_id: string
           reporter_id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: string | null
         }
         Insert: {
           created_at?: string
@@ -444,6 +456,9 @@ export type Database = {
           reason: string
           reported_user_id: string
           reporter_id: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string | null
         }
         Update: {
           created_at?: string
@@ -452,6 +467,9 @@ export type Database = {
           reason?: string
           reported_user_id?: string
           reporter_id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string | null
         }
         Relationships: []
       }

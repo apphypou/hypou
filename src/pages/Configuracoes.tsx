@@ -1,5 +1,5 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import IconButton from "@/components/IconButton";
@@ -94,49 +94,10 @@ const Configuracoes = () => {
     if (!user) return;
     setDeleting(true);
     try {
-      // Delete all user-related data in dependency order
-      // 1. Messages (depends on conversations)
-      const { data: userMatches } = await supabase.from("matches").select("id").or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
-      if (userMatches) {
-        for (const match of userMatches) {
-          const { data: convs } = await supabase.from("conversations").select("id").eq("match_id", match.id);
-          if (convs) {
-            for (const conv of convs) {
-              await supabase.from("messages").delete().eq("conversation_id", conv.id);
-            }
-            await supabase.from("conversations").delete().eq("match_id", match.id);
-          }
-        }
-      }
-
-      // 2. Ratings, reports, notifications, blocked
-      await supabase.from("ratings").delete().or(`rater_id.eq.${user.id},rated_id.eq.${user.id}`);
-      await supabase.from("reports").delete().eq("reporter_id", user.id);
-      await supabase.from("notifications").delete().eq("user_id", user.id);
-      await supabase.from("blocked_users").delete().eq("blocker_id", user.id);
-
-      // 3. Video likes, matches
-      await supabase.from("video_likes").delete().eq("user_id", user.id);
-      await supabase.from("matches").delete().or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
-
-      // 4. Favorites, swipes, categories
-      await supabase.from("favorites").delete().eq("user_id", user.id);
-      await supabase.from("swipes").delete().eq("swiper_id", user.id);
-      await supabase.from("user_categories").delete().eq("user_id", user.id);
-
-      // 5. Item videos, images, items
-      const { data: userItems } = await supabase.from("items").select("id").eq("user_id", user.id);
-      if (userItems) {
-        for (const item of userItems) {
-          await supabase.from("item_videos").delete().eq("item_id", item.id);
-          await supabase.from("item_images").delete().eq("item_id", item.id);
-        }
-        await supabase.from("items").delete().eq("user_id", user.id);
-      }
-
-      // 6. Profile
-      await supabase.from("profiles").delete().eq("user_id", user.id);
-      await signOut();
+      const { data, error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
       toast({ title: "Conta excluída. Até logo! 👋" });
       navigate("/");
     } catch (err: any) {
@@ -171,6 +132,24 @@ const Configuracoes = () => {
       onClick: () => setPasswordDialogOpen(true),
     },
     {
+      icon: Ban,
+      label: "Usuários Bloqueados",
+      description: "Gerenciar bloqueios",
+      onClick: () => setBlockedDialogOpen(true),
+    },
+    {
+      icon: FileText,
+      label: "Termos de Uso",
+      description: "Leia os termos da plataforma",
+      onClick: () => navigate("/termos"),
+    },
+    {
+      icon: Shield,
+      label: "Política de Privacidade",
+      description: "Como protegemos seus dados",
+      onClick: () => navigate("/privacidade"),
+    },
+    {
       icon: Info,
       label: "Sobre o Hypou",
       description: "Conheça mais sobre a plataforma",
@@ -179,7 +158,7 @@ const Configuracoes = () => {
     {
       icon: Smartphone,
       label: "Versão do App",
-      description: "v1.1.0",
+      description: "v1.2.0",
       onClick: undefined,
     },
   ];

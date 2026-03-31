@@ -5,6 +5,8 @@ import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
 
 const Cadastro = () => {
   const [name, setName] = useState("");
@@ -12,6 +14,7 @@ const Cadastro = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -19,6 +22,10 @@ const Cadastro = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!termsAccepted) {
+      toast({ title: "Aceite os termos de uso para continuar", variant: "destructive" });
+      return;
+    }
     if (name.length > 100) {
       toast({ title: "Nome muito longo (máx. 100 caracteres)", variant: "destructive" });
       return;
@@ -38,11 +45,15 @@ const Cadastro = () => {
         variant: "destructive",
       });
     } else {
+      // Record terms acceptance
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString() }).eq("user_id", user.id);
+      }
       toast({ title: "Conta criada com sucesso!" });
       navigate("/onboarding");
     }
   };
-
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
@@ -104,11 +115,31 @@ const Cadastro = () => {
           </button>
         </div>
 
+        {/* Terms checkbox */}
+        <div className="flex items-start gap-3 px-1">
+          <Checkbox
+            id="terms"
+            checked={termsAccepted}
+            onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+            className="mt-0.5"
+          />
+          <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+            Li e aceito os{" "}
+            <Link to="/termos" className="text-primary font-semibold hover:underline" onClick={(e) => e.stopPropagation()}>
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link to="/privacidade" className="text-primary font-semibold hover:underline" onClick={(e) => e.stopPropagation()}>
+              Política de Privacidade
+            </Link>
+          </label>
+        </div>
+
         <NeonButton
           variant="primary"
           icon={ArrowRight}
           type="submit"
-          disabled={loading}
+          disabled={loading || !termsAccepted}
           className="mt-2"
         >
           {loading ? "Criando conta..." : "Criar conta"}

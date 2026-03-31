@@ -6,6 +6,7 @@ export interface SearchFilters {
   condition?: string;
   minPrice?: number;
   maxPrice?: number;
+  sort?: "recent" | "price_asc" | "price_desc" | "relevance";
 }
 
 export const searchItems = async (userId: string, filters: SearchFilters) => {
@@ -36,9 +37,21 @@ export const searchItems = async (userId: string, filters: SearchFilters) => {
     q = q.lte("market_value", filters.maxPrice);
   }
 
-  const { data, error } = await q
-    .order("created_at", { ascending: false })
-    .limit(100);
+  // Sort
+  switch (filters.sort) {
+    case "price_asc":
+      q = q.order("market_value", { ascending: true });
+      break;
+    case "price_desc":
+      q = q.order("market_value", { ascending: false });
+      break;
+    case "recent":
+    default:
+      q = q.order("created_at", { ascending: false });
+      break;
+  }
+
+  const { data, error } = await q.limit(100);
 
   if (error) throw error;
 
