@@ -7,6 +7,8 @@ export interface SearchFilters {
   minPrice?: number;
   maxPrice?: number;
   sort?: "recent" | "price_asc" | "price_desc" | "relevance";
+  page?: number;
+  pageSize?: number;
 }
 
 export const searchItems = async (userId: string, filters: SearchFilters) => {
