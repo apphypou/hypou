@@ -1,5 +1,5 @@
-import { ArrowLeft, Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
-import { useState, useCallback, useMemo } from "react";
+import { ArrowLeft, Search, SlidersHorizontal, X, ArrowUpDown, Loader2 } from "lucide-react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
