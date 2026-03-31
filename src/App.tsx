@@ -34,6 +34,7 @@ import AdminItens from "./pages/admin/AdminItens";
 import AdminMatches from "./pages/admin/AdminMatches";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminWaitlist from "./pages/admin/AdminWaitlist";
+import AdminStatus from "./pages/admin/AdminStatus";
 
 const queryClient = new QueryClient();
 
