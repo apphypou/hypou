@@ -292,11 +292,16 @@ const MeuPerfil = () => {
 
               {items.length === 0 ? (
                 <GlassCard className="p-8 flex flex-col items-center gap-3">
-                  <span className="text-4xl">📦</span>
-                  <p className="text-foreground/40 text-sm text-center">Nenhum item cadastrado ainda</p>
+                  <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-1">
+                    <PlusCircle className="h-8 w-8 text-primary/50" />
+                  </div>
+                  <h3 className="text-base font-bold text-foreground">Nenhum item cadastrado</h3>
+                  <p className="text-foreground/40 text-sm text-center max-w-xs leading-relaxed">
+                    Cadastre seu primeiro item para começar a receber propostas de troca!
+                  </p>
                   <button
                     onClick={() => navigate("/novo-item")}
-                    className="text-primary text-xs font-bold uppercase tracking-wider"
+                    className="mt-1 px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold transition-all hover:opacity-90"
                   >
                     Cadastrar primeiro item
                   </button>

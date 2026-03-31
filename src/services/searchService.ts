@@ -7,6 +7,8 @@ export interface SearchFilters {
   minPrice?: number;
   maxPrice?: number;
   sort?: "recent" | "price_asc" | "price_desc" | "relevance";
+  page?: number;
+  pageSize?: number;
 }
 
 export const searchItems = async (userId: string, filters: SearchFilters) => {
@@ -51,7 +53,12 @@ export const searchItems = async (userId: string, filters: SearchFilters) => {
       break;
   }
 
-  const { data, error } = await q.limit(100);
+  const page = filters.page ?? 0;
+  const pageSize = filters.pageSize ?? 20;
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data, error } = await q.range(from, to);
 
   if (error) throw error;
 

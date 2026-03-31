@@ -1,5 +1,5 @@
-import { ArrowLeft, Search, SlidersHorizontal, X, ArrowUpDown } from "lucide-react";
-import { useState, useCallback, useMemo } from "react";
+import { ArrowLeft, Search, SlidersHorizontal, X, ArrowUpDown, Loader2 } from "lucide-react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -38,11 +38,19 @@ const Busca = () => {
     debounceRef[0] = timeout;
   }, [debounceRef]);
 
+  const [page, setPage] = useState(0);
+  const [allResults, setAllResults] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 20;
+
   const filters: SearchFilters = useMemo(() => ({
     query: debouncedQuery,
     category: category || undefined,
     condition: condition || undefined,
     sort,
+    page: 0,
+    pageSize: PAGE_SIZE,
   }), [debouncedQuery, category, condition, sort]);
 
   const hasFilters = !!debouncedQuery || !!category || !!condition;
@@ -53,6 +61,53 @@ const Busca = () => {
     enabled: !!user && hasFilters,
     staleTime: 30_000,
   });
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(0);
+    setAllResults([]);
+    setHasMore(true);
+  }, [debouncedQuery, category, condition, sort]);
+
+  // Merge first page results
+  useEffect(() => {
+    if (results.length > 0 && page === 0) {
+      setAllResults(results);
+      setHasMore(results.length >= PAGE_SIZE);
+    } else if (results.length === 0 && page === 0) {
+      setAllResults([]);
+      setHasMore(false);
+    }
+  }, [results, page]);
+
+  const loadMore = useCallback(async () => {
+    if (!user || !hasFilters || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const moreResults = await searchItems(user.id, { ...filters, page: nextPage, pageSize: PAGE_SIZE });
+      setAllResults((prev) => [...prev, ...moreResults]);
+      setPage(nextPage);
+      setHasMore(moreResults.length >= PAGE_SIZE);
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, hasFilters, loadingMore, hasMore, page, filters]);
+
+  // Infinite scroll observer
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore || !hasFilters) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, hasFilters, loadMore]);
 
   const clearFilters = () => {
     setQuery("");
@@ -211,7 +266,7 @@ const Busca = () => {
               <Skeleton key={i} className="h-52 rounded-2xl" />
             ))}
           </div>
-        ) : results.length === 0 ? (
+        ) : allResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <motion.div
               initial={{ scale: 0 }}
@@ -231,9 +286,9 @@ const Busca = () => {
           </div>
         ) : (
           <>
-            <p className="text-xs text-muted-foreground mt-3 mb-2">{results.length} resultado{results.length !== 1 ? "s" : ""}</p>
+            <p className="text-xs text-muted-foreground mt-3 mb-2">{allResults.length}+ resultado{allResults.length !== 1 ? "s" : ""}</p>
             <div className="grid grid-cols-2 gap-3">
-              {results.map((item: any) => {
+              {allResults.map((item: any) => {
                 const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
                 return (
                   <motion.div
@@ -279,6 +334,13 @@ const Busca = () => {
                 );
               })}
             </div>
+
+            {/* Infinite scroll sentinel */}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-6">
+                {loadingMore && <Loader2 className="h-5 w-5 animate-spin text-primary" />}
+              </div>
+            )}
           </>
         )}
       </main>

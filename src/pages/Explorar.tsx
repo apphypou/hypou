@@ -2,6 +2,7 @@ import { PlusCircle, Share2 } from "lucide-react";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
+import OnboardingTour from "@/components/OnboardingTour";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -352,6 +353,9 @@ const Explorar = () => {
       )}
 
       <BottomNav activeTab="explorar" />
+
+      {/* Onboarding Tour for first-time users */}
+      {!isGuest && <OnboardingTour />}
 
       {/* Guest prompt dialog */}
       <GuestPromptDialog
