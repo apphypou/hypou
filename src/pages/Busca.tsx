@@ -38,11 +38,19 @@ const Busca = () => {
     debounceRef[0] = timeout;
   }, [debounceRef]);
 
+  const [page, setPage] = useState(0);
+  const [allResults, setAllResults] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 20;
+
   const filters: SearchFilters = useMemo(() => ({
     query: debouncedQuery,
     category: category || undefined,
     condition: condition || undefined,
     sort,
+    page: 0,
+    pageSize: PAGE_SIZE,
   }), [debouncedQuery, category, condition, sort]);
 
   const hasFilters = !!debouncedQuery || !!category || !!condition;
@@ -53,6 +61,53 @@ const Busca = () => {
     enabled: !!user && hasFilters,
     staleTime: 30_000,
   });
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPage(0);
+    setAllResults([]);
+    setHasMore(true);
+  }, [debouncedQuery, category, condition, sort]);
+
+  // Merge first page results
+  useEffect(() => {
+    if (results.length > 0 && page === 0) {
+      setAllResults(results);
+      setHasMore(results.length >= PAGE_SIZE);
+    } else if (results.length === 0 && page === 0) {
+      setAllResults([]);
+      setHasMore(false);
+    }
+  }, [results, page]);
+
+  const loadMore = useCallback(async () => {
+    if (!user || !hasFilters || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    const nextPage = page + 1;
+    try {
+      const moreResults = await searchItems(user.id, { ...filters, page: nextPage, pageSize: PAGE_SIZE });
+      setAllResults((prev) => [...prev, ...moreResults]);
+      setPage(nextPage);
+      setHasMore(moreResults.length >= PAGE_SIZE);
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [user, hasFilters, loadingMore, hasMore, page, filters]);
+
+  // Infinite scroll observer
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore || !hasFilters) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) loadMore(); },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, hasFilters, loadMore]);
 
   const clearFilters = () => {
     setQuery("");
