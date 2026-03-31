@@ -329,13 +329,13 @@ const ListaEspera = () => {
             <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 text-center lg:text-left">
               As portas abrem em
             </p>
-            <div className="flex items-center gap-2.5 sm:gap-3 justify-center lg:justify-start">
+            <div className="flex items-center gap-1.5 sm:gap-3 justify-center lg:justify-start">
               <CountdownBlock value={countdown.days} label="dias" />
-              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
               <CountdownBlock value={countdown.hours} label="hrs" />
-              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
               <CountdownBlock value={countdown.minutes} label="min" />
-              <span className="text-xl text-primary/40 font-bold mt-[-20px]">:</span>
+              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
               <CountdownBlock value={countdown.seconds} label="seg" />
             </div>
           </motion.div>
