@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowLeft, ArrowRight, Heart, ThumbsDown, ChevronUp } from "lucide-react";
+import { X, ArrowLeft, ArrowRight, Heart, ChevronUp, Search, Repeat } from "lucide-react";
 
 interface TourStep {
   title: string;
