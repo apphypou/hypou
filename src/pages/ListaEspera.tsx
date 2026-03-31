@@ -396,10 +396,17 @@ const ListaEspera = () => {
             className="flex items-center gap-2"
           >
             <div className="flex -space-x-2">
-              {[...Array(4)].map((_, i) => (
-                <div
+              {[
+                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
+                "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face",
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face",
+              ].map((src, i) => (
+                <img
                   key={i}
-                  className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-br from-slate-200 to-slate-300"
+                  src={src}
+                  alt=""
+                  className="w-7 h-7 rounded-full border-2 border-white object-cover"
                   style={{ zIndex: 4 - i }}
                 />
               ))}
