@@ -354,6 +354,9 @@ const Explorar = () => {
 
       <BottomNav activeTab="explorar" />
 
+      {/* Onboarding Tour for first-time users */}
+      {!isGuest && <OnboardingTour />}
+
       {/* Guest prompt dialog */}
       <GuestPromptDialog
         open={showGuestPrompt}
