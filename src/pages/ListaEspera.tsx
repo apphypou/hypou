@@ -276,7 +276,7 @@ const ListaEspera = () => {
             transition={{ delay: 0.7 }}
             className="text-center lg:text-left"
           >
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
               Uma nova forma de{" "}
               <AnimatePresence mode="wait">
                 <motion.span
