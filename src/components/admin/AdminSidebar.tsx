@@ -36,6 +36,7 @@ const items = [
   { title: "Matches", url: "/admin/matches", icon: Handshake },
   { title: "Reports", url: "/admin/reports", icon: ShieldAlert },
   { title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered },
+  { title: "Status", url: "/admin/status", icon: Activity },
 ];
 
 export function AdminSidebar() {
