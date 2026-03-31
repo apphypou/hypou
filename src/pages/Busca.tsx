@@ -266,7 +266,7 @@ const Busca = () => {
               <Skeleton key={i} className="h-52 rounded-2xl" />
             ))}
           </div>
-        ) : results.length === 0 ? (
+        ) : allResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <motion.div
               initial={{ scale: 0 }}
