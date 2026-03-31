@@ -67,8 +67,8 @@ const useCountdown = (target: Date) => {
 };
 
 const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
-  <div className="flex flex-col items-center gap-1.5">
-    <div className="rounded-2xl w-[4.2rem] h-[4.2rem] sm:w-20 sm:h-20 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/80 shadow-sm">
+  <div className="flex flex-col items-center gap-1">
+    <div className="rounded-xl sm:rounded-2xl w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/80 shadow-sm">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
@@ -76,13 +76,13 @@ const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
           animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
           exit={{ y: 16, opacity: 0, filter: "blur(4px)" }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="text-2xl sm:text-3xl font-extrabold text-primary font-display tabular-nums"
+          className="text-xl sm:text-3xl font-extrabold text-primary font-display tabular-nums"
         >
           {String(value).padStart(2, "0")}
         </motion.span>
       </AnimatePresence>
     </div>
-    <span className="text-[10px] sm:text-xs uppercase tracking-widest text-slate-400 font-semibold">
+    <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-slate-400 font-semibold">
       {label}
     </span>
   </div>
