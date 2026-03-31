@@ -246,7 +246,7 @@ const ListaEspera = () => {
       <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 gap-6 sm:gap-8 lg:gap-16">
         
         {/* LEFT SIDE - Content */}
-        <div className="flex flex-col items-center lg:items-start gap-6 max-w-md w-full">
+        <div className="flex flex-col items-center lg:items-start gap-4 sm:gap-6 max-w-md w-full">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -10 }}
