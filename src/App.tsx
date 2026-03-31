@@ -34,6 +34,7 @@ import AdminItens from "./pages/admin/AdminItens";
 import AdminMatches from "./pages/admin/AdminMatches";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminWaitlist from "./pages/admin/AdminWaitlist";
+import AdminStatus from "./pages/admin/AdminStatus";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +111,7 @@ const App = () => (
               <Route path="matches" element={<AdminMatches />} />
               <Route path="reports" element={<AdminReports />} />
               <Route path="waitlist" element={<AdminWaitlist />} />
+              <Route path="status" element={<AdminStatus />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
