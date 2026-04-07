@@ -55,23 +55,23 @@
     --background: 0 0% 11%;
     --foreground: 0 0% 100%;
 
-    --card: 174 30% 13%;
+    --card: 0 0% 15%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 174 30% 13%;
+    --popover: 0 0% 15%;
     --popover-foreground: 0 0% 100%;
 
     --primary: 184 100% 50%;
-    --primary-foreground: 174 30% 10%;
+    --primary-foreground: 0 0% 8%;
 
-    --secondary: 174 20% 16%;
+    --secondary: 0 0% 18%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 174 20% 16%;
-    --muted-foreground: 200 10% 60%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
 
     --accent: 184 100% 50%;
-    --accent-foreground: 174 30% 10%;
+    --accent-foreground: 0 0% 8%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
@@ -87,11 +87,11 @@
 
     --radius: 1rem;
 
-    --sidebar-background: 174 30% 10%;
+    --sidebar-background: 0 0% 13%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 184 100% 50%;
-    --sidebar-primary-foreground: 174 30% 10%;
-    --sidebar-accent: 174 20% 16%;
+    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 100% / 0.1;
     --sidebar-ring: 184 100% 50%;
@@ -116,7 +116,7 @@
   }
 
   .dark .glass-panel {
-    background: hsl(174 30% 13% / 0.95);
+    background: hsl(0 0% 15% / 0.95);
     border: 1px solid hsl(0 0% 100% / 0.08);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   }
