@@ -219,7 +219,7 @@ const ListaEspera = () => {
             transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
             className="relative flex flex-col items-center"
           >
-            <img src={logoHypou} alt="Hypou" className="h-12 sm:h-16 w-auto object-contain" />
+            <img src={logoHypou} alt="Hypou" className="h-16 sm:h-20 w-auto object-contain" />
             <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
           </motion.div>
 
