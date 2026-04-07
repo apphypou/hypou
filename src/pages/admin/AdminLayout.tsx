@@ -42,7 +42,7 @@ const AdminLayout = () => {
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header with blur + breadcrumbs */}
-          <header className="h-14 flex items-center justify-between border-b border-border/50 px-4 md:px-6 bg-background/80 backdrop-blur-lg sticky top-0 z-10">
+          <header className="h-14 flex items-center justify-between border-b border-transparent dark:border-white/[0.04] px-4 md:px-6 bg-background/80 backdrop-blur-lg sticky top-0 z-10">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="mr-1" />
               <Breadcrumb>
@@ -76,7 +76,7 @@ const AdminLayout = () => {
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </Button>
               <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8 ring-2 ring-border">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={profile?.avatar_url || ""} />
                   <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
                     {(profile?.display_name || user?.email || "A")[0].toUpperCase()}

@@ -76,8 +76,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 100% / 0.12;
-    --input: 0 0% 100% / 0.12;
+    --border: 0 0% 100% / 0.06;
+    --input: 0 0% 100% / 0.08;
     --ring: 184 100% 50%;
 
     --success: 142 71% 45%;
@@ -93,7 +93,7 @@
     --sidebar-primary-foreground: 0 0% 8%;
     --sidebar-accent: 0 0% 18%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 100% / 0.1;
+    --sidebar-border: 0 0% 100% / 0.06;
     --sidebar-ring: 184 100% 50%;
   }
 }
@@ -117,7 +117,7 @@
 
   .dark .glass-panel {
     background: hsl(0 0% 15% / 0.95);
-    border: 1px solid hsl(0 0% 100% / 0.08);
+    border: 1px solid hsl(0 0% 100% / 0.04);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   }
 
@@ -131,7 +131,7 @@
 
   .dark .glass-card {
     background: rgba(38, 38, 38, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.03);
     box-shadow: none;
   }
 
