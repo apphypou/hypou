@@ -67,7 +67,9 @@ const App = () => (
             } />
 
             {/* Protected routes (require auth + completed onboarding) */}
-            <Route path="/explorar" element={<Explorar />} />
+            <Route path="/explorar" element={
+              <ProtectedRoute><Explorar /></ProtectedRoute>
+            } />
             <Route path="/busca" element={
               <ProtectedRoute><Busca /></ProtectedRoute>
             } />
