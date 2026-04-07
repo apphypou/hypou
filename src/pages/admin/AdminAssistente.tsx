@@ -218,7 +218,19 @@ const AdminAssistente = () => {
                     }`}
                   >
                     {m.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                      <div className="prose prose-sm dark:prose-invert max-w-none
+                        [&>*:first-child]:mt-0 [&>*:last-child]:mb-0
+                        prose-p:my-3 prose-p:leading-relaxed
+                        prose-headings:mt-5 prose-headings:mb-2 prose-headings:font-bold
+                        prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
+                        prose-ul:my-3 prose-ul:space-y-1.5 prose-ol:my-3 prose-ol:space-y-1.5
+                        prose-li:leading-relaxed
+                        prose-strong:text-foreground prose-strong:font-semibold
+                        prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
+                        prose-pre:bg-muted prose-pre:rounded-xl prose-pre:p-4 prose-pre:my-4
+                        prose-blockquote:border-primary/40 prose-blockquote:text-muted-foreground
+                        prose-hr:border-border/50 prose-hr:my-5
+                      ">
                         <ReactMarkdown>{m.content}</ReactMarkdown>
                       </div>
                     ) : (
