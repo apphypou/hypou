@@ -90,6 +90,41 @@ export type Database = {
           },
         ]
       }
+      incident_updates: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          incident_id: string
+          message: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          incident_id: string
+          message: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          incident_id?: string
+          message?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_updates_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "system_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       item_images: {
         Row: {
           created_at: string
@@ -504,6 +539,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_incidents: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      uptime_checks: {
+        Row: {
+          checked_at: string
+          component: string
+          id: string
+          latency_ms: number | null
+          status: string
+        }
+        Insert: {
+          checked_at?: string
+          component: string
+          id?: string
+          latency_ms?: number | null
+          status?: string
+        }
+        Update: {
+          checked_at?: string
+          component?: string
+          id?: string
+          latency_ms?: number | null
+          status?: string
+        }
+        Relationships: []
       }
       user_categories: {
         Row: {
