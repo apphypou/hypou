@@ -7,6 +7,7 @@ import {
   ListOrdered,
   Activity,
   LogOut,
+  Bot,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -37,6 +38,7 @@ const items = [
   { title: "Reports", url: "/admin/reports", icon: ShieldAlert },
   { title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered },
   { title: "Status", url: "/admin/status", icon: Activity },
+  { title: "Assistente IA", url: "/admin/assistente", icon: Bot },
 ];
 
 export function AdminSidebar() {
