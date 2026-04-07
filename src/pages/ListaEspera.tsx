@@ -211,16 +211,6 @@ const ListaEspera = () => {
         
         {/* LEFT SIDE - Content */}
         <div className="flex flex-col items-center lg:items-start gap-6 sm:gap-8 max-w-md w-full">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/[0.04]"
-          >
-            <Lock className="w-3 h-3 text-primary" />
-            <span className="text-xs font-semibold text-primary tracking-wide">Vagas limitadas • Lançamento exclusivo</span>
-          </motion.div>
 
           {/* Logo */}
           <motion.div
