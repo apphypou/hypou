@@ -207,23 +207,20 @@ const ListaEspera = () => {
         <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-500/[0.02] blur-[80px]" />
       </div>
 
-      {/* Badge - fixed top */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="relative z-10 flex items-center justify-center pt-4 sm:pt-6"
-      >
-        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/[0.04]">
-          <Lock className="w-3 h-3 text-primary" />
-          <span className="text-xs font-semibold text-primary tracking-wide">Vagas limitadas • Lançamento exclusivo</span>
-        </div>
-      </motion.div>
-
       <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 gap-6 sm:gap-8 lg:gap-16">
         
         {/* LEFT SIDE - Content */}
         <div className="flex flex-col items-center lg:items-start gap-4 sm:gap-6 max-w-md w-full">
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/[0.04]"
+          >
+            <Lock className="w-3 h-3 text-primary" />
+            <span className="text-xs font-semibold text-primary tracking-wide">Vagas limitadas • Lançamento exclusivo</span>
+          </motion.div>
 
           {/* Logo */}
           <motion.div
