@@ -174,7 +174,7 @@ const AdminAssistente = () => {
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 min-h-0 rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 rounded-xl bg-background/50 backdrop-blur-sm overflow-hidden flex flex-col">
         <ScrollArea className="flex-1 p-4" ref={scrollRef as any}>
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full py-12 gap-6">
@@ -192,7 +192,7 @@ const AdminAssistente = () => {
                   <button
                     key={i}
                     onClick={() => send(s)}
-                    className="text-left text-xs p-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
+                    className="text-left text-xs p-3 rounded-xl border border-white/[0.04] bg-muted/30 hover:bg-muted/60 hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
                   >
                     {s}
                   </button>
@@ -260,7 +260,7 @@ const AdminAssistente = () => {
         </ScrollArea>
 
         {/* Input */}
-        <div className="p-3 border-t border-border/50">
+        <div className="p-3">
           <div className="flex gap-2 items-end">
             <Textarea
               ref={textareaRef}

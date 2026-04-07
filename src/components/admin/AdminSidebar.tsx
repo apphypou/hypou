@@ -55,7 +55,7 @@ export function AdminSidebar() {
       : location.pathname.startsWith(path);
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50">
+    <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center justify-center">
           <HypouLogo size={collapsed ? "sm" : "md"} />
@@ -66,8 +66,6 @@ export function AdminSidebar() {
           </span>
         )}
       </SidebarHeader>
-
-      <Separator className="opacity-50" />
 
       <SidebarContent className="px-2 pt-4">
         <SidebarGroup>
@@ -106,10 +104,9 @@ export function AdminSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3 space-y-2">
-        <Separator className="opacity-50" />
         {!collapsed && (
           <div className="flex items-center gap-2 px-1 py-1">
-            <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+            <Avatar className="h-8 w-8 ring-1 ring-border">
               <AvatarImage src={profile?.avatar_url || ""} />
               <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
                 {(profile?.display_name || user?.email || "A")[0].toUpperCase()}
