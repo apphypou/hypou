@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ArrowRight, Flame, Copy, Check, Share2, Sparkles, Lock, Zap, Shield, Eye, EyeOff } from "lucide-react";
 import HypouLogo from "@/components/HypouLogo";
+import logoHypou from "@/assets/logo-hypou.png";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -232,9 +233,9 @@ const ListaEspera = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-            className="relative"
+            className="relative flex flex-col items-center"
           >
-            <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:bg-gradient-to-r [&>span:first-child]:from-foreground [&>span:first-child]:to-primary [&>span:first-child]:bg-clip-text [&>span:first-child]:text-transparent" />
+            <img src={logoHypou} alt="Hypou" className="h-14 sm:h-16 w-auto object-contain" />
             <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
           </motion.div>
 
