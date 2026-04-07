@@ -82,7 +82,7 @@ const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
         </motion.span>
       </AnimatePresence>
     </div>
-    <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-slate-400 font-semibold">
+    <span className="text-[9px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-muted-foreground font-semibold">
       {label}
     </span>
   </div>
