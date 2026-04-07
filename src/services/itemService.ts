@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { validateImageFile } from "@/lib/fileValidation";
 
 export const createItem = async (data: {
   user_id: string;
@@ -55,6 +56,8 @@ export const deleteItemImage = async (imageId: string) => {
 };
 
 export const uploadItemImage = async (userId: string, itemId: string, file: File, position: number): Promise<string> => {
+  const validationError = validateImageFile(file);
+  if (validationError) throw new Error(validationError);
   const ext = file.name.split(".").pop();
   const path = `${userId}/${itemId}/${position}.${ext}`;
 
