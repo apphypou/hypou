@@ -102,7 +102,7 @@ const useFakeCounter = (base: number) => {
 };
 
 // ── ROTATING WORDS ──────────────────────────────────────────────────
-const rotatingWords = ["um PS5.", "um iPhone.", "uma bike.", "um notebook."];
+const rotatingWords = ["um PS5.", "um iPhone.", "uma bike.", "um imóvel."];
 
 const useRotatingWord = () => {
   const [idx, setIdx] = useState(0);
