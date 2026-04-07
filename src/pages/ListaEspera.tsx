@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ArrowRight, Flame, Copy, Check, Share2, Sparkles, Lock, Zap, Shield, Eye, EyeOff } from "lucide-react";
+import { Mail, ArrowRight, Flame, Copy, Check, Share2, Lock } from "lucide-react";
 import HypouLogo from "@/components/HypouLogo";
 import logoHypou from "@/assets/logo-hypou.png";
 import NeonButton from "@/components/NeonButton";
@@ -114,12 +114,6 @@ const useRotatingWord = () => {
 };
 
 
-// ── BENEFITS ────────────────────────────────────────────────────────
-const features = [
-  { icon: Zap, text: "Troque direto, sem gastar 1 real.", delay: 0.1 },
-  { icon: Shield, text: "Perfis verificados. Trocas protegidas.", delay: 0.2 },
-  { icon: Eye, text: "Itens exclusivos perto de você.", delay: 0.3 },
-];
 
 // ── MAIN PAGE ───────────────────────────────────────────────────────
 const ListaEspera = () => {
@@ -266,28 +260,6 @@ const ListaEspera = () => {
             </p>
           </motion.div>
 
-          {/* Mystery features */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
-            className="flex flex-col gap-2.5 w-full"
-          >
-            {features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1 + f.delay }}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <f.icon className="w-4 h-4 text-primary" />
-                </div>
-                <span className="text-sm font-medium text-muted-foreground">{f.text}</span>
-              </motion.div>
-            ))}
-          </motion.div>
 
           {/* Countdown */}
           <motion.div
