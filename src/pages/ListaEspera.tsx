@@ -68,7 +68,7 @@ const useCountdown = (target: Date) => {
 
 const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center gap-1">
-    <div className="rounded-xl sm:rounded-2xl w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center bg-white/80 backdrop-blur-sm border border-slate-200/80 shadow-sm">
+    <div className="rounded-xl sm:rounded-2xl w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 shadow-sm">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
@@ -202,7 +202,7 @@ const ListaEspera = () => {
   };
 
   return (
-    <div className="relative min-h-[100dvh] bg-white overflow-hidden flex flex-col">
+    <div className="relative min-h-[100dvh] bg-background overflow-hidden flex flex-col">
       <Particles />
 
       {/* Mesh gradient bg */}
@@ -234,7 +234,7 @@ const ListaEspera = () => {
             transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
             className="relative"
           >
-            <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:text-slate-800" />
+            <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:text-foreground" />
             <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
           </motion.div>
 
@@ -245,7 +245,7 @@ const ListaEspera = () => {
             transition={{ delay: 0.7 }}
             className="text-center lg:text-left"
           >
-            <h1 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground leading-tight">
               Uma nova forma de{" "}
               <AnimatePresence mode="wait">
                 <motion.span
@@ -260,7 +260,7 @@ const ListaEspera = () => {
                 </motion.span>
               </AnimatePresence>
             </h1>
-            <p className="text-sm text-slate-400 mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               Ninguém sabe exatamente o que é. Mas quem entrou, não quer sair.
             </p>
           </motion.div>
@@ -278,12 +278,12 @@ const ListaEspera = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1 + f.delay }}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-100"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10"
               >
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <f.icon className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-sm font-medium text-slate-600">{f.text}</span>
+                <span className="text-sm font-medium text-muted-foreground">{f.text}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -295,7 +295,7 @@ const ListaEspera = () => {
             transition={{ delay: 1.4 }}
             className="w-full"
           >
-            <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-3 text-center lg:text-left">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 text-center lg:text-left">
               As portas abrem em
             </p>
             <div className="flex items-center gap-1.5 sm:gap-3 justify-center lg:justify-start">
@@ -322,19 +322,19 @@ const ListaEspera = () => {
                 className="w-full flex flex-col gap-3"
               >
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Seu melhor email"
-                    className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-white border border-slate-200 text-sm sm:text-base text-slate-800 placeholder:text-slate-300 font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-sm sm:text-base text-foreground placeholder:text-muted-foreground font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
                   {loading ? "Entrando..." : "Garantir minha vaga"}
                 </NeonButton>
-                <p className="text-[10px] text-slate-300 text-center">
+                <p className="text-[10px] text-muted-foreground text-center">
                   Vagas limitadas. Sem spam. Só acesso antecipado.
                 </p>
               </motion.form>
@@ -346,7 +346,7 @@ const ListaEspera = () => {
                 className="w-full flex flex-col items-center gap-4"
               >
                 <div className="rounded-3xl p-6 w-full text-center border border-primary/20 bg-gradient-to-b from-primary/[0.03] to-transparent">
-                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-2">Você está na fila</p>
+                  <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest mb-2">Você está na fila</p>
                   <motion.p
                     initial={{ scale: 0.5 }}
                     animate={{ scale: 1 }}
@@ -355,15 +355,15 @@ const ListaEspera = () => {
                   >
                     #{position}
                   </motion.p>
-                  <p className="text-xs text-slate-400 mt-3">
+                  <p className="text-xs text-muted-foreground mt-3">
                     Cada amigo que entra pelo seu link = <span className="text-primary font-bold">você sobe na fila</span>
                   </p>
                 </div>
 
                 {/* Referral share */}
-                <div className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Seu link exclusivo</p>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-400 font-mono overflow-hidden">
+                <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Seu link exclusivo</p>
+                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/10 text-xs text-muted-foreground font-mono overflow-hidden">
                     <span className="truncate flex-1">{shareUrl}</span>
                   </div>
                 </div>
@@ -371,7 +371,7 @@ const ListaEspera = () => {
                 <div className="w-full flex gap-3">
                   <button
                     onClick={handleCopy}
-                    className="flex-1 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:border-primary/40 transition-all"
+                    className="flex-1 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:border-primary/40 transition-all"
                   >
                     {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
                     {copied ? "Copiado!" : "Copiar"}
@@ -406,16 +406,16 @@ const ListaEspera = () => {
                   key={i}
                   src={src}
                   alt=""
-                  className="w-7 h-7 rounded-full border-2 border-white object-cover"
+                  className="w-7 h-7 rounded-full border-2 border-background object-cover"
                   style={{ zIndex: 4 - i }}
                 />
               ))}
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-700">
+              <span className="text-sm font-bold text-foreground">
                 {socialCount.toLocaleString("pt-BR")}+
               </span>
-              <span className="text-[10px] text-slate-400">já garantiram vaga</span>
+              <span className="text-[10px] text-muted-foreground">já garantiram vaga</span>
             </div>
             <Flame className="w-4 h-4 text-orange-400 ml-1 animate-pulse" />
           </motion.div>
