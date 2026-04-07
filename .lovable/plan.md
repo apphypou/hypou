@@ -1,74 +1,110 @@
 
 
-# Redesign Estetico do Painel Admin Hypou
+# Plano Completo de Seguranca - Hypou App
 
-## Diagnostico Atual
+## Diagnostico Atual (Security Scan)
 
-O painel esta funcional mas visualmente generico — cards sem hierarquia visual, sidebar basica, header plano, tabelas sem polish, graficos sem refinamento. Falta identidade visual alinhada com a marca Hypou.
+O scan identificou **10 vulnerabilidades**: 6 criticas (error) e 4 avisos (warn).
 
-## Mudancas Propostas
+---
 
-### 1. Sidebar Premium
-**Arquivo**: `AdminSidebar.tsx`
-- Fundo com gradiente sutil (de sidebar-background para um tom levemente mais escuro)
-- Logo Hypou centralizada no topo com separador elegante abaixo
-- Menu items com border-radius maior (rounded-xl), transicao suave, e indicador lateral ciano (barra de 3px na esquerda) no item ativo em vez de apenas bg-primary/10
-- Icones com tamanho levemente maior (h-5 w-5) e spacing refinado
-- Hover com efeito de glow sutil no modo escuro
-- Footer com avatar do admin + nome truncado ao lado do botao sair
+## Fase 1 - Vulnerabilidades Criticas (Prioridade Maxima)
 
-### 2. Header Contextual
-**Arquivo**: `AdminLayout.tsx`
-- Remover texto generico "Painel Administrativo"
-- Adicionar breadcrumb dinamico baseado na rota atual (ex: "Admin / Dashboard")
-- Adicionar avatar do usuario logado + nome no canto direito do header
-- Adicionar toggle de tema (light/dark) no header
-- Background com `backdrop-blur-lg` e borda inferior mais sutil
+### 1.1 Dados sensiveis de perfil expostos publicamente
+**Problema:** A tabela `profiles` tem SELECT policy `USING (true)`, expondo telefone, coordenadas GPS, tier de assinatura para qualquer pessoa.
+**Correcao:** Substituir a policy de SELECT publica por uma que retorne apenas campos nao-sensiveis (display_name, avatar_url, bio) para usuarios anonimos, e dados completos apenas para o proprio usuario.
 
-### 3. KPI Cards Redesign
-**Arquivo**: `KpiCard.tsx`
-- Cada card com gradiente de fundo unico e sutil baseado na cor semantica do KPI (azul para usuarios, verde para itens, amber para matches, etc.)
-- Icone dentro de circulo com gradiente (nao apenas bg-primary/10 para todos)
-- Adicionar indicador de trend (seta para cima/baixo com cor verde/vermelho) usando a prop `trend` que ja existe mas nao e usada
-- Tipografia do valor com `tabular-nums` para alinhamento numerico
-- Hover com leve elevacao (shadow transition)
+### 1.2 Emails da waitlist expostos publicamente
+**Problema:** A tabela `waitlist` SELECT usa `USING (true)`, qualquer pessoa pode ler todos os emails.
+**Correcao:** Restringir SELECT para que cada usuario veja apenas sua propria entrada, ou limitar a admins.
 
-### 4. Graficos com Mais Polish
-**Arquivo**: `AdminDashboard.tsx`
-- Cards de graficos com header mais elaborado: icone + titulo + badge com periodo
-- Gradientes nos fills dos graficos (linearGradient SVG em vez de cor solida com opacity)
-- Grid lines mais sutis (stroke-dasharray, cor muted)
-- Tooltips customizados com border-radius maior e sombra
-- Pie chart como donut (innerRadius) com label central mostrando total
+### 1.3 Chat media publicamente acessivel
+**Problema:** O bucket `chat-media` e publico e qualquer pessoa pode ver arquivos de conversas privadas.
+**Correcao:** Tornar o bucket privado e adicionar policy que verifica participacao na conversa.
 
-### 5. Tabelas Refinadas
-**Arquivos**: `AdminUsuarios.tsx`, `AdminItens.tsx`, `AdminMatches.tsx`, `AdminReports.tsx`, `AdminWaitlist.tsx`
-- Header da tabela com bg-muted/30 e texto uppercase tracking-wider
-- Rows com hover mais pronunciado e transicao suave
-- Avatares maiores (h-10 w-10) com ring de borda sutil
-- Badges com cores semanticas mais vibrantes e rounded-full
-- Adicionar barra de busca/filtro no topo de cada tabela (input com icone Search)
-- Empty state com ilustracao (icone grande + texto) em vez de tabela vazia
+### 1.4 Realtime sem autorizacao de canal
+**Problema:** Sem policies em `realtime.messages`, qualquer usuario autenticado pode se inscrever em qualquer canal e receber mensagens/matches de outros usuarios.
+**Correcao:** Adicionar RLS policies na tabela `realtime.messages` para restringir subscricoes a canais dos proprios matches/conversas do usuario.
 
-### 6. Feed de Atividade
-**Arquivo**: `RealtimeActivityFeed.tsx`
-- Timeline vertical com linha conectora entre eventos (border-l)
-- Icones de evento dentro de circulos com borda, posicionados sobre a linha
-- Animacao de entrada (fade-in slide-up) para novos eventos
-- Separacao visual por "agora", "5 min atras", "1h atras" com headers de tempo
+### 1.5 Matches broadcast para todos
+**Problema:** Atualizacoes de matches sao transmitidas para qualquer subscriber.
+**Correcao:** Resolvido junto com 1.4 (realtime policies).
 
-### 7. Espacamento e Hierarquia Global
-**Arquivo**: `AdminDashboard.tsx` + `AdminLayout.tsx`
-- Secoes do dashboard com titulos de secao (ex: "Visao Geral", "Atividade", "Graficos") com icone e linha separadora
-- Main area com max-width para nao esticar demais em telas largas (max-w-7xl mx-auto)
-- Gap entre secoes aumentado para 8 (space-y-8)
-- Background do main area levemente diferente do sidebar (bg-muted/20 ou padrao sutil)
+### 1.6 Mensagens privadas broadcast para todos
+**Problema:** Conteudo de mensagens de todas as conversas e transmitido.
+**Correcao:** Resolvido junto com 1.4.
 
-## Detalhes Tecnicos
+---
 
-- **Arquivos editados**: `AdminLayout.tsx`, `AdminSidebar.tsx`, `KpiCard.tsx`, `AdminDashboard.tsx`, `RealtimeActivityFeed.tsx`, `AdminUsuarios.tsx`, `AdminItens.tsx`, `AdminMatches.tsx`, `AdminReports.tsx`, `AdminWaitlist.tsx`
-- **Nenhuma dependencia nova** — tudo com Tailwind, shadcn e Recharts existentes
-- **Cores**: usar variantes com opacidade dos tokens existentes (primary, accent, success, destructive) + cores semanticas pontuais (blue-500, amber-500, etc.)
-- **Animacoes**: transicoes CSS (transition-all duration-200) + framer-motion apenas no feed de atividade
-- **Responsivo**: manter mobile-friendly, sidebar collapsa normalmente
+## Fase 2 - Vulnerabilidades de Nivel Warn
+
+### 2.1 RLS policies com `true` em INSERT/UPDATE/DELETE
+**Problema:** Algumas tabelas usam expressoes permissivas demais.
+**Correcao:** Revisar e restringir policies de `item_images`, `item_videos`, e outras tabelas que usam `{public}` em vez de `{authenticated}`.
+
+### 2.2 Leaked Password Protection desabilitada
+**Problema:** O Supabase nao esta verificando senhas vazadas.
+**Correcao:** Habilitar no dashboard do Supabase (Auth > Settings).
+
+### 2.3 Upload de chat media sem verificacao de participacao
+**Problema:** Qualquer autenticado pode fazer upload no bucket chat-media.
+**Correcao:** Adicionar policy de INSERT que verifica participacao na conversa.
+
+### 2.4 Ratings publicamente legiveis
+**Problema:** Todos os ratings sao visiveis para anonimos.
+**Correcao:** Restringir SELECT para authenticated ou apenas participantes.
+
+---
+
+## Fase 3 - Hardening Adicional (Boas Praticas)
+
+### 3.1 Validacao de input no frontend
+- Adicionar validacao com limites de tamanho em todos os formularios (nome de item max 100 chars, descricao max 1000, etc.)
+- Sanitizar inputs antes de enviar ao Supabase
+
+### 3.2 Rate limiting na senha
+- Senha minima de 8 caracteres (atualmente 6)
+- Exigir ao menos 1 numero e 1 letra
+
+### 3.3 Edge Functions - Input validation
+- Adicionar validacao Zod em todas as edge functions (`delete-account`, `admin-stats`, `seed-test-users`, `validate-item-price`)
+- Atualizar CORS headers para usar import do SDK
+
+### 3.4 Edge Functions - verify_jwt
+- Atualmente todas as functions tem `verify_jwt = false` no config.toml
+- Para `admin-stats` e `delete-account`: manter false mas garantir validacao JWT em codigo (ja implementado)
+- Remover `seed-test-users` do deploy de producao ou proteger com secret
+
+### 3.5 Storage - Tipos de arquivo
+- Restringir uploads de imagens para apenas jpg/png/webp
+- Restringir uploads de video para mp4/webm
+- Limitar tamanho maximo de arquivo
+
+### 3.6 Protecao de rotas
+- A rota `/explorar` nao esta protegida por `ProtectedRoute` (linha 70 do App.tsx) - corrigir
+
+---
+
+## Ordem de Implementacao
+
+| Etapa | O que | Tipo |
+|-------|-------|------|
+| 1 | Fix profiles SELECT policy | Migration SQL |
+| 2 | Fix waitlist SELECT policy | Migration SQL |
+| 3 | Tornar chat-media privado + policies | Migration SQL |
+| 4 | Adicionar realtime policies | Migration SQL |
+| 5 | Fix ratings SELECT policy | Migration SQL |
+| 6 | Restringir roles de policies (public -> authenticated) | Migration SQL |
+| 7 | Proteger rota /explorar | Codigo |
+| 8 | Validacao de inputs nos formularios | Codigo |
+| 9 | Fortalecer regras de senha | Codigo |
+| 10 | Validacao Zod nas edge functions | Codigo |
+| 11 | Habilitar leaked password protection | Dashboard Supabase (manual) |
+| 12 | Restringir tipos/tamanhos de upload | Codigo + Storage policies |
+
+---
+
+## Nota Importante
+
+O item 11 (Leaked Password Protection) precisa ser habilitado manualmente pelo dono do projeto no dashboard do Supabase em **Authentication > Settings > Security**. Vou indicar isso apos a implementacao.
 
