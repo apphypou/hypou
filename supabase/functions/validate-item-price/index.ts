@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,25 +6,25 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const BodySchema = z.object({
+  name: z.string().min(1).max(255),
+  category: z.string().min(1).max(100),
+  condition: z.string().max(50).optional(),
+  value_cents: z.number().int().min(0).max(100_000_000),
+  description: z.string().max(2000).optional(),
+});
+
 async function searchTavily(query: string, extraDomains: string[] = []): Promise<string> {
   const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
-  if (!TAVILY_API_KEY) {
-    console.error("TAVILY_API_KEY not configured");
-    return "";
-  }
+  if (!TAVILY_API_KEY) return "";
 
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
     const baseDomains = [
-      "mercadolivre.com.br",
-      "olx.com.br",
-      "amazon.com.br",
-      "magazineluiza.com.br",
-      "americanas.com.br",
-      "zoom.com.br",
-      "buscape.com.br",
+      "mercadolivre.com.br", "olx.com.br", "amazon.com.br",
+      "magazineluiza.com.br", "americanas.com.br", "zoom.com.br", "buscape.com.br",
     ];
 
     const response = await fetch("https://api.tavily.com/search", {
@@ -42,28 +42,19 @@ async function searchTavily(query: string, extraDomains: string[] = []): Promise
     });
 
     clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("Tavily error:", response.status, errText);
-      return "";
-    }
+    if (!response.ok) return "";
 
     const data = await response.json();
-
     let summary = "";
-    if (data.answer) {
-      summary += `Resumo da pesquisa: ${data.answer}\n\n`;
-    }
-    if (data.results && data.results.length > 0) {
+    if (data.answer) summary += `Resumo da pesquisa: ${data.answer}\n\n`;
+    if (data.results?.length > 0) {
       summary += "Resultados encontrados:\n";
       for (const r of data.results) {
         summary += `- ${r.title} (${r.url}): ${r.content?.substring(0, 300) || ""}\n`;
       }
     }
     return summary;
-  } catch (err) {
-    console.error("Tavily search failed:", err);
+  } catch {
     return "";
   }
 }
@@ -86,98 +77,66 @@ async function searchFipe(vehicleName: string): Promise<string> {
         search_depth: "basic",
         max_results: 5,
         include_answer: true,
-        include_domains: [
-          "tabelafipe.org",
-          "fipe.org.br",
-          "veiculos.fipe.org.br",
-          "kbb.com.br",
-          "webmotors.com.br",
-          "icarros.com.br",
-          "autoo.com.br",
-        ],
+        include_domains: ["tabelafipe.org", "fipe.org.br", "veiculos.fipe.org.br", "kbb.com.br", "webmotors.com.br"],
       }),
     });
 
     clearTimeout(timeout);
-
-    if (!response.ok) {
-      console.error("FIPE search error:", response.status);
-      return "";
-    }
+    if (!response.ok) return "";
 
     const data = await response.json();
-
     let summary = "";
-    if (data.answer) {
-      summary += `Dados da Tabela FIPE: ${data.answer}\n\n`;
-    }
-    if (data.results && data.results.length > 0) {
+    if (data.answer) summary += `Dados da Tabela FIPE: ${data.answer}\n\n`;
+    if (data.results?.length > 0) {
       summary += "Resultados FIPE:\n";
       for (const r of data.results) {
         summary += `- ${r.title} (${r.url}): ${r.content?.substring(0, 300) || ""}\n`;
       }
     }
     return summary;
-  } catch (err) {
-    console.error("FIPE search failed:", err);
+  } catch {
     return "";
   }
 }
 
 const VEHICLE_CATEGORIES = ["Carros & Motos"];
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { name, category, condition, value_cents, description } = await req.json();
-
-    if (!name || !category || value_cents == null) {
+    const rawBody = await req.json();
+    const parsed = BodySchema.safeParse(rawBody);
+    
+    if (!parsed.success) {
       return new Response(
-        JSON.stringify({ valid: true, reason: "Dados insuficientes para validação" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ valid: true, reason: "Dados inválidos para validação", errors: parsed.error.flatten().fieldErrors }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const { name, category, condition, value_cents, description } = parsed.data;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
       return new Response(
         JSON.stringify({ valid: true, reason: "Validação indisponível" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const valueFormatted = (value_cents / 100).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-
-    const conditionLabel = {
-      new: "novo",
-      like_new: "seminovo",
-      used: "usado",
-      worn: "bem usado",
-    }[condition || "used"] || "usado";
-
+    const valueFormatted = (value_cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    const conditionLabel = { new: "novo", like_new: "seminovo", used: "usado", worn: "bem usado" }[condition || "used"] || "usado";
     const isVehicle = VEHICLE_CATEGORIES.includes(category);
 
-    // Step 1: Search real prices via Tavily
     const searchQuery = `preço ${name} ${conditionLabel} Brasil reais comprar`;
-    console.log("Searching Tavily for:", searchQuery);
-
-    // Run searches in parallel; add FIPE search for vehicles
     const searchPromises: Promise<string>[] = [searchTavily(searchQuery)];
-    if (isVehicle) {
-      console.log("Vehicle detected, also searching FIPE for:", name);
-      searchPromises.push(searchFipe(name));
-    }
+    if (isVehicle) searchPromises.push(searchFipe(name));
 
     const [searchResults, fipeResults] = await Promise.all(searchPromises);
 
-    // Step 2: Build prompt with real search data + description
     const systemPrompt = `Você é um especialista em avaliação de preços de produtos usados no Brasil.
 Sua função é analisar se o preço informado por um usuário é razoável comparado ao mercado real.
 
@@ -187,7 +146,7 @@ Regras de depreciação por condição:
 - Usado: 40-70% do preço de novo
 - Bem usado: 20-50% do preço de novo
 
-${isVehicle ? `Para veículos, use a Tabela FIPE como referência principal de preço e aplique depreciação baseada na condição.` : ""}
+${isVehicle ? `Para veículos, use a Tabela FIPE como referência principal.` : ""}
 
 Seja tolerante: só marque como inválido se o preço estiver mais de 60% acima ou abaixo da faixa razoável.
 Use os dados reais da pesquisa web fornecidos para embasar sua análise.
@@ -200,25 +159,11 @@ Use a função validate_price para responder.`;
 - Condição: ${conditionLabel}
 - Valor informado: ${valueFormatted}
 `;
-
-    if (description) {
-      userPrompt += `- Descrição do item: "${description}"\n`;
-    }
-
+    if (description) userPrompt += `- Descrição do item: "${description}"\n`;
     userPrompt += "\n";
-
-    if (searchResults) {
-      userPrompt += `DADOS REAIS DE PESQUISA WEB (preços encontrados em sites brasileiros):\n${searchResults}\n\n`;
-    }
-
-    if (fipeResults) {
-      userPrompt += `DADOS DA TABELA FIPE (referência oficial de preços de veículos):\n${fipeResults}\n\n`;
-    }
-
-    if (!searchResults && !fipeResults) {
-      userPrompt += `(Pesquisa web indisponível — use seu conhecimento interno como referência)\n\n`;
-    }
-
+    if (searchResults) userPrompt += `DADOS REAIS DE PESQUISA WEB:\n${searchResults}\n\n`;
+    if (fipeResults) userPrompt += `DADOS DA TABELA FIPE:\n${fipeResults}\n\n`;
+    if (!searchResults && !fipeResults) userPrompt += `(Pesquisa web indisponível — use seu conhecimento interno)\n\n`;
     userPrompt += `Com base nos dados acima, o valor de ${valueFormatted} é razoável para um "${name}" na condição "${conditionLabel}"? Use a função validate_price para responder.`;
 
     const controller = new AbortController();
@@ -237,38 +182,24 @@ Use a função validate_price para responder.`;
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "validate_price",
-              description: "Retorna a validação do preço do item baseado em pesquisa de mercado.",
-              parameters: {
-                type: "object",
-                properties: {
-                  valid: {
-                    type: "boolean",
-                    description: "true se o preço é razoável, false se está muito fora do mercado",
-                  },
-                  reason: {
-                    type: "string",
-                    description: "Explicação curta em português. Ex: 'Um iPhone 14 usado custa entre R$ 2.500 e R$ 4.000 no mercado'",
-                  },
-                  suggested_min_cents: {
-                    type: "number",
-                    description: "Valor mínimo sugerido em centavos",
-                  },
-                  suggested_max_cents: {
-                    type: "number",
-                    description: "Valor máximo sugerido em centavos",
-                  },
-                },
-                required: ["valid", "reason", "suggested_min_cents", "suggested_max_cents"],
-                additionalProperties: false,
+        tools: [{
+          type: "function",
+          function: {
+            name: "validate_price",
+            description: "Retorna a validação do preço do item baseado em pesquisa de mercado.",
+            parameters: {
+              type: "object",
+              properties: {
+                valid: { type: "boolean" },
+                reason: { type: "string" },
+                suggested_min_cents: { type: "number" },
+                suggested_max_cents: { type: "number" },
               },
+              required: ["valid", "reason", "suggested_min_cents", "suggested_max_cents"],
+              additionalProperties: false,
             },
           },
-        ],
+        }],
         tool_choice: { type: "function", function: { name: "validate_price" } },
       }),
     });
@@ -276,16 +207,6 @@ Use a função validate_price para responder.`;
     clearTimeout(timeout);
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
-
-      if (response.status === 429 || response.status === 402) {
-        return new Response(
-          JSON.stringify({ valid: true, reason: "Serviço temporariamente indisponível" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
       return new Response(
         JSON.stringify({ valid: true, reason: "Não foi possível validar o preço" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -296,7 +217,6 @@ Use a função validate_price para responder.`;
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
 
     if (!toolCall?.function?.arguments) {
-      console.error("No tool call in response:", JSON.stringify(data));
       return new Response(
         JSON.stringify({ valid: true, reason: "Validação inconclusiva" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -304,7 +224,6 @@ Use a função validate_price para responder.`;
     }
 
     const result = JSON.parse(toolCall.function.arguments);
-    console.log("Validation result:", JSON.stringify(result));
 
     return new Response(
       JSON.stringify({

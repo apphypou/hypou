@@ -30,8 +30,12 @@ const Cadastro = () => {
       toast({ title: "Nome muito longo (máx. 100 caracteres)", variant: "destructive" });
       return;
     }
-    if (password.length < 6) {
-      toast({ title: "Senha deve ter no mínimo 6 caracteres", variant: "destructive" });
+    if (password.length < 8) {
+      toast({ title: "Senha deve ter no mínimo 8 caracteres", variant: "destructive" });
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      toast({ title: "Senha deve conter letras e números", variant: "destructive" });
       return;
     }
     setLoading(true);

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { validateChatMedia } from "@/lib/fileValidation";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio';
 
@@ -170,6 +171,9 @@ export const uploadChatMedia = async (
   file: File,
   type: MessageType
 ): Promise<string> => {
+  const mediaType = type === 'text' ? 'image' : type as 'image' | 'video' | 'audio';
+  const validationError = validateChatMedia(file, mediaType);
+  if (validationError) throw new Error(validationError);
   const ext = file.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
   const path = `${userId}/${Date.now()}.${ext}`;
 
