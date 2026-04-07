@@ -1,47 +1,49 @@
 
 
-# Plano: Assistente de IA no Painel Admin
+# Plano: Refinamento do Frontend Admin
 
-## O que sera construido
+## Problema
 
-Uma nova aba "Assistente IA" no painel admin com um chat interativo especializado no Hypou. Os donos do app poderao conversar com a IA para obter estrategias de marketing, analise de metricas, ideias de campanhas, copy para redes sociais, etc.
+O painel admin tem bordas brancas/claras visíveis em vários elementos (sidebar, header, chat area, inputs, separadores), criando um visual "quadriculado" e pouco profissional no modo escuro. O layout precisa parecer mais limpo e integrado.
 
-## Arquitetura
+## Mudanças
 
-```text
-Frontend (AdminAssistente.tsx)
-    |
-    v
-Supabase Edge Function (admin-ai-chat)
-    |
-    v
-Lovable AI Gateway (google/gemini-3-flash-preview)
-```
+### 1. Reduzir opacidade das bordas globais (src/index.css)
 
-## Etapas
+- Mudar `--border` no dark mode de `0 0% 100% / 0.12` para `0 0% 100% / 0.06` — corta pela metade a visibilidade de todas as bordas
+- Mudar `--sidebar-border` de `0 0% 100% / 0.1` para `0 0% 100% / 0.06`
+- Mudar `--input` de `0 0% 100% / 0.12` para `0 0% 100% / 0.08`
 
-### 1. Edge Function `admin-ai-chat`
-- Recebe mensagens do chat e envia para o Lovable AI Gateway com streaming SSE
-- System prompt especializado: contexto do Hypou (app de trocas, publico jovem, modelo freemium), instrucoes para atuar como consultor de marketing digital
-- Validacao JWT para garantir que apenas admins autenticados usem
-- Usa `LOVABLE_API_KEY` (ja configurado)
-- Atualizar `config.toml` com a nova function
+### 2. Limpar sidebar (AdminSidebar.tsx)
 
-### 2. Pagina `AdminAssistente.tsx`
-- Interface de chat com streaming token-by-token
-- Renderizacao markdown das respostas (react-markdown)
-- Historico de conversa em memoria (sem persistencia no banco)
-- Sugestoes rapidas pre-definidas: "Crie um post para Instagram", "Estrategia de lancamento", "Analise de retencao", "Copy para email marketing"
-- Design consistente com o painel admin (cards, glassmorphism)
+- Remover `border-r border-border/50` da Sidebar — usar apenas diferença de fundo como separador
+- Remover os dois `<Separator>` que criam linhas horizontais desnecessárias
+- Reduzir `ring-2 ring-primary/20` do avatar para `ring-1 ring-border`
 
-### 3. Integracao no Admin
-- Adicionar rota `/admin/assistente` em `App.tsx`
-- Adicionar item "Assistente IA" com icone `Bot` no `AdminSidebar.tsx`
-- Adicionar label no `AdminLayout.tsx` breadcrumbs
+### 3. Limpar header do layout (AdminLayout.tsx)
 
-## System Prompt (resumo)
-A IA sera instruida como especialista em marketing digital para um app de trocas chamado Hypou. Conhece o modelo de negocio (freemium, trocas por proximidade, publico 18-35), e fornece estrategias de growth hacking, copy, campanhas, analise de funil, etc.
+- Trocar `border-b border-border/50` por `border-b border-transparent dark:border-white/[0.04]` — borda quase invisível
+- Remover `ring-2 ring-border` do avatar do header
 
-## Dependencia
-- Instalar `react-markdown` para renderizar respostas formatadas
+### 4. Limpar área de chat (AdminAssistente.tsx)
+
+- Remover `border border-border/50` do container do chat — deixar só o fundo diferenciado
+- Remover `border-t border-border/50` do input area — usar apenas espaçamento
+- Reduzir `border border-border/50` dos suggestion cards para `border border-white/[0.04]`
+
+### 5. Suavizar glass-card e glass-panel no dark (src/index.css)
+
+- `.dark .glass-card` border: mudar de `rgba(255, 255, 255, 0.05)` para `rgba(255, 255, 255, 0.03)`
+- `.dark .glass-panel` border: mudar de `hsl(0 0% 100% / 0.08)` para `hsl(0 0% 100% / 0.04)`
+
+## Resultado esperado
+
+Painel admin com visual mais limpo e integrado — sem linhas brancas visíveis contornando cada elemento, mantendo hierarquia visual apenas por diferença de fundo e espaçamento.
+
+## Arquivos editados
+
+1. `src/index.css` — tokens de borda + glass utilities
+2. `src/components/admin/AdminSidebar.tsx` — remover bordas e separadores
+3. `src/pages/admin/AdminLayout.tsx` — suavizar header
+4. `src/pages/admin/AdminAssistente.tsx` — limpar chat container
 
