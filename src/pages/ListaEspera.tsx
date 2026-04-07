@@ -234,7 +234,7 @@ const ListaEspera = () => {
             transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
             className="relative"
           >
-            <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:text-foreground" />
+            <HypouLogo size="lg" className="text-5xl sm:text-6xl [&>span:first-child]:bg-gradient-to-r [&>span:first-child]:from-foreground [&>span:first-child]:to-primary [&>span:first-child]:bg-clip-text [&>span:first-child]:text-transparent" />
             <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
           </motion.div>
 
