@@ -101,24 +101,24 @@ const useFakeCounter = (base: number) => {
   return count;
 };
 
-// ── MYSTERY WORDS ───────────────────────────────────────────────────
-const mysteryWords = ["trocar.", "descobrir.", "conquistar.", "evoluir."];
+// ── ROTATING WORDS ──────────────────────────────────────────────────
+const rotatingWords = ["um PS5.", "um iPhone.", "uma bike.", "um notebook."];
 
-const useMysteryWord = () => {
+const useRotatingWord = () => {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setIdx((i) => (i + 1) % mysteryWords.length), 2800);
+    const id = setInterval(() => setIdx((i) => (i + 1) % rotatingWords.length), 2800);
     return () => clearInterval(id);
   }, []);
-  return mysteryWords[idx];
+  return rotatingWords[idx];
 };
 
 
-// ── MYSTERY FEATURES ────────────────────────────────────────────────
+// ── BENEFITS ────────────────────────────────────────────────────────
 const features = [
-  { icon: Zap, text: "Sem dinheiro. Sem complicação.", delay: 0.1 },
-  { icon: Shield, text: "100% seguro e verificado.", delay: 0.2 },
-  { icon: Eye, text: "Descubra o que ninguém viu.", delay: 0.3 },
+  { icon: Zap, text: "Troque direto, sem gastar 1 real.", delay: 0.1 },
+  { icon: Shield, text: "Perfis verificados. Trocas protegidas.", delay: 0.2 },
+  { icon: Eye, text: "Itens exclusivos perto de você.", delay: 0.3 },
 ];
 
 // ── MAIN PAGE ───────────────────────────────────────────────────────
@@ -133,7 +133,7 @@ const ListaEspera = () => {
 
   const countdown = useCountdown(LAUNCH_DATE);
   const socialCount = useFakeCounter(1247);
-  const mysteryWord = useMysteryWord();
+  const rotatingWord = useRotatingWord();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,7 +225,7 @@ const ListaEspera = () => {
             className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/[0.04]"
           >
             <Lock className="w-3 h-3 text-primary" />
-            <span className="text-xs font-semibold text-primary tracking-wide">Acesso limitado • Apenas por convite</span>
+            <span className="text-xs font-semibold text-primary tracking-wide">Vagas limitadas • Lançamento exclusivo</span>
           </motion.div>
 
           {/* Logo */}
@@ -246,23 +246,23 @@ const ListaEspera = () => {
             transition={{ delay: 0.7 }}
             className="text-center lg:text-left"
           >
-            <h1 className="text-lg sm:text-2xl font-bold text-foreground leading-tight">
-              Uma nova forma de{" "}
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
+              Troque o que não usa por{" "}
               <AnimatePresence mode="wait">
                 <motion.span
-                  key={mysteryWord}
+                  key={rotatingWord}
                   initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
                   animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                   exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
                   transition={{ duration: 0.4 }}
                   className="text-primary inline-block"
                 >
-                  {mysteryWord}
+                  {rotatingWord}
                 </motion.span>
               </AnimatePresence>
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Ninguém sabe exatamente o que é. Mas quem entrou, não quer sair.
+              O app que conecta pessoas para trocar objetos. Sem pagar nada. Só chega primeiro quem entrar agora.
             </p>
           </motion.div>
 
@@ -297,7 +297,7 @@ const ListaEspera = () => {
             className="w-full"
           >
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 text-center lg:text-left">
-              As portas abrem em
+              Lançamento oficial em
             </p>
             <div className="flex items-center gap-1.5 sm:gap-3 justify-center lg:justify-start">
               <CountdownBlock value={countdown.days} label="dias" />
@@ -333,10 +333,10 @@ const ListaEspera = () => {
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
-                  {loading ? "Entrando..." : "Garantir minha vaga"}
+                  {loading ? "Entrando..." : "Quero entrar primeiro →"}
                 </NeonButton>
                 <p className="text-[10px] text-muted-foreground text-center">
-                  Vagas limitadas. Sem spam. Só acesso antecipado.
+                  5 segundos pra cadastrar. Zero spam. Cancele quando quiser.
                 </p>
               </motion.form>
             ) : (
