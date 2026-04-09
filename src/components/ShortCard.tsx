@@ -41,19 +41,18 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
 
     if (isVisible) {
       el.play().then(() => setPlaying(true)).catch(() => {});
-      if (!viewCounted && !video.isMock) {
+      if (!viewCounted) {
         const timer = setTimeout(() => {
           incrementView(video.id).catch(() => {});
           setViewCounted(true);
-        }, 2000);
+        }, 3000);
         return () => clearTimeout(timer);
       }
     } else {
       el.pause();
-      el.currentTime = 0;
       setPlaying(false);
     }
-  }, [isVisible, viewCounted, video.id, video.isMock]);
+  }, [isVisible, viewCounted, video.id]);
 
   useEffect(() => {
     const el = videoRef.current;
@@ -96,13 +95,6 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
   };
 
   const handleLike = async () => {
-    if (video.isMock) {
-      setLiked((l) => !l);
-      setLikeCount((c) => liked ? c - 1 : c + 1);
-      setShowHeart(true);
-      setTimeout(() => setShowHeart(false), 800);
-      return;
-    }
     if (!user) return;
     const newLiked = !liked;
     setLiked(newLiked);
