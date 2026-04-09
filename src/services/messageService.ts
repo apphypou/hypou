@@ -77,31 +77,23 @@ export const getConversations = async (userId: string): Promise<ConversationWith
   const unreadCounts: Record<string, number> = {};
 
   if (conversationIds.length > 0) {
-    // Get last message per conversation (one query per conversation for efficiency)
-    await Promise.all(conversationIds.map(async (convId) => {
-      const { data: lastMsgArr } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", convId)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      
-      if (lastMsgArr && lastMsgArr.length > 0) {
-        lastMessages[convId] = lastMsgArr[0] as Message;
-      }
+    // Batch: fetch recent messages for all conversations at once
+    const { data: allMessages } = await supabase
+      .from("messages")
+      .select("*")
+      .in("conversation_id", conversationIds)
+      .order("created_at", { ascending: false });
 
-      // Count unread
-      const { count } = await supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .eq("conversation_id", convId)
-        .neq("sender_id", userId)
-        .is("read_at", null);
-      
-      if (count && count > 0) {
-        unreadCounts[convId] = count;
+    if (allMessages) {
+      for (const msg of allMessages as Message[]) {
+        if (!lastMessages[msg.conversation_id]) {
+          lastMessages[msg.conversation_id] = msg;
+        }
+        if (msg.sender_id !== userId && !msg.read_at) {
+          unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
+        }
       }
-    }));
+    }
   }
 
   return matches.map((m: any) => {

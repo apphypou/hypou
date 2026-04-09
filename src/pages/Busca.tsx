@@ -4,15 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { searchItems, type SearchFilters } from "@/services/searchService";
+import { formatValue } from "@/lib/utils";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
-
 import { categories, conditions } from "@/constants/categories";
-
-const formatValue = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 const SORT_OPTIONS = [
   { value: "recent" as const, label: "Mais recentes" },
@@ -296,7 +293,7 @@ const Busca = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="rounded-2xl bg-card border border-foreground/5 overflow-hidden cursor-pointer hover:border-primary/30 transition-all"
-                    onClick={() => navigate(`/explorar`)}
+                    onClick={() => navigate(`/usuario/${item.profiles?.user_id || item.user_id}`)}
                   >
                     <div className="aspect-square relative">
                       {mainImage ? (

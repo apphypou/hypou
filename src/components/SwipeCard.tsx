@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { formatValue, translateCondition } from "@/lib/utils";
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
@@ -43,25 +44,6 @@ interface SwipeCardProps {
   standby?: boolean;
   matchedOwnItem?: MatchedOwnItem | null;
 }
-
-const formatValue = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
-
-const CONDITION_MAP: Record<string, string> = {
-  used: "Usado",
-  USED: "Usado",
-  new: "Novo",
-  NEW: "Novo",
-  like_new: "Semi-novo",
-  LIKE_NEW: "Semi-novo",
-  "semi-novo": "Semi-novo",
-  "Semi-novo": "Semi-novo",
-};
-
-const translateCondition = (raw: string | null | undefined) => {
-  if (!raw) return null;
-  return CONDITION_MAP[raw] || raw;
-};
 
 const getTimeSince = (dateStr: string | null | undefined) => {
   if (!dateStr) return null;

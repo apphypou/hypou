@@ -2,13 +2,11 @@ import { ArrowLeft, MapPin, Star } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { formatValue } from "@/lib/utils";
 import ScreenLayout from "@/components/ScreenLayout";
 import GlassCard from "@/components/GlassCard";
 import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
 import { useUserRating } from "@/hooks/useRatings";
-
-const formatValue = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 const PerfilUsuario = () => {
   const { userId } = useParams<{ userId: string }>();
