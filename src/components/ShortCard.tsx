@@ -118,9 +118,6 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
     }
   };
 
-  const formatValue = (cents: number) =>
-    `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
-
   const formatCount = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
     if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;

@@ -133,10 +133,6 @@ const MeuPerfil = () => {
     }
   };
 
-  const formatValue = (cents: number) => {
-    return `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
-  };
-
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user || !uploadingVideoItemId) return;
