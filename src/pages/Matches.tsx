@@ -309,7 +309,7 @@ const Matches = () => {
                     <Repeat2 className="h-16 w-16 text-foreground/10" />
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 h-[60%]" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.85) 25%, hsl(var(--background) / 0.4) 50%, hsl(var(--background) / 0.05) 75%, transparent 100%)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[45%]" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 20%, hsl(var(--background) / 0.45) 55%, hsl(var(--background) / 0.08) 80%, transparent 100%)' }} /> style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.85) 25%, hsl(var(--background) / 0.4) 50%, hsl(var(--background) / 0.05) 75%, transparent 100%)' }} />
               </div>
 
               {/* Content */}
@@ -357,42 +357,42 @@ const Matches = () => {
                 </div>
 
                 {/* Exchange visualization */}
-                <div className="rounded-2xl bg-foreground/5 border border-foreground/10 p-4 mb-6 overflow-hidden">
-                  <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-3 text-center">
+                <div className="rounded-2xl bg-foreground/[0.07] border border-foreground/10 p-5 mb-6 overflow-hidden">
+                  <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-4 text-center">
                     {selectedMatch.status === "completed" ? "Troca Concluída ✅" : "Proposta de Troca"}
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {/* My item */}
                     <div className="flex-1 min-w-0 flex flex-col items-center text-center">
-                      <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-foreground/10 mb-2">
+                      <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
                         {myImages[0]?.image_url ? (
                           <img src={myImages[0].image_url} alt={myItem.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center text-lg">📦</div>
+                          <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                         )}
                       </div>
-                      <p className="text-foreground/80 text-[11px] font-semibold truncate w-full px-1">{myItem.name}</p>
-                      <p className="text-primary/70 text-[10px] font-bold">{formatValue(myItem.market_value)}</p>
-                      <p className="text-foreground/30 text-[9px] mt-0.5">Seu item</p>
+                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{myItem.name}</p>
+                      <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(myItem.market_value)}</p>
+                      <p className="text-foreground/30 text-[9px] mt-1">Seu item</p>
                     </div>
 
                     {/* Arrow */}
-                    <div className="flex-shrink-0 flex items-center justify-center">
-                      <ArrowRightLeft className="h-4 w-4 text-primary/60" />
+                    <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                      <ArrowRightLeft className="h-4 w-4 text-primary/70" />
                     </div>
 
                     {/* Their item */}
                     <div className="flex-1 min-w-0 flex flex-col items-center text-center">
-                      <div className="w-14 h-14 flex-shrink-0 rounded-xl overflow-hidden border border-primary/20 mb-2 ring-1 ring-primary/30">
+                      <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
                         {otherImages[0]?.image_url ? (
                           <img src={otherImages[0].image_url} alt={otherItem.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center text-lg">📦</div>
+                          <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                         )}
                       </div>
-                      <p className="text-foreground/80 text-[11px] font-semibold truncate w-full px-1">{otherItem.name}</p>
-                      <p className="text-primary/70 text-[10px] font-bold">{formatValue(otherItem.market_value)}</p>
-                      <p className="text-foreground/30 text-[9px] mt-0.5">Item deles</p>
+                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{otherItem.name}</p>
+                      <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(otherItem.market_value)}</p>
+                      <p className="text-foreground/30 text-[9px] mt-1">Item deles</p>
                     </div>
                   </div>
 
@@ -485,9 +485,25 @@ const Matches = () => {
                   Proposta Recusada
                 </div>
               ) : isSentProposal(selectedMatch) ? (
-                <div className="w-full h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 font-bold text-base flex items-center justify-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Aguardando resposta
+                <div className="space-y-3">
+                  <div className="w-full h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 font-bold text-base flex items-center justify-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    Aguardando resposta
+                  </div>
+                  <button
+                    onClick={handleRejectMatch}
+                    disabled={rejecting}
+                    className="w-full h-11 rounded-2xl bg-card border border-foreground/10 text-foreground/50 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {rejecting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <XIcon className="h-4 w-4" />
+                        Cancelar proposta
+                      </>
+                    )}
+                  </button>
                 </div>
               ) : (
                 <div className="flex gap-3">
