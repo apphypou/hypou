@@ -25,6 +25,26 @@ import { formatValue, translateCondition } from "@/lib/utils";
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
 
+export interface SwipeCardHandle {
+  triggerSwipe: (direction: "like" | "dislike") => void;
+}
+
+interface MatchedOwnItem {
+  id: string;
+  name: string;
+  image_url: string | null;
+  count?: number;
+}
+
+interface SwipeCardProps {
+  item: any;
+  onSwipeComplete: (direction: "like" | "dislike") => void;
+  onDragDirectionChange?: (rawX: number) => void;
+  disabled?: boolean;
+  standby?: boolean;
+  matchedOwnItem?: MatchedOwnItem | null;
+}
+
 const getTimeSince = (dateStr: string | null | undefined) => {
   if (!dateStr) return null;
   const created = new Date(dateStr);
