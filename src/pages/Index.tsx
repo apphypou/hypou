@@ -46,7 +46,7 @@ const productPairs: ProductPair[] = [
   ],
 ];
 
-const CYCLE_MS = 3500;
+const CYCLE_MS = 5500;
 
 const cardVariants = {
   enterLeft: {
