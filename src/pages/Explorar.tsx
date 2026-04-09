@@ -225,14 +225,18 @@ const Explorar = () => {
         ) : feedEnded || items.length === 0 ? (
           /* ===== EMPTY STATE ===== */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-            <motion.span
-              className="text-7xl mb-5"
+            <motion.div
+              className="mb-5"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              {items.length === 0 ? "🤷‍♂️" : "✅"}
-            </motion.span>
+              {items.length === 0 ? (
+                <img src={emptyChestImg} alt="Baú vazio" className="w-28 h-28 object-contain" />
+              ) : (
+                <span className="text-7xl">✅</span>
+              )}
+            </motion.div>
             <h2 className="text-xl font-bold text-foreground mb-2">
               {items.length === 0
                 ? "Ainda não há itens por aqui"
