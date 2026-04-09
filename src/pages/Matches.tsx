@@ -309,7 +309,7 @@ const Matches = () => {
                     <Repeat2 className="h-16 w-16 text-foreground/10" />
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background via-background/80 to-transparent" />
               </div>
 
               {/* Content */}
