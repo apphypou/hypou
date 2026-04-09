@@ -102,12 +102,8 @@ const cardVariants = {
 
 const ProductCardEl = ({ card }: { card: ProductCard }) => (
   <div className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
-    <div className="h-[145px] flex items-center justify-center overflow-hidden" style={card.type === "icon" ? { background: card.gradient } : { background: "white" }}>
-      {card.type === "image" ? (
-        <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
-      ) : (
-        card.icon && <card.icon className="h-14 w-14 text-white/90 drop-shadow-lg" />
-      )}
+    <div className="h-[145px] flex items-center justify-center overflow-hidden bg-white">
+      <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
     </div>
     <div className="p-2 space-y-1">
       <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
