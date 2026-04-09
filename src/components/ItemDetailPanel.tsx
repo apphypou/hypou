@@ -3,16 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { motion, type PanInfo } from "framer-motion";
 import { useCallback, useRef } from "react";
-
-const formatValue = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
-
-const CONDITION_MAP: Record<string, string> = {
-  used: "Usado", USED: "Usado",
-  new: "Novo", NEW: "Novo",
-  like_new: "Semi-novo", LIKE_NEW: "Semi-novo",
-  "semi-novo": "Semi-novo", "Semi-novo": "Semi-novo",
-};
+import { formatValue, CONDITION_MAP } from "@/lib/utils";
 
 interface ItemDetailPanelProps {
   item: any;
