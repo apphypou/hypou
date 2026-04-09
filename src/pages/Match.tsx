@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
 import { useState } from "react";
+import { formatValue } from "@/lib/utils";
 
 const Match = () => {
   const { matchId } = useParams<{ matchId: string }>();
