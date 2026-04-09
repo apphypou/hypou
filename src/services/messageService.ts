@@ -65,7 +65,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
 
   // Fetch profiles
   const { data: profiles } = await supabase
-    .from("profiles")
+    .from("public_profiles" as any)
     .select("user_id, display_name, avatar_url")
     .in("user_id", [...otherUserIds]);
 

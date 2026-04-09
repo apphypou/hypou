@@ -53,7 +53,7 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
   let profilesMap: Record<string, any> = {};
   if (uniqueIds.length > 0) {
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles" as any)
       .select("user_id, display_name, avatar_url, location")
       .in("user_id", uniqueIds);
     
@@ -183,7 +183,7 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
   const otherUserId = isUserA ? data.user_b_id : data.user_a_id;
 
   const { data: profile } = await supabase
-    .from("profiles")
+    .from("public_profiles" as any)
     .select("user_id, display_name, avatar_url, location")
     .eq("user_id", otherUserId)
     .single();
