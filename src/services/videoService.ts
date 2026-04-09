@@ -23,7 +23,7 @@ export interface ShortVideo {
   liked_by_me?: boolean;
 }
 
-
+export type SortMode = "recent" | "trending" | "popular";
 
 export const fetchShortsFeed = async (
   page = 0,

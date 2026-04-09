@@ -200,7 +200,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (!video.isMock) navigate(`/usuario/${video.user_id}`);
+               navigate(`/usuario/${video.user_id}`);
             }}
           >
             <div className="p-[2px] rounded-full bg-gradient-to-br from-primary via-primary/80 to-primary/40">
@@ -251,7 +251,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!video.isMock) navigate(`/usuario/${video.user_id}`);
+                  navigate(`/usuario/${video.user_id}`);
                 }}
                 className="mb-2 flex items-center gap-1.5"
               >

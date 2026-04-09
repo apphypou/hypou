@@ -87,10 +87,6 @@ const Shorts = () => {
 
   // Trade flow
   const handleTradePress = useCallback((video: ShortVideo) => {
-    if (video.isMock) {
-      toast({ title: "Demo", description: "Esta é uma demonstração. Cadastre itens reais para trocar!" });
-      return;
-    }
     if (!user) {
       navigate("/login");
       return;
