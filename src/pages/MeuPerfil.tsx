@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatValue } from "@/lib/utils";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { uploadVideo } from "@/services/videoService";
 import SelectItemDialog from "@/components/SelectItemDialog";

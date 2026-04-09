@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toggleLike, incrementView, type ShortVideo } from "@/services/videoService";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatValue } from "@/lib/utils";
 
 interface ShortCardProps {
   video: ShortVideo;

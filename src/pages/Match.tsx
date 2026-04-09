@@ -45,8 +45,6 @@ const Match = () => {
     }
   };
 
-  const formatValue = (cents: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
   if (isLoading) {
     return (

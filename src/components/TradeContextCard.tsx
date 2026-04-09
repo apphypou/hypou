@@ -1,4 +1,5 @@
 import { ArrowLeftRight } from "lucide-react";
+import { formatValue } from "@/lib/utils";
 
 interface TradeItem {
   name: string;
@@ -10,9 +11,6 @@ interface TradeContextCardProps {
   otherItem: TradeItem | null;
   matchStatus: string;
 }
-
-const formatValue = (cents: number) =>
-  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   proposal: { label: "Pendente ⏳", className: "bg-primary/10 text-primary border-primary/20" },
