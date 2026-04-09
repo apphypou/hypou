@@ -233,7 +233,7 @@ const Explorar = () => {
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
               {items.length === 0 ? (
-                <img src={emptyChestImg} alt="Baú vazio" className="w-36 h-36 object-contain" />
+                <img src={emptyChestImg} alt="Baú vazio" className="w-48 h-48 object-contain" />
               ) : (
                 <span className="text-7xl">✅</span>
               )}
