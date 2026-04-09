@@ -1,4 +1,5 @@
 import { PlusCircle, Share2 } from "lucide-react";
+import emptyChestImg from "@/assets/empty-chest.png";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
