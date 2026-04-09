@@ -67,10 +67,10 @@ export const searchItems = async (userId: string, filters: SearchFilters) => {
   let profileMap: Record<string, any> = {};
   if (ownerIds.length > 0) {
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles" as any)
       .select("user_id, display_name, avatar_url, location")
       .in("user_id", ownerIds);
-    (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
+    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
   }
 
   return (data || [])

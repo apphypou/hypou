@@ -17,12 +17,12 @@ const PerfilUsuario = () => {
     queryKey: ["user-profile", userId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles" as any)
         .select("user_id, display_name, avatar_url, bio, location")
         .eq("user_id", userId!)
         .single();
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!userId,
   });

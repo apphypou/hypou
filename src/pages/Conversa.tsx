@@ -53,7 +53,7 @@ const useConversationDetails = (conversationId: string | null) => {
       const myItem = isUserA ? match.item_a : match.item_b;
 
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("public_profiles" as any)
         .select("display_name, avatar_url")
         .eq("user_id", otherUserId)
         .single();
@@ -62,7 +62,7 @@ const useConversationDetails = (conversationId: string | null) => {
         match_id: match.id,
         match_status: match.status,
         other_user_id: otherUserId,
-        other_user: profile || { display_name: "Usuário", avatar_url: null },
+        other_user: (profile as any) || { display_name: "Usuário", avatar_url: null },
         other_item: otherItem as any,
         my_item: myItem as any,
         is_user_b: !isUserA, // user_b is the one who receives proposals
