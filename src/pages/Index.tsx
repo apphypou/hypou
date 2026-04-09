@@ -1,10 +1,14 @@
-import { ArrowRight, Handshake, Headphones, Shirt, Bike, Camera } from "lucide-react";
+import { ArrowRight, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import NeonButton from "@/components/NeonButton";
 import ps5Image from "@/assets/ps5-hero.png";
 import notebookImage from "@/assets/notebook-hero.png";
+import headphonesImage from "@/assets/headphones-hero.png";
+import sneakerImage from "@/assets/sneaker-hero.png";
+import cameraImage from "@/assets/camera-hero.png";
+import bikeImage from "@/assets/bike-hero.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -16,10 +20,7 @@ const fadeUp = {
 };
 
 type ProductCard = {
-  type: "image" | "icon";
-  image?: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  gradient?: string;
+  image: string;
   name: string;
   price: string;
   category: string;
@@ -29,20 +30,20 @@ type ProductPair = [ProductCard, ProductCard];
 
 const productPairs: ProductPair[] = [
   [
-    { type: "image", image: ps5Image, name: "PS5 Pro", price: "R$ 4.500", category: "Games" },
-    { type: "image", image: notebookImage, name: "Notebook Samsung", price: "R$ 3.200", category: "Eletrônicos" },
+    { image: ps5Image, name: "PS5 Pro", price: "R$ 4.500", category: "Games" },
+    { image: notebookImage, name: "Notebook Samsung", price: "R$ 4.200", category: "Eletrônicos" },
   ],
   [
-    { type: "icon", icon: Headphones, gradient: "linear-gradient(135deg, hsl(270 60% 55%), hsl(300 50% 45%))", name: "Fone Bluetooth", price: "R$ 890", category: "Áudio" },
-    { type: "icon", icon: Shirt, gradient: "linear-gradient(135deg, hsl(340 70% 50%), hsl(20 80% 55%))", name: "Camiseta Nike", price: "R$ 250", category: "Moda" },
+    { image: headphonesImage, name: "Fone Bluetooth", price: "R$ 850", category: "Áudio" },
+    { image: sneakerImage, name: "Tênis Nike", price: "R$ 900", category: "Moda" },
   ],
   [
-    { type: "icon", icon: Bike, gradient: "linear-gradient(135deg, hsl(150 60% 40%), hsl(180 70% 45%))", name: "Bike Caloi", price: "R$ 1.800", category: "Esportes" },
-    { type: "icon", icon: Camera, gradient: "linear-gradient(135deg, hsl(35 80% 50%), hsl(45 90% 55%))", name: "Câmera Canon", price: "R$ 2.100", category: "Fotografia" },
+    { image: bikeImage, name: "Bike Caloi", price: "R$ 2.100", category: "Esportes" },
+    { image: cameraImage, name: "Câmera Canon", price: "R$ 2.300", category: "Fotografia" },
   ],
   [
-    { type: "image", image: notebookImage, name: "MacBook Air", price: "R$ 7.500", category: "Eletrônicos" },
-    { type: "icon", icon: Headphones, gradient: "linear-gradient(135deg, hsl(200 80% 50%), hsl(220 70% 45%))", name: "AirPods Pro", price: "R$ 1.900", category: "Áudio" },
+    { image: notebookImage, name: "MacBook Air", price: "R$ 7.500", category: "Eletrônicos" },
+    { image: ps5Image, name: "PS5 + Jogos", price: "R$ 7.200", category: "Games" },
   ],
 ];
 
@@ -101,12 +102,8 @@ const cardVariants = {
 
 const ProductCardEl = ({ card }: { card: ProductCard }) => (
   <div className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
-    <div className="h-[145px] flex items-center justify-center overflow-hidden" style={card.type === "icon" ? { background: card.gradient } : { background: "white" }}>
-      {card.type === "image" ? (
-        <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
-      ) : (
-        card.icon && <card.icon className="h-14 w-14 text-white/90 drop-shadow-lg" />
-      )}
+    <div className="h-[145px] flex items-center justify-center overflow-hidden bg-white">
+      <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
     </div>
     <div className="p-2 space-y-1">
       <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
