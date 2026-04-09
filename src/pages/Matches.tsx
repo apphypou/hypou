@@ -309,7 +309,7 @@ const Matches = () => {
                     <Repeat2 className="h-16 w-16 text-foreground/10" />
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 h-[45%]" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 20%, hsl(var(--background) / 0.45) 55%, hsl(var(--background) / 0.08) 80%, transparent 100%)' }} /> style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.85) 25%, hsl(var(--background) / 0.4) 50%, hsl(var(--background) / 0.05) 75%, transparent 100%)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[45%]" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 20%, hsl(var(--background) / 0.45) 55%, hsl(var(--background) / 0.08) 80%, transparent 100%)' }} />
               </div>
 
               {/* Content */}
