@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
 import { useState } from "react";
+import { formatValue } from "@/lib/utils";
 
 const Match = () => {
   const { matchId } = useParams<{ matchId: string }>();
@@ -44,8 +45,6 @@ const Match = () => {
     }
   };
 
-  const formatValue = (cents: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
   if (isLoading) {
     return (

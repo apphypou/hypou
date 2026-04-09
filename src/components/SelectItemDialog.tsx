@@ -12,6 +12,7 @@ import {
   DrawerFooter,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { formatValue } from "@/lib/utils";
 
 interface SelectItemDialogProps {
   open: boolean;
@@ -20,9 +21,6 @@ interface SelectItemDialogProps {
   targetItemName?: string;
   loading?: boolean;
 }
-
-const formatValue = (cents: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 
 const SelectItemDialog = ({ open, onClose, onConfirm, targetItemName, loading }: SelectItemDialogProps) => {
   const { user } = useAuth();

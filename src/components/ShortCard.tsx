@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toggleLike, incrementView, type ShortVideo } from "@/services/videoService";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatValue } from "@/lib/utils";
 
 interface ShortCardProps {
   video: ShortVideo;
@@ -116,9 +117,6 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
       setLikeCount((c) => newLiked ? c - 1 : c + 1);
     }
   };
-
-  const formatValue = (cents: number) =>
-    `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
 
   const formatCount = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;

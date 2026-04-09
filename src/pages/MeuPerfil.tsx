@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatValue } from "@/lib/utils";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { uploadVideo } from "@/services/videoService";
 import SelectItemDialog from "@/components/SelectItemDialog";
@@ -130,10 +131,6 @@ const MeuPerfil = () => {
     } catch {
       toast({ title: "Erro ao remover item", variant: "destructive" });
     }
-  };
-
-  const formatValue = (cents: number) => {
-    return `R$ ${(cents / 100).toLocaleString("pt-BR")}`;
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
