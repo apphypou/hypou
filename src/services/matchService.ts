@@ -57,7 +57,7 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
       .select("user_id, display_name, avatar_url, location")
       .in("user_id", uniqueIds);
     
-    (profiles || []).forEach((p) => {
+    ((profiles || []) as any[]).forEach((p) => {
       profilesMap[p.user_id] = p;
     });
   }
@@ -196,7 +196,7 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
     confirmed_by_b: (data as any).confirmed_by_b,
     item_a: data.item_a as any,
     item_b: data.item_b as any,
-    other_user: profile || { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
+    other_user: (profile as any) || { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
     my_item_side: isUserA ? "a" : "b",
   };
 };

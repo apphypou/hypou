@@ -70,7 +70,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     .in("user_id", [...otherUserIds]);
 
   const profileMap: Record<string, any> = {};
-  (profiles || []).forEach((p) => { profileMap[p.user_id] = p; });
+  ((profiles || []) as any[]).forEach((p) => { profileMap[p.user_id] = p; });
 
   // Fetch last message for each conversation
   const lastMessages: Record<string, Message> = {};
