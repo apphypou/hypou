@@ -296,7 +296,7 @@ const Busca = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="rounded-2xl bg-card border border-foreground/5 overflow-hidden cursor-pointer hover:border-primary/30 transition-all"
-                    onClick={() => navigate(`/explorar`)}
+                    onClick={() => navigate(`/usuario/${item.profiles?.user_id || item.user_id}`)}
                   >
                     <div className="aspect-square relative">
                       {mainImage ? (

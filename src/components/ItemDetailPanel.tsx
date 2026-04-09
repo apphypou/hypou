@@ -119,7 +119,7 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
               Anunciante
             </h3>
             <button
-              onClick={() => navigate(`/perfil/${ownerProfile.user_id}`)}
+              onClick={() => navigate(`/usuario/${ownerProfile.user_id}`)}
               className="w-full flex items-center gap-3 p-3 rounded-xl bg-background border border-border hover:border-primary/30 transition-all group"
             >
               {ownerProfile.avatar_url ? (
