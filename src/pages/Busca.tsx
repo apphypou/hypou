@@ -6,6 +6,10 @@ import { useQuery } from "@tanstack/react-query";
 import { searchItems, type SearchFilters } from "@/services/searchService";
 import { formatValue } from "@/lib/utils";
 import ScreenLayout from "@/components/ScreenLayout";
+import BottomNav from "@/components/BottomNav";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatePresence, motion } from "framer-motion";
+import { categories, conditions } from "@/constants/categories";
 
 const SORT_OPTIONS = [
   { value: "recent" as const, label: "Mais recentes" },
