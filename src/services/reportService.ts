@@ -23,6 +23,17 @@ export const unblockUser = async (blockerId: string, blockedId: string) => {
   if (error) throw error;
 };
 
+export const getBlockedUserIds = async (blockerId: string) => {
+  const { data, error } = await supabase
+    .from("blocked_users")
+    .select("blocked_id")
+    .eq("blocker_id", blockerId);
+
+  if (error) throw error;
+
+  return (data || []).map((row) => row.blocked_id);
+};
+
 export const getBlockedUsers = async (blockerId: string) => {
   const { data, error } = await supabase
     .from("blocked_users")

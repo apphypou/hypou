@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getBlockedUserIds } from "@/services/reportService";
 
 export interface SearchFilters {
   query?: string;
@@ -12,11 +13,18 @@ export interface SearchFilters {
 }
 
 export const searchItems = async (userId: string, filters: SearchFilters) => {
+  const blockedUserIds = await getBlockedUserIds(userId);
+
   let q = supabase
     .from("items")
     .select(`*, item_images (id, image_url, position)`)
     .eq("status", "active")
     .neq("user_id", userId);
+
+  if (blockedUserIds.length > 0) {
+    const blockedFilter = `(${blockedUserIds.map((id) => `"${id}"`).join(",")})`;
+    q = q.not("user_id", "in", blockedFilter);
+  }
 
   if (filters.query && filters.query.trim()) {
     const term = `%${filters.query.trim()}%`;
@@ -39,7 +47,6 @@ export const searchItems = async (userId: string, filters: SearchFilters) => {
     q = q.lte("market_value", filters.maxPrice);
   }
 
-  // Sort
   switch (filters.sort) {
     case "price_asc":
       q = q.order("market_value", { ascending: true });
@@ -62,7 +69,6 @@ export const searchItems = async (userId: string, filters: SearchFilters) => {
 
   if (error) throw error;
 
-  // Fetch profiles
   const ownerIds = [...new Set((data || []).map((i) => i.user_id))];
   let profileMap: Record<string, any> = {};
   if (ownerIds.length > 0) {
