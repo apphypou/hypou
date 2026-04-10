@@ -297,19 +297,19 @@ const Matches = () => {
 
             <div className="h-full w-full overflow-y-auto overflow-x-hidden no-scrollbar pb-36">
               {/* Hero image */}
-              <div className="relative w-full aspect-square max-h-[50vh] bg-card overflow-hidden">
+              <div className="relative w-full aspect-square max-h-[50vh] bg-background overflow-hidden">
                 {otherImages[0]?.image_url ? (
                   <img
                     src={otherImages[0].image_url}
                     alt={otherItem.name}
-                    className="w-full h-full object-contain bg-card"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-card flex items-center justify-center">
+                  <div className="w-full h-full bg-background flex items-center justify-center">
                     <Repeat2 className="h-16 w-16 text-foreground/10" />
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 h-[45%]" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.9) 20%, hsl(var(--background) / 0.45) 55%, hsl(var(--background) / 0.08) 80%, transparent 100%)' }} />
+                <div className="absolute bottom-0 left-0 right-0 h-[50%]" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 0%, hsl(var(--background) / 0.85) 30%, hsl(var(--background) / 0.35) 60%, hsl(var(--background) / 0.05) 85%, transparent 100%)' }} />
               </div>
 
               {/* Content */}
