@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.admin-ai-chat]
 verify_jwt = false
+
+[functions.confirm-test-users]
+verify_jwt = false
