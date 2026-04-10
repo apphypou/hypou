@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { blockUser } from "@/services/reportService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, ShieldAlert, Search, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, ShieldAlert, Search, CheckCircle2, XCircle, Ban } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 const AdminReports = () => {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -63,8 +66,13 @@ const AdminReports = () => {
   };
 
   const handleBlockUser = async (userId: string) => {
-    // For now we just show a toast - actual blocking would need more infra
-    toast({ title: "Funcionalidade em desenvolvimento", description: "O bloqueio de usuários pelo admin será implementado em breve." });
+    if (!user) return;
+    try {
+      await blockUser(user.id, userId);
+      toast({ title: "Usuário bloqueado 🚫", description: "Este usuário não aparecerá mais para você." });
+    } catch (err: any) {
+      toast({ title: "Erro ao bloquear", description: err.message, variant: "destructive" });
+    }
   };
 
   if (isLoading) {
