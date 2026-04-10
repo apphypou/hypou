@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle, MoreVertical, Ban } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, MoreVertical, Ban } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +9,6 @@ import ChatSafetyDialog from "@/components/ChatSafetyDialog";
 import TradeContextCard from "@/components/TradeContextCard";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
-import { acceptProposal, rejectProposal } from "@/services/matchService";
 import { createReport, blockUser } from "@/services/reportService";
 import {
   Dialog,
@@ -106,7 +105,7 @@ const Conversa = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  
 
   // Report dialog
   const [reportOpen, setReportOpen] = useState(false);
@@ -198,33 +197,6 @@ const Conversa = () => {
     setIsRecording(false);
   }, []);
 
-  const handleAcceptTrade = async () => {
-    if (!details?.match_id) return;
-    setActionLoading(true);
-    try {
-      await acceptProposal(details.match_id, user!.id);
-      toast({ title: "Troca aceita! ✅", description: "Combinem a entrega pelo chat." });
-      refetchDetails();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRejectTrade = async () => {
-    if (!details?.match_id) return;
-    setActionLoading(true);
-    try {
-      await rejectProposal(details.match_id, user!.id);
-      toast({ title: "Proposta recusada" });
-      refetchDetails();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleReport = async () => {
     if (!user || !details?.other_user_id || !reportReason) return;
