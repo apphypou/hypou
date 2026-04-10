@@ -1,6 +1,6 @@
 project_id = "gfvqympaaglkplzbocbl"
 
-[functions.seed-test-users]
+[functions.delete-account]
 verify_jwt = false
 
 [functions.validate-item-price]
