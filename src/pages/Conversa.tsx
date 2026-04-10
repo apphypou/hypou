@@ -242,6 +242,21 @@ const Conversa = () => {
     }
   };
 
+  const handleBlock = async () => {
+    if (!user || !details?.other_user_id) return;
+    setBlocking(true);
+    try {
+      await blockUser(user.id, details.other_user_id);
+      toast({ title: "Usuário bloqueado 🚫", description: "Você não verá mais itens deste usuário." });
+      setBlockConfirmOpen(false);
+      navigate("/chat");
+    } catch {
+      toast({ title: "Erro ao bloquear", variant: "destructive" });
+    } finally {
+      setBlocking(false);
+    }
+  
+
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
