@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle, MoreVertical, Ban } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,13 +10,29 @@ import TradeContextCard from "@/components/TradeContextCard";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { acceptProposal, rejectProposal } from "@/services/matchService";
-import { createReport } from "@/services/reportService";
+import { createReport, blockUser } from "@/services/reportService";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 
 // Fetch conversation details including match status
@@ -97,6 +113,10 @@ const Conversa = () => {
   const [reportReason, setReportReason] = useState("");
   const [reportDesc, setReportDesc] = useState("");
   const [reporting, setReporting] = useState(false);
+
+  // Block dialog
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
 
   // Check if user accepted chat terms
   const { data: chatTermsAccepted } = useQuery({
@@ -222,6 +242,21 @@ const Conversa = () => {
     }
   };
 
+  const handleBlock = async () => {
+    if (!user || !details?.other_user_id) return;
+    setBlocking(true);
+    try {
+      await blockUser(user.id, details.other_user_id);
+      toast({ title: "Usuário bloqueado 🚫", description: "Você não verá mais itens deste usuário." });
+      setBlockConfirmOpen(false);
+      navigate("/chat");
+    } catch {
+      toast({ title: "Erro ao bloquear", variant: "destructive" });
+    } finally {
+      setBlocking(false);
+    }
+  };
+
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -327,12 +362,23 @@ const Conversa = () => {
 
         {/* Report button */}
         {details && (
-          <button
-            onClick={() => setReportOpen(true)}
-            className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-destructive transition-colors"
-          >
-            <Flag className="h-4 w-4" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors">
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+              <DropdownMenuItem onClick={() => setReportOpen(true)} className="text-foreground gap-2">
+                <Flag className="h-4 w-4" />
+                Denunciar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBlockConfirmOpen(true)} className="text-destructive gap-2 focus:text-destructive">
+                <Ban className="h-4 w-4" />
+                Bloquear
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </header>
 
@@ -559,6 +605,31 @@ const Conversa = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Block Confirm Dialog */}
+      <AlertDialog open={blockConfirmOpen} onOpenChange={setBlockConfirmOpen}>
+        <AlertDialogContent className="bg-card border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <Ban className="h-5 w-5 text-destructive" />
+              Bloquear Usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Ao bloquear, você não verá mais itens deste usuário e ele não poderá interagir com os seus. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlock}
+              disabled={blocking}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Bloquear"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { ArrowLeft, MapPin, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Ban, MoreVertical, Flag, Loader2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,11 +7,78 @@ import ScreenLayout from "@/components/ScreenLayout";
 import GlassCard from "@/components/GlassCard";
 import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
 import { useUserRating } from "@/hooks/useRatings";
-
+import { useAuth } from "@/hooks/useAuth";
+import { blockUser } from "@/services/reportService";
+import { createReport } from "@/services/reportService";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 const PerfilUsuario = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: rating } = useUserRating(userId);
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDesc, setReportDesc] = useState("");
+  const [reporting, setReporting] = useState(false);
+
+  const isOwnProfile = user?.id === userId;
+
+  const handleBlock = async () => {
+    if (!user || !userId) return;
+    setBlocking(true);
+    try {
+      await blockUser(user.id, userId);
+      toast({ title: "Usuário bloqueado 🚫", description: "Você não verá mais itens deste usuário." });
+      setBlockConfirmOpen(false);
+      navigate(-1);
+    } catch {
+      toast({ title: "Erro ao bloquear", variant: "destructive" });
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!user || !userId || !reportReason) return;
+    setReporting(true);
+    try {
+      await createReport(user.id, userId, reportReason, reportDesc || undefined);
+      toast({ title: "Denúncia enviada", description: "Vamos analisar o caso." });
+      setReportOpen(false);
+      setReportReason("");
+      setReportDesc("");
+    } catch {
+      toast({ title: "Erro ao enviar denúncia", variant: "destructive" });
+    } finally {
+      setReporting(false);
+    }
+  };
 
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["user-profile", userId],
@@ -54,7 +121,26 @@ const PerfilUsuario = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-foreground text-lg font-bold tracking-tight">Perfil</h1>
+        <h1 className="text-foreground text-lg font-bold tracking-tight flex-1">Perfil</h1>
+        {!isOwnProfile && user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-10 w-10 flex items-center justify-center rounded-full text-foreground/40 hover:text-foreground hover:bg-foreground/10 transition-all">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+              <DropdownMenuItem onClick={() => setReportOpen(true)} className="text-foreground gap-2">
+                <Flag className="h-4 w-4" />
+                Denunciar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBlockConfirmOpen(true)} className="text-destructive gap-2 focus:text-destructive">
+                <Ban className="h-4 w-4" />
+                Bloquear
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </header>
 
       <main className="relative flex-1 w-full px-5 overflow-y-auto no-scrollbar z-10 pb-28">
@@ -157,6 +243,81 @@ const PerfilUsuario = () => {
           </>
         )}
       </main>
+
+      {/* Block Confirm Dialog */}
+      <AlertDialog open={blockConfirmOpen} onOpenChange={setBlockConfirmOpen}>
+        <AlertDialogContent className="bg-card border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <Ban className="h-5 w-5 text-destructive" />
+              Bloquear Usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Ao bloquear, você não verá mais itens deste usuário e ele não poderá interagir com os seus. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlock}
+              disabled={blocking}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Bloquear"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report Dialog */}
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent className="bg-card border-foreground/10">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Flag className="h-5 w-5 text-destructive" />
+              Denunciar Usuário
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 mt-2">
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Motivo</p>
+              <div className="flex flex-wrap gap-2">
+                {["Golpe", "Conteúdo impróprio", "Assédio", "Perfil falso", "Outro"].map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setReportReason(reason)}
+                    className={`px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
+                      reportReason === reason
+                        ? "bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
+                        : "bg-foreground/5 border border-foreground/10 text-foreground/70 hover:border-foreground/20 hover:text-foreground"
+                    }`}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Detalhes (opcional)</p>
+              <Textarea
+                value={reportDesc}
+                onChange={(e) => setReportDesc(e.target.value)}
+                placeholder="Descreva o que aconteceu..."
+                rows={3}
+                className="bg-foreground/5 border-foreground/10 resize-none focus:border-primary/50"
+              />
+            </div>
+            <button
+              onClick={handleReport}
+              disabled={!reportReason || reporting}
+              className="w-full py-3 rounded-full bg-destructive text-white font-bold text-sm uppercase tracking-wider disabled:opacity-30 flex items-center justify-center gap-2 hover:bg-destructive/90 transition-all"
+            >
+              {reporting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Enviar Denúncia
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ScreenLayout>
   );
 };
