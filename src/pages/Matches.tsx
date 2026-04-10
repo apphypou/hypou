@@ -297,7 +297,7 @@ const Matches = () => {
 
             <div className="h-full w-full overflow-y-auto overflow-x-hidden no-scrollbar pb-36">
               {/* Hero image */}
-              <div className="relative w-full bg-background overflow-hidden" style={{ minHeight: '45vh' }}>
+              <div className="relative w-full bg-card overflow-hidden" style={{ minHeight: '45vh' }}>
                 {otherImages[0]?.image_url ? (
                   <img
                     src={otherImages[0].image_url}
