@@ -109,13 +109,15 @@ export const validateItemPrice = async (
 
 /** Fetch recommended items for a logged-in user via RPC */
 export const getRecommendedItems = async (userId: string, limit = 50) => {
+  const blockedIds = await getBlockedUserIds(userId);
+
   const { data, error } = await supabase.rpc("recommended_items", {
     p_user_id: userId,
     p_limit: limit,
   });
   if (error) throw error;
 
-  const rows = (data || []) as any[];
+  const rows = ((data || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
   const itemIds = rows.map((i) => i.id);
   const ownerIds = [...new Set(rows.map((i) => i.user_id))];
 
