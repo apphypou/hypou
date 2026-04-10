@@ -448,13 +448,15 @@ const NovoItem = () => {
                 type="button"
                 onClick={handleSuggestPrice}
                 disabled={suggestingPrice || !itemName.trim() || !category}
-                className="w-12 rounded-xl bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-all disabled:opacity-30 shrink-0"
-                title="Sugerir preço"
+                className="px-3 rounded-xl bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/20 transition-all disabled:opacity-30 shrink-0 flex flex-col items-center justify-center gap-0.5"
               >
                 {suggestingPrice ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Sparkles className="h-5 w-5" />
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>Sugerir</span>
+                  </>
                 )}
               </button>
             </div>
