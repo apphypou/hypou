@@ -105,7 +105,7 @@ const Conversa = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const [actionLoading, setActionLoading] = useState(false);
+  
 
   // Report dialog
   const [reportOpen, setReportOpen] = useState(false);
