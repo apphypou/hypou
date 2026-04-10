@@ -284,7 +284,7 @@ const Matches = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md"
+            className="fixed inset-0 z-[100] bg-background"
           >
             {/* Back button */}
             <button
