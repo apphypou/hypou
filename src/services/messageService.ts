@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { validateChatMedia } from "@/lib/fileValidation";
+import { getBlockedUserIds } from "@/services/reportService";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio';
 
