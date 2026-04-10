@@ -7,7 +7,7 @@ import GlassCard from "@/components/GlassCard";
 import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
-import { acceptProposal, rejectProposal, confirmTrade } from "@/services/matchService";
+import { acceptProposal, rejectProposal, confirmTrade, cancelProposal } from "@/services/matchService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<MatchWithDetails | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
