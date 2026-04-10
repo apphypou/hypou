@@ -154,6 +154,25 @@ export const rejectProposal = async (matchId: string, currentUserId: string) => 
   if (error) throw error;
 };
 
+export const cancelProposal = async (matchId: string, currentUserId: string) => {
+  const { data: match, error: fetchErr } = await supabase
+    .from("matches")
+    .select("user_a_id, status")
+    .eq("id", matchId)
+    .single();
+
+  if (fetchErr || !match) throw new Error("Proposta não encontrada");
+  if (match.user_a_id !== currentUserId) throw new Error("Apenas quem enviou pode cancelar a proposta");
+  if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
+
+  const { error } = await supabase
+    .from("matches")
+    .update({ status: "rejected" })
+    .eq("id", matchId)
+    .eq("status", "proposal");
+  if (error) throw error;
+};
+
 export const confirmTrade = async (matchId: string, userId: string) => {
   const { data: match, error: fetchErr } = await supabase
     .from("matches")

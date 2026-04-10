@@ -7,7 +7,7 @@ import GlassCard from "@/components/GlassCard";
 import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
-import { acceptProposal, rejectProposal, confirmTrade } from "@/services/matchService";
+import { acceptProposal, rejectProposal, confirmTrade, cancelProposal } from "@/services/matchService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ const Matches = () => {
   const [selectedMatch, setSelectedMatch] = useState<MatchWithDetails | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
@@ -45,6 +46,20 @@ const Matches = () => {
     }
   }, [selectedMatch, rejecting, queryClient, toast]);
 
+  const handleCancelProposal = useCallback(async () => {
+    if (!selectedMatch || cancelling) return;
+    setCancelling(true);
+    try {
+      await cancelProposal(selectedMatch.id, user!.id);
+      await queryClient.invalidateQueries({ queryKey: ["matches"] });
+      setSelectedMatch(null);
+      toast({ title: "Proposta cancelada" });
+    } catch (err: any) {
+      toast({ title: "Erro ao cancelar proposta", description: err.message, variant: "destructive" });
+    } finally {
+      setCancelling(false);
+    }
+  }, [selectedMatch, cancelling, queryClient, toast, user]);
   const handleConfirmTrade = useCallback(async () => {
     if (!selectedMatch || confirmingTrade) return;
     setConfirmingTrade(true);
@@ -491,11 +506,11 @@ const Matches = () => {
                     Aguardando resposta
                   </div>
                   <button
-                    onClick={handleRejectMatch}
-                    disabled={rejecting}
+                    onClick={handleCancelProposal}
+                    disabled={cancelling}
                     className="w-full h-11 rounded-2xl bg-card border border-foreground/10 text-foreground/50 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
                   >
-                    {rejecting ? (
+                    {cancelling ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
