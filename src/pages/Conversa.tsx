@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle, MoreVertical, Ban } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, MoreVertical, Ban } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
