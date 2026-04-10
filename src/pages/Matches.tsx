@@ -46,6 +46,20 @@ const Matches = () => {
     }
   }, [selectedMatch, rejecting, queryClient, toast]);
 
+  const handleCancelProposal = useCallback(async () => {
+    if (!selectedMatch || cancelling) return;
+    setCancelling(true);
+    try {
+      await cancelProposal(selectedMatch.id, user!.id);
+      await queryClient.invalidateQueries({ queryKey: ["matches"] });
+      setSelectedMatch(null);
+      toast({ title: "Proposta cancelada" });
+    } catch (err: any) {
+      toast({ title: "Erro ao cancelar proposta", description: err.message, variant: "destructive" });
+    } finally {
+      setCancelling(false);
+    }
+  }, [selectedMatch, cancelling, queryClient, toast, user]);
   const handleConfirmTrade = useCallback(async () => {
     if (!selectedMatch || confirmingTrade) return;
     setConfirmingTrade(true);
