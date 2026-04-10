@@ -197,33 +197,6 @@ const Conversa = () => {
     setIsRecording(false);
   }, []);
 
-  const handleAcceptTrade = async () => {
-    if (!details?.match_id) return;
-    setActionLoading(true);
-    try {
-      await acceptProposal(details.match_id, user!.id);
-      toast({ title: "Troca aceita! ✅", description: "Combinem a entrega pelo chat." });
-      refetchDetails();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleRejectTrade = async () => {
-    if (!details?.match_id) return;
-    setActionLoading(true);
-    try {
-      await rejectProposal(details.match_id, user!.id);
-      toast({ title: "Proposta recusada" });
-      refetchDetails();
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const handleReport = async () => {
     if (!user || !details?.other_user_id || !reportReason) return;
