@@ -255,7 +255,7 @@ const Conversa = () => {
     } finally {
       setBlocking(false);
     }
-  
+  };
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
