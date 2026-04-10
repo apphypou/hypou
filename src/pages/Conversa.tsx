@@ -605,6 +605,31 @@ const Conversa = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Block Confirm Dialog */}
+      <AlertDialog open={blockConfirmOpen} onOpenChange={setBlockConfirmOpen}>
+        <AlertDialogContent className="bg-card border-foreground/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <Ban className="h-5 w-5 text-destructive" />
+              Bloquear Usuário
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Ao bloquear, você não verá mais itens deste usuário e ele não poderá interagir com os seus. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlock}
+              disabled={blocking}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {blocking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Bloquear"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
