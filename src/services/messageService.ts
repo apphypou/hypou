@@ -38,6 +38,9 @@ export interface ConversationWithDetails {
 }
 
 export const getConversations = async (userId: string): Promise<ConversationWithDetails[]> => {
+  // Fetch blocked user IDs to filter them out
+  const blockedIds = await getBlockedUserIds(userId);
+
   // Get all conversations via matches
   const { data: matches, error: matchErr } = await supabase
     .from("matches")
@@ -52,6 +55,14 @@ export const getConversations = async (userId: string): Promise<ConversationWith
 
   if (matchErr) throw matchErr;
   if (!matches || matches.length === 0) return [];
+
+  // Filter out matches with blocked users
+  const filteredMatches = blockedIds.length > 0
+    ? matches.filter((m: any) => {
+        const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
+        return !blockedIds.includes(otherId);
+      })
+    : matches;
 
   // Collect other user IDs and conversation IDs
   const otherUserIds = new Set<string>();
