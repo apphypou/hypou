@@ -506,11 +506,11 @@ const Matches = () => {
                     Aguardando resposta
                   </div>
                   <button
-                    onClick={handleRejectMatch}
-                    disabled={rejecting}
+                    onClick={handleCancelProposal}
+                    disabled={cancelling}
                     className="w-full h-11 rounded-2xl bg-card border border-foreground/10 text-foreground/50 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
                   >
-                    {rejecting ? (
+                    {cancelling ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <>
