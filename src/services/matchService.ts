@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getBlockedUserIds } from "@/services/reportService";
 
 export interface MatchWithDetails {
   id: string;
@@ -32,6 +33,8 @@ export interface MatchWithDetails {
 }
 
 export const getMatches = async (userId: string): Promise<MatchWithDetails[]> => {
+  const blockedIds = await getBlockedUserIds(userId);
+
   const { data, error } = await supabase
     .from("matches")
     .select(`
@@ -44,7 +47,15 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 
   if (error) throw error;
 
-  const otherUserIds = (data || []).map((m: any) =>
+  // Filter out matches with blocked users
+  const filteredData = blockedIds.length > 0
+    ? (data || []).filter((m: any) => {
+        const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
+        return !blockedIds.includes(otherId);
+      })
+    : (data || []);
+
+  const otherUserIds = filteredData.map((m: any) =>
     m.user_a_id === userId ? m.user_b_id : m.user_a_id
   ).filter(Boolean);
 
@@ -62,7 +73,7 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
     });
   }
 
-  return (data || []).map((m: any) => {
+  return filteredData.map((m: any) => {
     const isUserA = m.user_a_id === userId;
     const otherUserId = isUserA ? m.user_b_id : m.user_a_id;
     return {

@@ -78,9 +78,9 @@ export const fetchShortsFeed = async (
   (items || []).forEach((i: any) => { itemMap[i.id] = i; });
 
   // Filter by category if needed
-  let filtered = data;
+  let filtered = visibleData;
   if (category) {
-    filtered = data.filter((v: any) => itemMap[v.item_id]?.category === category);
+    filtered = visibleData.filter((v: any) => itemMap[v.item_id]?.category === category);
   }
 
   // Fetch profiles
