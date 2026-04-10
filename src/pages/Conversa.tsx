@@ -1,4 +1,4 @@
-import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, CheckCircle2, XCircle, MoreVertical, Ban } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,7 @@ import TradeContextCard from "@/components/TradeContextCard";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { acceptProposal, rejectProposal } from "@/services/matchService";
-import { createReport } from "@/services/reportService";
+import { createReport, blockUser } from "@/services/reportService";
 import {
   Dialog,
   DialogContent,
