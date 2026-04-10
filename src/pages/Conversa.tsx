@@ -114,6 +114,10 @@ const Conversa = () => {
   const [reportDesc, setReportDesc] = useState("");
   const [reporting, setReporting] = useState(false);
 
+  // Block dialog
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+
   // Check if user accepted chat terms
   const { data: chatTermsAccepted } = useQuery({
     queryKey: ["chat-terms", user?.id],
