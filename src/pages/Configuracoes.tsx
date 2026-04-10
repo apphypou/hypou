@@ -170,7 +170,7 @@ const Configuracoes = () => {
         <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Configurações</span>
       </header>
 
-      <main className="flex-1 w-full px-5 overflow-y-auto no-scrollbar pb-28">
+      <main className="flex-1 w-full px-5 overflow-y-auto no-scrollbar pb-36">
         <div className="flex flex-col gap-3 mt-2">
           {menuItems.map((item) => (
             <GlassCard

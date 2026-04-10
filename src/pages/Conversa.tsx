@@ -9,7 +9,6 @@ import ChatSafetyDialog from "@/components/ChatSafetyDialog";
 import TradeContextCard from "@/components/TradeContextCard";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
-import { acceptProposal, rejectProposal } from "@/services/matchService";
 import { createReport, blockUser } from "@/services/reportService";
 import {
   Dialog,
