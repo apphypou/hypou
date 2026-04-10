@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getBlockedUserIds } from "@/services/reportService";
 
 export interface ShortVideo {
   id: string;
@@ -35,6 +36,12 @@ export const fetchShortsFeed = async (
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
+  // Get blocked user IDs to filter them out
+  let blockedIds: string[] = [];
+  if (userId) {
+    blockedIds = await getBlockedUserIds(userId);
+  }
+
   let query = supabase
     .from("item_videos")
     .select("*")
@@ -55,8 +62,13 @@ export const fetchShortsFeed = async (
     return [];
   }
 
+  // Filter out blocked users' videos
+  const visibleData = blockedIds.length > 0
+    ? data.filter((v: any) => !blockedIds.includes(v.user_id))
+    : data;
+
   // Fetch related items
-  const itemIds = [...new Set(data.map((v: any) => v.item_id))];
+  const itemIds = [...new Set(visibleData.map((v: any) => v.item_id))];
   const { data: items } = await supabase
     .from("items")
     .select("id, name, market_value, category")
@@ -66,9 +78,9 @@ export const fetchShortsFeed = async (
   (items || []).forEach((i: any) => { itemMap[i.id] = i; });
 
   // Filter by category if needed
-  let filtered = data;
+  let filtered = visibleData;
   if (category) {
-    filtered = data.filter((v: any) => itemMap[v.item_id]?.category === category);
+    filtered = visibleData.filter((v: any) => itemMap[v.item_id]?.category === category);
   }
 
   // Fetch profiles
