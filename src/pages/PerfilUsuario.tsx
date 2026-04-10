@@ -1,4 +1,4 @@
-import { ArrowLeft, MapPin, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Ban, MoreVertical, Flag, Loader2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,34 @@ import ScreenLayout from "@/components/ScreenLayout";
 import GlassCard from "@/components/GlassCard";
 import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
 import { useUserRating } from "@/hooks/useRatings";
-
+import { useAuth } from "@/hooks/useAuth";
+import { blockUser } from "@/services/reportService";
+import { createReport } from "@/services/reportService";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 const PerfilUsuario = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
