@@ -22,7 +22,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   ];
 
   return (
-    <div className="fixed bottom-6 left-5 right-5 z-50 flex justify-center">
+    <div className="fixed left-5 right-5 z-50 flex justify-center" style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))" }}>
       <nav className="bg-background/80 dark:bg-background/40 backdrop-blur-2xl border border-foreground/8 rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;

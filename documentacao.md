@@ -929,3 +929,64 @@ npx vitest run
 ---
 
 > **Nota:** Este documento reflete o estado atual da aplicação em 2026-04-10. Para alterações no banco de dados, consulte `supabase/migrations/`. Para o Design System visual detalhado, consulte `DESIGN_SYSTEM.md`.
+
+---
+
+## 🔧 Build Nativo (Capacitor)
+
+O Hypou usa o **Capacitor** para gerar builds nativos Android e iOS a partir do mesmo codebase React.
+
+### Dependências instaladas
+
+- `@capacitor/core`, `@capacitor/cli`
+- `@capacitor/android`, `@capacitor/ios`
+- `@capacitor/splash-screen`, `@capacitor/status-bar`, `@capacitor/keyboard`
+
+### Passo a passo para rodar nativamente
+
+1. **Exporte o projeto para GitHub** via botão "Export to Github" no Lovable
+2. Clone e instale:
+   ```bash
+   git clone <SEU_REPO>
+   cd hypou
+   npm install
+   ```
+3. **Adicione as plataformas nativas:**
+   ```bash
+   npx cap add android
+   npx cap add ios
+   ```
+4. **Gere os assets (ícones e splash screen):**
+   - Coloque `icon.png` (1024x1024) e `splash.png` (2732x2732) na pasta `resources/`
+   ```bash
+   npx @capacitor/assets generate --iconBackgroundColor '#0a0a0a' --splashBackgroundColor '#0a0a0a'
+   ```
+5. **Build e sync:**
+   ```bash
+   npm run build
+   npx cap sync
+   ```
+6. **Rodar no emulador ou dispositivo:**
+   ```bash
+   npx cap run android   # Requer Android Studio
+   npx cap run ios       # Requer Mac com Xcode
+   ```
+
+### Hot Reload (desenvolvimento)
+
+O `capacitor.config.ts` está configurado com `server.url` apontando para o preview do Lovable. Isso permite hot reload direto no dispositivo/emulador durante o desenvolvimento.
+
+**Para produção**, remova ou comente o bloco `server` no `capacitor.config.ts` para que o app use os arquivos locais do `dist/`.
+
+### Requisitos
+
+| Plataforma | Ferramenta | Versão mínima |
+|------------|-----------|---------------|
+| Android | Android Studio | Arctic Fox+ |
+| iOS | Xcode | 14+ |
+| iOS | macOS | Ventura+ |
+
+### Referência
+
+- [Documentação Capacitor](https://capacitorjs.com/docs)
+- [Lovable + Capacitor](https://docs.lovable.dev/tips-tricks/mobile-development)
