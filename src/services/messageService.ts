@@ -68,7 +68,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
   const otherUserIds = new Set<string>();
   const conversationIds: string[] = [];
 
-  matches.forEach((m: any) => {
+  filteredMatches.forEach((m: any) => {
     const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
     otherUserIds.add(otherId);
     const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
@@ -108,7 +108,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     }
   }
 
-  return matches.map((m: any) => {
+  return filteredMatches.map((m: any) => {
     const isUserA = m.user_a_id === userId;
     const otherId = isUserA ? m.user_b_id : m.user_a_id;
     const otherItem = isUserA ? m.item_b : m.item_a;

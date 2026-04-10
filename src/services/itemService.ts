@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getBlockedUserIds } from "@/services/reportService";
 import { validateImageFile } from "@/lib/fileValidation";
 
 export const createItem = async (data: {
