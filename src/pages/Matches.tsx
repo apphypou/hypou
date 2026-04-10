@@ -289,7 +289,7 @@ const Matches = () => {
             {/* Back button */}
             <button
               onClick={() => setSelectedMatch(null)}
-              className="absolute top-4 left-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-lg border border-foreground/10 hover:bg-background transition-colors"
+              className="absolute top-4 left-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-background text-foreground shadow-lg border border-border hover:bg-muted transition-colors"
               style={{ marginTop: "env(safe-area-inset-top)" }}
             >
               <ArrowLeft className="h-5 w-5" />
