@@ -435,27 +435,27 @@ const NovoItem = () => {
 
           <div>
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Valor de Mercado</label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-stretch">
               <input
                 type="text"
                 inputMode="numeric"
                 value={itemValue}
                 onChange={handleCurrencyChange}
                 placeholder="R$ 0,00"
-                className="flex-1 bg-card/50 border border-foreground/10 text-foreground rounded-xl px-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
+                className="min-w-0 flex-1 bg-card/50 border border-foreground/10 text-foreground rounded-xl px-4 py-3.5 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
               />
               <button
                 type="button"
                 onClick={handleSuggestPrice}
                 disabled={suggestingPrice || !itemName.trim() || !category}
-                className="px-4 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider hover:bg-primary/20 transition-all disabled:opacity-30 flex items-center gap-1.5 shrink-0"
+                className="w-12 rounded-xl bg-primary/10 border border-primary/30 text-primary flex items-center justify-center hover:bg-primary/20 transition-all disabled:opacity-30 shrink-0"
+                title="Sugerir preço"
               >
                 {suggestingPrice ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-5 w-5" />
                 )}
-                Sugerir
               </button>
             </div>
           </div>
