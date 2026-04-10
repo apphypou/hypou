@@ -38,7 +38,47 @@ import { Textarea } from "@/components/ui/textarea";
 const PerfilUsuario = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: rating } = useUserRating(userId);
+  const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDesc, setReportDesc] = useState("");
+  const [reporting, setReporting] = useState(false);
+
+  const isOwnProfile = user?.id === userId;
+
+  const handleBlock = async () => {
+    if (!user || !userId) return;
+    setBlocking(true);
+    try {
+      await blockUser(user.id, userId);
+      toast({ title: "Usuário bloqueado 🚫", description: "Você não verá mais itens deste usuário." });
+      setBlockConfirmOpen(false);
+      navigate(-1);
+    } catch {
+      toast({ title: "Erro ao bloquear", variant: "destructive" });
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!user || !userId || !reportReason) return;
+    setReporting(true);
+    try {
+      await createReport(user.id, userId, reportReason, reportDesc || undefined);
+      toast({ title: "Denúncia enviada", description: "Vamos analisar o caso." });
+      setReportOpen(false);
+      setReportReason("");
+      setReportDesc("");
+    } catch {
+      toast({ title: "Erro ao enviar denúncia", variant: "destructive" });
+    } finally {
+      setReporting(false);
+    }
+  };
 
   const { data: profile, isLoading: loadingProfile } = useQuery({
     queryKey: ["user-profile", userId],
