@@ -121,7 +121,26 @@ const PerfilUsuario = () => {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-foreground text-lg font-bold tracking-tight">Perfil</h1>
+        <h1 className="text-foreground text-lg font-bold tracking-tight flex-1">Perfil</h1>
+        {!isOwnProfile && user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-10 w-10 flex items-center justify-center rounded-full text-foreground/40 hover:text-foreground hover:bg-foreground/10 transition-all">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+              <DropdownMenuItem onClick={() => setReportOpen(true)} className="text-foreground gap-2">
+                <Flag className="h-4 w-4" />
+                Denunciar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBlockConfirmOpen(true)} className="text-destructive gap-2 focus:text-destructive">
+                <Ban className="h-4 w-4" />
+                Bloquear
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </header>
 
       <main className="relative flex-1 w-full px-5 overflow-y-auto no-scrollbar z-10 pb-28">
