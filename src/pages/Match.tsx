@@ -141,6 +141,8 @@ const Match = () => {
 
   return (
     <div className="relative flex h-[100dvh] w-full flex-col bg-background overflow-hidden">
+      {/* Confetti Animation */}
+      <Confetti />
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-background to-background" />
       <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent" />
