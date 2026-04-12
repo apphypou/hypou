@@ -292,19 +292,19 @@ const Perfil = () => {
                     <div
                       key={cat.label}
                       onClick={() => toggleCategory(cat.label)}
-                      className={`group relative rounded-2xl bg-card cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-3 px-4 py-4 ${
+                      className={`group relative rounded-2xl bg-card cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 px-3 py-3.5 overflow-hidden ${
                         isSelected
                           ? "border border-primary ring-1 ring-primary/50 neon-border-glow"
                           : "border border-foreground/5 hover:border-foreground/20"
                       }`}
                     >
-                      <span className={`text-2xl ${isSelected ? "filter drop-shadow-lg" : "opacity-80 group-hover:opacity-100 transition-opacity"}`}>
+                      <span className={`text-xl shrink-0 ${isSelected ? "filter drop-shadow-lg" : "opacity-80 group-hover:opacity-100 transition-opacity"}`}>
                         {cat.emoji}
                       </span>
-                      <span className={`text-sm tracking-wide flex-1 ${isSelected ? "font-semibold text-foreground" : "font-medium text-foreground/60 group-hover:text-foreground transition-colors"}`}>
+                      <span className={`text-sm tracking-wide flex-1 min-w-0 truncate ${isSelected ? "font-semibold text-foreground" : "font-medium text-foreground/60 group-hover:text-foreground transition-colors"}`}>
                         {cat.label}
                       </span>
-                      <div className={`transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                      <div className={`shrink-0 transition-opacity ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                         {isSelected ? (
                           <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center">
                             <Check className="h-3 w-3 text-primary-foreground" strokeWidth={3} />
