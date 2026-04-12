@@ -546,7 +546,7 @@ const Matches = () => {
                     ) : (
                       <>
                         <Handshake className="h-5 w-5" />
-                        Confirmar Troca
+                        Aceitar Proposta
                       </>
                     )}
                   </button>
