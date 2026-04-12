@@ -1,12 +1,17 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
+import OfflineScreen from "@/components/OfflineScreen";
+import PageTransition from "@/components/PageTransition";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -39,94 +44,138 @@ import AdminWaitlist from "./pages/admin/AdminWaitlist";
 import AdminStatus from "./pages/admin/AdminStatus";
 import AdminAssistente from "./pages/admin/AdminAssistente";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 30, // 30 min cache for offline resilience
+      staleTime: 1000 * 60 * 2, // 2 min stale time
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/lista-espera" element={<ListaEspera />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/recuperar-senha" element={<RecuperarSenha />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/termos" element={<Termos />} />
-            <Route path="/privacidade" element={<Privacidade />} />
+// Apply native class to body on Capacitor
+if (Capacitor.isNativePlatform()) {
+  document.body.classList.add("native-app");
+}
 
-            {/* Onboarding (requires auth but NOT onboarding check) */}
-            <Route path="/onboarding" element={
-              <ProtectedRoute requireOnboarding={false}>
-                <Perfil />
-              </ProtectedRoute>
-            } />
+const AnimatedRoutes = () => {
+  const location = useLocation();
 
-            {/* Protected routes (require auth + completed onboarding) */}
-            <Route path="/explorar" element={<Explorar />} />
-            <Route path="/busca" element={
-              <ProtectedRoute><Busca /></ProtectedRoute>
-            } />
-            <Route path="/shorts" element={
-              <ProtectedRoute><Shorts /></ProtectedRoute>
-            } />
-            <Route path="/partidas" element={
-              <ProtectedRoute><Matches /></ProtectedRoute>
-            } />
-            <Route path="/match/:matchId" element={
-              <ProtectedRoute><Match /></ProtectedRoute>
-            } />
-            <Route path="/chat" element={
-              <ProtectedRoute><Chat /></ProtectedRoute>
-            } />
-            <Route path="/chat/:conversationId" element={
-              <ProtectedRoute><Conversa /></ProtectedRoute>
-            } />
-            <Route path="/meu-perfil" element={
-              <ProtectedRoute><MeuPerfil /></ProtectedRoute>
-            } />
-            <Route path="/configuracoes" element={
-              <ProtectedRoute><Configuracoes /></ProtectedRoute>
-            } />
-            <Route path="/novo-item" element={
-              <ProtectedRoute><NovoItem /></ProtectedRoute>
-            } />
-            <Route path="/editar-item/:itemId" element={
-              <ProtectedRoute><EditarItem /></ProtectedRoute>
-            } />
-            <Route path="/usuario/:userId" element={
-              <ProtectedRoute><PerfilUsuario /></ProtectedRoute>
-            } />
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public routes */}
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/lista-espera" element={<PageTransition><ListaEspera /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/cadastro" element={<PageTransition><Cadastro /></PageTransition>} />
+        <Route path="/recuperar-senha" element={<PageTransition><RecuperarSenha /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+        <Route path="/termos" element={<PageTransition><Termos /></PageTransition>} />
+        <Route path="/privacidade" element={<PageTransition><Privacidade /></PageTransition>} />
 
-            {/* Admin routes */}
-            <Route path="/admin" element={
-              <AdminProtectedRoute>
-                <AdminLayout />
-              </AdminProtectedRoute>
-            }>
-              <Route index element={<AdminDashboard />} />
-              <Route path="usuarios" element={<AdminUsuarios />} />
-              <Route path="itens" element={<AdminItens />} />
-              <Route path="matches" element={<AdminMatches />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="waitlist" element={<AdminWaitlist />} />
-              <Route path="status" element={<AdminStatus />} />
-              <Route path="assistente" element={<AdminAssistente />} />
-            </Route>
+        {/* Onboarding */}
+        <Route path="/onboarding" element={
+          <ProtectedRoute requireOnboarding={false}>
+            <PageTransition><Perfil /></PageTransition>
+          </ProtectedRoute>
+        } />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+        {/* Protected routes */}
+        <Route path="/explorar" element={<PageTransition><Explorar /></PageTransition>} />
+        <Route path="/busca" element={
+          <ProtectedRoute><PageTransition><Busca /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/shorts" element={
+          <ProtectedRoute><PageTransition><Shorts /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/partidas" element={
+          <ProtectedRoute><PageTransition><Matches /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/match/:matchId" element={
+          <ProtectedRoute><PageTransition><Match /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/chat" element={
+          <ProtectedRoute><PageTransition><Chat /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/chat/:conversationId" element={
+          <ProtectedRoute><PageTransition><Conversa /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/meu-perfil" element={
+          <ProtectedRoute><PageTransition><MeuPerfil /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/configuracoes" element={
+          <ProtectedRoute><PageTransition><Configuracoes /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/novo-item" element={
+          <ProtectedRoute><PageTransition><NovoItem /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/editar-item/:itemId" element={
+          <ProtectedRoute><PageTransition><EditarItem /></PageTransition></ProtectedRoute>
+        } />
+        <Route path="/usuario/:userId" element={
+          <ProtectedRoute><PageTransition><PerfilUsuario /></PageTransition></ProtectedRoute>
+        } />
+
+        {/* Admin routes */}
+        <Route path="/admin" element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }>
+          <Route index element={<AdminDashboard />} />
+          <Route path="usuarios" element={<AdminUsuarios />} />
+          <Route path="itens" element={<AdminItens />} />
+          <Route path="matches" element={<AdminMatches />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="waitlist" element={<AdminWaitlist />} />
+          <Route path="status" element={<AdminStatus />} />
+          <Route path="assistente" element={<AdminAssistente />} />
+        </Route>
+
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
+const useOnlineStatus = () => {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  return isOnline;
+};
+
+const App = () => {
+  const isOnline = useOnlineStatus();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {!isOnline && <OfflineScreen />}
+          <BrowserRouter>
+            <AuthProvider>
+              <AnimatedRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
