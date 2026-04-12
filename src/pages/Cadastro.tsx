@@ -7,6 +7,7 @@ import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
 
 const Cadastro = () => {
   const [email, setEmail] = useState("");
