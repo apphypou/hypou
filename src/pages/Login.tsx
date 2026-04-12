@@ -45,9 +45,6 @@ const Login = () => {
       {/* Header */}
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
         <img src={logoHypou} alt="Hypou" className="h-16 w-auto object-contain mb-6" />
-        <h1 className="text-3xl font-bold tracking-tight">
-          Entrar no <span className="gradient-text">Hypou</span>
-        </h1>
         <p className="text-muted-foreground text-sm mt-2">
           Acesse sua conta e continue trocando
         </p>
