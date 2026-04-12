@@ -35,7 +35,7 @@ const Cadastro = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, "");
+    const { error, user: newUser } = await signUp(email, password, "");
     setLoading(false);
 
     if (error) {
@@ -45,10 +45,9 @@ const Cadastro = () => {
         variant: "destructive",
       });
     } else {
-      // Record terms acceptance
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString() }).eq("user_id", user.id);
+      // Record terms acceptance using the user returned from signUp
+      if (newUser) {
+        await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString() }).eq("user_id", newUser.id);
       }
       toast({ title: "Conta criada com sucesso!" });
       navigate("/onboarding");
