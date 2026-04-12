@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Camera, Pencil, User, Check, Rocket, Loader2, Sparkles, Package } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile, uploadAvatar, saveUserCategories } from "@/services/profileService";
 import { useToast } from "@/hooks/use-toast";
