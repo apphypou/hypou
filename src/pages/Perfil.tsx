@@ -277,9 +277,8 @@ const Perfil = () => {
           >
             <main className="relative flex-1 flex flex-col w-full px-6 pt-6 pb-8 z-10 overflow-y-auto no-scrollbar">
               <div className="flex flex-col mb-8">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">
-                  O que te <br />
-                  <span className="text-primary text-glow">interessa?</span>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3 whitespace-nowrap">
+                  O que te <span className="text-primary text-glow">interessa?</span>
                 </h1>
                 <p className="text-muted-foreground text-base leading-relaxed">
                   Escolha as categorias que mais te interessam. Isso personaliza sua experiência.
