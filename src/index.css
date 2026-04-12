@@ -229,3 +229,18 @@
     cursor: pointer;
   }
 }
+
+/* Native app behavior — hide web-like interactions */
+.native-app {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.native-app input,
+.native-app textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
