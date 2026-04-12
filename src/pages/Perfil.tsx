@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Camera, Pencil, User, Check, Rocket, Loader2, Sparkles, Package } from "lucide-react";
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { updateProfile, uploadAvatar, saveUserCategories } from "@/services/profileService";
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +38,7 @@ const Perfil = () => {
   const [saving, setSaving] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -105,6 +107,7 @@ const Perfil = () => {
     setSaving(true);
     try {
       await updateProfile(user.id, { onboarding_completed: true });
+      queryClient.setQueryData(["profile-onboarding", user.id], { onboarding_completed: true });
       navigate(goTo === "explorar" ? "/explorar" : "/novo-item");
     } catch (err: any) {
       toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
