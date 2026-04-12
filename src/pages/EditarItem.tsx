@@ -129,7 +129,17 @@ const EditarItem = () => {
   const totalImages = existingImages.length + newPhotos.length;
   const valueCents = parseCurrencyToCents(itemValue);
 
-  const handleNewPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewPhotos = async (e?: React.ChangeEvent<HTMLInputElement>) => {
+    if (isNativePlatform()) {
+      const maxNew = 5 - totalImages;
+      const results = await pickPhotos({ multiple: true, maxFiles: maxNew });
+      if (results.length > 0) {
+        setNewPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
+        setNewPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+      }
+      return;
+    }
+    if (!e) return;
     const files = Array.from(e.target.files || []);
     const maxNew = 5 - totalImages;
     const toAdd = files.slice(0, maxNew);
