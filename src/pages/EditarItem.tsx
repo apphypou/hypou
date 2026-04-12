@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { updateItem, uploadItemImage, getItemById, deleteItemImage, validateItemPrice } from "@/services/itemService";
+import { isNativePlatform, pickPhotos } from "@/lib/nativeCamera";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,

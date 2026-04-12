@@ -30,6 +30,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { uploadVideo } from "@/services/videoService";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import { createProposal } from "@/services/matchService";
+import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
