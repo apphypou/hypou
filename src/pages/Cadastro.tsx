@@ -26,10 +26,6 @@ const Cadastro = () => {
       toast({ title: "Aceite os termos de uso para continuar", variant: "destructive" });
       return;
     }
-    if (name.length > 100) {
-      toast({ title: "Nome muito longo (máx. 100 caracteres)", variant: "destructive" });
-      return;
-    }
     if (password.length < 8) {
       toast({ title: "Senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return;
@@ -39,7 +35,7 @@ const Cadastro = () => {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(email, password, name);
+    const { error } = await signUp(email, password, "");
     setLoading(false);
 
     if (error) {
@@ -74,19 +70,6 @@ const Cadastro = () => {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm mt-4">
-        <div className="relative">
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Seu nome"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            maxLength={100}
-            className="w-full h-14 pl-12 pr-5 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-          />
-        </div>
-
         <div className="relative">
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <input
