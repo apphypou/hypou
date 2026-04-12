@@ -207,7 +207,7 @@ const Match = () => {
         {/* Text Content */}
         <div className="text-center space-y-4 mb-8">
           <h1 className="text-5xl font-extrabold tracking-tight leading-tight drop-shadow-lg">
-            <span className="text-primary text-glow">Hypou!</span>
+            <span className="bg-gradient-to-r from-[hsl(184,85%,50%)] via-[hsl(184,60%,65%)] to-[hsl(184,85%,42%)] bg-clip-text text-transparent" style={{ filter: "drop-shadow(0 0 20px hsl(184 85% 50% / 0.5))" }}>Hypou!</span>
           </h1>
           <p className="text-foreground/70 text-base font-normal leading-relaxed max-w-xs mx-auto">
             Você e <span className="text-primary font-semibold">{match.other_user.display_name || "alguém"}</span> têm interesse em trocar itens.
