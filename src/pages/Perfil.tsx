@@ -105,6 +105,7 @@ const Perfil = () => {
     setSaving(true);
     try {
       await updateProfile(user.id, { onboarding_completed: true });
+      queryClient.setQueryData(["profile-onboarding", user.id], { onboarding_completed: true });
       navigate(goTo === "explorar" ? "/explorar" : "/novo-item");
     } catch (err: any) {
       toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
