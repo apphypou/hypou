@@ -22,9 +22,15 @@ const Login = () => {
     setLoading(false);
 
     if (error) {
+      let description = error.message;
+      if (error.message?.includes("Email not confirmed")) {
+        description = "E-mail ainda não confirmado. Verifique sua caixa de entrada.";
+      } else if (error.message?.includes("Invalid login credentials")) {
+        description = "E-mail ou senha incorretos.";
+      }
       toast({
         title: "Erro ao entrar",
-        description: error.message,
+        description,
         variant: "destructive",
       });
     } else {
