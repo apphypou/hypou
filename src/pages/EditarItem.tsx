@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { updateItem, uploadItemImage, getItemById, deleteItemImage, validateItemPrice } from "@/services/itemService";
+import { isNativePlatform, pickPhotos } from "@/lib/nativeCamera";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
@@ -129,7 +130,17 @@ const EditarItem = () => {
   const totalImages = existingImages.length + newPhotos.length;
   const valueCents = parseCurrencyToCents(itemValue);
 
-  const handleNewPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewPhotos = async (e?: React.ChangeEvent<HTMLInputElement>) => {
+    if (isNativePlatform()) {
+      const maxNew = 5 - totalImages;
+      const results = await pickPhotos({ multiple: true, maxFiles: maxNew });
+      if (results.length > 0) {
+        setNewPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
+        setNewPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+      }
+      return;
+    }
+    if (!e) return;
     const files = Array.from(e.target.files || []);
     const maxNew = 5 - totalImages;
     const toAdd = files.slice(0, maxNew);
@@ -374,7 +385,7 @@ const EditarItem = () => {
             ))}
             {totalImages < 5 && (
               <div
-                onClick={() => itemInputRef.current?.click()}
+                onClick={() => isNativePlatform() ? handleNewPhotos() : itemInputRef.current?.click()}
                 className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
               >
                 <Plus className="h-6 w-6 text-primary/50" />

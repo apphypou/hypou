@@ -30,6 +30,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { uploadVideo } from "@/services/videoService";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import { createProposal } from "@/services/matchService";
+import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
@@ -105,9 +106,20 @@ const MeuPerfil = () => {
     }
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  const handleAvatarChange = async (e?: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) return;
+    
+    let file: File | undefined;
+    
+    if (isNativePlatform()) {
+      const result = await pickAvatar();
+      if (!result) return;
+      file = result.file;
+    } else {
+      file = e?.target?.files?.[0];
+      if (!file) return;
+    }
+
     setSaving(true);
     try {
       const url = await uploadAvatar(user.id, file);
@@ -213,7 +225,7 @@ const MeuPerfil = () => {
                 />
               </div>
               <button
-                onClick={() => avatarInputRef.current?.click()}
+                onClick={() => isNativePlatform() ? handleAvatarChange() : avatarInputRef.current?.click()}
                 className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center border-2 border-background"
               >
                 <Camera className="h-4 w-4 text-primary-foreground" />

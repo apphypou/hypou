@@ -89,19 +89,6 @@ const Login = () => {
           </Link>
         </div>
 
-        {/* Test credentials hint */}
-        <div className="rounded-xl bg-primary/5 border border-primary/20 px-4 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-primary/60 mb-1">Conta de teste</p>
-          <button
-            type="button"
-            onClick={() => { setEmail("teste@hypou.app"); setPassword("teste123"); }}
-            className="text-xs text-foreground/60 hover:text-foreground transition-colors"
-          >
-            <span className="text-foreground/80 font-medium">teste@hypou.app</span> / <span className="text-foreground/80 font-medium">teste123</span>
-            <span className="text-primary/60 ml-2">← clique para preencher</span>
-          </button>
-        </div>
-
         <NeonButton
           variant="primary"
           icon={LogIn}

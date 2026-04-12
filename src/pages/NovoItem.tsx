@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { createItem, uploadItemImage, validateItemPrice } from "@/services/itemService";
+import { isNativePlatform, pickPhotos } from "@/lib/nativeCamera";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -70,7 +71,19 @@ const NovoItem = () => {
 
   const valueCents = parseCurrencyToCents(itemValue);
 
-  const handleItemPhotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleItemPhotos = async (e?: React.ChangeEvent<HTMLInputElement>) => {
+    // Try native camera first
+    if (isNativePlatform()) {
+      const maxNew = 5 - itemPhotos.length;
+      const results = await pickPhotos({ multiple: true, maxFiles: maxNew });
+      if (results.length > 0) {
+        setItemPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
+        setItemPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+      }
+      return;
+    }
+    // Web fallback
+    if (!e) return;
     const files = Array.from(e.target.files || []);
     const maxNew = 5 - itemPhotos.length;
     const toAdd = files.slice(0, maxNew);
@@ -309,7 +322,7 @@ const NovoItem = () => {
               ))}
               {itemPreviews.length < 5 && (
                 <div
-                  onClick={() => itemInputRef.current?.click()}
+                  onClick={() => isNativePlatform() ? handleItemPhotos() : itemInputRef.current?.click()}
                   className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
                 >
                   <Plus className="h-6 w-6 text-primary/50" />
@@ -318,7 +331,7 @@ const NovoItem = () => {
             </div>
           ) : (
             <div
-              onClick={() => itemInputRef.current?.click()}
+              onClick={() => isNativePlatform() ? handleItemPhotos() : itemInputRef.current?.click()}
               className="relative w-full aspect-[16/10] rounded-3xl bg-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/80 dashed-border-glow"
             >
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">

@@ -13,6 +13,15 @@ if (Capacitor.isNativePlatform()) {
   import("@capacitor/keyboard").then(({ Keyboard, KeyboardResize }) => {
     Keyboard.setResizeMode({ mode: KeyboardResize.Body });
   });
+
+  // Hide splash screen once app is rendered
+  import("@capacitor/splash-screen").then(({ SplashScreen }) => {
+    // Small delay to ensure first paint
+    setTimeout(() => SplashScreen.hide(), 300);
+  });
+
+  // Block context menu on native (hides web behavior)
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
