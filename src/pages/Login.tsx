@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
