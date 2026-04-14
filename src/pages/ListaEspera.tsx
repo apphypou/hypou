@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, ArrowRight, Flame, Copy, Check, Share2, Lock } from "lucide-react";
+import { Mail, ArrowRight, Flame, Copy, Check, Share2, MessageCircle } from "lucide-react";
 import HypouLogo from "@/components/HypouLogo";
 import logoHypou from "@/assets/logo-hypou.png";
 import NeonButton from "@/components/NeonButton";
@@ -11,6 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 // ── CONFIG ──────────────────────────────────────────────────────────
 const LAUNCH_DATE = new Date();
 LAUNCH_DATE.setDate(LAUNCH_DATE.getDate() + 30);
+
+// Link do grupo de lançamento no WhatsApp (placeholder - admin vai trocar)
+const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/PLACEHOLDER";
 
 // ── PARTICLES ───────────────────────────────────────────────────────
 const Particles = () => {
@@ -113,7 +116,126 @@ const useRotatingWord = () => {
   return rotatingWords[idx];
 };
 
+// ── THANK YOU SCREEN ────────────────────────────────────────────────
+const ThankYouScreen = ({
+  position,
+  referralCode,
+}: {
+  position: number;
+  referralCode: string;
+}) => {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = `${window.location.origin}/lista-espera?ref=${referralCode}`;
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      await navigator.share({
+        title: "Hypou — Algo grande está chegando",
+        text: "Entra na fila antes que acabe. Você não vai querer ficar de fora.",
+        url: shareUrl,
+      });
+    } else {
+      handleCopy();
+    }
+  };
+
+  return (
+    <motion.div
+      key="thank-you"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full flex flex-col items-center gap-5 max-w-md mx-auto"
+    >
+      {/* Confetti emoji */}
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
+        className="text-6xl"
+      >
+        🎉
+      </motion.div>
+
+      {/* Thank you message */}
+      <div className="text-center">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground mb-2">
+          Você está dentro!
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Obrigado por se cadastrar. Você é o <span className="text-primary font-bold">#{position}</span> na fila.
+        </p>
+      </div>
+
+      {/* WhatsApp CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="w-full rounded-2xl border border-green-500/20 bg-green-500/5 p-5 text-center"
+      >
+        <MessageCircle className="w-8 h-8 text-green-500 mx-auto mb-3" />
+        <h3 className="text-base font-bold text-foreground mb-1">
+          Entre no grupo de lançamento
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Receba novidades em primeira mão, participe de sorteios exclusivos e conecte-se com a comunidade.
+        </p>
+        <a
+          href={WHATSAPP_GROUP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20"
+        >
+          <MessageCircle className="w-5 h-5" />
+          Entrar no grupo do WhatsApp
+        </a>
+      </motion.div>
+
+      {/* Referral section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="w-full"
+      >
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+            Suba na fila — compartilhe seu link
+          </p>
+          <p className="text-[10px] text-muted-foreground mb-3">
+            Cada amigo que entra pelo seu link = <span className="text-primary font-bold">você sobe na fila</span>
+          </p>
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/10 text-xs text-muted-foreground font-mono overflow-hidden">
+            <span className="truncate flex-1">{shareUrl}</span>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-3">
+          <button
+            onClick={handleCopy}
+            className="flex-1 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:border-primary/40 transition-all"
+          >
+            {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Copiado!" : "Copiar"}
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex-1 h-12 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+          >
+            <Share2 className="w-4 h-4" />
+            Compartilhar
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
 
 // ── MAIN PAGE ───────────────────────────────────────────────────────
 const ListaEspera = () => {
@@ -122,7 +244,6 @@ const ListaEspera = () => {
   const [registered, setRegistered] = useState(false);
   const [position, setPosition] = useState(0);
   const [referralCode, setReferralCode] = useState("");
-  const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
   const countdown = useCountdown(LAUNCH_DATE);
@@ -176,26 +297,6 @@ const ListaEspera = () => {
     }
   };
 
-  const shareUrl = `${window.location.origin}/lista-espera?ref=${referralCode}`;
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      await navigator.share({
-        title: "Hypou — Algo grande está chegando",
-        text: "Entra na fila antes que acabe. Você não vai querer ficar de fora.",
-        url: shareUrl,
-      });
-    } else {
-      handleCopy();
-    }
-  };
-
   return (
     <div className="relative min-h-[100dvh] bg-background overflow-hidden flex flex-col">
       <Particles />
@@ -207,79 +308,80 @@ const ListaEspera = () => {
         <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-500/[0.02] blur-[80px]" />
       </div>
 
-      <div className="relative z-10 w-full flex-1 flex flex-col lg:flex-row items-center justify-center max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 gap-6 sm:gap-8 lg:gap-16">
-        
-        {/* LEFT SIDE - Content */}
-        <div className="flex flex-col items-center lg:items-start gap-6 sm:gap-8 max-w-md w-full">
+      <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 gap-6 sm:gap-8">
 
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-            className="relative flex flex-col items-center"
-          >
-            <img src={logoHypou} alt="Hypou" className="h-16 sm:h-20 w-auto object-contain" />
-            <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
-          </motion.div>
+        <AnimatePresence mode="wait">
+          {!registered ? (
+            <motion.div
+              key="landing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -30 }}
+              className="flex flex-col items-center gap-6 sm:gap-8 max-w-md w-full"
+            >
+              {/* Logo */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
+                className="relative flex flex-col items-center"
+              >
+                <img src={logoHypou} alt="Hypou" className="h-16 sm:h-20 w-auto object-contain" />
+                <div className="absolute inset-0 -z-10 blur-3xl bg-primary/10 rounded-full scale-150" />
+              </motion.div>
 
-          {/* Dynamic headline */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="text-center lg:text-left"
-          >
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
-              Troque o que não usa por{" "}
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={rotatingWord}
-                  initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-                  transition={{ duration: 0.4 }}
-                  className="text-primary inline-block"
-                >
-                  {rotatingWord}
-                </motion.span>
-              </AnimatePresence>
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              O app que conecta pessoas para trocar objetos. Sem pagar nada. Só chega primeiro quem entrar agora.
-            </p>
-          </motion.div>
+              {/* Dynamic headline */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="text-center"
+              >
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">
+                  Troque o que não usa por{" "}
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={rotatingWord}
+                      initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                      exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+                      transition={{ duration: 0.4 }}
+                      className="text-primary inline-block"
+                    >
+                      {rotatingWord}
+                    </motion.span>
+                  </AnimatePresence>
+                </h1>
+                <p className="text-sm text-muted-foreground mt-2">
+                  O app que conecta pessoas para trocar objetos. Sem pagar nada. Só chega primeiro quem entrar agora.
+                </p>
+              </motion.div>
 
-
-          {/* Countdown */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4 }}
-            className="w-full"
-          >
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 text-center lg:text-left">
-              Lançamento oficial em
-            </p>
-            <div className="flex items-center gap-1.5 sm:gap-3 justify-center lg:justify-start">
-              <CountdownBlock value={countdown.days} label="dias" />
-              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
-              <CountdownBlock value={countdown.hours} label="hrs" />
-              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
-              <CountdownBlock value={countdown.minutes} label="min" />
-              <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
-              <CountdownBlock value={countdown.seconds} label="seg" />
-            </div>
-          </motion.div>
-
-          {/* Form / Confirmation */}
-          <AnimatePresence mode="wait">
-            {!registered ? (
-              <motion.form
-                key="form"
+              {/* Countdown */}
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 1.4 }}
+                className="w-full"
+              >
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-3 text-center">
+                  Lançamento oficial em
+                </p>
+                <div className="flex items-center gap-1.5 sm:gap-3 justify-center">
+                  <CountdownBlock value={countdown.days} label="dias" />
+                  <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
+                  <CountdownBlock value={countdown.hours} label="hrs" />
+                  <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
+                  <CountdownBlock value={countdown.minutes} label="min" />
+                  <span className="text-base sm:text-xl text-primary/40 font-bold mt-[-16px] sm:mt-[-20px]">:</span>
+                  <CountdownBlock value={countdown.seconds} label="seg" />
+                </div>
+              </motion.div>
+
+              {/* Form */}
+              <motion.form
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.6 }}
                 onSubmit={handleSubmit}
                 className="w-full flex flex-col gap-3"
@@ -301,88 +403,43 @@ const ListaEspera = () => {
                   5 segundos pra cadastrar. Zero spam. Cancele quando quiser.
                 </p>
               </motion.form>
-            ) : (
+
+              {/* Social counter */}
               <motion.div
-                key="confirmation"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.8 }}
+                className="flex items-center gap-2"
               >
-                <div className="rounded-3xl p-6 w-full text-center border border-primary/20 bg-gradient-to-b from-primary/[0.03] to-transparent">
-                  <p className="text-muted-foreground text-xs font-semibold uppercase tracking-widest mb-2">Você está na fila</p>
-                  <motion.p
-                    initial={{ scale: 0.5 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
-                    className="text-5xl font-extrabold text-primary text-glow"
-                  >
-                    #{position}
-                  </motion.p>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    Cada amigo que entra pelo seu link = <span className="text-primary font-bold">você sobe na fila</span>
-                  </p>
+                <div className="flex -space-x-2">
+                  {[
+                    "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
+                    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
+                    "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face",
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face",
+                  ].map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt=""
+                      className="w-7 h-7 rounded-full border-2 border-background object-cover"
+                      style={{ zIndex: 4 - i }}
+                    />
+                  ))}
                 </div>
-
-                {/* Referral share */}
-                <div className="w-full rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Seu link exclusivo</p>
-                  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/10 text-xs text-muted-foreground font-mono overflow-hidden">
-                    <span className="truncate flex-1">{shareUrl}</span>
-                  </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-foreground">
+                    {socialCount.toLocaleString("pt-BR")}+
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">já garantiram vaga</span>
                 </div>
-
-                <div className="w-full flex gap-3">
-                  <button
-                    onClick={handleCopy}
-                    className="flex-1 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:border-primary/40 transition-all"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
-                    {copied ? "Copiado!" : "Copiar"}
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="flex-1 h-12 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Compartilhar
-                  </button>
-                </div>
+                <Flame className="w-4 h-4 text-orange-400 ml-1 animate-pulse" />
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Social counter */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.8 }}
-            className="flex items-center gap-2"
-          >
-            <div className="flex -space-x-2">
-              {[
-                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face",
-                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
-                "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face",
-                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face",
-              ].map((src, i) => (
-                <img
-                  key={i}
-                  src={src}
-                  alt=""
-                  className="w-7 h-7 rounded-full border-2 border-background object-cover"
-                  style={{ zIndex: 4 - i }}
-                />
-              ))}
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-foreground">
-                {socialCount.toLocaleString("pt-BR")}+
-              </span>
-              <span className="text-[10px] text-muted-foreground">já garantiram vaga</span>
-            </div>
-            <Flame className="w-4 h-4 text-orange-400 ml-1 animate-pulse" />
-          </motion.div>
-        </div>
+            </motion.div>
+          ) : (
+            <ThankYouScreen position={position} referralCode={referralCode} />
+          )}
+        </AnimatePresence>
 
       </div>
 
