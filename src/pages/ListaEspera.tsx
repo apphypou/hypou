@@ -197,7 +197,7 @@ const ThankYouScreen = ({
           Receba novidades em primeira mão, participe de sorteios exclusivos e conecte-se com a comunidade.
         </p>
         <a
-          href={WHATSAPP_GROUP_URL}
+          href={whatsappUrl || "#"}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20"
