@@ -442,6 +442,7 @@ auth.users (Supabase Auth)
 
 Tabelas de sistema:
     ├── waitlist
+    ├── site_settings (key-value para configs do site)
     ├── system_incidents
     │       └── incident_updates
     └── uptime_checks
@@ -818,7 +819,7 @@ Os uploads seguem o padrão `{userId}/{itemId}/{filename}` para garantir que o R
 | **Itens** | Lista de itens com filtros |
 | **Matches** | Visualização de propostas e trocas |
 | **Denúncias** | Gestão de reports com resolução |
-| **Waitlist** | Lista de espera pré-lançamento |
+| **Waitlist** | Lista de espera pré-lançamento + configuração do link do WhatsApp (tabela `site_settings`) |
 | **Status** | Incidentes do sistema + uptime checks |
 | **Assistente** | Chat com IA para suporte interno |
 

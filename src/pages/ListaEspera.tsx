@@ -7,13 +7,11 @@ import logoHypou from "@/assets/logo-hypou.png";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 // ── CONFIG ──────────────────────────────────────────────────────────
 const LAUNCH_DATE = new Date();
 LAUNCH_DATE.setDate(LAUNCH_DATE.getDate() + 30);
-
-// Link do grupo de lançamento no WhatsApp (placeholder - admin vai trocar)
-const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/PLACEHOLDER";
 
 // ── PARTICLES ───────────────────────────────────────────────────────
 const Particles = () => {
@@ -124,6 +122,18 @@ const ThankYouScreen = ({
   position: number;
   referralCode: string;
 }) => {
+  const { data: whatsappUrl } = useQuery({
+    queryKey: ["site-settings", "whatsapp_group_url"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings" as any)
+        .select("value")
+        .eq("key", "whatsapp_group_url")
+        .single();
+      return (data as any)?.value as string || "https://chat.whatsapp.com/PLACEHOLDER";
+    },
+    staleTime: 1000 * 60 * 5,
+  });
   const [copied, setCopied] = useState(false);
   const shareUrl = `${window.location.origin}/lista-espera?ref=${referralCode}`;
 
@@ -187,7 +197,7 @@ const ThankYouScreen = ({
           Receba novidades em primeira mão, participe de sorteios exclusivos e conecte-se com a comunidade.
         </p>
         <a
-          href={WHATSAPP_GROUP_URL}
+          href={whatsappUrl || "#"}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20"
