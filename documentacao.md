@@ -819,7 +819,7 @@ Os uploads seguem o padrão `{userId}/{itemId}/{filename}` para garantir que o R
 | **Itens** | Lista de itens com filtros |
 | **Matches** | Visualização de propostas e trocas |
 | **Denúncias** | Gestão de reports com resolução |
-| **Waitlist** | Lista de espera pré-lançamento |
+| **Waitlist** | Lista de espera pré-lançamento + configuração do link do WhatsApp (tabela `site_settings`) |
 | **Status** | Incidentes do sistema + uptime checks |
 | **Assistente** | Chat com IA para suporte interno |
 
