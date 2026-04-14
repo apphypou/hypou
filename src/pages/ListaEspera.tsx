@@ -7,13 +7,11 @@ import logoHypou from "@/assets/logo-hypou.png";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 // ── CONFIG ──────────────────────────────────────────────────────────
 const LAUNCH_DATE = new Date();
 LAUNCH_DATE.setDate(LAUNCH_DATE.getDate() + 30);
-
-// Link do grupo de lançamento no WhatsApp (placeholder - admin vai trocar)
-const WHATSAPP_GROUP_URL = "https://chat.whatsapp.com/PLACEHOLDER";
 
 // ── PARTICLES ───────────────────────────────────────────────────────
 const Particles = () => {
