@@ -122,6 +122,18 @@ const ThankYouScreen = ({
   position: number;
   referralCode: string;
 }) => {
+  const { data: whatsappUrl } = useQuery({
+    queryKey: ["site-settings", "whatsapp_group_url"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings" as any)
+        .select("value")
+        .eq("key", "whatsapp_group_url")
+        .single();
+      return (data as any)?.value as string || "https://chat.whatsapp.com/PLACEHOLDER";
+    },
+    staleTime: 1000 * 60 * 5,
+  });
   const [copied, setCopied] = useState(false);
   const shareUrl = `${window.location.origin}/lista-espera?ref=${referralCode}`;
 
