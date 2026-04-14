@@ -442,6 +442,7 @@ auth.users (Supabase Auth)
 
 Tabelas de sistema:
     ├── waitlist
+    ├── site_settings (key-value para configs do site)
     ├── system_incidents
     │       └── incident_updates
     └── uptime_checks
