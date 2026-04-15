@@ -41,7 +41,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
+    <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       {/* Header */}
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
         <img src={logoHypou} alt="Hypou" className="h-16 w-auto object-contain mb-6" />

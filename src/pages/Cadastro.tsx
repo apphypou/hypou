@@ -55,7 +55,7 @@ const Cadastro = () => {
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
+    <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       {/* Header */}
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
         <h1 className="text-3xl font-bold tracking-tight">
