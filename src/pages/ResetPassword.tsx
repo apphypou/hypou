@@ -53,7 +53,7 @@ const ResetPassword = () => {
 
   if (!valid) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground px-6">
+      <div className="dark flex flex-col items-center justify-center min-h-screen bg-background text-foreground px-6">
         <p className="text-muted-foreground text-center">
           Link inválido ou expirado. Solicite um novo link de recuperação.
         </p>
@@ -65,7 +65,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
+    <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
         <img src={logoHypou} alt="Hypou" className="h-20 w-auto object-contain mb-6" />
         <h1 className="text-3xl font-bold tracking-tight">
