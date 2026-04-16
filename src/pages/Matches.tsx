@@ -31,6 +31,7 @@ const Matches = () => {
   const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
   const [showRating, setShowRating] = useState(false);
 
   // Rating check for completed matches
