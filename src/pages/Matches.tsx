@@ -31,7 +31,26 @@ const Matches = () => {
   const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
+  const [showRating, setShowRating] = useState(false);
+
+  // Rating check for completed matches
+  const selectedMatchId = selectedMatch?.id;
+  const otherUserId = selectedMatch
+    ? selectedMatch.other_user.user_id
+    : undefined;
+  const { data: existingRating } = useMatchRating(
+    selectedMatch?.status === "completed" ? selectedMatchId : undefined,
+    user?.id
+  );
+
+  // Auto-open rating dialog for completed matches without rating
+  useEffect(() => {
+    if (selectedMatch?.status === "completed" && existingRating === null && user) {
+      const timer = setTimeout(() => setShowRating(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMatch?.status, existingRating, user]);
+
 
   const handleRejectMatch = useCallback(async () => {
     if (!selectedMatch || rejecting) return;
