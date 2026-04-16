@@ -703,8 +703,31 @@ Match aceito → Chat liberado (/chat/:conversationId)
              → Trigger check_trade_completion():
                 → Se ambos confirmaram + status = "accepted"
                 → status = "completed"
-             → Tela de avaliação (RatingDialog)
+             → Trigger deactivate_items_on_trade_completion():
+                → Desativa item_a e item_b (status = 'inactive')
+                → Itens somem do feed de ambos os usuários
+             → RatingDialog abre automaticamente para ambos
+             → Avaliação visível no perfil público
 ```
+
+### 12.4.1 Status da Troca no Chat (TradeContextCard)
+
+| Status DB   | Label exibido no chat      |
+|-------------|---------------------------|
+| proposal    | Pendente ⏳                |
+| accepted    | Em negociação 🤝          |
+| completed   | Troca concluída ✅         |
+| rejected    | Troca não realizada ❌     |
+
+### 12.4.2 Desativação Automática de Itens
+
+Quando ambos os usuários confirmam a entrega e o match atinge status `completed`, o trigger `deactivate_items_on_trade_completion()` (SECURITY DEFINER) automaticamente atualiza `items.status = 'inactive'` para os dois itens envolvidos. Itens inativos são filtrados do feed pela RLS (`status = 'active'`).
+
+### 12.4.3 Avaliação Pós-Troca
+
+- O `RatingDialog` abre automaticamente ao visualizar um match concluído sem avaliação
+- Botão "Avaliar troca" disponível nos matches concluídos na aba Histórico
+- Ratings são visíveis publicamente (policy permite `anon` e `authenticated`)
 
 ### 12.5 Máquina de Estados do Match
 
