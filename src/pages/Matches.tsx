@@ -517,7 +517,7 @@ const Matches = () => {
                       ) : (
                         <>
                           <CheckCircle2 className="h-5 w-5" />
-                          Confirmar Entrega
+                          Confirmar Troca
                         </>
                       )}
                     </button>
