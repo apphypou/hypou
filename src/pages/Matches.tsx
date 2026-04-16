@@ -501,7 +501,7 @@ const Matches = () => {
                 </div>
               ) : isSentProposal(selectedMatch) ? (
                 <div className="space-y-3">
-                  <div className="w-full h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 font-bold text-base flex items-center justify-center gap-2">
+                  <div className="w-full h-14 rounded-2xl bg-amber-600 border border-amber-700 text-white font-bold text-base flex items-center justify-center gap-2">
                     <Clock className="h-5 w-5" />
                     Aguardando resposta
                   </div>
