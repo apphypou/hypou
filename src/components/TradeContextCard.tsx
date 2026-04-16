@@ -14,8 +14,9 @@ interface TradeContextCardProps {
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   proposal: { label: "Pendente ⏳", className: "bg-primary/10 text-primary border-primary/20" },
-  accepted: { label: "Aceita ✅", className: "bg-success/10 text-success border-success/20" },
-  rejected: { label: "Recusada ❌", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  accepted: { label: "Em negociação 🤝", className: "bg-primary/10 text-primary border-primary/20" },
+  completed: { label: "Troca concluída ✅", className: "bg-success/10 text-success border-success/20" },
+  rejected: { label: "Troca não realizada ❌", className: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
 const getItemImage = (item: TradeItem | null) => {

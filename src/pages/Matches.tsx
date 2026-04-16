@@ -1,5 +1,5 @@
 import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send, CheckCircle2, History } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
@@ -15,6 +15,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { formatValue } from "@/lib/utils";
+import { useMatchRating } from "@/hooks/useRatings";
+import RatingDialog from "@/components/RatingDialog";
 
 const Matches = () => {
   const { data: matches = [], isLoading } = useMatches();
