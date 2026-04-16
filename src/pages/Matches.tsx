@@ -94,7 +94,7 @@ const Matches = () => {
     new: "bg-primary text-primary-foreground border-primary/50",
     accepted: "bg-success text-white border-success/50",
     pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
-    sent: "bg-amber-500/20 text-amber-600 border-amber-500/30",
+    sent: "bg-amber-500 text-white border-amber-600",
     completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
   };
 
