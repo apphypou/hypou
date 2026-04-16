@@ -617,9 +617,20 @@ const Matches = () => {
         )}
       </AnimatePresence>
 
+      {/* Rating Dialog */}
+      {user && selectedMatch && otherUserId && (
+        <RatingDialog
+          open={showRating}
+          onClose={() => setShowRating(false)}
+          matchId={selectedMatch.id}
+          raterId={user.id}
+          ratedId={otherUserId}
+          ratedName={selectedMatch.other_user.display_name || "Usuário"}
+        />
+      )}
+
       <BottomNav activeTab="trocas" />
     </ScreenLayout>
-  );
 };
 
 export default Matches;
