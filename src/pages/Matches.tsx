@@ -1,5 +1,5 @@
 import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send, CheckCircle2, History } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
@@ -15,6 +15,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { formatValue } from "@/lib/utils";
+import { useMatchRating } from "@/hooks/useRatings";
+import RatingDialog from "@/components/RatingDialog";
 
 const Matches = () => {
   const { data: matches = [], isLoading } = useMatches();
@@ -30,6 +32,26 @@ const Matches = () => {
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
+  const [showRating, setShowRating] = useState(false);
+
+  // Rating check for completed matches
+  const selectedMatchId = selectedMatch?.id;
+  const otherUserId = selectedMatch
+    ? selectedMatch.other_user.user_id
+    : undefined;
+  const { data: existingRating } = useMatchRating(
+    selectedMatch?.status === "completed" ? selectedMatchId : undefined,
+    user?.id
+  );
+
+  // Auto-open rating dialog for completed matches without rating
+  useEffect(() => {
+    if (selectedMatch?.status === "completed" && existingRating === null && user) {
+      const timer = setTimeout(() => setShowRating(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedMatch?.status, existingRating, user]);
+
 
   const handleRejectMatch = useCallback(async () => {
     if (!selectedMatch || rejecting) return;
@@ -457,9 +479,20 @@ const Matches = () => {
               style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             >
               {selectedMatch.status === "completed" ? (
-                <div className="w-full h-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 font-bold text-base flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Troca Concluída
+                <div className="space-y-3">
+                  <div className="w-full h-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 font-bold text-base flex items-center justify-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    Troca Concluída
+                  </div>
+                  {existingRating === null && (
+                    <button
+                      onClick={() => setShowRating(true)}
+                      className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.3)]"
+                    >
+                      <Star className="h-4 w-4" />
+                      Avaliar troca
+                    </button>
+                  )}
                 </div>
               ) : selectedMatch.status === "accepted" ? (
                 <div className="flex gap-3">
@@ -583,6 +616,18 @@ const Matches = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Rating Dialog */}
+      {user && selectedMatch && otherUserId && (
+        <RatingDialog
+          open={showRating}
+          onClose={() => setShowRating(false)}
+          matchId={selectedMatch.id}
+          raterId={user.id}
+          ratedId={otherUserId}
+          ratedName={selectedMatch.other_user.display_name || "Usuário"}
+        />
+      )}
 
       <BottomNav activeTab="trocas" />
     </ScreenLayout>
