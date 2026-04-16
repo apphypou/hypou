@@ -479,9 +479,20 @@ const Matches = () => {
               style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             >
               {selectedMatch.status === "completed" ? (
-                <div className="w-full h-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 font-bold text-base flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  Troca Concluída
+                <div className="space-y-3">
+                  <div className="w-full h-14 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 font-bold text-base flex items-center justify-center gap-2">
+                    <CheckCircle2 className="h-5 w-5" />
+                    Troca Concluída
+                  </div>
+                  {existingRating === null && (
+                    <button
+                      onClick={() => setShowRating(true)}
+                      className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.3)]"
+                    >
+                      <Star className="h-4 w-4" />
+                      Avaliar troca
+                    </button>
+                  )}
                 </div>
               ) : selectedMatch.status === "accepted" ? (
                 <div className="flex gap-3">
