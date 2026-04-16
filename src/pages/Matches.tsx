@@ -631,6 +631,7 @@ const Matches = () => {
 
       <BottomNav activeTab="trocas" />
     </ScreenLayout>
+  );
 };
 
 export default Matches;
