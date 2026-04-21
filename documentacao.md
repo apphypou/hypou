@@ -760,6 +760,15 @@ Quando ambos os usuários confirmam a entrega e o match atinge status `completed
 | `completed` | Troca concluída ✅     | TradeContextCard, Matches (badge)         |
 | `rejected`  | Troca não realizada ❌ | TradeContextCard, Chat                    |
 
+### Fluxo de Conclusão de Troca
+
+1. Ambos usuários combinam a entrega via chat
+2. Cada um clica em "Confirmar Troca" na tela de Propostas
+3. O trigger `check_trade_completion` muda o status para `completed` quando ambos confirmam
+4. O trigger `deactivate_items_on_trade_completion` marca os itens como `inactive`
+5. A tela permanece aberta mostrando "Troca Concluída" e o dialog de avaliação
+6. Uma RLS policy permite que participantes vejam itens inativos envolvidos em seus matches
+
 ---
 
 ## 13. Realtime e Notificações
