@@ -7,7 +7,7 @@ import GlassCard from "@/components/GlassCard";
 import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
-import { acceptProposal, rejectProposal, confirmTrade, cancelProposal } from "@/services/matchService";
+import { acceptProposal, rejectProposal, confirmTrade, cancelProposal, getMatch } from "@/services/matchService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -88,8 +88,19 @@ const Matches = () => {
     try {
       await confirmTrade(selectedMatch.id, user!.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
-      toast({ title: "Troca confirmada! ✅", description: "Quando ambos confirmarem, a troca será concluída." });
-      setSelectedMatch(null);
+      // Re-fetch the match to check if it transitioned to completed
+      const updatedMatch = await getMatch(selectedMatch.id, user!.id);
+      if (updatedMatch?.status === "completed") {
+        setSelectedMatch(updatedMatch);
+        toast({ title: "Troca concluída! 🎉", description: "Avalie sua experiência." });
+        setTimeout(() => setShowRating(true), 600);
+      } else if (updatedMatch) {
+        setSelectedMatch(updatedMatch);
+        toast({ title: "Entrega confirmada! ✅", description: "Quando ambos confirmarem, a troca será concluída." });
+      } else {
+        setSelectedMatch(null);
+        toast({ title: "Entrega confirmada! ✅" });
+      }
     } catch (err: any) {
       toast({ title: "Erro ao confirmar troca", description: err.message, variant: "destructive" });
     } finally {
@@ -315,7 +326,7 @@ const Matches = () => {
 
       {/* ===== FULLSCREEN ITEM DETAIL POPUP ===== */}
       <AnimatePresence>
-        {selectedMatch && otherItem && myItem && (
+        {selectedMatch && (otherItem || myItem) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -338,7 +349,7 @@ const Matches = () => {
                 {otherImages[0]?.image_url ? (
                   <img
                     src={otherImages[0].image_url}
-                    alt={otherItem.name}
+                    alt={otherItem?.name || "Item"}
                     className="w-full h-full absolute inset-0 object-cover"
                   />
                 ) : (
@@ -371,21 +382,21 @@ const Matches = () => {
 
                 {/* Item name + value */}
                 <h2 className="text-2xl font-extrabold text-foreground tracking-tight mb-1 break-words">
-                  {otherItem.name}
+                  {otherItem?.name || "Item"}
                 </h2>
                 <p className="text-primary text-2xl font-bold text-glow mb-4">
-                  {formatValue(otherItem.market_value)}
+                  {otherItem ? formatValue(otherItem.market_value) : "—"}
                 </p>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-5">
-                  {otherItem.category && (
+                  {otherItem?.category && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
                       <Tag className="h-3 w-3" />
                       {otherItem.category}
                     </span>
                   )}
-                  {otherItem.location && (
+                  {otherItem?.location && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-foreground/5 border border-foreground/10 text-xs font-medium text-foreground/60">
                       <MapPin className="h-3 w-3" />
                       {otherItem.location}
@@ -403,13 +414,13 @@ const Matches = () => {
                     <div className="flex-1 min-w-0 flex flex-col items-center text-center">
                       <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
                         {myImages[0]?.image_url ? (
-                          <img src={myImages[0].image_url} alt={myItem.name} className="w-full h-full object-cover" />
+                          <img src={myImages[0].image_url} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                         )}
                       </div>
-                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{myItem.name}</p>
-                      <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(myItem.market_value)}</p>
+                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{myItem?.name || "Item"}</p>
+                      <p className="text-primary text-[11px] font-bold mt-0.5">{myItem ? formatValue(myItem.market_value) : "—"}</p>
                       <p className="text-foreground/30 text-[9px] mt-1">Seu item</p>
                     </div>
 
@@ -422,13 +433,13 @@ const Matches = () => {
                     <div className="flex-1 min-w-0 flex flex-col items-center text-center">
                       <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
                         {otherImages[0]?.image_url ? (
-                          <img src={otherImages[0].image_url} alt={otherItem.name} className="w-full h-full object-cover" />
+                          <img src={otherImages[0].image_url} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                         )}
                       </div>
-                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{otherItem.name}</p>
-                      <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(otherItem.market_value)}</p>
+                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{otherItem?.name || "Item"}</p>
+                      <p className="text-primary text-[11px] font-bold mt-0.5">{otherItem ? formatValue(otherItem.market_value) : "—"}</p>
                       <p className="text-foreground/30 text-[9px] mt-1">Item deles</p>
                     </div>
                   </div>
