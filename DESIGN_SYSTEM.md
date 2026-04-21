@@ -34,29 +34,52 @@
 
 Todas as cores são definidas em HSL no `src/index.css` e mapeadas no `tailwind.config.ts`. **Nunca use cores hardcoded nos componentes** — sempre use tokens semânticos.
 
-### Cores principais
+O app suporta **Light e Dark mode** via classe `.dark` no `<html>`. O tema padrão é **Light**.
+
+### Cores principais — Modo Claro (:root)
 
 | Token | HSL | HEX | Uso |
 |---|---|---|---|
-| `--background` | `0 0% 3%` | `#080808` | Fundo global do app (preto) |
-| `--foreground` | `0 0% 100%` | `#FFFFFF` | Texto principal |
-| `--primary` | `184 100% 50%` | `#00EEFF` | Ciano neon — CTAs, destaques, glows |
-| `--primary-foreground` | `174 30% 10%` | `#122524` | Texto sobre fundo primário |
-| `--card` | `174 30% 13%` | `#173533` | Fundo de cards e painéis |
-| `--secondary` | `174 20% 16%` | `#212E2D` | Fundos secundários, inputs |
-| `--muted` | `174 20% 16%` | `#212E2D` | Áreas neutras |
-| `--muted-foreground` | `200 10% 60%` | `#8F9A9C` | Texto secundário, labels |
-| `--destructive` | `0 84.2% 60.2%` | `#E5484D` | Erros e ações destrutivas |
+| `--background` | `210 20% 96%` | `#F1F5F9` | Fundo global (cinza claro) |
+| `--foreground` | `210 25% 15%` | `#1E293B` | Texto principal (cinza escuro) |
+| `--primary` | `181 72% 63%` | `#6EE7E1` | Ciano suave — CTAs, destaques, glows |
+| `--primary-foreground` | `0 0% 100%` | `#FFFFFF` | Texto sobre fundo primário |
+| `--card` | `0 0% 100%` | `#FFFFFF` | Fundo de cards e painéis |
+| `--secondary` | `210 15% 92%` | `#E2E8F0` | Fundos secundários, inputs |
+| `--muted` | `210 15% 92%` | `#E2E8F0` | Áreas neutras |
+| `--muted-foreground` | `210 10% 45%` | `#64748B` | Texto secundário, labels |
+| `--accent` | `181 72% 63%` | `#6EE7E1` | Mesmo do primário — destaques |
+| `--destructive` | `0 72% 55%` | `#DC2626` | Erros e ações destrutivas |
+| `--success` | `142 60% 42%` | `#15803D` | Confirmações, swipe like, status positivo |
+| `--danger` | `0 72% 55%` | `#DC2626` | Alertas, swipe nope, ações perigosas |
+| `--border` | `210 15% 88%` | `#CBD5E1` | Bordas padrão |
+| `--ring` | `181 72% 63%` | `#6EE7E1` | Ring de foco |
+
+### Cores principais — Modo Escuro (.dark)
+
+| Token | HSL | HEX | Uso |
+|---|:---:|---|---|
+| `--background` | `0 0% 11%` | `#1C1C1C` | Fundo global (quase preto) |
+| `--foreground` | `0 0% 100%` | `#FFFFFF` | Texto principal (branco) |
+| `--primary` | `178 98% 54%` | `#00F0E4` | Ciano neon — CTAs, destaques, glows |
+| `--primary-foreground` | `0 0% 8%` | `#141414` | Texto sobre fundo primário |
+| `--card` | `0 0% 15%` | `#262626` | Fundo de cards e painéis |
+| `--secondary` | `0 0% 18%` | `#2E2E2E` | Fundos secundários, inputs |
+| `--muted` | `0 0% 18%` | `#2E2E2E` | Áreas neutras |
+| `--muted-foreground` | `0 0% 60%` | `#999999` | Texto secundário, labels |
+| `--accent` | `178 98% 54%` | `#00F0E4` | Mesmo do primário — destaques |
+| `--destructive` | `0 84.2% 60.2%` | `#EF4444` | Erros e ações destrutivas |
 | `--success` | `142 71% 45%` | `#22C55E` | Confirmações, swipe like, status positivo |
-| `--danger` | `0 84% 60%` | `#E5484D` | Alertas, swipe nope, ações perigosas |
-| `--border` | `0 0% 100% / 0.12` | `rgba(255,255,255,0.12)` | Bordas padrão |
-| `--ring` | `184 100% 50%` | `#00EEFF` | Ring de foco |
+| `--danger` | `0 84% 60%` | `#EF4444` | Alertas, swipe nope, ações perigosas |
+| `--border` | `0 0% 100% / 0.03` | `rgba(255,255,255,0.03)` | Bordas sutis no dark mode |
+| `--ring` | `178 98% 54%` | `#00F0E4` | Ring de foco |
 
 ### Como usar no código
 
 ```tsx
 // ✅ Correto — tokens semânticos
 className="bg-background text-foreground border-primary"
+// O Tailwind resolve automaticamente baseado no tema ativo (.dark no :root)
 
 // ❌ Errado — cores hardcoded
 className="bg-black text-white border-[#00EEFF]"
