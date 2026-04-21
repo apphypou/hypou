@@ -1,71 +1,37 @@
 
-# Plano: Status de troca no chat, desativação de itens e feedback obrigatório
+
+# Plano: Bolinha de mensagens no navbar + Correção de status no chat
 
 ## Resumo
-Implementar lógica completa de ciclo de vida da troca: status visível no chat, desativar itens ao concluir, e prompt automático de avaliação para ambos os usuários.
+Dois ajustes: garantir que a bolinha de mensagens não lidas apareça de forma confiável no BottomNav, e remover código legado que pode causar inconsistência no status exibido no chat.
 
-## O que muda
+## 1. Bolinha de mensagens não lidas no navbar
 
-### 1. Status da troca no TradeContextCard (chat)
-Atualizar `TradeContextCard.tsx` para exibir 3 status claros:
-- **"Em negociação"** (status `accepted`) — substituindo "Aceita"
-- **"Troca concluída"** (status `completed`)
-- **"Troca não realizada"** (status `rejected`)
+O código já existe em `BottomNav.tsx` e `useUnreadCount.ts` com assinatura realtime. Porém, a bolinha atual (8px) pode não estar visível dependendo do posicionamento. Ajustes:
 
-### 2. Desativar itens quando a troca é concluída
-Criar um **database trigger** na tabela `matches` que, ao detectar `status = 'completed'`, automaticamente atualiza `items.status = 'inactive'` para `item_a_id` e `item_b_id`. Isso faz os itens sumirem do feed de ambos os usuários.
+- **Aumentar a bolinha** de `h-2 w-2` para `h-2.5 w-2.5` e adicionar borda para contraste
+- **Adicionar animação pulse** para chamar atenção quando há mensagens novas
+- **Reposicionar** a bolinha para ficar mais visível (top-right do ícone)
 
-**Migration SQL:**
-```sql
-CREATE OR REPLACE FUNCTION public.deactivate_items_on_trade_completion()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-BEGIN
-  IF NEW.status = 'completed' AND (OLD.status IS DISTINCT FROM 'completed') THEN
-    UPDATE items SET status = 'inactive' WHERE id IN (NEW.item_a_id, NEW.item_b_id);
-  END IF;
-  RETURN NEW;
-END;
-$$;
+**Arquivo:** `src/components/BottomNav.tsx`
 
-CREATE TRIGGER on_trade_completed_deactivate_items
-  AFTER UPDATE ON matches
-  FOR EACH ROW
-  EXECUTE FUNCTION deactivate_items_on_trade_completion();
-```
+## 2. Bug do status "Aceita" vs "Em negociação"
 
-### 3. Prompt de avaliação automático para ambos
-Na página **Matches** (`Matches.tsx`): quando o usuário abre um match com status `completed` e ainda não avaliou (`useMatchRating`), abrir automaticamente o `RatingDialog`.
+O `TradeContextCard` já foi atualizado para mostrar "Em negociação 🤝" para status `accepted`. Porém, em `Conversa.tsx` (linha 278) existe uma variável `matchStatusLabel` que mapeia `accepted` → "Troca aceita ✅". Embora essa variável pareça não estar sendo renderizada atualmente, ela representa código inconsistente que deve ser removido ou alinhado.
 
-Também exibir botão "Avaliar troca" nos matches concluídos que ainda não foram avaliados.
+Além disso, na página `Matches.tsx` (linha 108), o badge mostra "Aceita" para status `accepted`. Isso deve ser atualizado para "Em negociação" para manter consistência em todo o app.
 
-### 4. Avaliação visível no perfil público
-O `PerfilUsuario.tsx` já usa `useUserRating` para exibir média e contagem. Verificar e garantir que a seção de rating está visível (já implementado).
+**Arquivos:**
+- `src/pages/Conversa.tsx` — alinhar `matchStatusLabel` com os mesmos termos do `TradeContextCard`
+- `src/pages/Matches.tsx` — alterar badge "Aceita" → "Em negociação"
 
-### 5. Rating público (SELECT para anon)
-Atualmente ratings tem SELECT apenas para `authenticated`. Adicionar policy para `anon` poder ver ratings, para visitantes verem a reputação.
+## 3. Atualizar documentacao.md
 
-**Migration SQL adicional:**
-```sql
-DROP POLICY IF EXISTS "Authenticated users can view ratings" ON public.ratings;
-CREATE POLICY "Anyone can view ratings" ON public.ratings
-  FOR SELECT TO anon, authenticated USING (true);
-```
-
-### 6. Atualizar documentacao.md
-Documentar o trigger de desativação e o fluxo de feedback.
+Documentar os status padronizados de troca usados em todo o app.
 
 ## Arquivos modificados
-- `src/components/TradeContextCard.tsx` — novos labels de status
-- `src/pages/Matches.tsx` — auto-abrir RatingDialog em completed, botão avaliar
-- `supabase/migrations/` — trigger deactivate_items + policy ratings
-- `documentacao.md` — documentar mudanças
+- `src/components/BottomNav.tsx` — bolinha maior com pulse
+- `src/pages/Conversa.tsx` — alinhar labels de status
+- `src/pages/Matches.tsx` — badge "Aceita" → "Em negociação"
+- `documentacao.md` — documentar padronização
 
-## Detalhes técnicos
-- O trigger `check_trade_completion` já muda status para `completed` quando ambos confirmam
-- O novo trigger `deactivate_items_on_trade_completion` roda AFTER UPDATE, após o status já ter sido atualizado
-- Itens inativos já são filtrados do feed pelo RLS (`status = 'active'`)
-- O `RatingDialog` já existe e funciona, só precisa ser aberto automaticamente
