@@ -7,7 +7,7 @@ import GlassCard from "@/components/GlassCard";
 import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
-import { acceptProposal, rejectProposal, confirmTrade, cancelProposal } from "@/services/matchService";
+import { acceptProposal, rejectProposal, confirmTrade, cancelProposal, getMatch } from "@/services/matchService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -88,8 +88,19 @@ const Matches = () => {
     try {
       await confirmTrade(selectedMatch.id, user!.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
-      toast({ title: "Troca confirmada! ✅", description: "Quando ambos confirmarem, a troca será concluída." });
-      setSelectedMatch(null);
+      // Re-fetch the match to check if it transitioned to completed
+      const updatedMatch = await getMatch(selectedMatch.id, user!.id);
+      if (updatedMatch?.status === "completed") {
+        setSelectedMatch(updatedMatch);
+        toast({ title: "Troca concluída! 🎉", description: "Avalie sua experiência." });
+        setTimeout(() => setShowRating(true), 600);
+      } else if (updatedMatch) {
+        setSelectedMatch(updatedMatch);
+        toast({ title: "Entrega confirmada! ✅", description: "Quando ambos confirmarem, a troca será concluída." });
+      } else {
+        setSelectedMatch(null);
+        toast({ title: "Entrega confirmada! ✅" });
+      }
     } catch (err: any) {
       toast({ title: "Erro ao confirmar troca", description: err.message, variant: "destructive" });
     } finally {
@@ -315,7 +326,7 @@ const Matches = () => {
 
       {/* ===== FULLSCREEN ITEM DETAIL POPUP ===== */}
       <AnimatePresence>
-        {selectedMatch && otherItem && myItem && (
+        {selectedMatch && (otherItem || myItem) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
