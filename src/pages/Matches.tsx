@@ -382,21 +382,21 @@ const Matches = () => {
 
                 {/* Item name + value */}
                 <h2 className="text-2xl font-extrabold text-foreground tracking-tight mb-1 break-words">
-                  {otherItem.name}
+                  {otherItem?.name || "Item"}
                 </h2>
                 <p className="text-primary text-2xl font-bold text-glow mb-4">
-                  {formatValue(otherItem.market_value)}
+                  {otherItem ? formatValue(otherItem.market_value) : "—"}
                 </p>
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-5">
-                  {otherItem.category && (
+                  {otherItem?.category && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary">
                       <Tag className="h-3 w-3" />
                       {otherItem.category}
                     </span>
                   )}
-                  {otherItem.location && (
+                  {otherItem?.location && (
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-foreground/5 border border-foreground/10 text-xs font-medium text-foreground/60">
                       <MapPin className="h-3 w-3" />
                       {otherItem.location}
