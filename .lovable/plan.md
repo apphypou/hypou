@@ -1,37 +1,65 @@
 
 
-# Plano: Bolinha de mensagens no navbar + Correção de status no chat
+# Plano: Correção completa do fluxo de conclusão de troca
 
-## Resumo
-Dois ajustes: garantir que a bolinha de mensagens não lidas apareça de forma confiável no BottomNav, e remover código legado que pode causar inconsistência no status exibido no chat.
+## Problemas identificados
 
-## 1. Bolinha de mensagens não lidas no navbar
+### Bug 1: Histórico mostra tela em branco
+Quando a troca é concluída, o trigger `deactivate_items_on_trade_completion` marca ambos os itens como `inactive`. A política RLS da tabela `items` permite ver apenas itens `active` ou itens do próprio usuário (`auth.uid() = user_id`). Resultado: ao abrir uma troca concluída no histórico, o item do outro usuário retorna `null` e a condição `otherItem && myItem` (linha 318 de `Matches.tsx`) falha, mostrando tela em branco.
 
-O código já existe em `BottomNav.tsx` e `useUnreadCount.ts` com assinatura realtime. Porém, a bolinha atual (8px) pode não estar visível dependendo do posicionamento. Ajustes:
+### Bug 2: Tela de conclusão nunca aparece
+Após clicar "Confirmar Troca", o `handleConfirmTrade` executa `setSelectedMatch(null)` (linha 92), fechando o popup imediatamente. O usuário nunca vê o estado "Troca Concluída" nem o dialog de avaliação.
 
-- **Aumentar a bolinha** de `h-2 w-2` para `h-2.5 w-2.5` e adicionar borda para contraste
-- **Adicionar animação pulse** para chamar atenção quando há mensagens novas
-- **Reposicionar** a bolinha para ficar mais visível (top-right do ícone)
+### Bug 3: Rating dialog nunca abre automaticamente
+O auto-open (linha 48-53) depende de `selectedMatch?.status === "completed"`, mas como o popup fecha após confirmar, `selectedMatch` é `null` e o dialog nunca aparece.
 
-**Arquivo:** `src/components/BottomNav.tsx`
+## Correções
 
-## 2. Bug do status "Aceita" vs "Em negociação"
+### 1. Permitir visualização de itens em matches concluídos (Migration)
+Criar uma nova política RLS na tabela `items` que permita participantes de um match visualizar os itens envolvidos, independente do status do item.
 
-O `TradeContextCard` já foi atualizado para mostrar "Em negociação 🤝" para status `accepted`. Porém, em `Conversa.tsx` (linha 278) existe uma variável `matchStatusLabel` que mapeia `accepted` → "Troca aceita ✅". Embora essa variável pareça não estar sendo renderizada atualmente, ela representa código inconsistente que deve ser removido ou alinhado.
+```sql
+CREATE POLICY "Match participants can view traded items"
+ON public.items
+FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.matches
+    WHERE (matches.item_a_id = items.id OR matches.item_b_id = items.id)
+    AND (matches.user_a_id = auth.uid() OR matches.user_b_id = auth.uid())
+  )
+);
+```
 
-Além disso, na página `Matches.tsx` (linha 108), o badge mostra "Aceita" para status `accepted`. Isso deve ser atualizado para "Em negociação" para manter consistência em todo o app.
+**Arquivo:** Nova migration SQL
 
-**Arquivos:**
-- `src/pages/Conversa.tsx` — alinhar `matchStatusLabel` com os mesmos termos do `TradeContextCard`
-- `src/pages/Matches.tsx` — alterar badge "Aceita" → "Em negociação"
+### 2. Manter popup aberto após confirmar troca
+Em `Matches.tsx`, alterar `handleConfirmTrade` para **re-buscar os dados do match** ao invés de fechar o popup. Se o match retornar como `completed`, manter aberto para mostrar a tela de conclusão e o rating dialog.
 
-## 3. Atualizar documentacao.md
+```
+- Remover `setSelectedMatch(null)` do handleConfirmTrade
+- Após invalidar queries, re-fetch o match atualizado
+- Atualizar selectedMatch com os novos dados (status pode ter mudado para completed)
+```
 
-Documentar os status padronizados de troca usados em todo o app.
+**Arquivo:** `src/pages/Matches.tsx` (handleConfirmTrade, ~linhas 85-98)
+
+### 3. Melhorar tela de troca concluída no popup
+Quando `selectedMatch.status === "completed"`, exibir uma seção celebratória antes dos botões de ação, com destaque visual claro de que a troca foi finalizada com sucesso.
+
+**Arquivo:** `src/pages/Matches.tsx` (seção de bottom actions, ~linhas 481-496)
+
+### 4. Garantir rating dialog funcional
+Remover a dependência do `useEffect` auto-open e acionar o rating dialog diretamente quando o match transiciona para `completed` dentro do `handleConfirmTrade`. Manter também o auto-open para quando o usuário abre um match completed pelo histórico.
+
+**Arquivo:** `src/pages/Matches.tsx`
+
+### 5. Atualizar documentacao.md
+Documentar o fluxo corrigido de conclusão de troca.
 
 ## Arquivos modificados
-- `src/components/BottomNav.tsx` — bolinha maior com pulse
-- `src/pages/Conversa.tsx` — alinhar labels de status
-- `src/pages/Matches.tsx` — badge "Aceita" → "Em negociação"
-- `documentacao.md` — documentar padronização
+- `supabase/migrations/` — nova RLS policy para items em matches
+- `src/pages/Matches.tsx` — handleConfirmTrade, tela de conclusão, rating dialog
+- `documentacao.md` — documentar correções
 
