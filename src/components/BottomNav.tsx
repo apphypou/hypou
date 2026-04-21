@@ -45,7 +45,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
                 }`}
               />
               {item.hasUnread && (
-                <span className="absolute top-1.5 right-[calc(50%-4px)] translate-x-3 h-2 w-2 rounded-full bg-primary z-20" />
+                <span className="absolute top-1.5 right-[calc(50%-6px)] translate-x-3 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background animate-pulse z-20" />
               )}
             </button>
           );

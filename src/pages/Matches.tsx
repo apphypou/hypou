@@ -105,7 +105,7 @@ const Matches = () => {
 
   const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" } | null => {
     if (match.status === "completed") return { label: "Concluída", color: "completed" };
-    if (match.status === "accepted") return { label: "Aceita", color: "accepted" };
+    if (match.status === "accepted") return { label: "Em negociação", color: "accepted" };
     if (isSentProposal(match)) return { label: "Enviada", color: "sent" };
     const age = Date.now() - new Date(match.created_at).getTime();
     if (age < 24 * 60 * 60 * 1000) return { label: "Nova Proposta", color: "new" };
