@@ -25,6 +25,7 @@ const routeLabels: Record<string, string> = {
   "/admin/waitlist": "Waitlist",
   "/admin/status": "Status",
   "/admin/assistente": "Assistente IA",
+  "/admin/lancamento": "Lançamento",
 };
 
 const AdminLayout = () => {
