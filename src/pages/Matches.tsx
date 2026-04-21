@@ -486,7 +486,7 @@ const Matches = () => {
 
             {/* Fixed bottom actions */}
             <div
-              className="fixed bottom-0 left-0 right-0 z-[110] px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent"
+              className="absolute bottom-0 left-0 right-0 z-[110] px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent"
               style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             >
               {selectedMatch.status === "completed" ? (
