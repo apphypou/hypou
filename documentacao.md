@@ -751,6 +751,15 @@ Quando ambos os usuários confirmam a entrega e o match atinge status `completed
       └───────────┘
 ```
 
+### 12.6 Labels Padronizados de Status
+
+| Status DB   | Label no App          | Onde aparece                              |
+|-------------|-----------------------|-------------------------------------------|
+| `proposal`  | Pendente ⏳            | TradeContextCard, Matches (badge)         |
+| `accepted`  | Em negociação 🤝      | TradeContextCard, Matches (badge), Chat   |
+| `completed` | Troca concluída ✅     | TradeContextCard, Matches (badge)         |
+| `rejected`  | Troca não realizada ❌ | TradeContextCard, Chat                    |
+
 ---
 
 ## 13. Realtime e Notificações
