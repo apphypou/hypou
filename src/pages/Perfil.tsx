@@ -108,6 +108,8 @@ const Perfil = () => {
     try {
       await updateProfile(user.id, { onboarding_completed: true });
       queryClient.setQueryData(["profile-onboarding", user.id], { onboarding_completed: true });
+      queryClient.setQueryData(["onboarding-check", user.id], { onboarding_completed: true });
+      queryClient.setQueryData(["profile", user.id], (old: any) => old ? { ...old, onboarding_completed: true } : old);
       navigate(goTo === "explorar" ? "/explorar" : "/novo-item");
     } catch (err: any) {
       toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
@@ -135,6 +137,9 @@ const Perfil = () => {
       if (selected.length > 0) {
         await saveUserCategories(user.id, selected);
       }
+      queryClient.setQueryData(["profile-onboarding", user.id], { onboarding_completed: true });
+      queryClient.setQueryData(["onboarding-check", user.id], { onboarding_completed: true });
+      queryClient.setQueryData(["profile", user.id], (old: any) => old ? { ...old, onboarding_completed: true } : old);
       navigate("/explorar");
     } catch (err: any) {
       toast({ title: "Erro ao pular", description: err.message, variant: "destructive" });
