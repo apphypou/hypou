@@ -308,7 +308,7 @@ const ListaEspera = () => {
   };
 
   return (
-    <div className="relative min-h-[100dvh] bg-background overflow-hidden flex flex-col">
+    <div className="dark relative min-h-[100dvh] bg-background overflow-hidden flex flex-col">
       <Particles />
 
       {/* Mesh gradient bg */}
