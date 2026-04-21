@@ -407,7 +407,7 @@ const ListaEspera = () => {
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>
-                  {loading ? "Entrando..." : "Quero entrar primeiro →"}
+                  {loading ? "Entrando..." : "Quero entrar primeiro"}
                 </NeonButton>
                 <p className="text-[10px] text-muted-foreground text-center">
                   5 segundos pra cadastrar. Zero spam. Cancele quando quiser.
