@@ -276,9 +276,9 @@ const Conversa = () => {
   };
 
   const matchStatusLabel = details?.match_status === "accepted"
-    ? "Troca aceita ✅"
+    ? "Em negociação 🤝"
     : details?.match_status === "rejected"
-    ? "Proposta recusada ❌"
+    ? "Troca não realizada ❌"
     : details?.match_status === "proposal"
     ? "Proposta pendente ⏳"
     : null;
