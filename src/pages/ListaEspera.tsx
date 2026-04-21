@@ -130,7 +130,7 @@ const ThankYouScreen = ({
         .select("value")
         .eq("key", "whatsapp_group_url")
         .single();
-      return (data as any)?.value as string || "https://chat.whatsapp.com/PLACEHOLDER";
+      return (data as any)?.value as string || "https://chat.whatsapp.com/CQBuRByILKp5M0RQLYnTet";
     },
     staleTime: 1000 * 60 * 5,
   });
