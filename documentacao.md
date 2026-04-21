@@ -1014,3 +1014,26 @@ O `capacitor.config.ts` está configurado com `server.url` apontando para o prev
 
 - [Documentação Capacitor](https://capacitorjs.com/docs)
 - [Lovable + Capacitor](https://docs.lovable.dev/tips-tricks/mobile-development)
+
+---
+
+## Suíte de Testes QA
+
+A suíte de testes do Hypou utiliza **Vitest + jsdom** e cobre lógica pura (helpers, validações, máquinas de estado) sem mocks pesados de Supabase, garantindo execução rápida e estável.
+
+### Arquivos de teste (`src/test/`)
+- `auth.test.ts` — validação de e-mail, senha, tradução de erros pt-BR, OAuth redirect.
+- `items.test.ts` — formatação de moeda BRL, limites de fotos/vídeo, margens, faixa de troca, filtro de feed.
+- `swipeMatch.test.ts` — direção de swipe, reciprocidade, filtros (próprio/bloqueados), compatibilidade.
+- `proposals.test.ts` — permissões (user_a/user_b), máquina de estados (proposal→accepted→completed), badges.
+- `chatTrade.test.ts` — labels de status (Em negociação / Troca concluída / Troca não realizada), confirmação dupla, desativação automática.
+- `ratings.test.ts` — score 1–5, permissão por participante, média.
+- `moderation.test.ts` — bloqueios, regras, validação de reports.
+- `uiHelpers.test.ts` — date-fns pt-BR, truncamento, localização, skeletons, badges, pull-to-refresh.
+
+### Execução
+```bash
+npx vitest run
+```
+
+Total atual: **14 arquivos / 118 testes** (50 novos + 68 existentes), todos passando.
