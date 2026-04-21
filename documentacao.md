@@ -248,13 +248,15 @@ src/
 |------|-----------|-----------|
 | `/` | `Index` | Landing page |
 | `/lista-espera` | `ListaEspera` | Waitlist pré-lançamento |
-| `/login` | `Login` | Autenticação |
-| `/cadastro` | `Cadastro` | Registro de conta |
-| `/recuperar-senha` | `RecuperarSenha` | Esqueci minha senha |
-| `/reset-password` | `ResetPassword` | Redefinir senha (via link) |
+| `/login` | `Login` | Autenticação (sempre modo escuro) |
+| `/cadastro` | `Cadastro` | Registro de conta (sempre modo escuro) |
+| `/recuperar-senha` | `RecuperarSenha` | Esqueci minha senha (sempre modo escuro) |
+| `/reset-password` | `ResetPassword` | Redefinir senha via link (sempre modo escuro) |
 | `/termos` | `Termos` | Termos de uso |
 | `/privacidade` | `Privacidade` | Política de privacidade |
 | `/explorar` | `Explorar` | Feed público (modo visitante) |
+
+> **Nota:** Todas as telas de autenticação (`/login`, `/cadastro`, `/recuperar-senha`, `/reset-password`) renderizam **sempre em modo escuro** via classe `dark` hardcoded, independente da preferência de tema do usuário. Isso garante consistência visual e melhor contraste com o logo da marca.
 
 ### Rotas Protegidas (autenticação + onboarding)
 
