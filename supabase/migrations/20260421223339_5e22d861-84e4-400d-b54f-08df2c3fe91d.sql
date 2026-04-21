@@ -1,0 +1,1 @@
+UPDATE public.site_settings SET value = 'https://chat.whatsapp.com/CQBuRByILKp5M0RQLYnTet', updated_at = now() WHERE key = 'whatsapp_group_url';
