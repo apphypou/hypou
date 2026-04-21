@@ -349,7 +349,7 @@ const Matches = () => {
                 {otherImages[0]?.image_url ? (
                   <img
                     src={otherImages[0].image_url}
-                    alt={otherItem.name}
+                    alt={otherItem?.name || "Item"}
                     className="w-full h-full absolute inset-0 object-cover"
                   />
                 ) : (
