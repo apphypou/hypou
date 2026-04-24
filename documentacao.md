@@ -1,7 +1,19 @@
 # 📘 Hypou — Documentação Técnica Completa
 
-> **Versão:** 1.0 · **Última atualização:** 2026-04-10
+> **Versão:** 1.1 · **Última atualização:** 2026-04-24
 > **URL de produção:** https://hypou.lovable.app
+
+## ⚡ Estratégia de Performance (Instant Load)
+
+Implementada para tornar a navegação instantânea e reduzir bundles iniciais:
+
+- **Code-splitting (`React.lazy` + `Suspense`)** em `src/App.tsx`. Apenas `Index`, `Login` e `Explorar` são eager-loaded. Demais rotas carregam sob demanda. Fallback do Suspense é um `div` vazio (sem spinner) para evitar flash em chunks rápidos.
+- **Transições enxutas** (`src/components/PageTransition.tsx`): apenas opacidade, duração 0.12s, sem translate. `AnimatePresence` em `mode="popLayout"` com `initial={false}`.
+- **Prefetch on hover/touch** em `BottomNav` (`onPointerEnter`/`onTouchStart`) — chunks das próximas telas baixam antes do clique.
+- **React Query** com `staleTime: 5min`, `gcTime: 30min`, `refetchOnWindowFocus: false`, `refetchOnMount: false`, `retry: 1`. Elimina skeletons ao alternar abas.
+- **Query keys unificadas** (`["onboarding-check", userId]`) entre `ProtectedRoute` e `Explorar` — uma única chamada Supabase.
+- **`manualChunks`** em `vite.config.ts` separa `react-vendor`, `framer`, `supabase`, `query` para melhor cache do navegador entre deploys.
+- **`<link rel="preconnect">`** para o domínio Supabase em `index.html` reduz TTFB do primeiro request.
 
 ---
 

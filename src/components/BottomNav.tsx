@@ -9,13 +9,26 @@ interface BottomNavProps {
   activeTab: TabId;
 }
 
+// Prefetch route chunks on hover/touch so navigation feels instant
+const routePrefetchers: Record<string, () => Promise<unknown>> = {
+  "/partidas": () => import("@/pages/Matches"),
+  "/chat": () => import("@/pages/Chat"),
+  "/meu-perfil": () => import("@/pages/MeuPerfil"),
+};
+
+const prefetched = new Set<string>();
+const prefetch = (path: string) => {
+  if (prefetched.has(path)) return;
+  prefetched.add(path);
+  routePrefetchers[path]?.().catch(() => prefetched.delete(path));
+};
+
 const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
   const unreadCount = useUnreadCount();
 
   const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; hasUnread?: boolean }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
-    // { icon: Clapperboard, label: "Shorts", id: "shorts", path: "/shorts" },
     { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas" },
     { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", hasUnread: unreadCount > 0 },
     { icon: UserCircle, label: "Perfil", id: "perfil", path: "/meu-perfil" },
@@ -30,6 +43,8 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
             <button
               key={item.id}
               onClick={() => navigate(item.path)}
+              onPointerEnter={() => prefetch(item.path)}
+              onTouchStart={() => prefetch(item.path)}
               className="relative flex items-center justify-center rounded-full h-12 flex-1 z-10"
             >
               {isActive && (

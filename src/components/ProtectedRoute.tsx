@@ -13,7 +13,8 @@ const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRoutePr
   const { user, loading: authLoading } = useAuth();
 
   const { data: profile, isLoading: profileLoading } = useQuery({
-    queryKey: ["profile-onboarding", user?.id],
+    // Unified key — shared with Explorar to avoid duplicate fetches
+    queryKey: ["onboarding-check", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -24,6 +25,7 @@ const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRoutePr
       return data;
     },
     enabled: !!user && requireOnboarding,
+    staleTime: 1000 * 60 * 5,
   });
 
   if (authLoading || (requireOnboarding && profileLoading && !!user)) {
