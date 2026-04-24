@@ -552,13 +552,13 @@ const Matches = () => {
                   <button
                     onClick={handleCancelProposal}
                     disabled={cancelling}
-                    className="w-full h-11 rounded-2xl bg-card border border-foreground/10 text-foreground/50 font-semibold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
+                    className="w-full h-14 rounded-2xl bg-card border border-foreground/10 text-foreground/70 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
                   >
                     {cancelling ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
-                        <XIcon className="h-4 w-4" />
+                        <XIcon className="h-5 w-5" />
                         Cancelar proposta
                       </>
                     )}
