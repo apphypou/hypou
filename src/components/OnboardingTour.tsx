@@ -161,17 +161,17 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
           </motion.p>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <button
               onClick={handlePrev}
               disabled={step === 0}
-              className="h-11 px-5 rounded-full bg-foreground/[0.06] text-foreground/60 text-sm font-semibold transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-foreground/10 active:scale-95"
+              className="flex-1 h-12 rounded-full bg-foreground/[0.06] text-foreground/70 text-sm font-semibold transition-all disabled:opacity-0 disabled:pointer-events-none hover:bg-foreground/10 active:scale-95"
             >
               Voltar
             </button>
             <button
               onClick={handleNext}
-              className="h-11 px-7 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.4)] transition-all hover:shadow-[0_4px_24px_-2px_hsl(var(--primary)/0.5)] active:scale-95"
+              className="flex-1 h-12 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.4)] transition-all hover:shadow-[0_4px_24px_-2px_hsl(var(--primary)/0.5)] active:scale-95"
             >
               {step === STEPS.length - 1 ? "Começar!" : "Próximo"}
             </button>
