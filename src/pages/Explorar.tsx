@@ -219,7 +219,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10 overflow-hidden">
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10" style={{ perspective: "1200px" }}>
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />

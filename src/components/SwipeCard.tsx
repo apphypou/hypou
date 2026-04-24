@@ -208,6 +208,19 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeGlowOpacity = useTransform(x, [0, 60, 140], [0, 0.25, 0.7]);
     const dislikeGlowOpacity = useTransform(x, [-140, -60, 0], [0.7, 0.25, 0]);
 
+    // 3D lift effect — card pops out as it's dragged
+    const absX = useTransform(x, (v) => Math.abs(v));
+    const liftScale = useTransform(absX, [0, 250], [1, 1.06]);
+    const liftShadow = useTransform(
+      absX,
+      [0, 250],
+      [
+        "0 4px 20px rgba(0,0,0,0.15)",
+        "0 30px 60px -10px rgba(0,0,0,0.55), 0 18px 36px -8px rgba(0,0,0,0.4)",
+      ]
+    );
+    const isDragging = useTransform(absX, (v) => v > 4);
+
     // Image + video gallery state
     const images = item?.item_images || [];
     const videos = item?.item_videos || [];
@@ -302,10 +315,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         style={{
           x: standby ? 0 : x,
           rotate: standby || expanded ? 0 : rotate,
-          zIndex: standby ? 9 : 10,
+          scale: standby ? 0.97 : (expanded ? 1 : liftScale),
+          boxShadow: standby || expanded ? undefined : liftShadow,
+          zIndex: standby ? 9 : 60,
           willChange: standby ? "auto" : "transform",
           transformOrigin: "50% 80%",
-          ...(standby ? { scale: 0.97, y: 0, opacity: 0 } : {}),
+          borderRadius: "1.5rem",
+          ...(standby ? { y: 0, opacity: 0 } : {}),
         }}
         drag={standby || expanded ? false : true}
         dragDirectionLock
