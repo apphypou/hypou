@@ -315,10 +315,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         style={{
           x: standby ? 0 : x,
           rotate: standby || expanded ? 0 : rotate,
-          zIndex: standby ? 9 : 10,
+          scale: standby ? 0.97 : (expanded ? 1 : liftScale),
+          boxShadow: standby || expanded ? undefined : liftShadow,
+          zIndex: standby ? 9 : 60,
           willChange: standby ? "auto" : "transform",
           transformOrigin: "50% 80%",
-          ...(standby ? { scale: 0.97, y: 0, opacity: 0 } : {}),
+          borderRadius: "1.5rem",
+          ...(standby ? { y: 0, opacity: 0 } : {}),
         }}
         drag={standby || expanded ? false : true}
         dragDirectionLock
