@@ -153,19 +153,22 @@ const NotificationBell = () => {
 
   const handleOpen = () => {
     setOpen(true);
-    if (unreadCount > 0) markAllAsRead();
+    // Don't auto-mark; let user choose via "Marcar todas como lidas"
   };
+
+  const badge = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
     <div className="relative">
       <button
         onClick={handleOpen}
+        aria-label={unreadCount > 0 ? `Notificações: ${unreadCount} não lidas` : "Notificações"}
         className="relative h-9 w-9 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-2 border-background">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            {badge}
           </span>
         )}
       </button>
