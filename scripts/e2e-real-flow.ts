@@ -10,8 +10,8 @@ const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdnF5bXBhYWdsa3BsemJvY2JsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTM2NTYsImV4cCI6MjA4NzI4OTY1Nn0.URR_2cpEO5xMsFwDGfELuYIn4g6Q8bIYKd4V-flBXhU";
 
 const ts = Date.now();
-const A_EMAIL = `qa.alice.${ts}@gmail.com`;
-const B_EMAIL = `qa.bob.${ts}@gmail.com`;
+const A_EMAIL = `qa-alice-${ts}@outlook.com`;
+const B_EMAIL = `qa-bob-${ts}@outlook.com`;
 const PWD = "Test123!@#";
 
 const log: string[] = [];
