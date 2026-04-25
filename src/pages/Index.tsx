@@ -1,7 +1,7 @@
 import { ArrowRight, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, forwardRef } from "react";
 import NeonButton from "@/components/NeonButton";
 import ps5Image from "@/assets/ps5-hero.png";
 import notebookImage from "@/assets/notebook-hero.png";
@@ -100,10 +100,10 @@ const cardVariants = {
   },
 };
 
-const ProductCardEl = ({ card }: { card: ProductCard }) => (
-  <div className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
+const ProductCardEl = forwardRef<HTMLDivElement, { card: ProductCard }>(({ card }, ref) => (
+  <div ref={ref} className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
     <div className="h-[145px] flex items-center justify-center overflow-hidden bg-white">
-      <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} />
+      <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} loading="lazy" />
     </div>
     <div className="p-2 space-y-1">
       <p className="text-foreground text-xs font-semibold leading-tight">{card.name}</p>
@@ -113,7 +113,8 @@ const ProductCardEl = ({ card }: { card: ProductCard }) => (
       </span>
     </div>
   </div>
-);
+));
+ProductCardEl.displayName = "ProductCardEl";
 
 const Index = () => {
   const navigate = useNavigate();

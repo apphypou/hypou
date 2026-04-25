@@ -15,6 +15,8 @@ const SwipeVisual = () => (
     alt="Arraste para os lados"
     className="h-full w-full object-contain"
     draggable={false}
+    loading="lazy"
+    decoding="async"
   />
 );
 
