@@ -26,6 +26,16 @@ const Cadastro = () => {
       toast({ title: "Aceite os termos de uso para continuar", variant: "destructive" });
       return;
     }
+    // Block reserved TLDs early — Supabase rejects them with a generic error
+    const reservedTlds = /\.(test|example|invalid|localhost)$/i;
+    if (reservedTlds.test(email.trim())) {
+      toast({
+        title: "E-mail inválido",
+        description: "Use um e-mail real (gmail, outlook, etc.). Domínios .test/.example não são aceitos.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (password.length < 8) {
       toast({ title: "Senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return;
