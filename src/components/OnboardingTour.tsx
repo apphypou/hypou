@@ -126,7 +126,7 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 20 }}
-              className="h-[72px] w-[72px] rounded-2xl bg-gradient-to-br from-primary/[0.12] to-primary/[0.04] border border-primary/[0.08] flex items-center justify-center"
+              className="h-[96px] w-[160px] rounded-2xl bg-gradient-to-br from-primary/[0.12] to-primary/[0.04] border border-primary/[0.08] flex items-center justify-center overflow-hidden p-2"
             >
               {current.icon}
             </motion.div>
