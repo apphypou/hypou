@@ -4,6 +4,7 @@ import {
   validateVideoFile,
   validateAudioFile,
   validateChatMedia,
+  isHeicFile,
 } from "@/lib/fileValidation";
 
 const makeFile = (name: string, type: string, sizeBytes: number) => {
@@ -50,5 +51,17 @@ describe("fileValidation", () => {
   });
   it("13 validateChatMedia roteia para áudio", () => {
     expect(validateChatMedia(makeFile("x.webm", "audio/webm", 100), "audio")).toBeNull();
+  });
+  it("14 detecta HEIC pelo MIME", () => {
+    expect(isHeicFile(makeFile("foto.heic", "image/heic", 100))).toBe(true);
+  });
+  it("15 detecta HEIC pela extensão (iOS Safari sem MIME)", () => {
+    expect(isHeicFile(makeFile("foto.HEIC", "", 100))).toBe(true);
+  });
+  it("16 aceita HEIC dentro do limite (15MB)", () => {
+    expect(validateImageFile(makeFile("foto.heic", "image/heic", 1024))).toBeNull();
+  });
+  it("17 rejeita HEIC acima de 15MB", () => {
+    expect(validateImageFile(makeFile("foto.heic", "image/heic", 16 * 1024 * 1024))).toMatch(/15MB/);
   });
 });
