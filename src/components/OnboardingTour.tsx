@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowLeft, ArrowRight, Heart, ChevronUp, Search, Repeat } from "lucide-react";
+import { X, ChevronUp, Search, Repeat } from "lucide-react";
+import tutorialSwipeImg from "@/assets/tutorial-swipe.png";
 
 interface TourStep {
   title: string;
@@ -9,23 +10,12 @@ interface TourStep {
 }
 
 const SwipeVisual = () => (
-  <div className="flex items-center gap-3">
-    <div className="flex items-center gap-1 text-destructive/70">
-      <ArrowLeft className="h-4 w-4" />
-      <div className="h-8 w-8 rounded-full border border-destructive/30 flex items-center justify-center">
-        <X className="h-4 w-4" />
-      </div>
-    </div>
-    <div className="relative h-10 w-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center">
-      <div className="h-3 w-3 rounded-full bg-primary" />
-    </div>
-    <div className="flex items-center gap-1 text-primary">
-      <div className="h-8 w-8 rounded-full border border-primary/30 flex items-center justify-center">
-        <Heart className="h-4 w-4" />
-      </div>
-      <ArrowRight className="h-4 w-4" />
-    </div>
-  </div>
+  <img
+    src={tutorialSwipeImg}
+    alt="Arraste para os lados"
+    className="h-full w-full object-contain"
+    draggable={false}
+  />
 );
 
 const STEPS: TourStep[] = [
@@ -136,7 +126,7 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 20 }}
-              className="h-[72px] w-[72px] rounded-2xl bg-gradient-to-br from-primary/[0.12] to-primary/[0.04] border border-primary/[0.08] flex items-center justify-center"
+              className="h-[96px] w-[160px] rounded-2xl bg-gradient-to-br from-primary/[0.12] to-primary/[0.04] border border-primary/[0.08] flex items-center justify-center overflow-hidden p-2"
             >
               {current.icon}
             </motion.div>
