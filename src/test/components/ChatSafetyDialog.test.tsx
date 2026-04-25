@@ -31,7 +31,7 @@ describe("ChatSafetyDialog", () => {
     expect(screen.getByText(/^Continuar$/)).toBeInTheDocument();
   });
 
-  it("04 dispara click sem crashar", () => {
+  it("04 click em Continuar não crasha", () => {
     renderWithProviders(<ChatSafetyDialog open userId="u1" onAccepted={() => {}} />);
     expect(() => fireEvent.click(screen.getByText(/^Continuar$/))).not.toThrow();
   });

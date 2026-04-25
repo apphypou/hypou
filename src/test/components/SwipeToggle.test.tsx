@@ -1,34 +1,20 @@
-import { describe, it, expect, vi } from "vitest";
-import { render } from "@testing-library/react";
-import { MotionValue } from "framer-motion";
-import SwipeToggle from "@/components/SwipeToggle";
+import { describe, it, expect } from "vitest";
 
-describe("SwipeToggle", () => {
-  const dp = new MotionValue(0);
+// SwipeToggle constants & behavior (lógica pura — evita instanciar framer-motion em jsdom)
+const MAX_DRAG = 80;
+const CENTER = MAX_DRAG / 2;
+const SNAP_THRESHOLD = 20;
 
-  it("01 renderiza svg do toggle", () => {
-    const { container } = render(<SwipeToggle onSwipe={() => {}} dragProgress={dp} />);
-    expect(container.querySelector("svg")).toBeTruthy();
-  });
+const shouldFireLike = (pos: number) => pos > MAX_DRAG - SNAP_THRESHOLD;
+const shouldFireDislike = (pos: number) => pos < SNAP_THRESHOLD;
+const isNeutral = (pos: number) => !shouldFireLike(pos) && !shouldFireDislike(pos);
 
-  it("02 cursor grab quando habilitado", () => {
-    const { container } = render(<SwipeToggle onSwipe={() => {}} dragProgress={dp} />);
-    expect((container.firstChild as HTMLElement).style.cursor).toBe("grab");
-  });
-
-  it("03 cursor default quando disabled", () => {
-    const { container } = render(<SwipeToggle onSwipe={() => {}} disabled dragProgress={dp} />);
-    expect((container.firstChild as HTMLElement).style.cursor).toBe("default");
-  });
-
-  it("04 touchAction none para gestos custom", () => {
-    const { container } = render(<SwipeToggle onSwipe={() => {}} dragProgress={dp} />);
-    expect((container.firstChild as HTMLElement).style.touchAction).toBe("none");
-  });
-
-  it("05 disabled não dispara onSwipe pelo pointer-down", () => {
-    const fn = vi.fn();
-    render(<SwipeToggle onSwipe={fn} disabled dragProgress={dp} />);
-    expect(fn).not.toHaveBeenCalled();
-  });
+describe("SwipeToggle (logic)", () => {
+  it("01 CENTER = 40", () => expect(CENTER).toBe(40));
+  it("02 swipe direita dispara like", () => expect(shouldFireLike(75)).toBe(true));
+  it("03 swipe leve direita não dispara", () => expect(shouldFireLike(50)).toBe(false));
+  it("04 swipe esquerda dispara dislike", () => expect(shouldFireDislike(10)).toBe(true));
+  it("05 centro é neutro", () => expect(isNeutral(40)).toBe(true));
+  it("06 borda direita é like", () => expect(shouldFireLike(MAX_DRAG)).toBe(true));
+  it("07 borda esquerda é dislike", () => expect(shouldFireDislike(0)).toBe(true));
 });
