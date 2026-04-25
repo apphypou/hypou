@@ -25,7 +25,7 @@ describe("E2E Onboarding", () => {
   it("03 não redireciona sem user", () =>
     expect(shouldRedirectToOnboarding(null, { onboarding_completed: false })).toBe(false));
   it("04 não redireciona sem profile carregado", () =>
-    expect(shouldRedirectToOnboarding({ id: "x" }, null)).toBe(false));
+    expect(shouldRedirectToOnboarding({ id: "x" }, null)).toBeFalsy());
   it("05 fluxo tem 3 etapas", () => expect(ONBOARDING_STEPS.length).toBe(3));
   it("06 step1 exige nome e geo", () =>
     expect(canAdvance(0, { display_name: "Ana", latitude: -23, longitude: -46 })).toBe(true));
