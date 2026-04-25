@@ -14,6 +14,24 @@ const BodySchema = z.object({
   description: z.string().max(2000).optional(),
 });
 
+// In-memory rate limiter: 5 requests per minute per user (or IP).
+// Reset on cold start; good enough for cost protection on a single edge runtime.
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60_000;
+const rateBuckets = new Map<string, number[]>();
+
+function checkRateLimit(key: string): { ok: boolean; retryAfter: number } {
+  const now = Date.now();
+  const bucket = (rateBuckets.get(key) || []).filter((t) => now - t < RATE_WINDOW_MS);
+  if (bucket.length >= RATE_LIMIT) {
+    const retryAfter = Math.ceil((RATE_WINDOW_MS - (now - bucket[0])) / 1000);
+    return { ok: false, retryAfter };
+  }
+  bucket.push(now);
+  rateBuckets.set(key, bucket);
+  return { ok: true, retryAfter: 0 };
+}
+
 async function searchTavily(query: string, extraDomains: string[] = []): Promise<string> {
   const TAVILY_API_KEY = Deno.env.get("TAVILY_API_KEY");
   if (!TAVILY_API_KEY) return "";
@@ -107,6 +125,30 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Rate limit per Authorization token / IP — protects AI cost.
+    const rateKey =
+      req.headers.get("authorization")?.slice(-32) ||
+      req.headers.get("x-forwarded-for") ||
+      "anon";
+    const limit = checkRateLimit(rateKey);
+    if (!limit.ok) {
+      return new Response(
+        JSON.stringify({
+          valid: true,
+          reason: "Muitas validações em pouco tempo. Tente novamente em alguns segundos.",
+          rate_limited: true,
+        }),
+        {
+          status: 429,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+            "Retry-After": String(limit.retryAfter),
+          },
+        }
+      );
+    }
+
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
     

@@ -23,6 +23,9 @@ import {
 import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
+import { haptic } from "@/lib/haptics";
+
+const PENDING_LIKE_KEY = "hypou:pending-like-item";
 
 const Explorar = () => {
   const { user } = useAuth();
@@ -51,6 +54,20 @@ const Explorar = () => {
       navigate("/onboarding", { replace: true });
     }
   }, [user, onboardingProfile, navigate]);
+
+  // Restore pending proposal context if user came back from /novo-item
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = sessionStorage.getItem(PENDING_LIKE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.id) {
+        setPendingLikeItem(parsed);
+        setShowSelectItem(true);
+      }
+    } catch { /* ignore */ }
+  }, [user]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [epoch, setEpoch] = useState(0);
@@ -146,7 +163,15 @@ const Explorar = () => {
 
       if (direction === "like") {
         recordSwipeInBackground("like", currentItem.id);
-        if (navigator.vibrate) navigator.vibrate(50);
+        haptic("light");
+        // Persist so the user can finish the proposal even after navigating to /novo-item
+        try {
+          sessionStorage.setItem(PENDING_LIKE_KEY, JSON.stringify({
+            id: currentItem.id,
+            user_id: currentItem.user_id,
+            name: currentItem.name,
+          }));
+        } catch { /* storage may be blocked */ }
         setPendingLikeItem(currentItem);
         setShowSelectItem(true);
       } else {
@@ -166,16 +191,19 @@ const Explorar = () => {
       try {
         await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
         toast({ title: "🤝 Proposta enviada!", description: `Proposta de troca enviada com sucesso.` });
+        haptic("success");
       } catch (err: any) {
         if (err.message?.includes("duplicate")) {
           toast({ title: "Proposta já existe", description: "Você já enviou uma proposta para este item." });
         } else {
           toast({ title: "Erro ao enviar proposta", description: err.message, variant: "destructive" });
+          haptic("error");
         }
       } finally {
         setProposalLoading(false);
         setShowSelectItem(false);
         setPendingLikeItem(null);
+        try { sessionStorage.removeItem(PENDING_LIKE_KEY); } catch { /* */ }
       }
     },
     [user, pendingLikeItem, toast]

@@ -67,11 +67,15 @@ const SelectItemDialog = ({ open, onClose, onConfirm, targetItemName, loading }:
       <DrawerContent className="max-h-[85vh]">
         <DrawerHeader className="text-center pb-2">
           <DrawerTitle className="text-lg font-extrabold text-foreground">
-            Qual item você oferece?
+            Você curtiu! 🎯 Escolha seu item
           </DrawerTitle>
-          {targetItemName && (
+          {targetItemName ? (
             <p className="text-xs text-muted-foreground mt-1">
-              Para trocar por <span className="font-semibold text-primary">{targetItemName}</span>
+              Para propor a troca por <span className="font-semibold text-primary">{targetItemName}</span>
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">
+              Selecione o item que você quer oferecer nessa troca.
             </p>
           )}
         </DrawerHeader>

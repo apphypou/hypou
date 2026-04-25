@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getBlockedUserIds } from "@/services/reportService";
-import { validateImageFile } from "@/lib/fileValidation";
+import { validateImageFile, ensureWebCompatibleImage } from "@/lib/fileValidation";
 
 export const createItem = async (data: {
   user_id: string;
@@ -59,12 +59,14 @@ export const deleteItemImage = async (imageId: string) => {
 export const uploadItemImage = async (userId: string, itemId: string, file: File, position: number): Promise<string> => {
   const validationError = validateImageFile(file);
   if (validationError) throw new Error(validationError);
-  const ext = file.name.split(".").pop();
+  // Convert HEIC/HEIF (iOS default) to JPEG when running on the web.
+  const finalFile = await ensureWebCompatibleImage(file);
+  const ext = finalFile.name.split(".").pop();
   const path = `${userId}/${itemId}/${position}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from("item-images")
-    .upload(path, file, { upsert: true });
+    .upload(path, finalFile, { upsert: true, contentType: finalFile.type });
   if (uploadError) throw uploadError;
 
   const { data } = supabase.storage.from("item-images").getPublicUrl(path);

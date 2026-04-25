@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateChatMedia } from "@/lib/fileValidation";
+import { validateChatMedia, ensureWebCompatibleImage } from "@/lib/fileValidation";
 import { getBlockedUserIds } from "@/services/reportService";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio';
@@ -178,12 +178,13 @@ export const uploadChatMedia = async (
   const mediaType = type === 'text' ? 'image' : type as 'image' | 'video' | 'audio';
   const validationError = validateChatMedia(file, mediaType);
   if (validationError) throw new Error(validationError);
-  const ext = file.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
+  const finalFile = mediaType === 'image' ? await ensureWebCompatibleImage(file) : file;
+  const ext = finalFile.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
   const path = `${userId}/${Date.now()}.${ext}`;
 
   const { error } = await supabase.storage
     .from("chat-media")
-    .upload(path, file, { cacheControl: "3600", upsert: false });
+    .upload(path, finalFile, { cacheControl: "3600", upsert: false, contentType: finalFile.type });
 
   if (error) throw error;
 

@@ -1068,4 +1068,19 @@ A suíte de testes do Hypou utiliza **Vitest + jsdom** e cobre lógica pura (hel
 npx vitest run
 ```
 
-Total atual: **14 arquivos / 118 testes** (50 novos + 68 existentes), todos passando.
+Total atual: **48 arquivos / 508 testes**, todos passando.
+
+---
+
+## 21. Melhorias pós-QA (Abr/2026)
+
+A partir do `RELATORIO_TESTES_HYPOU.md`, foram aplicadas as seguintes correções:
+
+- **Suporte a HEIC/HEIF (iPhone)** — `src/lib/fileValidation.ts` aceita `image/heic`/`image/heif` (até 15 MB) e expõe `ensureWebCompatibleImage()` que converte para JPEG via `heic2any` (dynamic import). Aplicado em `uploadItemImage`, `uploadAvatar` e `uploadChatMedia`.
+- **Haptics nativos** — `src/lib/haptics.ts` usa `@capacitor/haptics` em iOS/Android nativos e cai para `navigator.vibrate` no web. Aplicado em swipe like e em sucesso/erro de proposta no `Explorar`.
+- **Badge numérico no BottomNav** — substitui o dot pulsante; mostra contagem real até "99+" com `aria-label` para acessibilidade.
+- **Persistência de proposta pendente** — em `Explorar`, o item curtido fica em `sessionStorage["hypou:pending-like-item"]`; ao retornar de `/novo-item` o `SelectItemDialog` reabre automaticamente.
+- **Microcopy melhorada no `SelectItemDialog`** — título "Você curtiu! 🎯 Escolha seu item" reduz ambiguidade.
+- **`HypouLogo` semântico** — nova prop `as` permite renderizar como `h1` para SEO em telas-chave.
+- **Rate limit no `validate-item-price`** — 5 req/min por token (chave: últimos 32 chars do `Authorization` ou IP), responde HTTP 429 com `Retry-After` para proteger custo de IA.
+

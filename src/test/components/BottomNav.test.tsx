@@ -37,11 +37,27 @@ describe("BottomNav", () => {
 });
 
 describe("BottomNav unread", () => {
-  it("06 mostra dot quando há mensagens não lidas", async () => {
+  it("06 mostra badge numérico quando há mensagens não lidas", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 5 }));
     const { default: BN } = await import("@/components/BottomNav");
+    renderWithProviders(<BN activeTab="explorar" />);
+    expect(screen.getByLabelText(/5 novas mensagens/i)).toHaveTextContent("5");
+  });
+
+  it("07 limita badge a 99+ quando >99", async () => {
+    vi.resetModules();
+    vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 150 }));
+    const { default: BN } = await import("@/components/BottomNav");
+    renderWithProviders(<BN activeTab="explorar" />);
+    expect(screen.getByLabelText(/150 novas mensagens/i)).toHaveTextContent("99+");
+  });
+
+  it("08 oculta badge quando contagem é 0", async () => {
+    vi.resetModules();
+    vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 0 }));
+    const { default: BN } = await import("@/components/BottomNav");
     const { container } = renderWithProviders(<BN activeTab="explorar" />);
-    expect(container.querySelector(".animate-pulse")).toBeTruthy();
+    expect(container.querySelector("[aria-label*='novas mensagens']")).toBeNull();
   });
 });
