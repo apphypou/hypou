@@ -26,6 +26,16 @@ const Cadastro = () => {
       toast({ title: "Aceite os termos de uso para continuar", variant: "destructive" });
       return;
     }
+    // Block reserved TLDs early — Supabase rejects them with a generic error
+    const reservedTlds = /\.(test|example|invalid|localhost)$/i;
+    if (reservedTlds.test(email.trim())) {
+      toast({
+        title: "E-mail inválido",
+        description: "Use um e-mail real (gmail, outlook, etc.). Domínios .test/.example não são aceitos.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (password.length < 8) {
       toast({ title: "Senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return;
@@ -39,9 +49,15 @@ const Cadastro = () => {
     setLoading(false);
 
     if (error) {
+      const msg = (error.message || "").toLowerCase();
+      const friendly = msg.includes("rate") || msg.includes("limit")
+        ? "Muitos cadastros nesta rede agora. Tente novamente em alguns minutos ou troque de conexão."
+        : msg.includes("already") || msg.includes("registered")
+          ? "Este e-mail já tem conta. Faça login."
+          : error.message;
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: friendly,
         variant: "destructive",
       });
     } else {

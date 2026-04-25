@@ -75,3 +75,57 @@ export const ensureWebCompatibleImage = async (file: File): Promise<File> => {
     return file; // fall back; upload may fail but we tried
   }
 };
+
+/**
+ * Client-side image compression: downscale to max 1600px and re-encode as JPEG (q=0.82).
+ * Skips small images (<400KB) and unsupported types. Returns original on failure.
+ * Cuts upload weight by ~50–70% for typical phone photos.
+ */
+const COMPRESS_MIN_BYTES = 400 * 1024;
+const COMPRESS_MAX_DIM = 1600;
+
+export const compressImage = async (file: File): Promise<File> => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return file;
+  if (file.size < COMPRESS_MIN_BYTES) return file;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return file;
+
+  try {
+    const dataUrl: string = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result));
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    const img: HTMLImageElement = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = dataUrl;
+    });
+    const ratio = Math.min(1, COMPRESS_MAX_DIM / Math.max(img.width, img.height));
+    if (ratio === 1 && file.type === 'image/jpeg') return file;
+    const w = Math.round(img.width * ratio);
+    const h = Math.round(img.height * ratio);
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', 0.82)
+    );
+    if (!blob || blob.size >= file.size) return file;
+    const newName = file.name.replace(/\.(png|webp|jpg|jpeg)$/i, '.jpg');
+    return new File([blob], newName, { type: 'image/jpeg', lastModified: Date.now() });
+  } catch (err) {
+    console.warn('Image compression failed:', err);
+    return file;
+  }
+};
+
+/** Convenience: HEIC -> JPEG -> compress in one shot. */
+export const prepareImageForUpload = async (file: File): Promise<File> => {
+  const web = await ensureWebCompatibleImage(file);
+  return compressImage(web);
+};

@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { validateImageFile, ensureWebCompatibleImage } from "@/lib/fileValidation";
+import { validateImageFile, prepareImageForUpload } from "@/lib/fileValidation";
 
 interface ProfileUpdate {
   display_name?: string;
@@ -23,7 +23,7 @@ export const updateProfile = async (userId: string, data: ProfileUpdate) => {
 export const uploadAvatar = async (userId: string, file: File): Promise<string> => {
   const validationError = validateImageFile(file);
   if (validationError) throw new Error(validationError);
-  const finalFile = await ensureWebCompatibleImage(file);
+  const finalFile = await prepareImageForUpload(file);
   const ext = finalFile.name.split(".").pop();
   const path = `${userId}/avatar.${ext}`;
 

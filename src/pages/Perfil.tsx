@@ -256,6 +256,9 @@ const Perfil = () => {
                     }}
                     placeholder="Ex: São Paulo, SP"
                   />
+                  <p className="text-[11px] text-muted-foreground mt-2 pl-1 leading-relaxed">
+                    Usamos sua localização para mostrar trocas perto de você. Nunca compartilhamos seu endereço exato.
+                  </p>
                 </div>
               </div>
             </main>

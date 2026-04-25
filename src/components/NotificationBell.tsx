@@ -75,9 +75,13 @@ const NotificationItem = ({
 const NotificationList = ({
   notifications,
   onItemClick,
+  onMarkAll,
+  hasUnread,
 }: {
   notifications: Notification[];
   onItemClick: (n: Notification) => void;
+  onMarkAll?: () => void;
+  hasUnread?: boolean;
 }) => {
   if (notifications.length === 0) {
     return (
@@ -95,11 +99,39 @@ const NotificationList = ({
     );
   }
 
+  // Group similar pending proposals into a single summary entry
+  const proposals = notifications.filter((n) => !n.read_at && n.type === "proposal");
+  const others = notifications.filter((n) => !(proposals.length > 2 && !n.read_at && n.type === "proposal"));
+  const grouped: Notification[] = proposals.length > 2
+    ? [
+        {
+          ...proposals[0],
+          id: `group-proposals-${proposals[0].id}`,
+          title: `${proposals.length} novas propostas`,
+          body: "Toque para ver todas as propostas pendentes.",
+          data: { ...proposals[0].data, grouped: true, count: proposals.length },
+        } as Notification,
+        ...others,
+      ]
+    : notifications;
+
   return (
-    <div className="divide-y divide-foreground/5">
-      {notifications.slice(0, 20).map((n) => (
-        <NotificationItem key={n.id} n={n} onClick={onItemClick} />
-      ))}
+    <div>
+      {hasUnread && onMarkAll && (
+        <div className="px-4 py-2 flex justify-end border-b border-foreground/5">
+          <button
+            onClick={onMarkAll}
+            className="text-[11px] font-semibold text-primary hover:underline"
+          >
+            Marcar todas como lidas
+          </button>
+        </div>
+      )}
+      <div className="divide-y divide-foreground/5">
+        {grouped.slice(0, 20).map((n) => (
+          <NotificationItem key={n.id} n={n} onClick={onItemClick} />
+        ))}
+      </div>
     </div>
   );
 };
@@ -121,19 +153,22 @@ const NotificationBell = () => {
 
   const handleOpen = () => {
     setOpen(true);
-    if (unreadCount > 0) markAllAsRead();
+    // Don't auto-mark; let user choose via "Marcar todas como lidas"
   };
+
+  const badge = unreadCount > 99 ? "99+" : String(unreadCount);
 
   return (
     <div className="relative">
       <button
         onClick={handleOpen}
+        aria-label={unreadCount > 0 ? `Notificações: ${unreadCount} não lidas` : "Notificações"}
         className="relative h-9 w-9 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/50 hover:text-foreground transition-colors"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center border-2 border-background">
-            {unreadCount > 9 ? "9+" : unreadCount}
+            {badge}
           </span>
         )}
       </button>
@@ -156,6 +191,8 @@ const NotificationBell = () => {
               <NotificationList
                 notifications={notifications}
                 onItemClick={handleClick}
+                onMarkAll={markAllAsRead}
+                hasUnread={unreadCount > 0}
               />
             </div>
           </DrawerContent>
@@ -193,6 +230,8 @@ const NotificationBell = () => {
                 <NotificationList
                   notifications={notifications}
                   onItemClick={handleClick}
+                  onMarkAll={markAllAsRead}
+                  hasUnread={unreadCount > 0}
                 />
               </motion.div>
             </>

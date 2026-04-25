@@ -1084,3 +1084,14 @@ A partir do `RELATORIO_TESTES_HYPOU.md`, foram aplicadas as seguintes correçõe
 - **`HypouLogo` semântico** — nova prop `as` permite renderizar como `h1` para SEO em telas-chave.
 - **Rate limit no `validate-item-price`** — 5 req/min por token (chave: últimos 32 chars do `Authorization` ou IP), responde HTTP 429 com `Retry-After` para proteger custo de IA.
 
+
+## Correções pós-QA (2026-04-25)
+
+- `BrowserRouter` agora usa `future={{ v7_startTransition, v7_relativeSplatPath }}`.
+- `ProductCardEl` em `Index.tsx` envolvido em `React.forwardRef` (corrige warning).
+- `Cadastro` valida TLDs reservados (`.test/.example/.invalid/.localhost`) e traduz erro de rate limit do Supabase Auth.
+- `OnboardingTour` carrega imagem com `loading="lazy" decoding="async"`.
+- `NotificationBell`: botão "Marcar todas como lidas" explícito (não auto), badge `99+`, agrupamento de >2 propostas pendentes.
+- `lib/fileValidation.ts`: novas funções `compressImage` (≤1600px, JPEG q=0.82) e `prepareImageForUpload` (HEIC→JPEG→compress). Aplicado em `itemService.uploadItemImage` e `profileService.uploadAvatar`.
+- `Perfil.tsx` (step 1 do onboarding): explica por que pedimos localização.
+- Cobertura: 520 testes (49 suítes), incluindo `src/test/e2e/22-correcoes-qa.test.ts` para regressão das correções.
