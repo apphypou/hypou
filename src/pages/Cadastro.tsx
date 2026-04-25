@@ -49,9 +49,15 @@ const Cadastro = () => {
     setLoading(false);
 
     if (error) {
+      const msg = (error.message || "").toLowerCase();
+      const friendly = msg.includes("rate") || msg.includes("limit")
+        ? "Muitos cadastros nesta rede agora. Tente novamente em alguns minutos ou troque de conexão."
+        : msg.includes("already") || msg.includes("registered")
+          ? "Este e-mail já tem conta. Faça login."
+          : error.message;
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: friendly,
         variant: "destructive",
       });
     } else {
