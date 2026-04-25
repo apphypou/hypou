@@ -55,6 +55,20 @@ const Explorar = () => {
     }
   }, [user, onboardingProfile, navigate]);
 
+  // Restore pending proposal context if user came back from /novo-item
+  useEffect(() => {
+    if (!user) return;
+    try {
+      const raw = sessionStorage.getItem(PENDING_LIKE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed?.id) {
+        setPendingLikeItem(parsed);
+        setShowSelectItem(true);
+      }
+    } catch { /* ignore */ }
+  }, [user]);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [epoch, setEpoch] = useState(0);
   const swipingRef = useRef(false);
