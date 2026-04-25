@@ -27,12 +27,14 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
   const unreadCount = useUnreadCount();
 
-  const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; hasUnread?: boolean }[] = [
+  const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; unreadCount?: number }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
     { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas" },
-    { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", hasUnread: unreadCount > 0 },
+    { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", unreadCount },
     { icon: UserCircle, label: "Perfil", id: "perfil", path: "/meu-perfil" },
   ];
+
+  const formatBadge = (n: number) => (n > 99 ? "99+" : String(n));
 
   return (
     <div className="fixed left-5 right-5 z-50 flex justify-center" style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))" }}>
@@ -59,9 +61,14 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
                   isActive ? "text-background" : "text-muted-foreground"
                 }`}
               />
-              {item.hasUnread && (
-                <span className="absolute top-1.5 right-[calc(50%-6px)] translate-x-3 h-2.5 w-2.5 rounded-full bg-primary border-2 border-background animate-pulse z-20" />
-              )}
+              {item.unreadCount && item.unreadCount > 0 ? (
+                <span
+                  aria-label={`${item.unreadCount} novas mensagens`}
+                  className="absolute top-0.5 right-[calc(50%-18px)] min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none flex items-center justify-center border-2 border-background z-20"
+                >
+                  {formatBadge(item.unreadCount)}
+                </span>
+              ) : null}
             </button>
           );
         })}

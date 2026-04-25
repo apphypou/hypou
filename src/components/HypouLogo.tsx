@@ -1,8 +1,11 @@
 import { cn } from "@/lib/utils";
+import { type ElementType } from "react";
 
 interface HypouLogoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Render as a different HTML element (e.g. "h1" for SEO on main screens). Defaults to "span". */
+  as?: ElementType;
 }
 
 const sizeStyles = {
@@ -11,18 +14,18 @@ const sizeStyles = {
   lg: "text-4xl",
 };
 
-const HypouLogo = ({ size = "md", className }: HypouLogoProps) => {
+const HypouLogo = ({ size = "md", className, as: Tag = "span" }: HypouLogoProps) => {
   return (
-    <span
+    <Tag
       className={cn(
-        "font-display font-extrabold tracking-tight select-none",
+        "font-display font-extrabold tracking-tight select-none inline-block",
         sizeStyles[size],
         className
       )}
     >
       <span className="text-foreground">hyp</span>
       <span className="text-primary text-glow">ou</span>
-    </span>
+    </Tag>
   );
 };
 
