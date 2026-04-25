@@ -191,6 +191,8 @@ const NotificationBell = () => {
               <NotificationList
                 notifications={notifications}
                 onItemClick={handleClick}
+                onMarkAll={markAllAsRead}
+                hasUnread={unreadCount > 0}
               />
             </div>
           </DrawerContent>
@@ -228,6 +230,8 @@ const NotificationBell = () => {
                 <NotificationList
                   notifications={notifications}
                   onItemClick={handleClick}
+                  onMarkAll={markAllAsRead}
+                  hasUnread={unreadCount > 0}
                 />
               </motion.div>
             </>
