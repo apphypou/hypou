@@ -1,5 +1,6 @@
 /**
- * E2E #5 — Chat / Conversations (15 tests)
+ * E2E #5 — Chat / Conversations (helpers)
+ * Component-level tests live in src/test/e2e/13-chat-components.test.tsx
  */
 import { describe, it, expect } from "vitest";
 
@@ -18,7 +19,7 @@ const validMediaSize = (bytes: number, type: MType) => {
 };
 const formatLastSeen = (date: Date) => date.toLocaleString("pt-BR");
 
-describe("E2E Chat", () => {
+describe("E2E Chat helpers", () => {
   it("01 valida tipo text", () => expect(validMessageType("text")).toBe(true));
   it("02 valida tipo image", () => expect(validMessageType("image")).toBe(true));
   it("03 rejeita tipo desconhecido", () => expect(validMessageType("xxx")).toBe(false));
