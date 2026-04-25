@@ -20,7 +20,8 @@ describe("BottomNav", () => {
 
   it("03 usa safe-area-bottom", () => {
     const { container } = renderWithProviders(<BottomNav activeTab="explorar" />);
-    expect((container.firstChild as HTMLElement).style.bottom).toMatch(/safe-area-bottom/);
+    const raw = (container.firstChild as HTMLElement).getAttribute("style") || "";
+    expect(raw).toMatch(/safe-area-bottom/);
   });
 
   it("04 nav tem backdrop-blur (Liquid Glass)", () => {

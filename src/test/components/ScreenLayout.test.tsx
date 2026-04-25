@@ -13,13 +13,15 @@ describe("ScreenLayout", () => {
   });
   it("03 aplica safe-area top via CSS var", () => {
     const { container } = render(<ScreenLayout>x</ScreenLayout>);
-    expect((container.firstChild as HTMLElement).style.paddingTop).toContain("safe-area-top");
+    const el = container.firstChild as HTMLElement;
+    // jsdom não computa CSS vars; verifica via getAttribute style raw
+    expect(el.getAttribute("style") || "").toMatch(/safe-area-top/);
   });
   it("04 aplica safe-area lateral", () => {
     const { container } = render(<ScreenLayout>x</ScreenLayout>);
-    const el = container.firstChild as HTMLElement;
-    expect(el.style.paddingLeft).toContain("safe-area-left");
-    expect(el.style.paddingRight).toContain("safe-area-right");
+    const raw = (container.firstChild as HTMLElement).getAttribute("style") || "";
+    expect(raw).toMatch(/safe-area-left/);
+    expect(raw).toMatch(/safe-area-right/);
   });
   it("05 tem overflow-hidden para evitar bounce indesejado", () => {
     const { container } = render(<ScreenLayout>x</ScreenLayout>);
