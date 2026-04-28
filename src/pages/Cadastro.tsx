@@ -71,7 +71,7 @@ const Cadastro = () => {
     <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6 py-10">
       {/* Header */}
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
-        <img src={logoHypou} alt="Hypou" className="h-16 w-auto object-contain mb-6" />
+        <HypouLogo size="lg" className="mb-6" />
         <p className="text-muted-foreground text-sm mt-2">
           Crie sua conta e comece a trocar
         </p>
