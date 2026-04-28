@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
-import logoHypou from "@/assets/logo-hypou.png";
+import HypouLogo from "@/components/HypouLogo";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
