@@ -199,10 +199,15 @@ src/
 ├── lib/
 │   ├── utils.ts              # cn() e utilitários Tailwind
 │   └── fileValidation.ts     # Validação de tipo/tamanho de arquivos
+├── components/auth/         # Sistema unificado de telas de autenticação
+│   ├── AuthScreen.tsx       # Wrapper padrão (back button, logo, título, footer)
+│   ├── AuthInput.tsx        # Input com ícone esquerdo e slot direito (eye toggle)
+│   ├── SocialAuthButtons.tsx# Botões Google/Apple reutilizáveis
+│   └── PasswordStrengthMeter.tsx # Medidor de força de senha (4 níveis)
 ├── pages/
 │   ├── Index.tsx             # Landing page
-│   ├── Login.tsx             # Tela de login
-│   ├── Cadastro.tsx          # Tela de registro
+│   ├── Login.tsx             # Tela de login (usa AuthScreen + SocialAuthButtons)
+│   ├── Cadastro.tsx          # Tela de registro (usa AuthScreen + SocialAuthButtons + PasswordStrengthMeter)
 │   ├── Explorar.tsx          # Feed de swipe (tela principal)
 │   ├── Busca.tsx             # Busca com filtros
 │   ├── Shorts.tsx            # Feed de vídeos curtos
