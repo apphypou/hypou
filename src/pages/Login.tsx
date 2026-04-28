@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
-import logoHypouPng from "@/assets/logo-hypou.png";
-import logoHypouWebp from "@/assets/logo-hypou.webp";
+import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
@@ -44,19 +43,7 @@ const Login = () => {
     <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
       {/* Header */}
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
-        <picture>
-          <source srcSet={logoHypouWebp} type="image/webp" />
-          <img
-            src={logoHypouPng}
-            alt="Hypou"
-            width={64}
-            height={64}
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-            className="h-16 w-16 mb-6 object-contain"
-          />
-        </picture>
+        <img src={logoHypou} alt="Hypou" className="h-16 w-auto object-contain mb-6" />
         <p className="text-muted-foreground text-sm mt-2">
           Acesse sua conta e continue trocando
         </p>
