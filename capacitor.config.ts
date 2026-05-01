@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Hypou',
   webDir: 'dist',
   server: {
-    url: 'https://acb98236-6bad-48cf-a029-a44082a5c548.lovableproject.com?forceHideBadge=true',
+    url: 'https://app.hypou.app',
     cleartext: true,
   },
   plugins: {
