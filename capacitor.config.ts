@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.acb982366bad48cfa029a44082a5c548',
   appName: 'Hypou',
   webDir: 'dist',
-  server: {
-    url: 'https://app.hypou.app',
-    cleartext: true,
-  },
   plugins: {
     SplashScreen: {
       launchAutoHide: false,
