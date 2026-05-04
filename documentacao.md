@@ -267,6 +267,7 @@ src/
 | `/lista-espera` | `ListaEspera` | Waitlist pré-lançamento |
 | `/login` | `Login` | Autenticação (sempre modo escuro) |
 | `/cadastro` | `Cadastro` | Registro de conta (sempre modo escuro) |
+| `/confirmar-codigo` | `ConfirmarCodigo` | Verificação de código OTP de 6 dígitos enviado por e-mail (signup) |
 | `/recuperar-senha` | `RecuperarSenha` | Esqueci minha senha (sempre modo escuro) |
 | `/reset-password` | `ResetPassword` | Redefinir senha via link (sempre modo escuro) |
 | `/termos` | `Termos` | Termos de uso |
