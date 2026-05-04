@@ -1,65 +1,68 @@
+## Objetivo
 
+1. Email de confirmação passa a exibir a **logo Hypou** e um **código numérico** (em vez de botão de link).
+2. Após cadastro, o usuário é levado a uma nova tela onde digita o código para ativar a conta.
 
-# Plano: Correção completa do fluxo de conclusão de troca
+> Observação importante: o Supabase gera tokens OTP de **6 dígitos** (não 5). Vou usar 6 — é o padrão e não dá pra reduzir sem quebrar a verificação.
 
-## Problemas identificados
+---
 
-### Bug 1: Histórico mostra tela em branco
-Quando a troca é concluída, o trigger `deactivate_items_on_trade_completion` marca ambos os itens como `inactive`. A política RLS da tabela `items` permite ver apenas itens `active` ou itens do próprio usuário (`auth.uid() = user_id`). Resultado: ao abrir uma troca concluída no histórico, o item do outro usuário retorna `null` e a condição `otherItem && myItem` (linha 318 de `Matches.tsx`) falha, mostrando tela em branco.
+## Mudanças
 
-### Bug 2: Tela de conclusão nunca aparece
-Após clicar "Confirmar Troca", o `handleConfirmTrade` executa `setSelectedMatch(null)` (linha 92), fechando o popup imediatamente. O usuário nunca vê o estado "Troca Concluída" nem o dialog de avaliação.
+### 1. Email templates (`supabase/functions/send-auth-email/_templates.ts`)
+- Adicionar `<img>` da logo no topo (URL pública: `https://hypou.app/logo-hypou.png` — já existe em `public/`).
+- Substituir o botão "Confirmar" por um bloco grande mostrando o código de 6 dígitos (`payload.email_data.token`).
+- Estilo: fundo escuro `#1C1C1C`, código em destaque com cor primary `#18FDF6`, fonte monoespaçada, letter-spacing largo.
+- Manter o link como fallback discreto ("ou clique aqui se preferir").
+- Aplicar a todos os templates relevantes: `signup`, `magicLink`, `recovery`, `emailChange`.
 
-### Bug 3: Rating dialog nunca abre automaticamente
-O auto-open (linha 48-53) depende de `selectedMatch?.status === "completed"`, mas como o popup fecha após confirmar, `selectedMatch` é `null` e o dialog nunca aparece.
+### 2. Função `send-auth-email/index.ts`
+- Atualizar assinatura de `renderEmail` para receber também o `token`, já que hoje só passa a URL.
+- Passar `payload.email_data.token` para os templates.
 
-## Correções
+### 3. Nova tela `src/pages/ConfirmarCodigo.tsx`
+- Recebe o email via state/query param.
+- 6 inputs estilizados (ou um input único com `inputMode="numeric"` e máscara) — vou usar o componente `InputOTP` do shadcn (já existe em `src/components/ui/input-otp.tsx` se disponível, senão adiciono).
+- Botão "Confirmar" → chama `supabase.auth.verifyOtp({ email, token, type: 'signup' })`.
+- Em caso de sucesso → navega para `/onboarding`.
+- Botão "Reenviar código" → `supabase.auth.resend({ type: 'signup', email })` com cooldown de 60s.
+- Tratamento de erros: código inválido / expirado / já usado.
+- Visual seguindo o design system (Liquid Glass, NeonButton, header padrão de auth).
 
-### 1. Permitir visualização de itens em matches concluídos (Migration)
-Criar uma nova política RLS na tabela `items` que permita participantes de um match visualizar os itens envolvidos, independente do status do item.
+### 4. Rota
+- Adicionar `/confirmar-codigo` no `src/App.tsx` (rota pública).
 
-```sql
-CREATE POLICY "Match participants can view traded items"
-ON public.items
-FOR SELECT
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM public.matches
-    WHERE (matches.item_a_id = items.id OR matches.item_b_id = items.id)
-    AND (matches.user_a_id = auth.uid() OR matches.user_b_id = auth.uid())
-  )
-);
+### 5. Fluxo de cadastro (`src/pages/Cadastro.tsx`)
+- Após `signUp` bem-sucedido, navegar para `/confirmar-codigo?email=...` (em vez de `/onboarding`).
+- O onboarding só roda **depois** que o código for verificado.
+
+### 6. Onboarding guard
+- O `OnboardingGuard` já redireciona quem não está autenticado. Como `verifyOtp` cria a sessão, o fluxo natural funciona: confirmar código → sessão ativa → onboarding.
+
+### 7. Documentação
+- Atualizar `documentacao.md` com o novo fluxo de verificação por código.
+
+### 8. Memória
+- Atualizar `mem://features/auth/fluxo-cadastro-e-login` para refletir OTP de 6 dígitos em vez de link.
+
+---
+
+## Detalhes técnicos
+
+- `supabase.auth.verifyOtp({ email, token, type: 'signup' })` — cria sessão ao validar.
+- A logo precisa estar acessível por URL pública HTTPS no email. `public/logo-hypou.png` já é servida em `https://hypou.app/logo-hypou.png` (domínio custom) e também em `https://hypou.lovable.app/logo-hypou.png`. Vou usar `hypou.app`.
+- Não precisa mexer em config do Supabase — o hook `Send Email` já está ativo e o `token` já vem no payload.
+
+---
+
+## Arquivos tocados
+
+```text
+supabase/functions/send-auth-email/_templates.ts   (modificar)
+supabase/functions/send-auth-email/index.ts        (modificar)
+src/pages/ConfirmarCodigo.tsx                      (novo)
+src/pages/Cadastro.tsx                             (modificar redirect)
+src/App.tsx                                        (nova rota)
+documentacao.md                                    (atualizar)
+mem://features/auth/fluxo-cadastro-e-login        (atualizar)
 ```
-
-**Arquivo:** Nova migration SQL
-
-### 2. Manter popup aberto após confirmar troca
-Em `Matches.tsx`, alterar `handleConfirmTrade` para **re-buscar os dados do match** ao invés de fechar o popup. Se o match retornar como `completed`, manter aberto para mostrar a tela de conclusão e o rating dialog.
-
-```
-- Remover `setSelectedMatch(null)` do handleConfirmTrade
-- Após invalidar queries, re-fetch o match atualizado
-- Atualizar selectedMatch com os novos dados (status pode ter mudado para completed)
-```
-
-**Arquivo:** `src/pages/Matches.tsx` (handleConfirmTrade, ~linhas 85-98)
-
-### 3. Melhorar tela de troca concluída no popup
-Quando `selectedMatch.status === "completed"`, exibir uma seção celebratória antes dos botões de ação, com destaque visual claro de que a troca foi finalizada com sucesso.
-
-**Arquivo:** `src/pages/Matches.tsx` (seção de bottom actions, ~linhas 481-496)
-
-### 4. Garantir rating dialog funcional
-Remover a dependência do `useEffect` auto-open e acionar o rating dialog diretamente quando o match transiciona para `completed` dentro do `handleConfirmTrade`. Manter também o auto-open para quando o usuário abre um match completed pelo histórico.
-
-**Arquivo:** `src/pages/Matches.tsx`
-
-### 5. Atualizar documentacao.md
-Documentar o fluxo corrigido de conclusão de troca.
-
-## Arquivos modificados
-- `supabase/migrations/` — nova RLS policy para items em matches
-- `src/pages/Matches.tsx` — handleConfirmTrade, tela de conclusão, rating dialog
-- `documentacao.md` — documentar correções
-

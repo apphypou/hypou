@@ -20,6 +20,7 @@ import Explorar from "./pages/Explorar";
 
 // Lazy-load everything else to keep the initial bundle small
 const Cadastro = lazy(() => import("./pages/Cadastro"));
+const ConfirmarCodigo = lazy(() => import("./pages/ConfirmarCodigo"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Busca = lazy(() => import("./pages/Busca"));
@@ -81,6 +82,7 @@ const AnimatedRoutes = () => {
           <Route path="/lista-espera" element={<PageTransition><ListaEspera /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/cadastro" element={<PageTransition><Cadastro /></PageTransition>} />
+          <Route path="/confirmar-codigo" element={<PageTransition><ConfirmarCodigo /></PageTransition>} />
           <Route path="/recuperar-senha" element={<PageTransition><RecuperarSenha /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/termos" element={<PageTransition><Termos /></PageTransition>} />

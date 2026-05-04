@@ -51,20 +51,21 @@ function buildConfirmationUrl(p: AuthEmailPayload): string {
 
 function renderEmail(p: AuthEmailPayload): { subject: string; html: string } {
   const url = buildConfirmationUrl(p);
+  const token = p.email_data.token;
   switch (p.email_data.email_action_type) {
     case "recovery":
-      return recoveryTemplate(url);
+      return recoveryTemplate(url, token);
     case "magiclink":
-      return magicLinkTemplate(url);
+      return magicLinkTemplate(url, token);
     case "invite":
-      return inviteTemplate(url);
+      return inviteTemplate(url, token);
     case "email_change":
     case "email_change_current":
     case "email_change_new":
-      return emailChangeTemplate(url);
+      return emailChangeTemplate(url, token);
     case "signup":
     default:
-      return signupTemplate(url);
+      return signupTemplate(url, token);
   }
 }
 
