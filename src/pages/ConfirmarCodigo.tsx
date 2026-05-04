@@ -19,7 +19,14 @@ const ConfirmarCodigo = () => {
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (!email) navigate("/cadastro", { replace: true });
+    if (!email) {
+      navigate("/cadastro", { replace: true });
+      return;
+    }
+    // Se já tem sessão ativa (e-mail já confirmado em tentativa anterior), pula direto
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate("/onboarding", { replace: true });
+    });
   }, [email, navigate]);
 
   useEffect(() => {
