@@ -17,7 +17,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
 };
 
-const FROM = "Hypou <no-reply@mail.hypou.app>";
+const FROM = "Hypou <no-reply@hypou.app>";
 const SITE_URL = "https://app.hypou.app";
 
 interface AuthEmailPayload {
