@@ -19,7 +19,14 @@ const ConfirmarCodigo = () => {
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (!email) navigate("/cadastro", { replace: true });
+    if (!email) {
+      navigate("/cadastro", { replace: true });
+      return;
+    }
+    // Se já tem sessão ativa (e-mail já confirmado em tentativa anterior), pula direto
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate("/onboarding", { replace: true });
+    });
   }, [email, navigate]);
 
   useEffect(() => {
@@ -29,15 +36,23 @@ const ConfirmarCodigo = () => {
   }, [cooldown]);
 
   const handleVerify = async (token: string) => {
+    if (loading) return;
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       email,
       token,
       type: "signup",
     });
-    setLoading(false);
 
+    // Se já existe sessão (verificação anterior já passou), segue o fluxo
     if (error) {
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess.session) {
+        setLoading(false);
+        navigate("/onboarding", { replace: true });
+        return;
+      }
+      setLoading(false);
       const msg = (error.message || "").toLowerCase();
       const friendly =
         msg.includes("expired") ? "Código expirado. Peça um novo."
@@ -48,6 +63,7 @@ const ConfirmarCodigo = () => {
       return;
     }
 
+    setLoading(false);
     toast({ title: "E-mail confirmado!" });
     navigate("/onboarding", { replace: true });
   };
