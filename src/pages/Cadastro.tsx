@@ -62,8 +62,8 @@ const Cadastro = () => {
       if (newUser) {
         await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString() }).eq("user_id", newUser.id);
       }
-      toast({ title: "Conta criada com sucesso!" });
-      navigate("/onboarding");
+      toast({ title: "Conta criada!", description: "Confirme o código enviado por e-mail." });
+      navigate(`/confirmar-codigo?email=${encodeURIComponent(email)}`);
     }
   };
 
