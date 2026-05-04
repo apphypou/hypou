@@ -20,6 +20,7 @@ import Explorar from "./pages/Explorar";
 
 // Lazy-load everything else to keep the initial bundle small
 const Cadastro = lazy(() => import("./pages/Cadastro"));
+const ConfirmarCodigo = lazy(() => import("./pages/ConfirmarCodigo"));
 const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Busca = lazy(() => import("./pages/Busca"));
