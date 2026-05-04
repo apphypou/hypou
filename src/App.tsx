@@ -82,6 +82,7 @@ const AnimatedRoutes = () => {
           <Route path="/lista-espera" element={<PageTransition><ListaEspera /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/cadastro" element={<PageTransition><Cadastro /></PageTransition>} />
+          <Route path="/confirmar-codigo" element={<PageTransition><ConfirmarCodigo /></PageTransition>} />
           <Route path="/recuperar-senha" element={<PageTransition><RecuperarSenha /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/termos" element={<PageTransition><Termos /></PageTransition>} />
