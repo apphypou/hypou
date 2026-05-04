@@ -74,7 +74,7 @@ const ConfirmarCodigo = () => {
       </div>
 
       <div className="flex flex-col items-center pb-6 w-full max-w-sm">
-        <img src={logoHypou} alt="Hypou" className="h-14 w-auto object-contain mb-6" />
+        
         <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
           <MailCheck className="w-6 h-6 text-primary" />
         </div>
