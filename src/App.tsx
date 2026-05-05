@@ -37,6 +37,7 @@ const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
 const PerfilUsuario = lazy(() => import("./pages/PerfilUsuario"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ListaEspera = lazy(() => import("./pages/ListaEspera"));
+const Baixar = lazy(() => import("./pages/Baixar"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
@@ -80,6 +81,7 @@ const AnimatedRoutes = () => {
           {/* Public routes */}
           <Route path="/" element={<PageTransition><Index /></PageTransition>} />
           <Route path="/lista-espera" element={<PageTransition><ListaEspera /></PageTransition>} />
+          <Route path="/baixar" element={<PageTransition><Baixar /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/cadastro" element={<PageTransition><Cadastro /></PageTransition>} />
           <Route path="/confirmar-codigo" element={<PageTransition><ConfirmarCodigo /></PageTransition>} />

@@ -1101,3 +1101,17 @@ A partir do `RELATORIO_TESTES_HYPOU.md`, foram aplicadas as seguintes correçõe
 - `lib/fileValidation.ts`: novas funções `compressImage` (≤1600px, JPEG q=0.82) e `prepareImageForUpload` (HEIC→JPEG→compress). Aplicado em `itemService.uploadItemImage` e `profileService.uploadAvatar`.
 - `Perfil.tsx` (step 1 do onboarding): explica por que pedimos localização.
 - Cobertura: 520 testes (49 suítes), incluindo `src/test/e2e/22-correcoes-qa.test.ts` para regressão das correções.
+
+
+## 22. Landing Page de Download (`/baixar`) — Mai/2026
+
+Nova rota pública dedicada à conversão para as lojas de aplicativo.
+
+- **Rota**: `/baixar` (lazy, pública). A rota `/` continua sendo o entry do app (criar conta / entrar).
+- **Página**: `src/pages/Baixar.tsx` — hero, "Como funciona", contador de stats, diferenciais e CTA final.
+- **Componentes**: `src/components/landing/{StoreBadge,HowItWorks,Differentials,StatsCounter,LandingFooter}.tsx`.
+- **Config**: `src/config/storeLinks.ts` exporta `APP_STORE_URL`, `PLAY_STORE_URL` (placeholders `#` até a publicação) e `detectPlatform()` (iOS / Android / desktop).
+- **UX/UI**: identidade Liquid Glass mantida — gradient mesh cyan/purple, `glass-card`, Plus Jakarta Sans, Lucide icons, tom de voz Hypou/Troca.
+- **Framer Motion**: parallax do mockup com `useScroll`/`useTransform`, stagger `whileInView`, microinterações `whileHover`/`whileTap` nas badges, contador animado (`animate` + `useMotionValue`), respeita `prefers-reduced-motion`.
+- **Plataforma-aware**: destaca App Store em iOS/desktop e Play Store em Android. Em desktop, exibe QR code (gerado via `api.qrserver.com`) apontando para `/baixar`.
+- **SEO**: `<title>` e `<meta name="description">` setados via `useEffect`, H1 com keyword "Hypou".
