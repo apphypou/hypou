@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback, forwardRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { ArrowDown, Handshake, Sparkles } from "lucide-react";
-import HypouLogo from "@/components/HypouLogo";
 import StoreBadge from "@/components/landing/StoreBadge";
+import landingLogo from "@/assets/hypou-landing-logo.png";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Differentials from "@/components/landing/Differentials";
 import StatsCounter from "@/components/landing/StatsCounter";
