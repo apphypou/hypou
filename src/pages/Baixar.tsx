@@ -53,13 +53,18 @@ const Baixar = () => {
     <div className="dark min-h-screen bg-background text-foreground antialiased font-display">
       {/* Sticky header */}
       <header className="sticky top-0 z-50 border-b border-foreground/5 bg-background/70 backdrop-blur-xl">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <h1 className="m-0">
-            <img src={hypouWordmark} alt="Hypou" className="h-12 w-auto select-none" draggable={false} />
+        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
+          <h1 className="m-0 min-w-0">
+            <img
+              src={hypouWordmark}
+              alt="Hypou"
+              className="h-9 w-auto select-none sm:h-12"
+              draggable={false}
+            />
           </h1>
           <a
             href="#download"
-            className="rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]"
+            className="shrink-0 rounded-full bg-primary px-4 py-2 text-[11px] font-bold text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)] sm:px-5 sm:text-xs"
           >
             Baixar grátis
           </a>
@@ -67,7 +72,7 @@ const Baixar = () => {
       </header>
 
       {/* HERO */}
-      <section className="relative overflow-hidden px-6 pt-16 pb-24 md:pt-24 md:pb-32">
+      <section className="relative overflow-hidden px-5 pt-10 pb-20 sm:px-6 sm:pt-16 sm:pb-24 md:pt-24 md:pb-32">
         {/* Rich animated mesh */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <motion.div
@@ -118,7 +123,7 @@ const Baixar = () => {
               initial="hidden"
               animate="visible"
               variants={fadeUp}
-              className="mt-6 text-[44px] font-extrabold leading-[1.02] tracking-tight md:text-[64px] lg:text-[72px]"
+              className="mt-6 text-[34px] font-extrabold leading-[1.05] tracking-tight sm:text-[44px] md:text-[64px] lg:text-[72px]"
             >
               Troque o que tá parado.
               <br />
@@ -141,7 +146,7 @@ const Baixar = () => {
               animate="visible"
               variants={fadeUp}
               id="download"
-              className="mt-10 flex flex-col items-center gap-3 sm:flex-row lg:items-start"
+              className="mt-10 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center lg:items-start"
             >
               <StoreBadge store="apple" href={APP_STORE_URL} highlighted={showAppleHighlight} />
               <StoreBadge store="google" href={PLAY_STORE_URL} highlighted={showGoogleHighlight} />
@@ -182,7 +187,7 @@ const Baixar = () => {
               initial="hidden"
               animate="visible"
               variants={fadeUp}
-              className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground lg:justify-start"
+              className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-muted-foreground sm:gap-x-6 sm:text-xs lg:justify-start"
             >
               <span className="flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -200,7 +205,7 @@ const Baixar = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            className="relative mx-auto h-[520px] w-full max-w-[520px] md:h-[620px]"
+            className="relative mx-auto h-[420px] w-full max-w-[520px] sm:h-[520px] md:h-[620px]"
           >
             {/* Halo glow */}
             <div
@@ -263,7 +268,7 @@ const Baixar = () => {
       <FAQ />
 
       {/* CTA final */}
-      <section className="relative overflow-hidden px-6 py-28">
+      <section className="relative overflow-hidden px-5 py-20 sm:px-6 sm:py-28">
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div
             className="absolute inset-0"
@@ -282,13 +287,13 @@ const Baixar = () => {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="mx-auto max-w-3xl text-center"
         >
-          <h2 className="text-4xl font-extrabold leading-[1.05] tracking-tight md:text-6xl">
+          <h2 className="text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl md:text-6xl">
             Pronto pra dar o seu primeiro <span className="gradient-text">Hypou</span>?
           </h2>
-          <p className="mx-auto mt-5 max-w-lg text-base text-muted-foreground md:text-lg">
+          <p className="mx-auto mt-5 max-w-lg text-sm text-muted-foreground sm:text-base md:text-lg">
             Baixe grátis e descubra trocas perto de você em segundos.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-10 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
             <StoreBadge store="apple" href={APP_STORE_URL} highlighted={showAppleHighlight} />
             <StoreBadge store="google" href={PLAY_STORE_URL} highlighted={showGoogleHighlight} />
           </div>
