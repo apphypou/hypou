@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles, ArrowDown } from "lucide-react";
-import HypouLogo from "@/components/HypouLogo";
+import hypouWordmark from "@/assets/hypou-wordmark.png";
 import StoreBadge from "@/components/landing/StoreBadge";
 import HowItWorks from "@/components/landing/HowItWorks";
 import SocialProof from "@/components/landing/SocialProof";
@@ -54,7 +54,9 @@ const Baixar = () => {
       {/* Sticky header */}
       <header className="sticky top-0 z-50 border-b border-foreground/5 bg-background/70 backdrop-blur-xl">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <HypouLogo size="md" as="h1" />
+          <h1 className="m-0">
+            <img src={hypouWordmark} alt="Hypou" className="h-8 w-auto select-none" draggable={false} />
+          </h1>
           <a
             href="#download"
             className="rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground transition-all hover:scale-105 hover:shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]"
