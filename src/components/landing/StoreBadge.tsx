@@ -11,11 +11,33 @@ const AppleLogo = ({ className }: { className?: string }) => (
 );
 
 const GooglePlayLogo = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 512 512" className={className} aria-hidden="true">
-    <path fill="#00d4ff" d="M48 41.4v429.2c0 5.6 6.2 9 11 6L295 256 59 35.4c-4.8-3-11 .4-11 6z" opacity=".95" />
-    <path fill="#ffd400" d="M386.7 218.8L334.3 188.5 273 256l61.3 67.5 52.4-30.3c19.1-11 19.1-38.4 0-49.4z" />
-    <path fill="#ff3a44" d="M334.3 323.5L273 256l-86.5 95.3 153.2 88.5c10.3 5.9 22.8 4.5 31.4-3.6l-36.8-112.7z" opacity=".9" />
-    <path fill="#00f076" d="M334.3 188.5L186.5 160.7l-.0 0L273 256l61.3-67.5z" opacity=".9" />
+  <svg viewBox="0 0 256 280" className={className} aria-hidden="true">
+    <defs>
+      <linearGradient id="gp-blue" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#00C3FF" />
+        <stop offset="1" stopColor="#1A73E8" />
+      </linearGradient>
+      <linearGradient id="gp-red" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#FF3A44" />
+        <stop offset="1" stopColor="#C31162" />
+      </linearGradient>
+      <linearGradient id="gp-yellow" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#FFD400" />
+        <stop offset="1" stopColor="#FF8A00" />
+      </linearGradient>
+      <linearGradient id="gp-green" x1="0" y1="1" x2="1" y2="0">
+        <stop offset="0" stopColor="#00A95C" />
+        <stop offset="1" stopColor="#00F076" />
+      </linearGradient>
+    </defs>
+    {/* Blue left panel (play body) */}
+    <path fill="url(#gp-blue)" d="M14 12c-3 1.6-5 4.7-5 9v238c0 4.3 2 7.4 5 9l132-128L14 12z" />
+    {/* Green top-right panel */}
+    <path fill="url(#gp-green)" d="M190 90L52 11C49.4 9.5 46.7 9.2 44.3 10.1L146 140l44-50z" />
+    {/* Yellow right tip */}
+    <path fill="url(#gp-yellow)" d="M232 122l-42-32-44 50 44 50 42-32c14-8 14-28 0-36z" />
+    {/* Red bottom-right panel */}
+    <path fill="url(#gp-red)" d="M44.3 269.9c2.4.9 5.1.6 7.7-.9l138-79-44-50L44.3 269.9z" />
   </svg>
 );
 
