@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { Heart, Instagram, Mail } from "lucide-react";
-import HypouLogo from "@/components/HypouLogo";
+import hypouWordmark from "@/assets/hypou-wordmark.png";
 
 const LandingFooter = () => {
   return (
     <footer className="relative border-t border-foreground/5 px-6 py-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-start md:justify-between">
         <div className="flex flex-col items-center gap-3 md:items-start">
-          <HypouLogo size="md" />
+          <img src={hypouWordmark} alt="Hypou" className="h-8 w-auto select-none" draggable={false} />
           <p className="max-w-xs text-center text-sm text-muted-foreground md:text-left">
             Troque o que tá parado pelo que você quer. Sem dinheiro, sem golpe.
           </p>
