@@ -236,12 +236,13 @@ const Baixar = () => {
             </motion.div>
           </div>
 
-          {/* Mockups reais — duas iPhones */}
+          {/* Mockups reais — duas iPhones (desktop only) */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            className="relative mx-auto h-[420px] w-full max-w-[520px] sm:h-[520px] md:h-[620px]"
+            className="relative mx-auto hidden h-[420px] w-full max-w-[520px] sm:h-[520px] md:h-[620px] lg:block"
+          >
           >
             {/* Halo glow */}
             <div
