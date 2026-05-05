@@ -55,7 +55,7 @@ const Baixar = () => {
       <header className="sticky top-0 z-50 border-b border-foreground/5 bg-background/70 backdrop-blur-xl">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <h1 className="m-0">
-            <img src={hypouWordmark} alt="Hypou" className="h-8 w-auto select-none" draggable={false} />
+            <img src={hypouWordmark} alt="Hypou" className="h-12 w-auto select-none" draggable={false} />
           </h1>
           <a
             href="#download"
