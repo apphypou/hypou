@@ -243,7 +243,6 @@ const Baixar = () => {
             transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
             className="relative mx-auto hidden h-[420px] w-full max-w-[520px] sm:h-[520px] md:h-[620px] lg:block"
           >
-          >
             {/* Halo glow */}
             <div
               className="pointer-events-none absolute inset-0 -z-10 blur-3xl"
