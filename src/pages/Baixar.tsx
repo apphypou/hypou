@@ -138,13 +138,51 @@ const Baixar = () => {
               Match de objetos, não de pessoas. Negocie no chat seguro, com preço justo validado por IA.
             </motion.p>
 
+            {/* Mockups — somente mobile, acima dos botões */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+              className="relative mx-auto mt-10 h-[360px] w-full max-w-[420px] lg:hidden"
+            >
+              <div
+                className="pointer-events-none absolute inset-0 -z-10 blur-3xl"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 60% 50% at 50% 50%, hsl(184 100% 50% / 0.3) 0%, transparent 70%)",
+                }}
+              />
+              <motion.img
+                src={phoneExplore}
+                alt="App Hypou na tela Explorar"
+                width={832}
+                height={1664}
+                className="absolute left-0 top-6 w-[58%] drop-shadow-[0_30px_60px_rgba(0,0,0,0.5)]"
+                initial={{ rotate: -8 }}
+                animate={reduceMotion ? {} : { rotate: -8, y: [0, -10, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                style={{ transformOrigin: "center" }}
+              />
+              <motion.img
+                src={phoneMatch}
+                alt="App Hypou na tela de Match"
+                width={832}
+                height={1664}
+                className="absolute right-0 top-0 w-[58%] drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
+                initial={{ rotate: 8 }}
+                animate={reduceMotion ? {} : { rotate: 8, y: [0, 10, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+                style={{ transformOrigin: "center" }}
+              />
+            </motion.div>
+
             <motion.div
               custom={3}
               initial="hidden"
               animate="visible"
               variants={fadeUp}
               id="download"
-              className="mt-10 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center lg:items-start"
+              className="mt-8 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:items-center lg:mt-10 lg:items-start"
             >
               <StoreBadge store="apple" href={APP_STORE_URL} highlighted={showAppleHighlight} />
               <StoreBadge store="google" href={PLAY_STORE_URL} highlighted={showGoogleHighlight} />
