@@ -26,14 +26,23 @@ const items = [
 
 const Differentials = () => {
   return (
-    <section className="relative px-6 py-20">
-      <div className="mx-auto max-w-5xl">
+    <section className="relative px-6 py-24">
+      <div className="mx-auto max-w-6xl">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5 }}
+          className="text-center text-xs font-medium uppercase tracking-[0.2em] text-primary/70"
+        >
+          Por que Hypou
+        </motion.p>
         <motion.h2
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.5 }}
-          className="text-center text-3xl font-extrabold tracking-tight text-foreground md:text-4xl"
+          transition={{ duration: 0.55, delay: 0.05 }}
+          className="mx-auto mt-3 max-w-2xl text-center text-3xl font-extrabold leading-tight tracking-tight text-foreground md:text-5xl"
         >
           Feito pra <span className="gradient-text">trocas reais</span>
         </motion.h2>
