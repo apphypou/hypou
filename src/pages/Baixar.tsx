@@ -7,6 +7,7 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import SocialProof from "@/components/landing/SocialProof";
 import Differentials from "@/components/landing/Differentials";
 import StatsCounter from "@/components/landing/StatsCounter";
+import FAQ from "@/components/landing/FAQ";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { APP_STORE_URL, PLAY_STORE_URL, detectPlatform } from "@/config/storeLinks";
 
