@@ -52,6 +52,7 @@ const Cadastro = () => {
         : msg.includes("already") || msg.includes("registered")
           ? "Este e-mail já tem conta. Faça login."
           : error.message;
+      setLoading(false);
       toast({
         title: "Erro ao criar conta",
         description: friendly,
@@ -61,8 +62,17 @@ const Cadastro = () => {
       if (newUser) {
         await supabase.from("profiles").update({ terms_accepted_at: new Date().toISOString() }).eq("user_id", newUser.id);
       }
-      toast({ title: "Conta criada!", description: "Confirme o código enviado por e-mail." });
-      navigate(`/confirmar-codigo?email=${encodeURIComponent(email)}`);
+      // Verifica se a sessão já foi criada (e-mail confirmation desativado).
+      // Caso contrário, exige confirmação por código enviado ao e-mail.
+      const { data: sess } = await supabase.auth.getSession();
+      setLoading(false);
+      if (sess.session) {
+        toast({ title: "Conta criada!" });
+        navigate("/onboarding", { replace: true });
+      } else {
+        toast({ title: "Conta criada!", description: "Confirme o código enviado por e-mail." });
+        navigate(`/confirmar-codigo?email=${encodeURIComponent(email)}`);
+      }
     }
   };
 
