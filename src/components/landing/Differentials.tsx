@@ -47,7 +47,7 @@ const Differentials = () => {
           Feito pra <span className="gradient-text">trocas reais</span>
         </motion.h2>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        <div className="mt-14 grid gap-4 sm:grid-cols-2">
           {items.map((it, i) => (
             <motion.div
               key={it.title}
