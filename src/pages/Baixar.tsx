@@ -258,6 +258,7 @@ const Baixar = () => {
       <HowItWorks />
       <SocialProof />
       <Differentials />
+      <FAQ />
 
       {/* CTA final */}
       <section className="relative overflow-hidden px-6 py-28">
