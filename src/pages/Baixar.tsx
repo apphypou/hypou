@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback, forwardRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform, useReducedMotion } from "framer-motion";
 import { ArrowDown, Handshake, Sparkles } from "lucide-react";
-import HypouLogo from "@/components/HypouLogo";
 import StoreBadge from "@/components/landing/StoreBadge";
+import landingLogo from "@/assets/hypou-landing-logo.png";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Differentials from "@/components/landing/Differentials";
 import StatsCounter from "@/components/landing/StatsCounter";
@@ -132,7 +132,7 @@ const Baixar = () => {
         </div>
 
         <nav className="mx-auto mb-12 flex max-w-5xl items-center justify-between">
-          <HypouLogo size="md" as="h1" />
+          <img src={landingLogo} alt="Hypou — Troque o que tem pelo que quer" className="h-10 md:h-12 w-auto" />
           <a
             href="#download"
             className="hidden rounded-full border border-foreground/10 bg-foreground/5 px-4 py-1.5 text-xs font-medium text-foreground/80 backdrop-blur-md transition-colors hover:border-primary/30 hover:text-primary md:inline-block"
