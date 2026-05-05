@@ -184,8 +184,8 @@ const Baixar = () => {
               id="download"
               className="mt-8 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:items-center lg:mt-10 lg:items-start"
             >
-              <StoreBadge store="apple" href={APP_STORE_URL} highlighted={showAppleHighlight} />
-              <StoreBadge store="google" href={PLAY_STORE_URL} highlighted={showGoogleHighlight} />
+              <StoreBadge store="apple" href={APP_STORE_URL}  />
+              <StoreBadge store="google" href={PLAY_STORE_URL}  />
             </motion.div>
 
             {platform === "desktop" && (
@@ -330,8 +330,8 @@ const Baixar = () => {
             Baixe grátis e descubra trocas perto de você em segundos.
           </p>
           <div className="mt-10 flex w-full flex-col items-stretch justify-center gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <StoreBadge store="apple" href={APP_STORE_URL} highlighted={showAppleHighlight} />
-            <StoreBadge store="google" href={PLAY_STORE_URL} highlighted={showGoogleHighlight} />
+            <StoreBadge store="apple" href={APP_STORE_URL}  />
+            <StoreBadge store="google" href={PLAY_STORE_URL}  />
           </div>
         </motion.div>
       </section>
