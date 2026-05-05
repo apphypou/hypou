@@ -158,7 +158,7 @@ const Baixar = () => {
                 initial="hidden"
                 animate="visible"
                 variants={fadeUp}
-                className="mt-8 flex items-center gap-4"
+                className="mt-8 hidden items-center gap-4 lg:flex"
               >
                 <div className="rounded-2xl bg-white p-2 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.4)]">
                   {qrUrl && (
