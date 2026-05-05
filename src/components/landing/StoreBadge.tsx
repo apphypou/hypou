@@ -66,7 +66,7 @@ const StoreBadge = ({ store, href, highlighted, className }: StoreBadgeProps) =>
       whileTap={{ scale: 0.96 }}
       transition={{ type: "spring", stiffness: 380, damping: 22 }}
       className={cn(
-        "group relative inline-flex items-center gap-3 rounded-2xl border px-5 py-3 backdrop-blur-2xl transition-colors",
+        "group relative inline-flex w-full items-center justify-center gap-3 rounded-2xl border px-5 py-3 backdrop-blur-2xl transition-colors sm:w-auto sm:justify-start",
         highlighted
           ? "border-primary/40 bg-primary/10 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.5)]"
           : "border-foreground/10 bg-foreground/5 hover:border-foreground/20",
