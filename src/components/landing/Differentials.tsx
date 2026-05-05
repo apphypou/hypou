@@ -26,7 +26,7 @@ const items = [
 
 const Differentials = () => {
   return (
-    <section className="relative px-5 py-16 sm:px-6 sm:py-24">
+    <section className="relative border-y border-foreground/5 bg-foreground/[0.02] px-5 py-16 sm:px-6 sm:py-24">
       <div className="mx-auto max-w-6xl">
         <motion.p
           initial={{ opacity: 0, y: 12 }}

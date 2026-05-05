@@ -123,11 +123,9 @@ const Baixar = () => {
               initial="hidden"
               animate="visible"
               variants={fadeUp}
-              className="mt-6 text-[34px] font-extrabold leading-[1.05] tracking-tight sm:text-[44px] md:text-[64px] lg:text-[72px]"
+              className="mt-6 text-[30px] font-extrabold leading-[1.05] tracking-tight sm:text-[44px] md:text-[64px] lg:text-[72px]"
             >
-              Troque o que tá parado.
-              <br />
-              <span className="gradient-text">Hypou</span> o que você quer.
+              Troque o que tá parado. <span className="gradient-text">Hypou</span> o que você quer.
             </motion.h2>
 
             <motion.p

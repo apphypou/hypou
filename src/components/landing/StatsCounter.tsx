@@ -41,7 +41,7 @@ const LargeCounter = ({ to }: { to: number }) => {
 
 const StatsCounter = () => {
   return (
-    <section className="relative overflow-hidden px-5 py-16 sm:px-6 sm:py-24">
+    <section className="relative overflow-hidden border-y border-foreground/5 bg-foreground/[0.02] px-5 py-16 sm:px-6 sm:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div
           className="absolute inset-0"
@@ -70,7 +70,7 @@ const StatsCounter = () => {
               transition={{ duration: 0.6, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
               className="text-center"
             >
-              <div className="text-glow text-6xl font-extrabold tracking-tight text-primary md:text-7xl lg:text-[88px]">
+              <div className="text-glow text-5xl font-extrabold tracking-tight text-primary sm:text-6xl md:text-7xl lg:text-[88px]">
                 {s.isLarge ? <LargeCounter to={s.value} /> : <Counter to={s.value} decimals={s.decimals ?? 0} />}
                 <span className="text-primary/80">{s.suffix}</span>
               </div>
