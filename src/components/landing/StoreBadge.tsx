@@ -29,7 +29,7 @@ interface StoreBadgeProps {
 
 const StoreBadge = ({ store, href, highlighted, className }: StoreBadgeProps) => {
   const isApple = store === "apple";
-  const Icon = isApple ? Apple : Play;
+  const Icon = isApple ? AppleLogo : GooglePlayLogo;
   const topLine = isApple ? "Baixar na" : "Disponível no";
   const bottomLine = isApple ? "App Store" : "Google Play";
   const ariaLabel = `Baixar Hypou na ${bottomLine}`;
@@ -52,11 +52,7 @@ const StoreBadge = ({ store, href, highlighted, className }: StoreBadgeProps) =>
       )}
     >
       <Icon
-        className={cn(
-          "h-7 w-7 shrink-0",
-          isApple ? "fill-foreground text-foreground" : "fill-primary text-primary"
-        )}
-        strokeWidth={isApple ? 0 : 1.5}
+        className={cn("h-8 w-8 shrink-0", isApple && "text-foreground")}
       />
       <div className="text-left leading-tight">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{topLine}</p>
