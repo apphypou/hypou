@@ -44,7 +44,6 @@ const Cadastro = () => {
     }
     setLoading(true);
     const { error, user: newUser } = await signUp(email, password, "");
-    setLoading(false);
 
     if (error) {
       const msg = (error.message || "").toLowerCase();
