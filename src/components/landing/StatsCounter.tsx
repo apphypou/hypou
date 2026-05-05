@@ -41,7 +41,7 @@ const LargeCounter = ({ to }: { to: number }) => {
 
 const StatsCounter = () => {
   return (
-    <section className="relative overflow-hidden px-6 py-24">
+    <section className="relative overflow-hidden px-5 py-16 sm:px-6 sm:py-24">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div
           className="absolute inset-0"
