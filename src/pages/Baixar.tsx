@@ -7,6 +7,7 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import SocialProof from "@/components/landing/SocialProof";
 import Differentials from "@/components/landing/Differentials";
 import StatsCounter from "@/components/landing/StatsCounter";
+import FAQ from "@/components/landing/FAQ";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { APP_STORE_URL, PLAY_STORE_URL, detectPlatform } from "@/config/storeLinks";
 
@@ -65,22 +66,29 @@ const Baixar = () => {
 
       {/* HERO */}
       <section className="relative overflow-hidden px-6 pt-16 pb-24 md:pt-24 md:pb-32">
-        {/* Rich mesh */}
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `
-                radial-gradient(ellipse 60% 50% at 20% 20%, hsl(184 100% 50% / 0.35) 0%, transparent 60%),
-                radial-gradient(ellipse 55% 45% at 80% 30%, hsl(270 80% 55% / 0.22) 0%, transparent 60%),
-                radial-gradient(ellipse 70% 60% at 60% 80%, hsl(184 100% 50% / 0.18) 0%, transparent 65%),
-                radial-gradient(ellipse 40% 35% at 30% 70%, hsl(310 70% 55% / 0.12) 0%, transparent 60%)
-              `,
-            }}
+        {/* Rich animated mesh */}
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+          <motion.div
+            className="absolute -left-[10%] -top-[10%] h-[60%] w-[60%] rounded-full blur-3xl"
+            style={{ background: "radial-gradient(circle, hsl(184 100% 50% / 0.55) 0%, transparent 70%)" }}
+            animate={reduceMotion ? {} : { x: [0, 40, 0], y: [0, 30, 0] }}
+            transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute -right-[5%] top-[10%] h-[50%] w-[50%] rounded-full blur-3xl"
+            style={{ background: "radial-gradient(circle, hsl(270 85% 60% / 0.45) 0%, transparent 70%)" }}
+            animate={reduceMotion ? {} : { x: [0, -30, 0], y: [0, 40, 0] }}
+            transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div
+            className="absolute bottom-[5%] left-[30%] h-[55%] w-[55%] rounded-full blur-3xl"
+            style={{ background: "radial-gradient(circle, hsl(310 75% 55% / 0.30) 0%, transparent 70%)" }}
+            animate={reduceMotion ? {} : { x: [0, 50, 0], y: [0, -20, 0] }}
+            transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           />
           {/* grain */}
           <div
-            className="absolute inset-0 opacity-[0.04] mix-blend-overlay"
+            className="absolute inset-0 opacity-[0.05] mix-blend-overlay"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
             }}
@@ -250,6 +258,7 @@ const Baixar = () => {
       <HowItWorks />
       <SocialProof />
       <Differentials />
+      <FAQ />
 
       {/* CTA final */}
       <section className="relative overflow-hidden px-6 py-28">
