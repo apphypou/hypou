@@ -9,7 +9,7 @@ const testimonials = [
 
 const SocialProof = () => {
   return (
-    <section className="relative px-6 py-16">
+    <section className="relative px-5 py-12 sm:px-6 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
