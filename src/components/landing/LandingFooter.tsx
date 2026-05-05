@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import HypouLogo from "@/components/HypouLogo";
+import logoHypou from "@/assets/logo-hypou.png";
 
 const LandingFooter = () => {
   return (
     <footer className="border-t border-foreground/5 px-6 py-10">
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 md:flex-row md:justify-between">
-        <HypouLogo size="sm" />
+        <img src={logoHypou} alt="Hypou" className="h-6 w-auto" width={90} height={24} />
         <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
           <Link to="/termos" className="hover:text-foreground transition-colors">
             Termos
