@@ -51,8 +51,8 @@ const Baixar = () => {
 
   return (
     <div className="dark min-h-screen bg-background text-foreground antialiased font-display">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-50 border-b border-foreground/5 bg-background/70 backdrop-blur-xl">
+      {/* Sticky header — hidden on mobile */}
+      <header className="sticky top-0 z-50 hidden border-b border-foreground/5 bg-background/70 backdrop-blur-xl lg:block">
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
           <h1 className="m-0 min-w-0">
             <img
