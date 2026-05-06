@@ -7,7 +7,7 @@ const Termos = () => {
 
   return (
     <ScreenLayout>
-      <header className="relative z-40 flex items-center gap-3 px-6 pt-12 pb-4">
+      <header className="relative z-40 flex items-center gap-3 px-6 pt-6 pb-4">
         <button
           onClick={() => navigate(-1)}
           className="h-10 w-10 rounded-full flex items-center justify-center bg-card border border-foreground/10 text-foreground/60 hover:text-foreground transition-all shrink-0"
