@@ -343,7 +343,7 @@ const EditarItem = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <header className="relative z-40 flex w-full items-center gap-3 px-6 pt-12 pb-4">
+      <header className="relative z-40 flex w-full items-center gap-3 px-6 pt-6 pb-4">
         <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
         <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Editar Item</span>
       </header>
