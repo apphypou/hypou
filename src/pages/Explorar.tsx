@@ -404,6 +404,9 @@ const Explorar = () => {
           onClose={() => { setShowSelectItem(false); setPendingLikeItem(null); }}
           onConfirm={handleProposalConfirm}
           targetItemName={pendingLikeItem?.name}
+          targetItemValue={pendingLikeItem?.market_value}
+          targetMarginUp={(pendingLikeItem as any)?.margin_up}
+          targetMarginDown={(pendingLikeItem as any)?.margin_down}
           loading={proposalLoading}
         />
       )}
