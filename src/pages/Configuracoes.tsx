@@ -350,6 +350,52 @@ const Configuracoes = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Categories Preferences Dialog */}
+      <Dialog open={categoriesDialogOpen} onOpenChange={setCategoriesDialogOpen}>
+        <DialogContent className="bg-card border-foreground/10 max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Categorias de Interesse</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Escolha o que você quer ver no Explorar.
+          </p>
+          <div className="grid grid-cols-2 gap-2.5 overflow-y-auto no-scrollbar py-2">
+            {ALL_CATEGORIES.map((cat) => {
+              const isSelected = selectedCategories.includes(cat.label);
+              return (
+                <div
+                  key={cat.label}
+                  onClick={() => toggleCategory(cat.label)}
+                  className={`group relative rounded-2xl bg-background cursor-pointer transition-all active:scale-95 flex items-center gap-2 px-3 py-3 overflow-hidden ${
+                    isSelected
+                      ? "border border-primary ring-1 ring-primary/50"
+                      : "border border-foreground/5"
+                  }`}
+                >
+                  <span className="text-lg shrink-0">{cat.emoji}</span>
+                  <span className={`text-xs flex-1 min-w-0 truncate ${isSelected ? "font-semibold text-foreground" : "font-medium text-foreground/60"}`}>
+                    {cat.label}
+                  </span>
+                  {isSelected && (
+                    <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
+                      <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button
+            onClick={handleSaveCategories}
+            disabled={savingCategories}
+            className="w-full py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {savingCategories && <Loader2 className="h-4 w-4 animate-spin" />}
+            Salvar Preferências
+          </button>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Account Confirmation */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent className="bg-card border-foreground/10">
