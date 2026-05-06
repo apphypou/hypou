@@ -62,11 +62,11 @@ const MeuPerfil = () => {
   const [proposalTarget, setProposalTarget] = useState<any>(null);
   const [proposalLoading, setProposalLoading] = useState(false);
 
-  const handleProposalConfirm = async (myItemId: string) => {
+  const handleProposalConfirm = async (myItemIds: string[]) => {
     if (!user || !proposalTarget) return;
     setProposalLoading(true);
     try {
-      await createProposal(user.id, myItemId, proposalTarget.id, proposalTarget.user_id);
+      await createProposal(user.id, myItemIds, proposalTarget.id, proposalTarget.user_id);
       toast({ title: "Proposta enviada! 🎉" });
     } catch (err: any) {
       if (err.message?.includes("duplicate")) {

@@ -99,7 +99,7 @@ const Shorts = () => {
     setTradeDialogOpen(true);
   }, [user, navigate]);
 
-  const handleProposalConfirm = useCallback(async (myItemId: string) => {
+  const handleProposalConfirm = useCallback(async (myItemIds: string[]) => {
     if (!user || !pendingTradeVideo?.item) return;
     setProposalLoading(true);
     try {
