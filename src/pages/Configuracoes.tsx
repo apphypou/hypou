@@ -178,6 +178,12 @@ const Configuracoes = () => {
       onClick: () => setBlockedDialogOpen(true),
     },
     {
+      icon: Sparkles,
+      label: "Categorias de Interesse",
+      description: "Editar o que aparece no Explorar",
+      onClick: () => setCategoriesDialogOpen(true),
+    },
+    {
       icon: FileText,
       label: "Termos de Uso",
       description: "Leia os termos da plataforma",
