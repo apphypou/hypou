@@ -157,6 +157,16 @@ const Matches = () => {
   const otherImages = otherItem?.item_images || [];
   const myImages = myItem?.item_images || [];
 
+  // Multi-item proposal: full list of items on each side
+  const myItems = selectedMatch
+    ? (selectedMatch.my_item_side === "a" ? selectedMatch.items_a : selectedMatch.items_b) || (myItem ? [myItem] : [])
+    : [];
+  const otherItems = selectedMatch
+    ? (selectedMatch.my_item_side === "a" ? selectedMatch.items_b : selectedMatch.items_a) || (otherItem ? [otherItem] : [])
+    : [];
+  const myItemsTotal = myItems.reduce((s, it) => s + (it?.market_value || 0), 0);
+  const otherItemsTotal = otherItems.reduce((s, it) => s + (it?.market_value || 0), 0);
+
   const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed"), [matches]);
   const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected"), [matches]);
   const displayedMatches = activeTab === "active" ? activeMatches : historyMatches;
