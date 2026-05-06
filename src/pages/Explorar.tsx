@@ -185,11 +185,11 @@ const Explorar = () => {
   );
 
   const handleProposalConfirm = useCallback(
-    async (myItemId: string) => {
+    async (myItemIds: string[]) => {
       if (!user || !pendingLikeItem) return;
       setProposalLoading(true);
       try {
-        await createProposal(user.id, myItemId, pendingLikeItem.id, pendingLikeItem.user_id);
+        await createProposal(user.id, myItemIds, pendingLikeItem.id, pendingLikeItem.user_id);
         toast({ title: "🤝 Proposta enviada!", description: `Proposta de troca enviada com sucesso.` });
         haptic("success");
       } catch (err: any) {
