@@ -1,4 +1,4 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield } from "lucide-react";
+import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
@@ -6,11 +6,13 @@ import IconButton from "@/components/IconButton";
 import GlassCard from "@/components/GlassCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBlockedUsers, unblockUser } from "@/services/reportService";
+import { saveUserCategories } from "@/services/profileService";
+import { categories as ALL_CATEGORIES } from "@/constants/categories";
 import {
   AlertDialog,
   AlertDialogAction,
