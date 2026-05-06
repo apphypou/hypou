@@ -456,7 +456,20 @@ const Conversa = () => {
       />
 
       {/* Input area */}
-      {chatTermsAccepted !== false && (
+      {chatLocked && (
+        <div className="shrink-0 px-4 py-5 border-t border-foreground/5 bg-card/50 backdrop-blur-xl text-center">
+          <p className="text-sm font-semibold text-foreground/80">
+            {details?.match_status === "completed" ? "Troca concluída ✅" : "Conversa encerrada 🔒"}
+          </p>
+          <p className="text-xs text-foreground/50 mt-1">
+            {details?.match_status === "completed"
+              ? "Esta conversa foi finalizada. Avalie seu trocador na tela de Trocas."
+              : "Este item não está mais disponível."}
+          </p>
+        </div>
+      )}
+
+      {!chatLocked && chatTermsAccepted !== false && (
         <div className="shrink-0 px-4 pb-8 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl">
           {/* Attachment menu */}
           {showAttachMenu && (
