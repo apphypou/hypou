@@ -515,6 +515,20 @@ Propostas e negociações entre dois usuários.
 | `confirmed_by_a` | bool | Confirmação de entrega pelo user A |
 | `confirmed_by_b` | bool | Confirmação de entrega pelo user B |
 
+#### `match_items`
+Tabela de junção que permite **propostas com múltiplos itens** (até 3 do lado proponente, 1 do lado receptor). `matches.item_a_id`/`item_b_id` permanecem como item primário (compat).
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `match_id` | uuid | FK para matches |
+| `user_id` | uuid | Dono do item |
+| `item_id` | uuid | FK para items |
+| `side` | text | `a` (proponente, até 3) ou `b` (receptor, 1) |
+
+- Trigger `enforce_match_items_limit`: garante limites por lado.
+- RPC `create_proposal(p_my_item_ids uuid[], p_their_item_id uuid)`: cria match + match_items atomicamente, validando posse, status `active`, bloqueios e limite de 3.
+- `handle_trade_completion` e `deactivate_items_on_trade_completion` consideram todos os itens em `match_items` ao concluir uma troca (inativam todos e cancelam outras propostas que envolvam qualquer um deles).
+
 #### `conversations` e `messages`
 Chat entre participantes de um match aceito.
 
