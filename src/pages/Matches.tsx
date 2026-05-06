@@ -157,6 +157,16 @@ const Matches = () => {
   const otherImages = otherItem?.item_images || [];
   const myImages = myItem?.item_images || [];
 
+  // Multi-item proposal: full list of items on each side
+  const myItems = selectedMatch
+    ? (selectedMatch.my_item_side === "a" ? selectedMatch.items_a : selectedMatch.items_b) || (myItem ? [myItem] : [])
+    : [];
+  const otherItems = selectedMatch
+    ? (selectedMatch.my_item_side === "a" ? selectedMatch.items_b : selectedMatch.items_a) || (otherItem ? [otherItem] : [])
+    : [];
+  const myItemsTotal = myItems.reduce((s, it) => s + (it?.market_value || 0), 0);
+  const otherItemsTotal = otherItems.reduce((s, it) => s + (it?.market_value || 0), 0);
+
   const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed"), [matches]);
   const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected"), [matches]);
   const displayedMatches = activeTab === "active" ? activeMatches : historyMatches;
@@ -410,18 +420,48 @@ const Matches = () => {
                     {selectedMatch.status === "completed" ? "Troca Concluída ✅" : "Proposta de Troca"}
                   </p>
                   <div className="flex items-center gap-3">
-                    {/* My item */}
+                    {/* My side */}
                     <div className="flex-1 min-w-0 flex flex-col items-center text-center">
-                      <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
-                        {myImages[0]?.image_url ? (
-                          <img src={myImages[0].image_url} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
-                        )}
-                      </div>
-                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{myItem?.name || "Item"}</p>
-                      <p className="text-primary text-[11px] font-bold mt-0.5">{myItem ? formatValue(myItem.market_value) : "—"}</p>
-                      <p className="text-foreground/30 text-[9px] mt-1">Seu item</p>
+                      {myItems.length > 1 ? (
+                        <>
+                          <div className="flex -space-x-3 mb-2.5">
+                            {myItems.slice(0, 3).map((it, idx) => {
+                              const img = (it.item_images || []).sort((a, b) => a.position - b.position)[0]?.image_url;
+                              return (
+                                <div
+                                  key={it.id}
+                                  className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-background shadow-md"
+                                  style={{ zIndex: 3 - idx }}
+                                >
+                                  {img ? (
+                                    <img src={img} alt={it.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <p className="text-foreground/90 text-xs font-semibold w-full px-1">
+                            {myItems.length} itens
+                          </p>
+                          <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(myItemsTotal)}</p>
+                          <p className="text-foreground/30 text-[9px] mt-1">Sua oferta</p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
+                            {myImages[0]?.image_url ? (
+                              <img src={myImages[0].image_url} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
+                            )}
+                          </div>
+                          <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{myItem?.name || "Item"}</p>
+                          <p className="text-primary text-[11px] font-bold mt-0.5">{myItem ? formatValue(myItem.market_value) : "—"}</p>
+                          <p className="text-foreground/30 text-[9px] mt-1">Seu item</p>
+                        </>
+                      )}
                     </div>
 
                     {/* Arrow */}
@@ -429,18 +469,48 @@ const Matches = () => {
                       <ArrowRightLeft className="h-4 w-4 text-primary/70" />
                     </div>
 
-                    {/* Their item */}
+                    {/* Their side */}
                     <div className="flex-1 min-w-0 flex flex-col items-center text-center">
-                      <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
-                        {otherImages[0]?.image_url ? (
-                          <img src={otherImages[0].image_url} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
-                        )}
-                      </div>
-                      <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{otherItem?.name || "Item"}</p>
-                      <p className="text-primary text-[11px] font-bold mt-0.5">{otherItem ? formatValue(otherItem.market_value) : "—"}</p>
-                      <p className="text-foreground/30 text-[9px] mt-1">Item deles</p>
+                      {otherItems.length > 1 ? (
+                        <>
+                          <div className="flex -space-x-3 mb-2.5">
+                            {otherItems.slice(0, 3).map((it, idx) => {
+                              const img = (it.item_images || []).sort((a, b) => a.position - b.position)[0]?.image_url;
+                              return (
+                                <div
+                                  key={it.id}
+                                  className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-background ring-2 ring-primary/20 shadow-md"
+                                  style={{ zIndex: 3 - idx }}
+                                >
+                                  {img ? (
+                                    <img src={img} alt={it.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <p className="text-foreground/90 text-xs font-semibold w-full px-1">
+                            {otherItems.length} itens
+                          </p>
+                          <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(otherItemsTotal)}</p>
+                          <p className="text-foreground/30 text-[9px] mt-1">Oferta deles</p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
+                            {otherImages[0]?.image_url ? (
+                              <img src={otherImages[0].image_url} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
+                            )}
+                          </div>
+                          <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{otherItem?.name || "Item"}</p>
+                          <p className="text-primary text-[11px] font-bold mt-0.5">{otherItem ? formatValue(otherItem.market_value) : "—"}</p>
+                          <p className="text-foreground/30 text-[9px] mt-1">Item deles</p>
+                        </>
+                      )}
                     </div>
                   </div>
 

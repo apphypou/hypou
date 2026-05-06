@@ -249,6 +249,48 @@ export type Database = {
         }
         Relationships: []
       }
+      match_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          match_id: string
+          side: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          match_id: string
+          side: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          match_id?: string
+          side?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_items_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           confirmed_by_a: boolean | null
@@ -750,6 +792,10 @@ export type Database = {
       }
     }
     Functions: {
+      create_proposal: {
+        Args: { p_my_item_ids: string[]; p_their_item_id: string }
+        Returns: string
+      }
       get_waitlist_position: { Args: never; Returns: number }
       has_role: {
         Args: {

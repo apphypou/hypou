@@ -23,6 +23,22 @@ export interface MatchWithDetails {
     location: string | null;
     item_images: { image_url: string; position: number }[];
   };
+  items_a?: Array<{
+    id: string;
+    name: string;
+    market_value: number;
+    category: string;
+    location: string | null;
+    item_images: { image_url: string; position: number }[];
+  }>;
+  items_b?: Array<{
+    id: string;
+    name: string;
+    market_value: number;
+    category: string;
+    location: string | null;
+    item_images: { image_url: string; position: number }[];
+  }>;
   other_user: {
     user_id: string;
     display_name: string | null;
@@ -73,9 +89,29 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
     });
   }
 
+  // Load match_items (multi-item proposals) for these matches
+  const matchIds = filteredData.map((m: any) => m.id);
+  const itemsBySideMap: Record<string, { a: any[]; b: any[] }> = {};
+  if (matchIds.length > 0) {
+    const { data: miRows } = await supabase
+      .from("match_items" as any)
+      .select(`
+        match_id, side,
+        item:item_id (id, name, market_value, category, location, item_images (image_url, position))
+      `)
+      .in("match_id", matchIds);
+    ((miRows || []) as any[]).forEach((row: any) => {
+      const bucket = (itemsBySideMap[row.match_id] = itemsBySideMap[row.match_id] || { a: [], b: [] });
+      if (row.item) bucket[row.side as "a" | "b"].push(row.item);
+    });
+  }
+
   return filteredData.map((m: any) => {
     const isUserA = m.user_a_id === userId;
     const otherUserId = isUserA ? m.user_b_id : m.user_a_id;
+    const buckets = itemsBySideMap[m.id] || { a: [], b: [] };
+    const items_a = buckets.a.length > 0 ? buckets.a : (m.item_a ? [m.item_a] : []);
+    const items_b = buckets.b.length > 0 ? buckets.b : (m.item_b ? [m.item_b] : []);
     return {
       id: m.id,
       status: m.status,
@@ -84,6 +120,8 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
       confirmed_by_b: m.confirmed_by_b,
       item_a: m.item_a,
       item_b: m.item_b,
+      items_a,
+      items_b,
       other_user: profilesMap[otherUserId] || { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
       my_item_side: isUserA ? "a" : "b",
     };
@@ -91,24 +129,21 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 };
 
 export const createProposal = async (
-  userId: string,
-  myItemId: string,
+  _userId: string,
+  myItemIds: string | string[],
   theirItemId: string,
-  theirUserId: string
+  _theirUserId: string
 ) => {
-  const { data, error } = await supabase
-    .from("matches")
-    .insert({
-      user_a_id: userId,
-      user_b_id: theirUserId,
-      item_a_id: myItemId,
-      item_b_id: theirItemId,
-      status: "proposal",
-    })
-    .select("id")
-    .single();
+  const ids = Array.isArray(myItemIds) ? myItemIds : [myItemIds];
+  if (ids.length === 0) throw new Error("Selecione ao menos 1 item");
+  if (ids.length > 3) throw new Error("Máximo de 3 itens por proposta");
+
+  const { data, error } = await supabase.rpc("create_proposal" as any, {
+    p_my_item_ids: ids,
+    p_their_item_id: theirItemId,
+  });
   if (error) throw error;
-  return data;
+  return { id: data as unknown as string };
 };
 
 export const acceptProposal = async (matchId: string, currentUserId: string) => {

@@ -1,54 +1,90 @@
-## Problema
+# Proposta múltipla: até 3 itens em uma troca
 
-Hoje, quando os dois usuários clicam em "Confirmar entrega":
+Hoje uma proposta tem 1 item de cada lado (`matches.item_a_id` ↔ `matches.item_b_id`). Vamos permitir que o **lado proponente** combine **até 3 itens próprios** para chegar no valor do item desejado do outro trocador.
 
-- O trigger `check_trade_completion` muda o `matches.status` para `completed` e o trigger `deactivate_items_on_trade_completion` desativa `item_a` e `item_b`.
-- **Porém**: nada é enviado no chat da troca concluída, e os outros usuários que estavam negociando esses mesmos itens (em outros `matches` com status `accepted`/`proposal`) continuam com chat ativo, podendo seguir conversando sobre um item que já não existe mais.
+Exemplo: oferecer Carro (R$50k) + Relógio (R$50k) + Relógio (R$50k) = R$150k para trocar pela Casa de R$150k.
 
-## Solução
+## Decisões de produto
 
-1. **Mensagem automática "sistema" no chat da troca concluída.**
-2. **Cancelar todos os outros matches abertos que envolvem `item_a_id` ou `item_b_id`** e inserir mensagem automática nos chats deles avisando que o item ficou indisponível.
-3. **Travar a UI do chat** (esconder input + mostrar banner) quando o match estiver `completed` ou `cancelled`.
+- Limite: **1 a 3 itens próprios** por proposta. O outro lado continua oferecendo **1 item** (o que recebeu o like).
+- Faixa de troca: a soma dos valores dos itens propostos deve cair dentro do `margin_down`/`margin_up` do item desejado. Se ficar fora, mostramos aviso mas permitimos enviar (dono decide).
+- Ao aceitar, **todos** os itens do lote ficam reservados: ao concluir a troca, todos viram `inactive` e qualquer outra proposta envolvendo qualquer um deles é cancelada (já existe lógica para 2 itens — vamos estender).
+- Cancelar/rejeitar uma proposta libera os itens normalmente.
 
-## Mudanças
+## Mudanças de banco
 
-### 1. Banco (migração)
+Nova tabela `match_items` (junção) — preserva `matches.item_a_id`/`item_b_id` como o item "principal" de cada lado para compatibilidade com tudo que já existe:
 
-- Criar função `handle_trade_completion()` (SECURITY DEFINER) chamada via trigger `AFTER UPDATE ON matches` quando `status` muda para `completed`:
-  - Insere mensagem do tipo `system` na `conversation` deste match: "✅ Troca concluída! Avalie seu trocador."
-  - Faz `UPDATE matches SET status = 'cancelled'` em todos os outros matches em que `item_a_id` ou `item_b_id` apareça (exceto o atual) e que estejam em `proposal` ou `accepted`.
-  - Para cada match cancelado que tenha `conversation`, insere mensagem `system`: "⚠️ Item indisponível — o(s) outro(s) trocador(es) finalizaram uma troca com este item. Conversa encerrada."
-- Garantir que `messages.message_type` aceite `'system'` (coluna é `text` livre, então só precisamos usar o valor).
-- Para a inserção de mensagens via trigger funcionar com RLS, usar `SECURITY DEFINER` e setar `sender_id = NULL` não é viável (NOT NULL). Alternativa: usar o `user_a_id` do match como `sender_id` mas marcar `message_type = 'system'` (a UI ignora o sender em mensagens system). A função roda como definer e ignora RLS.
+```text
+match_items
+  id uuid pk
+  match_id uuid -> matches.id
+  user_id  uuid           (dono dos itens, == user_a_id ou user_b_id)
+  item_id  uuid -> items.id
+  side     text 'a' | 'b'
+  created_at
+  UNIQUE (match_id, item_id)
+```
 
-### 2. Frontend
+- RLS: SELECT/INSERT permitido a participantes do match (via `is_match_participant`). UPDATE/DELETE bloqueados.
+- Backfill: para cada match existente, inserir 2 linhas (item_a/side=a, item_b/side=b).
+- Trigger `enforce_match_items_limit`: ao inserir, BEFORE INSERT, contar linhas existentes para `(match_id, side)` e rejeitar se passar de 3 (lado a) ou 1 (lado b).
+- Atualizar trigger `handle_trade_completion`: ao virar `completed`, marcar como `inactive` **todos** os `item_id` em `match_items` daquele match (não só `item_a_id`/`item_b_id`) e cancelar outras propostas abertas que envolvam qualquer um desses itens.
+- Atualizar `recommended_items` para considerar também combinações até 3 itens do usuário caindo na faixa do candidato (opcional, fase 2 — não bloqueia o MVP).
 
-**`src/services/messageService.ts`**
-- Adicionar `'system'` ao tipo `MessageType`.
+## Mudanças de frontend
 
-**`src/pages/Conversa.tsx`**
-- Renderizar mensagens com `message_type === 'system'` como banner centralizado (sem avatar/bolha), estilo `bg-foreground/5 text-muted-foreground rounded-full text-xs px-4 py-2 mx-auto`.
-- Quando `details.match_status === 'completed'` ou `'cancelled'`: ocultar a área de input e mostrar barra fixa: "Esta conversa foi encerrada" (com link para avaliação se completed).
-- Atualizar `matchStatusLabel` para incluir `completed` ("Troca concluída ✅") e `cancelled` ("Conversa encerrada 🔒").
+### 1. `SelectItemDialog` → multi-seleção (até 3)
 
-**`src/services/messageService.ts` (getConversations)** já retorna `match_status`; nada a alterar lá.
+- State `selectedIds: string[]` em vez de `selectedId`.
+- Cada card vira togglable; mostra checkmark e ordem (1/2/3).
+- Rodapé fixo com:
+  - Soma dos valores selecionados (`R$ XXX`).
+  - Valor do item alvo + chip "Dentro da faixa" / "Acima" / "Abaixo" baseado em `margin_down`/`margin_up`.
+  - Botão "Propor troca (N item(ns))" — desabilitado se 0 ou >3.
+- Botão "+" para cadastrar novo item segue funcionando.
+- `onConfirm(myItemIds: string[])`.
 
-### 3. Realtime
+### 2. `services/matchService.ts`
 
-O canal de `messages` já está inscrito por `conversation_id`, então a mensagem `system` inserida pelo trigger chega em tempo real para os outros usuários. O `match_status` é refetched ao receber nova mensagem? — adicionar invalidação de `["conversation-detail", conversationId]` em `Conversa.tsx` no callback de realtime para que o input seja travado imediatamente quando chegar a mensagem do sistema.
+- `createProposal(userId, myItemIds: string[], theirItemId, theirUserId)`:
+  - Insere em `matches` com `item_a_id = myItemIds[0]` (compat).
+  - Insere N linhas em `match_items` com `side='a'` para os IDs do proponente + 1 linha `side='b'` para o item do outro.
+  - Tudo numa Edge Function `create-proposal` para garantir atomicidade e validar (≤3, todos ativos, todos do user, não bloqueado).
+- `MatchWithDetails` ganha `items_a: Item[]` e `items_b: Item[]` (carregadas via `match_items` join). UI usa array; quando length===1 renderiza igual a hoje.
+
+### 3. UI de exibição da proposta
+
+- `Matches.tsx`, `Match.tsx` (detalhe), `TradeContextCard`, `Conversa.tsx`:
+  - Quando `items_a.length > 1`, mostrar mini-galeria horizontal "3 itens · R$ 150.000" com thumbnails empilhados; tocar abre lista.
+  - Resumo no topo: `[A] 3 itens (R$150k) ↔ [B] Casa (R$150k)`.
+- `RatingDialog` e fluxo de confirmação continuam por `match_id` (sem mudança).
+
+### 4. Faixa de troca / validação
+
+- Helper `isWithinTradeRange(sumA, valueB, marginDown, marginUp)` reutilizável.
+- No `SelectItemDialog`, badge dinâmico. Se fora da faixa: toast informativo mas permite enviar.
 
 ## Detalhes técnicos
 
-- Trigger único `AFTER UPDATE ON matches` com `WHEN (OLD.status IS DISTINCT FROM 'completed' AND NEW.status = 'completed')`.
-- Função usa CTE para identificar matches a cancelar:
-  ```sql
-  UPDATE matches SET status='cancelled', updated_at=now()
-  WHERE id <> NEW.id
-    AND status IN ('proposal','accepted')
-    AND (item_a_id IN (NEW.item_a_id, NEW.item_b_id)
-      OR item_b_id IN (NEW.item_a_id, NEW.item_b_id))
-  RETURNING id;
-  ```
-- Para cada um, inserir uma mensagem system na conversation correspondente (se existir).
-- Ordem dos triggers: o `deactivate_items_on_trade_completion` continua atuando antes (BEFORE UPDATE) — não conflita.
+- Tipos TS atualizados via supabase types após migração (automático).
+- Edge function `create-proposal` (service role) faz: validação de propriedade dos itens, status active, limite 3, não bloqueado, insere `matches` + `match_items` em uma transação (RPC SQL).
+- Alternativa sem edge function: criar RPC `create_proposal(p_my_item_ids uuid[], p_their_item_id uuid)` com `SECURITY DEFINER` validando `auth.uid()`. **Preferida** — menos código e atômica.
+- `getMatches` faz um segundo select em `match_items` agrupado por `match_id` e popula `items_a`/`items_b`.
+- Realtime: incluir `match_items` na publicação `supabase_realtime` para atualizações ao vivo (opcional).
+
+## Arquivos afetados
+
+- nova migração SQL (tabela + RLS + trigger + RPC + backfill + ajuste no trigger de completion)
+- `src/components/SelectItemDialog.tsx`
+- `src/services/matchService.ts`
+- `src/pages/Explorar.tsx` (passa array para createProposal)
+- `src/pages/Matches.tsx`, `src/pages/Match.tsx`, `src/components/TradeContextCard.tsx`, `src/pages/Conversa.tsx`
+- `src/lib/utils.ts` (helper de faixa)
+- `documentacao.md` (atualização da arquitetura)
+
+## Fora de escopo (fase 2)
+
+- Permitir que o **lado B** também combine múltiplos itens (contraproposta multi).
+- Recomendações considerando combinações multi-item.
+- Edição da composição da proposta após criada (hoje: cancelar e refazer).
