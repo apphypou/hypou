@@ -52,11 +52,49 @@ const Configuracoes = () => {
   // Blocked users state
   const [blockedDialogOpen, setBlockedDialogOpen] = useState(false);
 
+  // Categories preferences state
+  const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [savingCategories, setSavingCategories] = useState(false);
+
   const { data: blockedUsers = [], refetch: refetchBlocked } = useQuery({
     queryKey: ["blocked-users", user?.id],
     queryFn: () => getBlockedUsers(user!.id),
     enabled: !!user && blockedDialogOpen,
   });
+
+  useEffect(() => {
+    if (!categoriesDialogOpen || !user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("user_categories")
+        .select("category")
+        .eq("user_id", user.id);
+      setSelectedCategories((data || []).map((r: any) => r.category));
+    })();
+  }, [categoriesDialogOpen, user]);
+
+  const toggleCategory = (label: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label]
+    );
+  };
+
+  const handleSaveCategories = async () => {
+    if (!user) return;
+    setSavingCategories(true);
+    try {
+      await saveUserCategories(user.id, selectedCategories);
+      queryClient.invalidateQueries({ queryKey: ["recommended-items"] });
+      queryClient.invalidateQueries({ queryKey: ["explore-items"] });
+      toast({ title: "Categorias atualizadas! ✨" });
+      setCategoriesDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar categorias", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingCategories(false);
+    }
+  };
 
   const handleLogout = async () => {
     setLoggingOut(true);
