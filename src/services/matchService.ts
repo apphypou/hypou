@@ -91,24 +91,21 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 };
 
 export const createProposal = async (
-  userId: string,
-  myItemId: string,
+  _userId: string,
+  myItemIds: string | string[],
   theirItemId: string,
-  theirUserId: string
+  _theirUserId: string
 ) => {
-  const { data, error } = await supabase
-    .from("matches")
-    .insert({
-      user_a_id: userId,
-      user_b_id: theirUserId,
-      item_a_id: myItemId,
-      item_b_id: theirItemId,
-      status: "proposal",
-    })
-    .select("id")
-    .single();
+  const ids = Array.isArray(myItemIds) ? myItemIds : [myItemIds];
+  if (ids.length === 0) throw new Error("Selecione ao menos 1 item");
+  if (ids.length > 3) throw new Error("Máximo de 3 itens por proposta");
+
+  const { data, error } = await supabase.rpc("create_proposal" as any, {
+    p_my_item_ids: ids,
+    p_their_item_id: theirItemId,
+  });
   if (error) throw error;
-  return data;
+  return { id: data as unknown as string };
 };
 
 export const acceptProposal = async (matchId: string, currentUserId: string) => {
