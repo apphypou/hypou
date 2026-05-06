@@ -55,6 +55,12 @@ export const useMessages = (conversationId: string | null) => {
       // Also refresh conversations list for last_message update
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
 
+      // System messages can change match status (completion/cancellation)
+      if (newMsg.message_type === 'system') {
+        queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
+        queryClient.invalidateQueries({ queryKey: ["matches"] });
+      }
+
       // Mark as read if it's from the other user
       if (user && newMsg.sender_id !== user.id) {
         markMessagesAsRead(conversationId, user.id);
