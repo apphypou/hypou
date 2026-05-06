@@ -1,4 +1,4 @@
-import { ArrowLeft, MapPin, Star, Ban, MoreVertical, Flag, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Ban, MoreVertical, Flag, Loader2, Repeat } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +40,19 @@ const PerfilUsuario = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: rating } = useUserRating(userId);
+  const { data: completedTrades = 0 } = useQuery({
+    queryKey: ["user-completed-trades", userId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("matches")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "completed")
+        .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!userId,
+  });
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -186,13 +199,24 @@ const PerfilUsuario = () => {
               {profile.bio && (
                 <p className="text-sm text-foreground/60 mt-3 max-w-xs leading-relaxed">{profile.bio}</p>
               )}
-              {rating && (
-                <div className="flex items-center gap-1.5 mt-3 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
-                  <Star className="h-4 w-4 text-primary fill-primary" />
-                  <span className="text-sm font-bold text-primary">{rating.average}</span>
-                  <span className="text-xs text-muted-foreground">({rating.count} avaliação{rating.count !== 1 ? "ões" : ""})</span>
+              <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+                  <Star className={`h-4 w-4 text-primary ${rating ? "fill-primary" : ""}`} />
+                  {rating ? (
+                    <>
+                      <span className="text-sm font-bold text-primary">{rating.average}</span>
+                      <span className="text-xs text-muted-foreground">({rating.count})</span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sem avaliações</span>
+                  )}
                 </div>
-              )}
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 border border-foreground/10 rounded-full">
+                  <Repeat className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-bold text-foreground">{completedTrades}</span>
+                  <span className="text-xs text-muted-foreground">{completedTrades === 1 ? "troca" : "trocas"}</span>
+                </div>
+              </div>
             </div>
 
             {/* Items Section */}
