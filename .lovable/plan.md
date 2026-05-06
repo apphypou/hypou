@@ -1,98 +1,54 @@
-# Landing Page Hypou — Download nas Lojas
+## Problema
 
-## Objetivo
-Criar uma landing page de apresentação do app Hypou com foco em conversão para download nas lojas (App Store e Google Play), substituindo (ou convivendo com) a tela atual de boas-vindas, mantendo a identidade visual Liquid Glass / cyan neon e usando Framer Motion para microinterações de alto padrão.
+Hoje, quando os dois usuários clicam em "Confirmar entrega":
 
-## Decisão de roteamento
-- Nova rota pública: `/baixar` (Landing focada em conversão para lojas).
-- A rota `/` (Index atual com botões "Criar conta / Entrar") permanece como app entry.
-- Em `/baixar` os CTAs principais NÃO levam para cadastro/login — levam para as lojas (badges oficiais Apple/Google).
-- Links das lojas configuráveis via constantes (placeholders agora; usuário troca quando publicar).
+- O trigger `check_trade_completion` muda o `matches.status` para `completed` e o trigger `deactivate_items_on_trade_completion` desativa `item_a` e `item_b`.
+- **Porém**: nada é enviado no chat da troca concluída, e os outros usuários que estavam negociando esses mesmos itens (em outros `matches` com status `accepted`/`proposal`) continuam com chat ativo, podendo seguir conversando sobre um item que já não existe mais.
 
-```
-Constantes em src/config/storeLinks.ts
-  APP_STORE_URL = "#" (placeholder)
-  PLAY_STORE_URL = "#" (placeholder)
-```
+## Solução
 
-Detecção de plataforma com `navigator.userAgent`:
-- iOS → destaca botão App Store
-- Android → destaca botão Play Store
-- Desktop → mostra ambos lado a lado + QR code para abrir no celular
+1. **Mensagem automática "sistema" no chat da troca concluída.**
+2. **Cancelar todos os outros matches abertos que envolvem `item_a_id` ou `item_b_id`** e inserir mensagem automática nos chats deles avisando que o item ficou indisponível.
+3. **Travar a UI do chat** (esconder input + mostrar banner) quando o match estiver `completed` ou `cancelled`.
 
-## Estrutura da página (mobile-first, scroll vertical)
+## Mudanças
 
-1. **Hero**
-   - Logo Hypou (HypouLogo) + badge "Disponível agora"
-   - H1: "Troque o que tá parado. **Hypou** o que você quer."
-   - Subtítulo curto sobre trocas seguras e gratuitas
-   - 2 botões store badges (SVG oficiais Apple/Google) com hover-scale
-   - QR code (desktop) gerado client-side via biblioteca leve `qrcode` ou SVG estático apontando para `/baixar`
-   - Mockup do app flutuando (reaproveita as imagens hero existentes: ps5, notebook, headphones) com parallax sutil em scroll (Framer `useScroll` + `useTransform`)
+### 1. Banco (migração)
 
-2. **Como funciona** (3 passos)
-   - Cards Liquid Glass com ícones Lucide (Search, Heart, Handshake)
-   - Stagger animation com `whileInView`
-   - "Descubra → Hypou → Troque"
+- Criar função `handle_trade_completion()` (SECURITY DEFINER) chamada via trigger `AFTER UPDATE ON matches` quando `status` muda para `completed`:
+  - Insere mensagem do tipo `system` na `conversation` deste match: "✅ Troca concluída! Avalie seu trocador."
+  - Faz `UPDATE matches SET status = 'cancelled'` em todos os outros matches em que `item_a_id` ou `item_b_id` apareça (exceto o atual) e que estejam em `proposal` ou `accepted`.
+  - Para cada match cancelado que tenha `conversation`, insere mensagem `system`: "⚠️ Item indisponível — o(s) outro(s) trocador(es) finalizaram uma troca com este item. Conversa encerrada."
+- Garantir que `messages.message_type` aceite `'system'` (coluna é `text` livre, então só precisamos usar o valor).
+- Para a inserção de mensagens via trigger funcionar com RLS, usar `SECURITY DEFINER` e setar `sender_id = NULL` não é viável (NOT NULL). Alternativa: usar o `user_a_id` do match como `sender_id` mas marcar `message_type = 'system'` (a UI ignora o sender em mensagens system). A função roda como definer e ignora RLS.
 
-3. **Showcase de produtos**
-   - Reaproveita o carrossel animado do Index.tsx (par de cards trocando) — já existe e é o destaque visual
-   - Headline "Match de objetos, não de pessoas"
+### 2. Frontend
 
-4. **Diferenciais** (grid 2x2)
-   - 100% gratuito
-   - IA valida preço justo
-   - Chat seguro pós-match
-   - Avaliações entre usuários
-   - Cards glass com `motion.div` `whileHover={{ y: -4 }}`
+**`src/services/messageService.ts`**
+- Adicionar `'system'` ao tipo `MessageType`.
 
-5. **Prova social / números**
-   - Contador animado (Framer `animate` em `motion.span`) — placeholders editáveis: "+10k trocas", "+5k usuários", "Nota 4.8"
+**`src/pages/Conversa.tsx`**
+- Renderizar mensagens com `message_type === 'system'` como banner centralizado (sem avatar/bolha), estilo `bg-foreground/5 text-muted-foreground rounded-full text-xs px-4 py-2 mx-auto`.
+- Quando `details.match_status === 'completed'` ou `'cancelled'`: ocultar a área de input e mostrar barra fixa: "Esta conversa foi encerrada" (com link para avaliação se completed).
+- Atualizar `matchStatusLabel` para incluir `completed` ("Troca concluída ✅") e `cancelled` ("Conversa encerrada 🔒").
 
-6. **CTA final**
-   - Repete badges das lojas + "Baixe grátis agora"
-   - Background com gradient mesh cyan/purple (mesmo do Index)
+**`src/services/messageService.ts` (getConversations)** já retorna `match_status`; nada a alterar lá.
 
-7. **Footer**
-   - Links: Termos, Privacidade, Suporte (mailto), Instagram (placeholder)
-   - © Hypou 2026
+### 3. Realtime
 
-## Animações (Framer Motion)
-- Hero: fade-up stagger (mesma curva `[0.25, 0.46, 0.45, 0.94]` já usada)
-- Mockup: `useScroll` + `useTransform` para parallax Y leve (-30px → +30px)
-- Seções: `whileInView` com `viewport={{ once: true, margin: "-80px" }}`
-- Botões store: `whileHover={{ scale: 1.04 }}` + `whileTap={{ scale: 0.96 }}`
-- Números: `motion.span` com tween de 0 ao valor final em 1.5s `whileInView`
-- Reduce motion: respeitar `prefers-reduced-motion` desabilitando parallax
-
-## Componentes a criar
-- `src/pages/Baixar.tsx` — página principal
-- `src/components/landing/StoreBadge.tsx` — botão SVG App Store / Play Store
-- `src/components/landing/HowItWorks.tsx`
-- `src/components/landing/Differentials.tsx`
-- `src/components/landing/StatsCounter.tsx`
-- `src/components/landing/LandingFooter.tsx`
-- `src/config/storeLinks.ts`
+O canal de `messages` já está inscrito por `conversation_id`, então a mensagem `system` inserida pelo trigger chega em tempo real para os outros usuários. O `match_status` é refetched ao receber nova mensagem? — adicionar invalidação de `["conversation-detail", conversationId]` em `Conversa.tsx` no callback de realtime para que o input seja travado imediatamente quando chegar a mensagem do sistema.
 
 ## Detalhes técnicos
-- Adicionar rota lazy em `App.tsx`: `const Baixar = lazy(() => import("./pages/Baixar"))` em `/baixar`
-- SEO: `<title>` e `<meta name="description">` setados via `useEffect` (padrão usado no projeto, sem react-helmet)
-- Imagens já compactadas / `loading="lazy"`
-- Sem dependências novas obrigatórias (QR code: gerar via `<img src="https://api.qrserver.com/v1/create-qr-code/?data=...&size=200x200">` para evitar pacote extra)
-- Acessibilidade: `aria-label` nas badges, contraste AA, foco visível
-- Responsivo: mobile-first; em ≥md vira layout 2 colunas no hero
 
-## Identidade visual
-- Mantém: bg `#1C1C1C`, primário cyan `#18FDF6`, Plus Jakarta Sans, glass-card existente, gradient mesh do Index
-- Tom de voz: "Troca", "Hypou", "Flopou" conforme memory
-
-## Documentação
-- Atualizar `documentacao.md` com a nova rota `/baixar` e seu propósito (conforme regra do projeto)
-
-## Fora de escopo
-- Configuração real dos links das lojas (apps ainda não publicados — fica como placeholder `#`)
-- Testes E2E da landing
-- i18n (mantém PT-BR)
-
-## Resultado esperado
-Uma landing page de nível premium em `/baixar`, com animações fluidas Framer Motion, conversão clara para App Store e Google Play, totalmente alinhada à identidade visual Liquid Glass do Hypou.
+- Trigger único `AFTER UPDATE ON matches` com `WHEN (OLD.status IS DISTINCT FROM 'completed' AND NEW.status = 'completed')`.
+- Função usa CTE para identificar matches a cancelar:
+  ```sql
+  UPDATE matches SET status='cancelled', updated_at=now()
+  WHERE id <> NEW.id
+    AND status IN ('proposal','accepted')
+    AND (item_a_id IN (NEW.item_a_id, NEW.item_b_id)
+      OR item_b_id IN (NEW.item_a_id, NEW.item_b_id))
+  RETURNING id;
+  ```
+- Para cada um, inserir uma mensagem system na conversation correspondente (se existir).
+- Ordem dos triggers: o `deactivate_items_on_trade_completion` continua atuando antes (BEFORE UPDATE) — não conflita.

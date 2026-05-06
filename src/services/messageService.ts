@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { validateChatMedia, ensureWebCompatibleImage } from "@/lib/fileValidation";
 import { getBlockedUserIds } from "@/services/reportService";
 
-export type MessageType = 'text' | 'image' | 'video' | 'audio';
+export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'system';
 
 export interface Message {
   id: string;

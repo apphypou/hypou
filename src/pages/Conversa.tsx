@@ -281,7 +281,13 @@ const Conversa = () => {
     ? "Troca não realizada ❌"
     : details?.match_status === "proposal"
     ? "Proposta pendente ⏳"
+    : details?.match_status === "completed"
+    ? "Troca concluída ✅"
+    : details?.match_status === "cancelled"
+    ? "Conversa encerrada 🔒"
     : null;
+
+  const chatLocked = details?.match_status === "completed" || details?.match_status === "cancelled";
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
@@ -381,6 +387,18 @@ const Conversa = () => {
         ) : (
           messages.map((msg) => {
             const isMine = msg.sender_id === user?.id;
+            const isSystem = msg.message_type === 'system';
+
+            if (isSystem) {
+              return (
+                <div key={msg.id} className="flex justify-center my-2">
+                  <div className="max-w-[85%] rounded-full bg-foreground/5 border border-foreground/10 px-4 py-2 text-center">
+                    <p className="text-xs text-foreground/70 leading-relaxed">{msg.content}</p>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={msg.id}
@@ -438,7 +456,20 @@ const Conversa = () => {
       />
 
       {/* Input area */}
-      {chatTermsAccepted !== false && (
+      {chatLocked && (
+        <div className="shrink-0 px-4 py-5 border-t border-foreground/5 bg-card/50 backdrop-blur-xl text-center">
+          <p className="text-sm font-semibold text-foreground/80">
+            {details?.match_status === "completed" ? "Troca concluída ✅" : "Conversa encerrada 🔒"}
+          </p>
+          <p className="text-xs text-foreground/50 mt-1">
+            {details?.match_status === "completed"
+              ? "Esta conversa foi finalizada. Avalie seu trocador na tela de Trocas."
+              : "Este item não está mais disponível."}
+          </p>
+        </div>
+      )}
+
+      {!chatLocked && chatTermsAccepted !== false && (
         <div className="shrink-0 px-4 pb-8 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl">
           {/* Attachment menu */}
           {showAttachMenu && (
