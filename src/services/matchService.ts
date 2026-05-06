@@ -23,6 +23,22 @@ export interface MatchWithDetails {
     location: string | null;
     item_images: { image_url: string; position: number }[];
   };
+  items_a?: Array<{
+    id: string;
+    name: string;
+    market_value: number;
+    category: string;
+    location: string | null;
+    item_images: { image_url: string; position: number }[];
+  }>;
+  items_b?: Array<{
+    id: string;
+    name: string;
+    market_value: number;
+    category: string;
+    location: string | null;
+    item_images: { image_url: string; position: number }[];
+  }>;
   other_user: {
     user_id: string;
     display_name: string | null;
