@@ -105,7 +105,7 @@ const Shorts = () => {
     try {
       await createProposal(
         user.id,
-        myItemId,
+        myItemIds,
         pendingTradeVideo.item.id,
         pendingTradeVideo.user_id
       );
