@@ -1,4 +1,4 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield } from "lucide-react";
+import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
@@ -6,11 +6,13 @@ import IconButton from "@/components/IconButton";
 import GlassCard from "@/components/GlassCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBlockedUsers, unblockUser } from "@/services/reportService";
+import { saveUserCategories } from "@/services/profileService";
+import { categories as ALL_CATEGORIES } from "@/constants/categories";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,11 +52,49 @@ const Configuracoes = () => {
   // Blocked users state
   const [blockedDialogOpen, setBlockedDialogOpen] = useState(false);
 
+  // Categories preferences state
+  const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [savingCategories, setSavingCategories] = useState(false);
+
   const { data: blockedUsers = [], refetch: refetchBlocked } = useQuery({
     queryKey: ["blocked-users", user?.id],
     queryFn: () => getBlockedUsers(user!.id),
     enabled: !!user && blockedDialogOpen,
   });
+
+  useEffect(() => {
+    if (!categoriesDialogOpen || !user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("user_categories")
+        .select("category")
+        .eq("user_id", user.id);
+      setSelectedCategories((data || []).map((r: any) => r.category));
+    })();
+  }, [categoriesDialogOpen, user]);
+
+  const toggleCategory = (label: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label]
+    );
+  };
+
+  const handleSaveCategories = async () => {
+    if (!user) return;
+    setSavingCategories(true);
+    try {
+      await saveUserCategories(user.id, selectedCategories);
+      queryClient.invalidateQueries({ queryKey: ["recommended-items"] });
+      queryClient.invalidateQueries({ queryKey: ["explore-items"] });
+      toast({ title: "Categorias atualizadas! ✨" });
+      setCategoriesDialogOpen(false);
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar categorias", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingCategories(false);
+    }
+  };
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -136,6 +176,12 @@ const Configuracoes = () => {
       label: "Usuários Bloqueados",
       description: "Gerenciar bloqueios",
       onClick: () => setBlockedDialogOpen(true),
+    },
+    {
+      icon: Sparkles,
+      label: "Categorias de Interesse",
+      description: "Editar o que aparece no Explorar",
+      onClick: () => setCategoriesDialogOpen(true),
     },
     {
       icon: FileText,
@@ -301,6 +347,52 @@ const Configuracoes = () => {
               ))
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Categories Preferences Dialog */}
+      <Dialog open={categoriesDialogOpen} onOpenChange={setCategoriesDialogOpen}>
+        <DialogContent className="bg-card border-foreground/10 max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Categorias de Interesse</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-1">
+            Escolha o que você quer ver no Explorar.
+          </p>
+          <div className="grid grid-cols-2 gap-2.5 overflow-y-auto no-scrollbar py-2">
+            {ALL_CATEGORIES.map((cat) => {
+              const isSelected = selectedCategories.includes(cat.label);
+              return (
+                <div
+                  key={cat.label}
+                  onClick={() => toggleCategory(cat.label)}
+                  className={`group relative rounded-2xl bg-background cursor-pointer transition-all active:scale-95 flex items-center gap-2 px-3 py-3 overflow-hidden ${
+                    isSelected
+                      ? "border border-primary ring-1 ring-primary/50"
+                      : "border border-foreground/5"
+                  }`}
+                >
+                  <span className="text-lg shrink-0">{cat.emoji}</span>
+                  <span className={`text-xs flex-1 min-w-0 truncate ${isSelected ? "font-semibold text-foreground" : "font-medium text-foreground/60"}`}>
+                    {cat.label}
+                  </span>
+                  {isSelected && (
+                    <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center shrink-0">
+                      <Check className="h-2.5 w-2.5 text-primary-foreground" strokeWidth={3} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button
+            onClick={handleSaveCategories}
+            disabled={savingCategories}
+            className="w-full py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm uppercase tracking-wider disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {savingCategories && <Loader2 className="h-4 w-4 animate-spin" />}
+            Salvar Preferências
+          </button>
         </DialogContent>
       </Dialog>
 
