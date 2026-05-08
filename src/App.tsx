@@ -13,6 +13,12 @@ import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import OfflineScreen from "@/components/OfflineScreen";
 import PageTransition from "@/components/PageTransition";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
+import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
+
+const GlobalAlerts = () => {
+  useGlobalRealtimeAlerts();
+  return null;
+};
 
 // Eager-load critical entry routes for instant first paint
 import Index from "./pages/Index";
@@ -189,6 +195,7 @@ const App = () => {
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <AuthRedirectHandler />
+              <GlobalAlerts />
               <AnimatedRoutes />
             </AuthProvider>
           </BrowserRouter>
