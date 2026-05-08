@@ -109,6 +109,9 @@ const Login = () => {
           <button
             type="button"
             onClick={async () => {
+              const params = new URLSearchParams(window.location.search);
+              const redirect = params.get("redirect") || "/explorar";
+              localStorage.setItem("postLoginRedirect", redirect);
               await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: { redirectTo: `${window.location.origin}/explorar` },
@@ -126,6 +129,9 @@ const Login = () => {
           <button
             type="button"
             onClick={async () => {
+              const params = new URLSearchParams(window.location.search);
+              const redirect = params.get("redirect") || "/explorar";
+              localStorage.setItem("postLoginRedirect", redirect);
               await supabase.auth.signInWithOAuth({
                 provider: "apple",
                 options: { redirectTo: `${window.location.origin}/explorar` },
