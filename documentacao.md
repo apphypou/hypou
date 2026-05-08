@@ -1129,3 +1129,18 @@ Nova rota pública dedicada à conversão para as lojas de aplicativo.
 - **Framer Motion**: parallax do mockup com `useScroll`/`useTransform`, stagger `whileInView`, microinterações `whileHover`/`whileTap` nas badges, contador animado (`animate` + `useMotionValue`), respeita `prefers-reduced-motion`.
 - **Plataforma-aware**: destaca App Store em iOS/desktop e Play Store em Android. Em desktop, exibe QR code (gerado via `api.qrserver.com`) apontando para `/baixar`.
 - **SEO**: `<title>` e `<meta name="description">` setados via `useEffect`, H1 com keyword "Hypou".
+
+
+## Realtime Sync (2026-05-08)
+
+Substituído modelo de "recarregar a página" por sincronização em tempo real via Supabase Realtime.
+
+- **Tabelas adicionadas à publicação `supabase_realtime`**: `notifications`, `conversations`, `ratings`, `items`, `item_images`, `item_videos`, `profiles`, `blocked_users` (já existiam: `matches`, `match_items`, `messages`). Todas com `REPLICA IDENTITY FULL` para payloads completos em UPDATE/DELETE.
+- **Hook genérico `useRealtimeInvalidate(subs, enabled)`** em `src/hooks/useRealtimeInvalidate.ts` — recebe lista de `{ table, filter?, event?, invalidateKeys }` e invalida queries do React Query quando rows mudam. Cleanup automático no unmount, canal único por hook.
+- **Aplicado em**:
+  - `useMatches` / `useMatch` — propostas e status atualizam sem reload (recebimento, aceite, conclusão, cancelamento).
+  - `useProfile` — perfil, lista de itens, contagem de propostas/trocas e rating médio sincronizam ao vivo.
+  - `useConversations` — nova conversa criada (proposta aceita) aparece imediatamente.
+  - `useNotifications` — já existia, mantido.
+  - `useMessages` — já existia via `subscribeToMessages`.
+- **Padrão**: hooks de dados invalidam queryKeys; componentes apenas consomem `useQuery`. Filtros usam sintaxe Postgres (`user_id=eq.${uid}`) para reduzir tráfego.
