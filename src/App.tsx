@@ -195,6 +195,7 @@ const App = () => {
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <AuthRedirectHandler />
+              <GlobalAlerts />
               <AnimatedRoutes />
             </AuthProvider>
           </BrowserRouter>
