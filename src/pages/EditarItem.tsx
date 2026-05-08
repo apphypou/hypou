@@ -427,7 +427,7 @@ const EditarItem = () => {
               </div>
               <div className="text-left">
                 <span className="text-sm font-bold text-primary block">Adicionar vídeo</span>
-                <span className="text-[11px] text-muted-foreground">Até 50MB · Aparece na aba Vitrine</span>
+                <span className="text-[11px] text-muted-foreground">Apenas 1 vídeo por item  ·  Até 50MB</span>
               </div>
             </button>
           )}
