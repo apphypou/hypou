@@ -12,6 +12,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
 import OfflineScreen from "@/components/OfflineScreen";
 import PageTransition from "@/components/PageTransition";
+import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 
 // Eager-load critical entry routes for instant first paint
 import Index from "./pages/Index";
@@ -187,6 +188,7 @@ const App = () => {
           {!isOnline && <OfflineScreen />}
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
+              <AuthRedirectHandler />
               <AnimatedRoutes />
             </AuthProvider>
           </BrowserRouter>
