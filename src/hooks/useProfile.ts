@@ -1,9 +1,36 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useRealtimeInvalidate } from "./useRealtimeInvalidate";
 
 export const useProfile = () => {
   const { user } = useAuth();
+
+  // Keep profile, my items, and stats in sync via realtime
+  useRealtimeInvalidate(
+    user
+      ? [
+          {
+            table: "profiles",
+            filter: `user_id=eq.${user.id}`,
+            invalidateKeys: [["profile", user.id]],
+          },
+          {
+            table: "items",
+            filter: `user_id=eq.${user.id}`,
+            invalidateKeys: [["my-items", user.id], ["profile-stats", user.id]],
+          },
+          { table: "item_images", invalidateKeys: [["my-items", user.id]] },
+          { table: "matches", invalidateKeys: [["profile-stats", user.id]] },
+          {
+            table: "ratings",
+            filter: `rated_id=eq.${user.id}`,
+            invalidateKeys: [["profile-stats", user.id]],
+          },
+        ]
+      : [],
+    !!user
+  );
 
   const profileQuery = useQuery({
     queryKey: ["profile", user?.id],
