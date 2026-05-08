@@ -346,7 +346,7 @@ const NovoItem = () => {
         {/* Video (optional) */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
-            Vídeo <span className="text-foreground/30 normal-case">(opcional — aparece na Vitrine)</span>
+            Vídeo <span className="text-foreground/30 normal-case">(opcional)</span>
           </label>
           {videoPreview ? (
             <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-primary/30">
