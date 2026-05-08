@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import {
   getConversations,
   getMessages,
@@ -14,6 +15,18 @@ import {
 
 export const useConversations = () => {
   const { user } = useAuth();
+
+  // Realtime: refresh list when new conversations are created or matches change status
+  useRealtimeInvalidate(
+    user
+      ? [
+          { table: "conversations", invalidateKeys: [["conversations", user.id]] },
+          { table: "matches", invalidateKeys: [["conversations", user.id]] },
+        ]
+      : [],
+    !!user
+  );
+
   return useQuery({
     queryKey: ["conversations", user?.id],
     queryFn: () => getConversations(user!.id),
