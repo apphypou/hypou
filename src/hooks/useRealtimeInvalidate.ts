@@ -40,8 +40,7 @@ export function useRealtimeInvalidate(subs: Subscription[], enabled = true) {
 
     subs.forEach((s) => {
       channel = channel.on(
-        // @ts-expect-error - supabase types for channel.on are loose
-        "postgres_changes",
+        "postgres_changes" as any,
         {
           event: s.event ?? "*",
           schema: "public",
