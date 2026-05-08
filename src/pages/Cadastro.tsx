@@ -157,6 +157,7 @@ const Cadastro = () => {
           <button
             type="button"
             onClick={async () => {
+              localStorage.setItem("postLoginRedirect", "/onboarding");
               await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: { redirectTo: `${window.location.origin}/onboarding` },
@@ -174,6 +175,7 @@ const Cadastro = () => {
           <button
             type="button"
             onClick={async () => {
+              localStorage.setItem("postLoginRedirect", "/onboarding");
               await supabase.auth.signInWithOAuth({
                 provider: "apple",
                 options: { redirectTo: `${window.location.origin}/onboarding` },
