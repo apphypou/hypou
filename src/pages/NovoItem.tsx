@@ -345,10 +345,9 @@ const NovoItem = () => {
 
         {/* Video (optional) */}
         <div className="mb-6">
-          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1 pl-1">
+          <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
             Vídeo do item <span className="text-foreground/30 normal-case">(opcional)</span>
           </label>
-          <p className="text-[11px] text-foreground/40 mb-3 pl-1 normal-case tracking-normal">Apenas 1 vídeo por item</p>
           {videoPreview ? (
             <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-primary/30">
               <video src={videoPreview} className="w-full h-full object-cover" controls preload="metadata" />
