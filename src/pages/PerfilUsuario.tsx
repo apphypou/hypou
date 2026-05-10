@@ -6,7 +6,7 @@ import { formatValue } from "@/lib/utils";
 import ScreenLayout from "@/components/ScreenLayout";
 import GlassCard from "@/components/GlassCard";
 import { SkeletonProfile, SkeletonItemCard } from "@/components/SkeletonCard";
-import { useUserRating } from "@/hooks/useRatings";
+import { useUserRating, useUserRatingsList } from "@/hooks/useRatings";
 import { useAuth } from "@/hooks/useAuth";
 import { blockUser } from "@/services/reportService";
 import { createReport } from "@/services/reportService";
