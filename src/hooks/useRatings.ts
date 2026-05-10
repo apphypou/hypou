@@ -11,8 +11,16 @@ export interface Rating {
   created_at: string;
 }
 
+export interface RatingItemInfo {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
+
 export interface RatingWithRater extends Rating {
   rater?: { display_name: string | null; avatar_url: string | null } | null;
+  rater_item?: RatingItemInfo | null;
+  rated_item?: RatingItemInfo | null;
 }
 
 export const useUserRating = (userId: string | undefined) => {
