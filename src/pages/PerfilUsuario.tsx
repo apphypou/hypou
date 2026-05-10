@@ -265,6 +265,76 @@ const PerfilUsuario = () => {
                 </div>
               )}
             </div>
+
+            {/* Comentários / Avaliações */}
+            <div className="mb-4 mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-foreground/90 uppercase tracking-widest">
+                  Comentários
+                </h3>
+                <span className="text-primary text-xs font-semibold">
+                  {ratingsList.length} avaliaç{ratingsList.length === 1 ? "ão" : "ões"}
+                </span>
+              </div>
+
+              {ratingsList.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <Star className="h-8 w-8 text-foreground/20 mb-2" />
+                  <p className="text-muted-foreground text-sm">Ainda sem comentários</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {ratingsList.map((r) => (
+                    <GlassCard key={r.id} className="p-4">
+                      <div className="flex items-start gap-3">
+                        {r.rater?.avatar_url ? (
+                          <img
+                            src={r.rater.avatar_url}
+                            alt={r.rater.display_name || ""}
+                            className="h-10 w-10 rounded-full object-cover border border-foreground/10 shrink-0"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-foreground/5 border border-foreground/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-foreground/40">
+                              {(r.rater?.display_name || "?")[0].toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-foreground font-semibold text-sm truncate">
+                              {r.rater?.display_name || "Usuário"}
+                            </p>
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <Star
+                                  key={n}
+                                  className={`h-3.5 w-3.5 ${
+                                    n <= r.score ? "text-primary fill-primary" : "text-foreground/20"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-foreground/40 text-[10px] mt-0.5">
+                            {new Date(r.created_at).toLocaleDateString("pt-BR", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                          {r.comment && (
+                            <p className="text-foreground/80 text-sm mt-2 leading-relaxed">
+                              {r.comment}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </GlassCard>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
       </main>
