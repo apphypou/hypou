@@ -11,8 +11,16 @@ export interface Rating {
   created_at: string;
 }
 
+export interface RatingItemInfo {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
+
 export interface RatingWithRater extends Rating {
   rater?: { display_name: string | null; avatar_url: string | null } | null;
+  rater_item?: RatingItemInfo | null;
+  rated_item?: RatingItemInfo | null;
 }
 
 export const useUserRating = (userId: string | undefined) => {
@@ -44,6 +52,7 @@ export const useUserRatingsList = (userId: string | undefined) => {
       if (error) throw error;
       const ratings = (data || []) as Rating[];
       const raterIds = Array.from(new Set(ratings.map((r) => r.rater_id)));
+      const matchIds = Array.from(new Set(ratings.map((r) => r.match_id)));
       const profilesMap: Record<string, { display_name: string | null; avatar_url: string | null }> = {};
       if (raterIds.length > 0) {
         const { data: profs } = await supabase
@@ -54,7 +63,50 @@ export const useUserRatingsList = (userId: string | undefined) => {
           profilesMap[p.user_id] = { display_name: p.display_name, avatar_url: p.avatar_url };
         });
       }
-      return ratings.map((r) => ({ ...r, rater: profilesMap[r.rater_id] || null })) as RatingWithRater[];
+
+      // Fetch items per match for both sides
+      const matchItemsMap: Record<string, { raterItem: RatingItemInfo | null; ratedItem: RatingItemInfo | null }> = {};
+      if (matchIds.length > 0) {
+        const { data: matchesData } = await supabase
+          .from("matches")
+          .select("id, user_a_id, user_b_id, item_a_id, item_b_id")
+          .in("id", matchIds);
+
+        const itemIds = Array.from(
+          new Set(
+            (matchesData || []).flatMap((m: any) => [m.item_a_id, m.item_b_id]).filter(Boolean),
+          ),
+        );
+        const itemsMap: Record<string, RatingItemInfo> = {};
+        if (itemIds.length > 0) {
+          const { data: itemsData } = await supabase
+            .from("items")
+            .select("id, name, item_images (image_url, position)")
+            .in("id", itemIds);
+          (itemsData as any[] | null)?.forEach((it) => {
+            const sorted = (it.item_images || []).slice().sort((a: any, b: any) => a.position - b.position);
+            itemsMap[it.id] = { id: it.id, name: it.name, image_url: sorted[0]?.image_url || null };
+          });
+        }
+
+        ratings.forEach((r) => {
+          const match = (matchesData as any[] | null)?.find((m) => m.id === r.match_id);
+          if (!match) return;
+          const raterItemId = match.user_a_id === r.rater_id ? match.item_a_id : match.item_b_id;
+          const ratedItemId = match.user_a_id === r.rated_id ? match.item_a_id : match.item_b_id;
+          matchItemsMap[r.id] = {
+            raterItem: itemsMap[raterItemId] || null,
+            ratedItem: itemsMap[ratedItemId] || null,
+          };
+        });
+      }
+
+      return ratings.map((r) => ({
+        ...r,
+        rater: profilesMap[r.rater_id] || null,
+        rater_item: matchItemsMap[r.id]?.raterItem || null,
+        rated_item: matchItemsMap[r.id]?.ratedItem || null,
+      })) as RatingWithRater[];
     },
     enabled: !!userId,
   });
