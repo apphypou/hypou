@@ -490,7 +490,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const shareUrl = `https://hypou.lovable.app/explorar`;
+                const shareUrl = `${window.location.origin}/item/${item.id}`;
                 const shareData = {
                   title: `${item.name} — Hypou`,
                   text: `Olha esse item no Hypou: ${item.name} por ${formatValue(item.market_value)}! Quer trocar?`,

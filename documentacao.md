@@ -1144,3 +1144,9 @@ Substituído modelo de "recarregar a página" por sincronização em tempo real 
   - `useNotifications` — já existia, mantido.
   - `useMessages` — já existia via `subscribeToMessages`.
 - **Padrão**: hooks de dados invalidam queryKeys; componentes apenas consomem `useQuery`. Filtros usam sintaxe Postgres (`user_id=eq.${uid}`) para reduzir tráfego.
+
+## Deep link de item compartilhado (rota /item/:itemId)
+- Nova rota pública `src/pages/Item.tsx` exibe um anúncio específico (imagens, preço, descrição, dono e CTAs) acessível sem login.
+- `SwipeCard` agora compartilha `${origin}/item/${item.id}` em vez de `/explorar`, levando quem recebe direto ao anúncio.
+- Usa `public.items` (RLS permite leitura de itens `status='active'`) e `public_profiles` para dados do dono.
+- CTA inferior leva usuários logados ao `/explorar` e não-logados ao `/cadastro`.
