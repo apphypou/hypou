@@ -328,6 +328,27 @@ const PerfilUsuario = () => {
                               {r.comment}
                             </p>
                           )}
+                          {(r.rater_item || r.rated_item) && (
+                            <div className="flex items-center gap-2 mt-3 p-2 rounded-xl bg-foreground/5 border border-foreground/10">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                {r.rater_item?.image_url ? (
+                                  <img src={r.rater_item.image_url} alt={r.rater_item.name} className="h-8 w-8 rounded-md object-cover shrink-0" />
+                                ) : (
+                                  <div className="h-8 w-8 rounded-md bg-foreground/10 shrink-0" />
+                                )}
+                                <span className="text-foreground/70 text-xs truncate">{r.rater_item?.name || "Item"}</span>
+                              </div>
+                              <ArrowLeftRight className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                                <span className="text-foreground/70 text-xs truncate text-right">{r.rated_item?.name || "Item"}</span>
+                                {r.rated_item?.image_url ? (
+                                  <img src={r.rated_item.image_url} alt={r.rated_item.name} className="h-8 w-8 rounded-md object-cover shrink-0" />
+                                ) : (
+                                  <div className="h-8 w-8 rounded-md bg-foreground/10 shrink-0" />
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </GlassCard>
