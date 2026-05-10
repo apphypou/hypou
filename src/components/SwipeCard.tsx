@@ -438,7 +438,15 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
         {/* Owner mini-profile — top left with trust badge */}
         {ownerProfile && !expanded && (
-          <div className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+          <button
+            type="button"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/usuario/${ownerProfile.user_id}`);
+            }}
+            className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
+          >
             {ownerProfile.avatar_url ? (
               <img
                 src={ownerProfile.avatar_url}
@@ -459,7 +467,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 <span className="text-yellow-400 text-[10px] font-bold">{rating.average}</span>
               </div>
             )}
-          </div>
+          </button>
         )}
 
 
