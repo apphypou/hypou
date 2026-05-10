@@ -107,6 +107,7 @@ const AnimatedRoutes = () => {
 
           {/* Protected routes */}
           <Route path="/explorar" element={<PageTransition><Explorar /></PageTransition>} />
+          <Route path="/item/:itemId" element={<PageTransition><Item /></PageTransition>} />
           <Route path="/busca" element={
             <ProtectedRoute><PageTransition><Busca /></PageTransition></ProtectedRoute>
           } />
