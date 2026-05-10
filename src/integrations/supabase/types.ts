@@ -796,6 +796,26 @@ export type Database = {
         Args: { p_my_item_ids: string[]; p_their_item_id: string }
         Returns: string
       }
+      get_user_ratings_with_items: {
+        Args: { _user_id: string }
+        Returns: {
+          comment: string
+          created_at: string
+          id: string
+          match_id: string
+          rated_id: string
+          rated_item_id: string
+          rated_item_image: string
+          rated_item_name: string
+          rater_avatar_url: string
+          rater_display_name: string
+          rater_id: string
+          rater_item_id: string
+          rater_item_image: string
+          rater_item_name: string
+          score: number
+        }[]
+      }
       get_waitlist_position: { Args: never; Returns: number }
       has_role: {
         Args: {
