@@ -45,6 +45,7 @@ const PerfilUsuario = lazy(() => import("./pages/PerfilUsuario"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ListaEspera = lazy(() => import("./pages/ListaEspera"));
 const Baixar = lazy(() => import("./pages/Baixar"));
+const Item = lazy(() => import("./pages/Item"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
