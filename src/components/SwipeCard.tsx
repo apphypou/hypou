@@ -195,6 +195,7 @@ const CardDetailContent = ({ item }: { item: any }) => {
 
 const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
   ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby, matchedOwnItem }, ref) => {
+    const navigate = useNavigate();
     const x = useMotionValue(0);
     const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
