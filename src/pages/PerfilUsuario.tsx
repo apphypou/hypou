@@ -40,6 +40,7 @@ const PerfilUsuario = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: rating } = useUserRating(userId);
+  const { data: ratingsList = [] } = useUserRatingsList(userId);
   const { data: completedTrades = 0 } = useQuery({
     queryKey: ["user-completed-trades", userId],
     queryFn: async () => {
