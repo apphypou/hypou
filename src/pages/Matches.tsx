@@ -297,7 +297,14 @@ const Matches = () => {
 
                     {/* Owner */}
                     <div className="mt-3 pt-3 border-t border-foreground/8 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/usuario/${match.other_user.user_id}`);
+                        }}
+                        className="flex items-center gap-2 hover:opacity-80 active:scale-95 transition-all"
+                      >
                         {match.other_user.avatar_url ? (
                           <img
                             alt={match.other_user.display_name || "Usuário"}
@@ -309,10 +316,10 @@ const Matches = () => {
                             {(match.other_user.display_name || "?")[0]}
                           </div>
                         )}
-                        <span className="text-xs font-medium text-foreground/70">
+                        <span className="text-xs font-medium text-foreground/70 underline-offset-2 hover:underline">
                           {match.other_user.display_name || "Usuário"}
                         </span>
-                      </div>
+                      </button>
                       {(match.status === "accepted" || match.status === "completed") && (
                         <button
                           onClick={(e) => {
