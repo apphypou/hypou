@@ -1157,3 +1157,11 @@ Substituído modelo de "recarregar a página" por sincronização em tempo real 
 - Arraste à esquerda (Flopou): ícone `Repeat` em `hsl(var(--danger))`.
 - Arraste à direita (Hypou): ícone `Handshake` em `hsl(var(--success))`.
 - Lógica de drag, thresholds e callbacks `onSwipe` permanecem inalterados.
+
+## Hardening de segurança (RLS, triggers, edge function)
+- **matches** — trigger `trg_matches_update_guard` impede alterar identidade (`user_a_id`, `user_b_id`, `item_a_id`, `item_b_id`, `created_at`), só o participante correspondente pode mudar seu próprio `confirmed_by_*`, status `completed` exige ambas confirmações e estados terminais (`completed`/`cancelled`) são imutáveis. Trigger `trg_matches_auto_complete` faz a transição para `completed` automaticamente ao confirmar dos dois lados. Política UPDATE com `WITH CHECK` espelhando o `USING`.
+- **messages** — trigger `trg_messages_update_guard` torna `id`, `conversation_id`, `sender_id` e `created_at` imutáveis; apenas o remetente pode editar `content`, `media_url`, `message_type`; apenas o destinatário pode mexer em `read_at`. Política UPDATE com `WITH CHECK`.
+- **profiles** — trigger `trg_profiles_update_guard` bloqueia alteração de `subscription_tier` e `subscription_expires_at` pelo próprio usuário (admins fazem bypass via `has_role`). Política UPDATE com `WITH CHECK`.
+- **ratings** — adicionada política UPDATE explícita: `USING/WITH CHECK (auth.uid() = rater_id)`.
+- **storage.objects** — adicionadas políticas UPDATE em `chat-media` e `item-videos` restritas ao dono do path (`(storage.foldername(name))[1] = auth.uid()`).
+- **edge function `validate-item-price`** — exige `Authorization: Bearer <jwt>` válido (via `supabase.auth.getClaims`), retorna 401 sem token e usa o `userId` autenticado como chave do rate limit (5 req/min), eliminando o drain anônimo da API.
