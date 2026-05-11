@@ -488,7 +488,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
         {/* Share — top right */}
         {!expanded && (
-          <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
+          <div className="absolute top-12 right-4 z-30 flex items-center gap-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
