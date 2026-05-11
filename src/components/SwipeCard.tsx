@@ -472,21 +472,23 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         )}
 
 
-        {/* Slide dots + share — top right */}
+        {/* Slide dots — top center (above owner pill, never overlaps name) */}
+        {!expanded && totalSlides > 1 && (
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+            {Array.from({ length: totalSlides }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full transition-all duration-200 ${
+                  i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Share — top right */}
         {!expanded && (
           <div className="absolute top-5 right-5 z-30 flex items-center gap-2">
-            {totalSlides > 1 && (
-              <div className="flex items-center gap-1.5">
-                {Array.from({ length: totalSlides }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-1.5 rounded-full transition-all duration-200 ${
-                      i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
-                    }`}
-                  />
-                ))}
-              </div>
-            )}
             <button
               onClick={(e) => {
                 e.stopPropagation();
