@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import { type MotionValue, useMotionValueEvent } from "framer-motion";
+import { Repeat, Handshake } from "lucide-react";
 
 interface SwipeToggleProps {
   onSwipe: (direction: "like" | "dislike") => void;
