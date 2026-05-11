@@ -47,7 +47,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
               onClick={() => navigate(item.path)}
               onPointerEnter={() => prefetch(item.path)}
               onTouchStart={() => prefetch(item.path)}
-              className="relative flex items-center justify-center rounded-full h-12 flex-1 z-10"
+              className="relative flex flex-col items-center justify-center gap-0.5 rounded-full h-14 flex-1 z-10"
             >
               {isActive && (
                 <motion.div
@@ -61,10 +61,17 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
                   isActive ? "text-background" : "text-muted-foreground"
                 }`}
               />
+              <span
+                className={`relative z-10 text-[10px] font-semibold leading-none transition-colors duration-200 ${
+                  isActive ? "text-background" : "text-muted-foreground"
+                }`}
+              >
+                {item.label}
+              </span>
               {item.unreadCount && item.unreadCount > 0 ? (
                 <span
                   aria-label={`${item.unreadCount} novas mensagens`}
-                  className="absolute top-0.5 right-[calc(50%-18px)] min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none flex items-center justify-center border-2 border-background z-20"
+                  className="absolute top-1 right-[calc(50%-18px)] min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none flex items-center justify-center border-2 border-background z-20"
                 >
                   {formatBadge(item.unreadCount)}
                 </span>
