@@ -178,7 +178,7 @@ export const uploadChatMedia = async (
   const mediaType = type === 'text' ? 'image' : type as 'image' | 'video' | 'audio';
   const validationError = validateChatMedia(file, mediaType);
   if (validationError) throw new Error(validationError);
-  const finalFile = mediaType === 'image' ? await ensureWebCompatibleImage(file) : file;
+  const finalFile = mediaType === 'image' ? await prepareImageForUpload(file) : file;
   const ext = finalFile.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
   const path = `${userId}/${Date.now()}.${ext}`;
 
