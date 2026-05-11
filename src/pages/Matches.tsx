@@ -373,7 +373,11 @@ const Matches = () => {
               {/* Content - overlaps image */}
               <div className="px-6 -mt-12 relative z-10">
                 {/* Other user badge */}
-                <div className="flex items-center gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/usuario/${selectedMatch.other_user.user_id}`)}
+                  className="flex items-center gap-2 mb-3 hover:opacity-80 transition-opacity active:scale-95"
+                >
                   {selectedMatch.other_user.avatar_url ? (
                     <img
                       src={selectedMatch.other_user.avatar_url}
@@ -385,10 +389,10 @@ const Matches = () => {
                       {(selectedMatch.other_user.display_name || "?")[0]}
                     </div>
                   )}
-                  <span className="text-sm font-semibold text-foreground/80">
+                  <span className="text-sm font-semibold text-foreground/80 underline-offset-2 hover:underline">
                     {selectedMatch.other_user.display_name || "Usuário"}
                   </span>
-                </div>
+                </button>
 
                 {/* Item name + value */}
                 <h2 className="text-2xl font-extrabold text-foreground tracking-tight mb-1 break-words">
