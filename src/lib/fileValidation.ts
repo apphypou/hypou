@@ -81,8 +81,9 @@ export const ensureWebCompatibleImage = async (file: File): Promise<File> => {
  * Skips small images (<400KB) and unsupported types. Returns original on failure.
  * Cuts upload weight by ~50–70% for typical phone photos.
  */
-const COMPRESS_MIN_BYTES = 400 * 1024;
-const COMPRESS_MAX_DIM = 1600;
+const COMPRESS_MIN_BYTES = 150 * 1024;
+const COMPRESS_MAX_DIM = 1280;
+const COMPRESS_QUALITY = 0.8;
 
 export const compressImage = async (file: File): Promise<File> => {
   if (typeof window === 'undefined' || typeof document === 'undefined') return file;
@@ -103,7 +104,6 @@ export const compressImage = async (file: File): Promise<File> => {
       i.src = dataUrl;
     });
     const ratio = Math.min(1, COMPRESS_MAX_DIM / Math.max(img.width, img.height));
-    if (ratio === 1 && file.type === 'image/jpeg') return file;
     const w = Math.round(img.width * ratio);
     const h = Math.round(img.height * ratio);
     const canvas = document.createElement('canvas');
@@ -111,9 +111,12 @@ export const compressImage = async (file: File): Promise<File> => {
     canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) return file;
+    // White background to avoid black PNG transparency when re-encoding to JPEG
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
     const blob: Blob | null = await new Promise((resolve) =>
-      canvas.toBlob(resolve, 'image/jpeg', 0.82)
+      canvas.toBlob(resolve, 'image/jpeg', COMPRESS_QUALITY)
     );
     if (!blob || blob.size >= file.size) return file;
     const newName = file.name.replace(/\.(png|webp|jpg|jpeg)$/i, '.jpg');
