@@ -1150,3 +1150,10 @@ Substituído modelo de "recarregar a página" por sincronização em tempo real 
 - `SwipeCard` agora compartilha `${origin}/item/${item.id}` em vez de `/explorar`, levando quem recebe direto ao anúncio.
 - Usa `public.items` (RLS permite leitura de itens `status='active'`) e `public_profiles` para dados do dono.
 - CTA inferior leva usuários logados ao `/explorar` e não-logados ao `/cadastro`.
+
+## SwipeToggle — iconografia da marca (Explorar)
+- Substituídos os chevrons neutros e os ícones genéricos X/check do `src/components/SwipeToggle.tsx` por ícones Lucide alinhados à voz da marca.
+- Estado neutro: knob limpo, sem indicadores direcionais.
+- Arraste à esquerda (Flopou): ícone `Repeat` em `hsl(var(--danger))`.
+- Arraste à direita (Hypou): ícone `Handshake` em `hsl(var(--success))`.
+- Lógica de drag, thresholds e callbacks `onSwipe` permanecem inalterados.
