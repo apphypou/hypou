@@ -1,5 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from "react";
 import { type MotionValue, useMotionValueEvent } from "framer-motion";
+import { Repeat, Handshake } from "lucide-react";
 
 interface SwipeToggleProps {
   onSwipe: (direction: "like" | "dislike") => void;
@@ -112,7 +113,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
 
     return (
       <div
-        className="select-none rounded-full"
+        className="select-none rounded-full relative"
         style={{ touchAction: "none", cursor: disabled ? "default" : "grab" }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -176,50 +177,48 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
               style={{ transition: transitionStyle }}
             />
 
-            {/* Neutral directional chevrons */}
-            <g opacity={neutralOpacity * 0.5} style={{ transition: transitionStyle }}>
-              <path
-                d="M 39 44 L 34 50 L 39 56"
-                stroke="hsl(var(--primary))"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <path
-                d="M 61 44 L 66 50 L 61 56"
-                stroke="hsl(var(--primary))"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </g>
-
-            {/* X icon (appears on left drag) */}
-            <g opacity={leftProgress} style={{ transition: transitionStyle }}>
-              <path
-                d="M 38 38 L 62 62 M 62 38 L 38 62"
-                stroke="#E75545"
-                strokeWidth="10"
-                strokeLinecap="round"
-              />
-            </g>
-
-            {/* Check icon (appears on right drag) */}
-            <g opacity={rightProgress} style={{ transition: transitionStyle }}>
-              <path
-                d="M 38 52 L 46 60 L 62 40"
-                stroke="#4BCC6B"
-                strokeWidth="10"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </g>
           </g>
         </g>
       </svg>
+
+      {/* Lucide icon overlay — Repeat (Flopou) e Handshake (Hypou) */}
+      {(() => {
+        const iconSize = 26;
+        const svgWidth = 140;
+        const centerX = (50 + position) * (svgWidth / 180);
+        const topPx = 39 - iconSize / 2;
+        const leftPx = centerX - iconSize / 2;
+        return (
+          <>
+            <div
+              className="pointer-events-none absolute"
+              style={{
+                top: topPx,
+                left: leftPx,
+                opacity: leftProgress,
+                transform: `scale(${knobScale})`,
+                transition: transitionStyle,
+                color: "hsl(var(--danger))",
+              }}
+            >
+              <Repeat size={iconSize} strokeWidth={2.5} />
+            </div>
+            <div
+              className="pointer-events-none absolute"
+              style={{
+                top: topPx,
+                left: leftPx,
+                opacity: rightProgress,
+                transform: `scale(${knobScale})`,
+                transition: transitionStyle,
+                color: "hsl(var(--success))",
+              }}
+            >
+              <Handshake size={iconSize} strokeWidth={2.5} />
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 };
