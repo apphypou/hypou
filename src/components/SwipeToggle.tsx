@@ -181,41 +181,71 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
         </g>
       </svg>
 
-      {/* Lucide icon overlay — Repeat (Flopou) e Handshake (Hypou) */}
+      {/* Botões fixos — Flopou (Repeat) e Hypou (Handshake) sempre visíveis e clicáveis */}
       {(() => {
-        const iconSize = 26;
+        const iconSize = 24;
         const svgWidth = 140;
-        const centerX = (50 + position) * (svgWidth / 180);
+        const leftCenter = 50 * (svgWidth / 180); // posição 0
+        const rightCenter = 130 * (svgWidth / 180); // posição MAX_DRAG
         const topPx = 39 - iconSize / 2;
-        const leftPx = centerX - iconSize / 2;
+        const baseOpacity = 0.55;
+        const leftOpacity = Math.min(1, baseOpacity + leftProgress * 0.45);
+        const rightOpacity = Math.min(1, baseOpacity + rightProgress * 0.45);
+        const leftScaleBtn = 1 + leftProgress * 0.15;
+        const rightScaleBtn = 1 + rightProgress * 0.15;
+        const stopDrag = (e: React.PointerEvent) => e.stopPropagation();
         return (
           <>
-            <div
-              className="pointer-events-none absolute"
+            <button
+              type="button"
+              aria-label="Flopou"
+              disabled={disabled}
+              onPointerDown={stopDrag}
+              onPointerMove={stopDrag}
+              onPointerUp={stopDrag}
+              onClick={(e) => { e.stopPropagation(); if (!disabled) onSwipe("dislike"); }}
+              className="absolute flex items-center justify-center active:scale-90"
               style={{
-                top: topPx,
-                left: leftPx,
-                opacity: leftProgress,
-                transform: `scale(${knobScale})`,
-                transition: transitionStyle,
+                top: topPx - 4,
+                left: leftCenter - iconSize / 2 - 4,
+                width: iconSize + 8,
+                height: iconSize + 8,
+                opacity: leftOpacity,
+                transform: `scale(${leftScaleBtn})`,
+                transition: "opacity 0.2s, transform 0.2s",
                 color: "hsl(var(--danger))",
+                background: "transparent",
+                border: "none",
+                cursor: disabled ? "default" : "pointer",
               }}
             >
               <Repeat size={iconSize} strokeWidth={2.5} />
-            </div>
-            <div
-              className="pointer-events-none absolute"
+            </button>
+            <button
+              type="button"
+              aria-label="Hypou"
+              disabled={disabled}
+              onPointerDown={stopDrag}
+              onPointerMove={stopDrag}
+              onPointerUp={stopDrag}
+              onClick={(e) => { e.stopPropagation(); if (!disabled) onSwipe("like"); }}
+              className="absolute flex items-center justify-center active:scale-90"
               style={{
-                top: topPx,
-                left: leftPx,
-                opacity: rightProgress,
-                transform: `scale(${knobScale})`,
-                transition: transitionStyle,
+                top: topPx - 4,
+                left: rightCenter - iconSize / 2 - 4,
+                width: iconSize + 8,
+                height: iconSize + 8,
+                opacity: rightOpacity,
+                transform: `scale(${rightScaleBtn})`,
+                transition: "opacity 0.2s, transform 0.2s",
                 color: "hsl(var(--success))",
+                background: "transparent",
+                border: "none",
+                cursor: disabled ? "default" : "pointer",
               }}
             >
               <Handshake size={iconSize} strokeWidth={2.5} />
-            </div>
+            </button>
           </>
         );
       })()}
