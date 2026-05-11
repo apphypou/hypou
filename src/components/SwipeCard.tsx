@@ -446,25 +446,25 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               e.stopPropagation();
               navigate(`/usuario/${ownerProfile.user_id}`);
             }}
-            className="absolute top-5 left-5 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
+            className="absolute top-12 left-4 z-30 flex items-center gap-1.5 max-w-[55%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
           >
             {ownerProfile.avatar_url ? (
               <img
                 src={ownerProfile.avatar_url}
                 alt=""
-                className="h-6 w-6 rounded-full object-cover border border-white/30"
+                className="h-5 w-5 rounded-full object-cover border border-white/30 shrink-0"
               />
             ) : (
-              <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] font-bold">
+              <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
                 {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
               </div>
             )}
-            <span className="text-white text-xs font-semibold drop-shadow-md">
+            <span className="text-white text-[11px] font-semibold drop-shadow-md truncate min-w-0">
               {ownerProfile.display_name || "Usuário"}
             </span>
             {rating && (
-              <div className="flex items-center gap-0.5">
-                <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
                 <span className="text-yellow-400 text-[10px] font-bold">{rating.average}</span>
               </div>
             )}
@@ -472,9 +472,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         )}
 
 
-        {/* Slide dots — top center (above owner pill, never overlaps name) */}
+        {/* Slide dots — top center */}
         {!expanded && totalSlides > 1 && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
             {Array.from({ length: totalSlides }).map((_, i) => (
               <div
                 key={i}
