@@ -113,7 +113,7 @@ const SwipeToggle = ({ onSwipe, disabled, dragProgress }: SwipeToggleProps) => {
 
     return (
       <div
-        className="select-none rounded-full"
+        className="select-none rounded-full relative"
         style={{ touchAction: "none", cursor: disabled ? "default" : "grab" }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
