@@ -407,7 +407,7 @@ const Conversa = () => {
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-3 ${
                     isMine
-                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      ? "bg-primary/70 text-primary-foreground rounded-br-md"
                       : "bg-card border border-foreground/5 text-foreground rounded-bl-md"
                   }`}
                 >
