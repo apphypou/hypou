@@ -1,29 +1,39 @@
 ## Objetivo
-Substituir, no toggle de swipe abaixo do card em Explorar, os ícones genéricos (chevrons neutros + X/check no arraste) por uma linguagem visual própria do Hypou:
 
-- Esquerda (Flopou / rejeitar): ícone **Repeat** (Lucide) — devolve o item pra pilha.
-- Direita (Hypou / curtir): ícone **Handshake** (Lucide) — aperto de mão da marca.
-- **Remover** os chevrons neutros do estado de repouso, deixando o knob limpo.
+Refinar o card do `Explorar` para parecer mais próximo da referência (Yasmin Cardoso): remover o "card branco" de informações e deixar texto flutuando sobre um gradiente, e substituir o `SwipeToggle` por dois botões circulares Liquid Glass (Flopou / Hypou).
 
-## Onde mexer
-Arquivo único: `src/components/SwipeToggle.tsx`
+## Mudanças visuais
 
-1. Importar `Repeat` e `Handshake` de `lucide-react` (ou renderizar SVG inline pra continuar dentro do `<svg>` atual).
-2. Remover o bloco de chevrons neutros (o `<g opacity={neutralOpacity * 0.5}>` com os dois `path` de seta).
-3. Substituir o `<g opacity={leftProgress}>` (X vermelho) por um ícone `Repeat` em vermelho/`--danger`, mesmo tamanho visual (~24px dentro do knob de raio 38).
-4. Substituir o `<g opacity={rightProgress}>` (check verde) por um ícone `Handshake` em verde/`--success`.
-5. Centralizar os ícones no knob (translate para o centro 50,50) e manter as transições de opacidade já existentes.
-6. Atualizar a cor do stroke do knob: como o estado neutro fica sem ícone, manter o anel ciano `hsl(var(--primary))` como única dica visual de "arraste pra qualquer lado".
+### 1. Painel de informações — gradiente em vez de card
 
-## Detalhes técnicos
-- Para usar ícones Lucide dentro de SVG, a forma mais simples é renderizar como overlay HTML absoluto sobre o `<svg>` em vez de tentar embutir. Plano: envolver o `<svg>` em `<div className="relative">` e posicionar dois `<Repeat />` e `<Handshake />` absolutos sobre o knob, controlando opacidade pelos mesmos `leftProgress`/`rightProgress` e `translateX(position)`.
-- Mantém toda a lógica de drag, snap, haptics e callback `onSwipe` intactos — mudança é puramente visual.
-- Tokens: usar `text-[hsl(var(--danger))]` e `text-[hsl(var(--success))]` (já existem no design system) em vez dos hex `#E75545` / `#4BCC6B`.
+Em `src/components/SwipeCard.tsx` (bloco "COMPACT INFO PANEL", linhas ~585-648):
 
-## Não muda
-- Comportamento de arraste, thresholds (`MAX_DRAG`, `SNAP_THRESHOLD`).
-- Halos radiais vermelho/verde de fundo.
-- Testes em `src/test/components/SwipeToggle.test.tsx` (são de lógica pura, seguem válidos).
+- Remover o wrapper `rounded-2xl bg-white/15 backdrop-blur-2xl border ...`.
+- O conteúdo (categoria, condição, local, nome, preço, "Compatível com…") fica direto sobre a imagem.
+- Aumentar a altura do gradient de baixo (já existente em ~linha 518) para ~`h-72`, com paradas mais densas no fim:  
+  `bg-gradient-to-t from-black/85 via-black/55 via-40% to-transparent`.
+- Texto: nome em `text-2xl font-extrabold`, preço em chip discreto (sem fundo), categoria/condição/local viram chips Liquid Glass pequenos (`rounded-full bg-white/10 backdrop-blur-md border border-white/15`).
+- Manter `cursor-pointer` + `onClick={toggleExpand}` no container, com seta `ChevronUp` discreta no canto direito.
 
-## Documentação
-Atualizar `documentacao.md` registrando que a iconografia do SwipeToggle passou a usar Repeat (Flopou) e Handshake (Hypou), alinhada à voz da marca.
+### 2. Botões Hypou / Flopou — Liquid Glass circulares
+
+Em `src/pages/Explorar.tsx` (linhas ~374-387):
+
+- Remover o `SwipeToggle`.
+- Inserir duas botões circulares fixas no rodapé (logo acima do `BottomNav`), centralizadas com `gap-6`:
+  - **Flopou** (esquerda): `h-16 w-16 rounded-full bg-white/10 backdrop-blur-2xl border border-white/15` com ícone `X` (lucide) em `text-danger`.
+  - **Hypou** (direita): mesmo estilo, ícone `Heart` em `text-success` (ou primary cyan), com `neon-glow` sutil.
+- Ambos chamam `cardRef.current?.triggerSwipe("dislike" | "like")`, reaproveitando o handler já existente.
+- Pressionar: `active:scale-90 transition-transform`. Desabilitar quando `swipingRef.current`.
+
+### 3. Ajustes finos
+
+- Aumentar `pb-36` da `main` para `pb-40` no Explorar para dar respiro aos novos botões.
+- Garantir contraste do texto sobre imagens claras com `drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]` no nome e preço.
+- Remover o `border` translúcido que existia no card antigo para evitar "moldura" visual.
+
+## Fora de escopo
+
+- Lógica de swipe por gesto continua funcionando normalmente.
+- Tela expandida (overlay com detalhes completos) permanece igual.
+- Tema, cores semânticas e tokens não mudam.

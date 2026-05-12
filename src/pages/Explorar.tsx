@@ -1,4 +1,4 @@
-import { PlusCircle, Share2 } from "lucide-react";
+import { PlusCircle, Share2, X, Heart } from "lucide-react";
 import emptyChestImg from "@/assets/empty-chest.png";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import NotificationBell from "@/components/NotificationBell";
@@ -247,7 +247,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-36 pt-1 z-10" style={{ perspective: "1200px" }}>
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-40 pt-1 z-10" style={{ perspective: "1200px" }}>
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
@@ -371,18 +371,36 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Toggle Switch */}
+      {/* Hypou / Flopou — circular Liquid Glass buttons */}
       {currentItem && !isLoading && !feedEnded && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center py-3"
+          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-6 py-3"
           style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 4.5rem)" }}
         >
-          <SwipeToggle
-            key={`toggle-${epoch}`}
-            onSwipe={handleSwipeComplete}
-            dragProgress={dragDirectionValue}
+          <button
+            type="button"
+            aria-label="Flopou"
             disabled={swipingRef.current}
-          />
+            onClick={() => {
+              haptic("light");
+              cardRef.current?.triggerSwipe("dislike");
+            }}
+            className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-2xl border border-white/15 flex items-center justify-center text-danger active:scale-90 transition-transform shadow-[0_8px_24px_rgba(0,0,0,0.25)] disabled:opacity-50"
+          >
+            <X className="h-7 w-7" strokeWidth={3} />
+          </button>
+          <button
+            type="button"
+            aria-label="Hypou"
+            disabled={swipingRef.current}
+            onClick={() => {
+              haptic("light");
+              cardRef.current?.triggerSwipe("like");
+            }}
+            className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-2xl border border-white/15 flex items-center justify-center text-primary active:scale-90 transition-transform shadow-[0_8px_24px_rgba(0,0,0,0.25)] neon-glow disabled:opacity-50"
+          >
+            <Heart className="h-7 w-7 fill-current" strokeWidth={2} />
+          </button>
         </div>
       )}
 
