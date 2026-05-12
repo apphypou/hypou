@@ -506,13 +506,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </div>
         )}
 
-        {/* Top gradient for readability */}
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
+        {/* Top gradient — só pra legibilidade do chrome */}
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none z-20" />
 
-        {/* Bottom gradient — extended to leave room for floating action buttons */}
-        <div className={`absolute inset-x-0 bottom-0 pointer-events-none z-20 transition-all duration-200 ${
-          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-[26rem] bg-gradient-to-t from-black/95 via-black/70 via-30% to-transparent"
-        }`} />
+        {/* Bottom gradient — sutil, complementa o painel Liquid Glass */}
+        {expanded && (
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" />
+        )}
 
         {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
         <AnimatePresence>
