@@ -425,7 +425,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               <img
                 key={activeImageIndex}
                 alt={item.name}
-                className="relative w-full h-full object-contain z-[1]"
+                className="relative w-full h-full object-contain object-top z-[1]"
                 src={currentImage}
                 draggable={false}
               />
