@@ -379,7 +379,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               style={{ opacity: likeOpacity }}
             >
               <motion.span
-                className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl"
+                className="text-success text-4xl font-black rotate-[-15deg] border-[3px] border-success px-4 py-2 rounded-xl"
                 style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
               >
                 HYPOU
