@@ -520,7 +520,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
         {/* Bottom gradient */}
         <div className={`absolute inset-x-0 bottom-0 pointer-events-none z-20 transition-all duration-200 ${
-          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-64 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
+          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-72 bg-gradient-to-t from-black/85 via-black/55 via-40% to-transparent"
         }`} />
 
         {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
