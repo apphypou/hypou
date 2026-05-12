@@ -521,18 +521,7 @@ const Conversa = () => {
           )}
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAttachMenu(!showAttachMenu)}
-              disabled={isRecording || uploading}
-              className={`h-11 w-11 shrink-0 rounded-full flex items-center justify-center transition-all ${
-                showAttachMenu
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card border border-foreground/10 text-foreground/50 hover:text-foreground"
-              } disabled:opacity-30`}
-            >
-              {showAttachMenu ? <X className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
-            </button>
-            <div className="flex-1 relative">
+            <div className="flex-1 relative flex items-center bg-card/60 backdrop-blur-xl border border-foreground/10 rounded-full pl-5 pr-2 py-1.5 shadow-sm">
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -540,14 +529,34 @@ const Conversa = () => {
                 placeholder="Digite sua mensagem..."
                 rows={1}
                 disabled={isRecording || uploading}
-                className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-2xl px-4 py-3 pr-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none text-sm max-h-32 disabled:opacity-50"
-                style={{ minHeight: "44px" }}
+                className="flex-1 bg-transparent border-0 text-foreground focus:outline-none placeholder:text-foreground/30 resize-none text-sm max-h-32 disabled:opacity-50 py-2"
+                style={{ minHeight: "28px" }}
               />
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={startRecording}
+                  disabled={isRecording || uploading}
+                  className="h-9 w-9 rounded-full bg-background/60 border border-foreground/10 text-foreground/70 hover:text-primary flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
+                  aria-label="Gravar audio"
+                >
+                  <Mic className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleImagePick}
+                  disabled={isRecording || uploading}
+                  className="h-9 w-9 rounded-full bg-background/60 border border-foreground/10 text-foreground/70 hover:text-primary flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
+                  aria-label="Enviar imagem"
+                >
+                  <Image className="h-4 w-4" />
+                </button>
+              </div>
             </div>
             <button
               onClick={handleSend}
               disabled={!text.trim() || sending || isRecording || uploading}
-              className="h-11 w-11 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition-all active:scale-90 disabled:opacity-30 disabled:active:scale-100 neon-glow"
+              className="h-11 w-11 shrink-0 rounded-full text-white flex items-center justify-center transition-all active:scale-90 disabled:opacity-30 disabled:active:scale-100 shadow-lg"
+              style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(260 85% 65%))" }}
+              aria-label="Enviar"
             >
               {sending ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
