@@ -582,66 +582,64 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           )}
         </AnimatePresence>
 
-        {/* ===== COMPACT INFO PANEL (collapsed) ===== */}
+        {/* ===== COMPACT INFO (gradient overlay, no card) ===== */}
         {activeImageIndex === 0 && !expanded && (
         <div
-          className="absolute bottom-0 inset-x-0 z-30 p-3 cursor-pointer"
+          className="absolute bottom-0 inset-x-0 z-30 px-5 pt-6 pb-5 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             toggleExpand(e);
           }}
         >
-          <div className="rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[9px] font-bold tracking-[0.1em] uppercase">
-                    {item.category}
-                  </span>
-                  {conditionLabel && (
-                    <span className="text-white/60 text-[9px] font-bold uppercase flex items-center gap-0.5">
-                      <Package className="h-2.5 w-2.5" /> {conditionLabel}
-                    </span>
-                  )}
-                  {item.location && (
-                    <span className="text-white/60 text-[9px] font-bold uppercase flex items-center gap-0.5 truncate max-w-[100px]">
-                      <MapPin className="h-2.5 w-2.5 shrink-0" /> {item.location}
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-white text-base font-bold tracking-tight leading-tight drop-shadow-md truncate">
-                  {item.name}
-                </h2>
-                <span className="text-white text-lg font-extrabold tracking-tighter drop-shadow-md">
-                  {formatValue(item.market_value)}
+          <div className="flex items-end justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[9px] font-bold tracking-[0.1em] uppercase">
+                  {item.category}
                 </span>
-                {matchedOwnItem && (
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <Repeat className="h-3 w-3 text-primary shrink-0" />
-                    {matchedOwnItem.image_url ? (
-                      <img
-                        src={matchedOwnItem.image_url}
-                        alt={matchedOwnItem.name}
-                        className="h-4 w-4 rounded-full object-cover border border-primary/50"
-                      />
-                    ) : (
-                      <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
-                        <Package className="h-2 w-2 text-primary" />
-                      </div>
-                    )}
-                    <span className="text-white/60 text-[10px] font-medium">
-                      Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
-                      {(matchedOwnItem.count ?? 0) > 1 && (
-                        <span className="text-white/40"> e +{(matchedOwnItem.count ?? 0) - 1} {(matchedOwnItem.count ?? 0) - 1 === 1 ? 'item seu' : 'itens seus'}</span>
-                      )}
-                    </span>
-                  </div>
+                {conditionLabel && (
+                  <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/80 text-[9px] font-bold uppercase flex items-center gap-1">
+                    <Package className="h-2.5 w-2.5" /> {conditionLabel}
+                  </span>
+                )}
+                {item.location && (
+                  <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/80 text-[9px] font-bold uppercase flex items-center gap-1 truncate max-w-[120px]">
+                    <MapPin className="h-2.5 w-2.5 shrink-0" /> {item.location}
+                  </span>
                 )}
               </div>
-              <div className="flex flex-col items-center gap-0.5 text-white/50">
-                <ChevronUp className="h-4 w-4 animate-bounce" />
-                <span className="text-[8px] font-semibold uppercase tracking-wider">Detalhes</span>
-              </div>
+              <h2 className="text-white text-2xl font-extrabold tracking-tight leading-tight truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                {item.name}
+              </h2>
+              <span className="text-white text-lg font-bold tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                {formatValue(item.market_value)}
+              </span>
+              {matchedOwnItem && (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <Repeat className="h-3 w-3 text-primary shrink-0" />
+                  {matchedOwnItem.image_url ? (
+                    <img
+                      src={matchedOwnItem.image_url}
+                      alt={matchedOwnItem.name}
+                      className="h-4 w-4 rounded-full object-cover border border-primary/50"
+                    />
+                  ) : (
+                    <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
+                      <Package className="h-2 w-2 text-primary" />
+                    </div>
+                  )}
+                  <span className="text-white/70 text-[10px] font-medium">
+                    Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                    {(matchedOwnItem.count ?? 0) > 1 && (
+                      <span className="text-white/50"> e +{(matchedOwnItem.count ?? 0) - 1} {(matchedOwnItem.count ?? 0) - 1 === 1 ? 'item seu' : 'itens seus'}</span>
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col items-center gap-0.5 text-white/60 shrink-0">
+              <ChevronUp className="h-4 w-4 animate-bounce" />
+              <span className="text-[8px] font-semibold uppercase tracking-wider">Detalhes</span>
             </div>
           </div>
         </div>
