@@ -47,11 +47,11 @@
     --radius: 1rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 25% 15%;
+    --sidebar-foreground: 0 0% 0%;
     --sidebar-primary: 178 98% 54%;
-    --sidebar-primary-foreground: 0 0% 8%;
+    --sidebar-primary-foreground: 0 0% 0%;
     --sidebar-accent: 210 15% 92%;
-    --sidebar-accent-foreground: 210 25% 15%;
+    --sidebar-accent-foreground: 0 0% 0%;
     --sidebar-border: 210 15% 88%;
     --sidebar-ring: 178 98% 54%;
   }
