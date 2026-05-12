@@ -414,22 +414,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               draggable={false}
             />
           ) : currentImage ? (
-            <>
-              <img
-                key={`bg-${activeImageIndex}`}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80"
-                src={currentImage}
-                draggable={false}
-              />
-              <img
-                key={activeImageIndex}
-                alt={item.name}
-                className="relative w-full h-full object-contain object-top z-[1]"
-                src={currentImage}
-                draggable={false}
-              />
-            </>
+            <img
+              key={activeImageIndex}
+              alt={item.name}
+              className="w-full h-full object-cover object-center"
+              src={currentImage}
+              draggable={false}
+            />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
               <Image className="h-16 w-16 text-foreground/10" />
