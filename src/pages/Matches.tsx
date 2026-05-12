@@ -182,15 +182,10 @@ const Matches = () => {
   return (
     <ScreenLayout>
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-2 shrink-0">
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
-            Suas Trocas
-          </span>
-          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-            Propostas
-          </h1>
-        </div>
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-8 pb-2 shrink-0">
+        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+          Propostas
+        </h1>
         <div className="flex items-center gap-1.5">
           <span className="text-primary text-xs font-semibold">{activeMatches.length}</span>
           <span className="h-1.5 w-1.5 rounded-full bg-primary" />
