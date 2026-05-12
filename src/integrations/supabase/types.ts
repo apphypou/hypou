@@ -796,6 +796,25 @@ export type Database = {
         Args: { p_my_item_ids: string[]; p_their_item_id: string }
         Returns: string
       }
+      get_my_matches: {
+        Args: never
+        Returns: {
+          confirmed_by_a: boolean
+          confirmed_by_b: boolean
+          created_at: string
+          id: string
+          item_a: Json
+          item_b: Json
+          items_a: Json
+          items_b: Json
+          my_item_side: string
+          other_user: Json
+          status: string
+          updated_at: string
+          user_a_id: string
+          user_b_id: string
+        }[]
+      }
       get_user_ratings_with_items: {
         Args: { _user_id: string }
         Returns: {

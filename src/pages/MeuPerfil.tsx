@@ -67,6 +67,10 @@ const MeuPerfil = () => {
     setProposalLoading(true);
     try {
       await createProposal(user.id, myItemIds, proposalTarget.id, proposalTarget.user_id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["matches", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] }),
+      ]);
       toast({ title: "Proposta enviada! 🎉" });
     } catch (err: any) {
       if (err.message?.includes("duplicate")) {

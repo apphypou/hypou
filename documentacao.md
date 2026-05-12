@@ -727,6 +727,9 @@ user_b recebe notificação → /partidas (Propostas Recebidas)
   → Recusar: rejectProposal() → status = "rejected"
 ```
 
+Observação operacional: a tela `/partidas` sempre refaz a busca ao montar para evitar cache antigo de propostas. Após enviar proposta por Explorar, Favoritos ou Shorts, o app invalida imediatamente as queries `matches` e `profile-stats` do usuário remetente.
+Para blindar a listagem contra falhas de join/RLS no cliente, `getMatches()` usa a RPC autenticada `get_my_matches()`, que retorna somente propostas onde `auth.uid()` participa, com itens, imagens e perfil público do outro usuário já agregados.
+
 ### 12.4 Fluxo de Conclusão da Troca
 
 ```
@@ -822,6 +825,8 @@ Quando ambos os usuários confirmam a entrega e o match atinge status `completed
 | `notify_on_match` | matches | INSERT | Notifica user_b sobre nova proposta |
 | `notify_on_trade_confirmed` | matches | UPDATE | Notifica ambos quando status → accepted |
 | `check_trade_completion` | matches | UPDATE (BEFORE) | Muda status para completed se ambos confirmaram |
+
+Triggers legados duplicados (`on_new_match`, `on_trade_confirmation`) foram removidos; permanecem `on_match_created` e `trg_matches_auto_complete` para evitar notificações/execuções em dobro.
 
 ### Indicadores de Leitura no Chat
 
