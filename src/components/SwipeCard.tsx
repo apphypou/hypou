@@ -298,7 +298,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
           doExit("dislike", velocity);
         } else {
-          animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
+          animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
         }
       },
       [doExit, x, expanded]
@@ -379,7 +379,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               style={{ opacity: likeOpacity }}
             >
               <motion.span
-                className="text-success text-5xl font-black rotate-[-15deg] border-4 border-success px-4 py-2 rounded-xl"
+                className="text-success text-4xl font-black rotate-[-15deg] border-[3px] border-success px-4 py-2 rounded-xl"
                 style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
               >
                 HYPOU
@@ -390,7 +390,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               style={{ opacity: dislikeOpacity }}
             >
               <motion.span
-                className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
+                className="text-danger text-4xl font-black rotate-[15deg] border-[3px] border-danger px-4 py-2 rounded-xl"
                 style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
               >
                 FLOPOU
@@ -414,22 +414,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               draggable={false}
             />
           ) : currentImage ? (
-            <>
-              <img
-                key={`bg-${activeImageIndex}`}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80"
-                src={currentImage}
-                draggable={false}
-              />
-              <img
-                key={activeImageIndex}
-                alt={item.name}
-                className="relative w-full h-full object-contain object-top z-[1]"
-                src={currentImage}
-                draggable={false}
-              />
-            </>
+            <img
+              key={activeImageIndex}
+              alt={item.name}
+              className="w-full h-full object-cover object-center"
+              src={currentImage}
+              draggable={false}
+            />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
               <Image className="h-16 w-16 text-foreground/10" />
@@ -469,7 +460,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             {rating && (
               <div className="flex items-center gap-0.5 shrink-0">
                 <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                <span className="text-yellow-400 text-[10px] font-bold">{rating.average}</span>
+                <span className="text-yellow-400 text-[10px] font-bold">{Number(rating.average).toFixed(1)}</span>
               </div>
             )}
           </button>
@@ -515,13 +506,13 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           </div>
         )}
 
-        {/* Top gradient for readability */}
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
+        {/* Top gradient — só pra legibilidade do chrome */}
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none z-20" />
 
-        {/* Bottom gradient — extended to leave room for floating action buttons */}
-        <div className={`absolute inset-x-0 bottom-0 pointer-events-none z-20 transition-all duration-200 ${
-          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-[26rem] bg-gradient-to-t from-black/95 via-black/70 via-30% to-transparent"
-        }`} />
+        {/* Bottom gradient — sutil, complementa o painel Liquid Glass */}
+        {expanded && (
+          <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" />
+        )}
 
         {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
         <AnimatePresence>
@@ -582,65 +573,80 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           )}
         </AnimatePresence>
 
-        {/* ===== COMPACT INFO (gradient overlay, no card) ===== */}
+        {/* ===== COMPACT INFO — Liquid Glass pedestal ===== */}
         {activeImageIndex === 0 && !expanded && (
         <div
-          className="absolute bottom-0 inset-x-0 z-30 px-5 pt-6 pb-28 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleExpand(e);
-          }}
+          className="absolute bottom-0 inset-x-0 z-30 rounded-b-[1.5rem] overflow-hidden"
+          onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-end justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white text-[9px] font-bold tracking-[0.1em] uppercase">
-                  {item.category}
-                </span>
-                {conditionLabel && (
-                  <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/80 text-[9px] font-bold uppercase flex items-center gap-1">
-                    <Package className="h-2.5 w-2.5" /> {conditionLabel}
-                  </span>
+          {/* Soft fade joining image and pedestal */}
+          <div className="h-6 bg-gradient-to-b from-transparent to-black/45 pointer-events-none" />
+
+          {/* Pedestal */}
+          <div className="relative bg-black/55 dark:bg-black/65 backdrop-blur-2xl border-t border-white/10 px-5 pt-4 pb-24">
+            {matchedOwnItem && (
+              <div className="flex items-center gap-1.5 mb-2">
+                <Repeat className="h-3 w-3 text-primary shrink-0" />
+                {matchedOwnItem.image_url ? (
+                  <img
+                    src={matchedOwnItem.image_url}
+                    alt={matchedOwnItem.name}
+                    className="h-4 w-4 rounded-full object-cover border border-primary/50"
+                  />
+                ) : (
+                  <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
+                    <Package className="h-2 w-2 text-primary" />
+                  </div>
                 )}
-                {item.location && (
-                  <span className="px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/80 text-[9px] font-bold uppercase flex items-center gap-1 truncate max-w-[120px]">
-                    <MapPin className="h-2.5 w-2.5 shrink-0" /> {item.location}
-                  </span>
-                )}
-              </div>
-              <h2 className="text-white text-2xl font-extrabold tracking-tight leading-tight truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-                {item.name}
-              </h2>
-              <span className="text-white text-lg font-bold tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-                {formatValue(item.market_value)}
-              </span>
-              {matchedOwnItem && (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <Repeat className="h-3 w-3 text-primary shrink-0" />
-                  {matchedOwnItem.image_url ? (
-                    <img
-                      src={matchedOwnItem.image_url}
-                      alt={matchedOwnItem.name}
-                      className="h-4 w-4 rounded-full object-cover border border-primary/50"
-                    />
-                  ) : (
-                    <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
-                      <Package className="h-2 w-2 text-primary" />
-                    </div>
+                <span className="text-white/70 text-[10px] font-medium truncate">
+                  Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                  {(matchedOwnItem.count ?? 0) > 1 && (
+                    <span className="text-white/50"> +{(matchedOwnItem.count ?? 0) - 1}</span>
                   )}
-                  <span className="text-white/70 text-[10px] font-medium">
-                    Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
-                    {(matchedOwnItem.count ?? 0) > 1 && (
-                      <span className="text-white/50"> e +{(matchedOwnItem.count ?? 0) - 1} {(matchedOwnItem.count ?? 0) - 1 === 1 ? 'item seu' : 'itens seus'}</span>
-                    )}
-                  </span>
-                </div>
+                </span>
+              </div>
+            )}
+
+            {/* Tags — uma linha unificada */}
+            <div className="flex items-center gap-1.5 mb-2 overflow-hidden">
+              <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white text-[10px] font-semibold tracking-wide uppercase shrink-0">
+                {item.category}
+              </span>
+              {conditionLabel && (
+                <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 shrink-0">
+                  <Package className="h-2.5 w-2.5" /> {conditionLabel}
+                </span>
+              )}
+              {item.location && (
+                <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 truncate min-w-0">
+                  <MapPin className="h-2.5 w-2.5 shrink-0" /> <span className="truncate">{item.location}</span>
+                </span>
               )}
             </div>
-            <div className="flex flex-col items-center gap-0.5 text-white/60 shrink-0">
-              <ChevronUp className="h-4 w-4 animate-bounce" />
-              <span className="text-[8px] font-semibold uppercase tracking-wider">Detalhes</span>
-            </div>
+
+            {/* Title */}
+            <h2 className="text-white text-[22px] font-bold tracking-tight leading-tight truncate">
+              {item.name}
+            </h2>
+
+            {/* Price — secundário */}
+            <p className="text-white/70 text-[15px] font-medium tracking-tight mt-0.5">
+              {formatValue(item.market_value)}
+            </p>
+
+            {/* "Ver detalhes" pill — affordance clara */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpand(e);
+              }}
+              aria-label="Ver detalhes do item"
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform"
+            >
+              <ChevronUp className="h-3 w-3" />
+              Ver detalhes
+            </button>
           </div>
         </div>
         )}
