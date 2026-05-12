@@ -728,6 +728,7 @@ user_b recebe notificação → /partidas (Propostas Recebidas)
 ```
 
 Observação operacional: a tela `/partidas` sempre refaz a busca ao montar para evitar cache antigo de propostas. Após enviar proposta por Explorar, Favoritos ou Shorts, o app invalida imediatamente as queries `matches` e `profile-stats` do usuário remetente.
+Para blindar a listagem contra falhas de join/RLS no cliente, `getMatches()` usa a RPC autenticada `get_my_matches()`, que retorna somente propostas onde `auth.uid()` participa, com itens, imagens e perfil público do outro usuário já agregados.
 
 ### 12.4 Fluxo de Conclusão da Troca
 
