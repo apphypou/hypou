@@ -425,7 +425,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               <img
                 key={activeImageIndex}
                 alt={item.name}
-                className="relative w-full h-full object-contain z-[1]"
+                className="relative w-full h-full object-contain object-top z-[1]"
                 src={currentImage}
                 draggable={false}
               />
@@ -518,9 +518,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* Top gradient for readability */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
 
-        {/* Bottom gradient */}
+        {/* Bottom gradient — extended to leave room for floating action buttons */}
         <div className={`absolute inset-x-0 bottom-0 pointer-events-none z-20 transition-all duration-200 ${
-          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-72 bg-gradient-to-t from-black/85 via-black/55 via-40% to-transparent"
+          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-[26rem] bg-gradient-to-t from-black/95 via-black/70 via-30% to-transparent"
         }`} />
 
         {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
@@ -585,7 +585,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* ===== COMPACT INFO (gradient overlay, no card) ===== */}
         {activeImageIndex === 0 && !expanded && (
         <div
-          className="absolute bottom-0 inset-x-0 z-30 px-5 pt-6 pb-5 cursor-pointer"
+          className="absolute bottom-0 inset-x-0 z-30 px-5 pt-6 pb-28 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             toggleExpand(e);
