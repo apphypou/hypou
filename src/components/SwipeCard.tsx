@@ -585,7 +585,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* ===== COMPACT INFO (gradient overlay, no card) ===== */}
         {activeImageIndex === 0 && !expanded && (
         <div
-          className="absolute bottom-0 inset-x-0 z-30 px-5 pt-6 pb-5 cursor-pointer"
+          className="absolute bottom-0 inset-x-0 z-30 px-5 pt-6 pb-28 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             toggleExpand(e);
