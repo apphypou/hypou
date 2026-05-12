@@ -298,7 +298,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
           doExit("dislike", velocity);
         } else {
-          animate(x, 0, { type: "spring", stiffness: 600, damping: 26, mass: 0.8 });
+          animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
         }
       },
       [doExit, x, expanded]
