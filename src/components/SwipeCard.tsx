@@ -518,9 +518,9 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* Top gradient for readability */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent pointer-events-none z-20" />
 
-        {/* Bottom gradient */}
+        {/* Bottom gradient — extended to leave room for floating action buttons */}
         <div className={`absolute inset-x-0 bottom-0 pointer-events-none z-20 transition-all duration-200 ${
-          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-72 bg-gradient-to-t from-black/85 via-black/55 via-40% to-transparent"
+          expanded ? "h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" : "h-[26rem] bg-gradient-to-t from-black/95 via-black/70 via-30% to-transparent"
         }`} />
 
         {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
