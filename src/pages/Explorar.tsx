@@ -6,7 +6,7 @@ import ScreenLayout from "@/components/ScreenLayout";
 import OnboardingTour from "@/components/OnboardingTour";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRecommendedItems, getPublicExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
 import { createProposal } from "@/services/matchService";
@@ -31,6 +31,7 @@ const Explorar = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isGuest = !user;
 
   // Onboarding guard
@@ -190,6 +191,10 @@ const Explorar = () => {
       setProposalLoading(true);
       try {
         await createProposal(user.id, myItemIds, pendingLikeItem.id, pendingLikeItem.user_id);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["matches", user.id] }),
+          queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] }),
+        ]);
         toast({ title: "🤝 Proposta enviada!", description: `Proposta de troca enviada com sucesso.` });
         haptic("success");
       } catch (err: any) {
@@ -206,7 +211,7 @@ const Explorar = () => {
         try { sessionStorage.removeItem(PENDING_LIKE_KEY); } catch { /* */ }
       }
     },
-    [user, pendingLikeItem, toast]
+    [user, pendingLikeItem, toast, queryClient]
   );
 
   const handleDragDirectionChange = useCallback(
