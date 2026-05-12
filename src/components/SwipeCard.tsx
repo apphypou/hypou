@@ -390,7 +390,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               style={{ opacity: dislikeOpacity }}
             >
               <motion.span
-                className="text-danger text-5xl font-black rotate-[15deg] border-4 border-danger px-4 py-2 rounded-xl"
+                className="text-danger text-4xl font-black rotate-[15deg] border-[3px] border-danger px-4 py-2 rounded-xl"
                 style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
               >
                 FLOPOU
