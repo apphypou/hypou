@@ -23,15 +23,10 @@ const Chat = () => {
   return (
     <ScreenLayout>
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4 shrink-0">
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
-            Negociações
-          </span>
-          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-            Conversas
-          </h1>
-        </div>
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-8 pb-4 shrink-0">
+        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+          Conversas
+        </h1>
         <div className="flex items-center gap-1">
           <span className="text-primary text-xs font-semibold">
             {conversations.filter((c) => c.unread_count > 0).length} nova{conversations.filter((c) => c.unread_count > 0).length !== 1 ? "s" : ""}
