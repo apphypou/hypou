@@ -49,6 +49,29 @@ export interface MatchWithDetails {
 }
 
 export const getMatches = async (userId: string): Promise<MatchWithDetails[]> => {
+  const { data: rpcMatches, error: rpcError } = await supabase.rpc("get_my_matches" as any);
+
+  if (!rpcError) {
+    return ((rpcMatches || []) as any[]).map((m) => {
+      const otherUserId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
+      return {
+        id: m.id,
+        status: m.status,
+        created_at: m.created_at,
+        confirmed_by_a: m.confirmed_by_a,
+        confirmed_by_b: m.confirmed_by_b,
+        item_a: m.item_a,
+        item_b: m.item_b,
+        items_a: m.items_a || (m.item_a ? [m.item_a] : []),
+        items_b: m.items_b || (m.item_b ? [m.item_b] : []),
+        other_user: m.other_user?.user_id
+          ? m.other_user
+          : { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
+        my_item_side: m.my_item_side === "a" ? "a" : "b",
+      };
+    });
+  }
+
   const blockedIds = await getBlockedUserIds(userId);
 
   const { data, error } = await supabase
