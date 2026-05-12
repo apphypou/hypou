@@ -247,7 +247,7 @@ const Explorar = () => {
       </header>
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-40 pt-1 z-10" style={{ perspective: "1200px" }}>
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-28 pt-1 z-10" style={{ perspective: "1200px" }}>
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
@@ -371,11 +371,11 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Hypou / Flopou — Floating Liquid Glass buttons */}
+      {/* Hypou / Flopou — Floating Liquid Glass buttons overlaid on card bottom */}
       {currentItem && !isLoading && !feedEnded && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-5 px-6"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5.5rem)" }}
+          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-5 px-6 pointer-events-none"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 6.5rem)" }}
         >
           <button
             type="button"
@@ -385,9 +385,9 @@ const Explorar = () => {
               haptic("light");
               cardRef.current?.triggerSwipe("dislike");
             }}
-            className="h-14 w-14 rounded-full bg-white/10 dark:bg-white/8 backdrop-blur-2xl border border-white/20 dark:border-white/15 flex items-center justify-center text-foreground active:scale-90 transition-transform shadow-[0_8px_24px_rgba(0,0,0,0.35)] disabled:opacity-50"
+            className="pointer-events-auto h-16 w-16 rounded-full bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/20 flex items-center justify-center text-foreground active:scale-90 transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.45)] disabled:opacity-50"
           >
-            <X className="h-6 w-6" strokeWidth={2.5} />
+            <X className="h-7 w-7" strokeWidth={2.5} />
           </button>
           <button
             type="button"
@@ -397,9 +397,9 @@ const Explorar = () => {
               haptic("light");
               cardRef.current?.triggerSwipe("like");
             }}
-            className="h-14 w-14 rounded-full bg-white/10 dark:bg-white/8 backdrop-blur-2xl border border-white/20 dark:border-white/15 flex items-center justify-center text-foreground active:scale-90 transition-transform shadow-[0_8px_24px_rgba(0,0,0,0.35)] disabled:opacity-50"
+            className="pointer-events-auto h-16 w-16 rounded-full bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/20 flex items-center justify-center text-foreground active:scale-90 transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.45)] disabled:opacity-50"
           >
-            <Heart className="h-6 w-6 fill-current" strokeWidth={2} />
+            <Heart className="h-7 w-7 fill-current" strokeWidth={2} />
           </button>
         </div>
       )}
