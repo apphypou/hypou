@@ -371,36 +371,42 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Hypou / Flopou — Floating Liquid Glass buttons overlaid on card bottom */}
+      {/* Hypou / Flopou — Floating Liquid Glass action buttons */}
       {currentItem && !isLoading && !feedEnded && (
         <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-5 px-6 pointer-events-none"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 6.5rem)" }}
+          className="fixed left-0 right-0 z-40 flex justify-center items-end gap-6 px-6 pointer-events-none"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 8.5rem)" }}
         >
-          <button
-            type="button"
-            aria-label="Flopou"
-            disabled={swipingRef.current}
-            onClick={() => {
-              haptic("light");
-              cardRef.current?.triggerSwipe("dislike");
-            }}
-            className="pointer-events-auto h-16 w-16 rounded-full bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/20 flex items-center justify-center text-foreground active:scale-90 transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.45)] disabled:opacity-50"
-          >
-            <X className="h-7 w-7" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            aria-label="Hypou"
-            disabled={swipingRef.current}
-            onClick={() => {
-              haptic("light");
-              cardRef.current?.triggerSwipe("like");
-            }}
-            className="pointer-events-auto h-16 w-16 rounded-full bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/30 dark:border-white/20 flex items-center justify-center text-foreground active:scale-90 transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.45)] disabled:opacity-50"
-          >
-            <Heart className="h-7 w-7 fill-current" strokeWidth={2} />
-          </button>
+          <div className="flex flex-col items-center gap-1.5 pointer-events-auto">
+            <button
+              type="button"
+              aria-label="Recusar item"
+              disabled={swipingRef.current}
+              onClick={() => {
+                haptic("light");
+                cardRef.current?.triggerSwipe("dislike");
+              }}
+              className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-2xl border border-danger/25 flex items-center justify-center text-danger/90 active:scale-92 transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.45)] disabled:opacity-50"
+            >
+              <X className="h-7 w-7" strokeWidth={2.5} />
+            </button>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/40">Flopou</span>
+          </div>
+          <div className="flex flex-col items-center gap-1.5 pointer-events-auto">
+            <button
+              type="button"
+              aria-label="Curtir item"
+              disabled={swipingRef.current}
+              onClick={() => {
+                haptic("light");
+                cardRef.current?.triggerSwipe("like");
+              }}
+              className="h-16 w-16 rounded-full bg-white/10 backdrop-blur-2xl border border-primary/30 flex items-center justify-center text-primary active:scale-92 transition-transform shadow-[0_8px_30px_hsl(var(--primary)/0.25)] disabled:opacity-50"
+            >
+              <Heart className="h-7 w-7 fill-current" strokeWidth={2} />
+            </button>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-primary/70">Hypou</span>
+          </div>
         </div>
       )}
 
