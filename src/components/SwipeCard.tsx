@@ -460,7 +460,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               </div>
             )}
             <span className="text-white text-[11px] font-semibold drop-shadow-md truncate min-w-0">
-              {ownerProfile.display_name || "Usuário"}
+              {(() => {
+                const full = ownerProfile.display_name || "Usuário";
+                const first = full.split(" ")[0];
+                return full.includes(" ") ? `${first}...` : first;
+              })()}
             </span>
             {rating && (
               <div className="flex items-center gap-0.5 shrink-0">
