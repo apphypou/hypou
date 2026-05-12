@@ -446,7 +446,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               e.stopPropagation();
               navigate(`/usuario/${ownerProfile.user_id}`);
             }}
-            className="absolute top-12 left-4 z-30 flex items-center gap-1.5 max-w-[55%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
+            className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
           >
             {ownerProfile.avatar_url ? (
               <img
