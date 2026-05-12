@@ -446,7 +446,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               e.stopPropagation();
               navigate(`/usuario/${ownerProfile.user_id}`);
             }}
-            className="absolute top-12 left-4 z-30 flex items-center gap-1.5 max-w-[55%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
+            className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
           >
             {ownerProfile.avatar_url ? (
               <img
@@ -460,7 +460,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               </div>
             )}
             <span className="text-white text-[11px] font-semibold drop-shadow-md truncate min-w-0">
-              {ownerProfile.display_name || "Usuário"}
+              {(() => {
+                const full = ownerProfile.display_name || "Usuário";
+                const first = full.split(" ")[0];
+                return full.includes(" ") ? `${first}...` : first;
+              })()}
             </span>
             {rating && (
               <div className="flex items-center gap-0.5 shrink-0">
@@ -472,14 +476,14 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         )}
 
 
-        {/* Slide dots — top center */}
+        {/* Slide dots — top center (smaller) */}
         {!expanded && totalSlides > 1 && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
             {Array.from({ length: totalSlides }).map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 rounded-full transition-all duration-200 ${
-                  i === activeImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/40"
+                className={`h-1 rounded-full transition-all duration-200 ${
+                  i === activeImageIndex ? "w-3.5 bg-white" : "w-1 bg-white/40"
                 }`}
               />
             ))}
@@ -488,7 +492,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
         {/* Share — top right */}
         {!expanded && (
-          <div className="absolute top-12 right-4 z-30 flex items-center gap-2">
+          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
