@@ -237,15 +237,10 @@ const Explorar = () => {
   return (
     <ScreenLayout>
       {/* Compact header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-2 shrink-0">
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-primary/70 font-bold mb-0.5">
-            Descubra
-          </span>
-          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-            Explorar
-          </h1>
-        </div>
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-4 pb-2 shrink-0">
+        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
+          Explorar
+        </h1>
         <div className="flex items-center gap-2">
           {!isGuest && <NotificationBell />}
         </div>
