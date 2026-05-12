@@ -460,7 +460,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             {rating && (
               <div className="flex items-center gap-0.5 shrink-0">
                 <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                <span className="text-yellow-400 text-[10px] font-bold">{rating.average}</span>
+                <span className="text-yellow-400 text-[10px] font-bold">{Number(rating.average).toFixed(1)}</span>
               </div>
             )}
           </button>
