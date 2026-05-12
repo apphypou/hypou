@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchShortsFeed, type SortMode, type ShortVideo } from "@/services/videoService";
 import ShortCard from "@/components/ShortCard";
 import SelectItemDialog from "@/components/SelectItemDialog";
@@ -36,6 +36,7 @@ const Shorts = () => {
   const [proposalLoading, setProposalLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: videos = [], isLoading } = useQuery({
@@ -109,6 +110,10 @@ const Shorts = () => {
         pendingTradeVideo.item.id,
         pendingTradeVideo.user_id
       );
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["matches", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] }),
+      ]);
       toast({
         title: "Proposta enviada! 🎉",
         description: `Sua proposta de troca por "${pendingTradeVideo.item.name}" foi enviada.`,
@@ -124,7 +129,7 @@ const Shorts = () => {
     } finally {
       setProposalLoading(false);
     }
-  }, [user, pendingTradeVideo]);
+  }, [user, pendingTradeVideo, queryClient]);
 
   if (isLoading) {
     return (
