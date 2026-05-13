@@ -195,6 +195,12 @@ const Chat = () => {
                 </button>
               );
             })}
+                      </div>
+                    )}
+                  </section>
+                </>
+              );
+            })()}
           </div>
         )}
         </div>
