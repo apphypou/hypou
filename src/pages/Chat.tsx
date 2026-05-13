@@ -25,7 +25,7 @@ const Chat = () => {
       {/* Header */}
       <header className="relative z-40 flex w-full justify-between items-center px-6 pt-8 pb-4 shrink-0">
         <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-          Conversas
+          Chat
         </h1>
         <div className="flex items-center gap-1">
           <span className="text-primary text-xs font-semibold">
