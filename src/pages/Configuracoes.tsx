@@ -356,9 +356,24 @@ const Configuracoes = () => {
           <DialogHeader>
             <DialogTitle className="text-foreground">Categorias de Interesse</DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-muted-foreground -mt-1">
-            Escolha o que você quer ver no Explorar.
-          </p>
+          <div className="flex items-center justify-between -mt-1">
+            <p className="text-xs text-muted-foreground">
+              Escolha o que você quer ver no Explorar.
+            </p>
+            <button
+              type="button"
+              onClick={() =>
+                setSelectedCategories(
+                  selectedCategories.length === ALL_CATEGORIES.length
+                    ? []
+                    : ALL_CATEGORIES.map((c) => c.label)
+                )
+              }
+              className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors px-2.5 py-1 rounded-full border border-primary/30 bg-primary/5 shrink-0"
+            >
+              {selectedCategories.length === ALL_CATEGORIES.length ? "Limpar todas" : "Selecionar todas"}
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-2.5 overflow-y-auto no-scrollbar py-2">
             {ALL_CATEGORIES.map((cat) => {
               const isSelected = selectedCategories.includes(cat.label);
