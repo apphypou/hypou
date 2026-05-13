@@ -167,7 +167,7 @@ const Matches = () => {
   const myItemsTotal = myItems.reduce((s, it) => s + (it?.market_value || 0), 0);
   const otherItemsTotal = otherItems.reduce((s, it) => s + (it?.market_value || 0), 0);
 
-  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed"), [matches]);
+  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed" && m.status !== "cancelled"), [matches]);
   const receivedMatches = useMemo(
     () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "b" : m.my_item_side === "b"),
     [activeMatches]
@@ -176,7 +176,7 @@ const Matches = () => {
     () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "a" : m.my_item_side === "a"),
     [activeMatches]
   );
-  const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected"), [matches]);
+  const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected" || m.status === "cancelled"), [matches]);
   const displayedMatches =
     activeTab === "received" ? receivedMatches : activeTab === "sent" ? sentMatches : historyMatches;
 
