@@ -296,6 +296,20 @@ const Perfil = () => {
                 </p>
               </div>
 
+              <div className="flex justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelected(
+                      selected.length === categories.length ? [] : categories.map((c) => c.label)
+                    )
+                  }
+                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors px-3 py-1.5 rounded-full border border-primary/30 bg-primary/5"
+                >
+                  {selected.length === categories.length ? "Limpar todas" : "Selecionar todas"}
+                </button>
+              </div>
+
               <div className="grid grid-cols-2 gap-3 w-full">
                 {categories.map((cat) => {
                   const isSelected = selected.includes(cat.label);
