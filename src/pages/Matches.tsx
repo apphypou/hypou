@@ -114,8 +114,10 @@ const Matches = () => {
   const isSentProposal = (match: MatchWithDetails) =>
     match.status === "proposal" && match.my_item_side === "a";
 
-  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" } | null => {
+  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" | "cancelled" } | null => {
     if (match.status === "completed") return { label: "Concluída", color: "completed" };
+    if (match.status === "cancelled") return { label: "Indisponível", color: "cancelled" };
+    if (match.status === "rejected") return { label: "Recusada", color: "cancelled" };
     if (match.status === "accepted") return { label: "Em negociação", color: "accepted" };
     if (isSentProposal(match)) return { label: "Enviada", color: "sent" };
     const age = Date.now() - new Date(match.created_at).getTime();
@@ -129,6 +131,7 @@ const Matches = () => {
     pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
     sent: "bg-amber-500 text-white border-amber-600",
     completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
+    cancelled: "bg-muted text-muted-foreground border-foreground/10",
   };
 
   const handleConfirmMatch = useCallback(async () => {
@@ -167,7 +170,7 @@ const Matches = () => {
   const myItemsTotal = myItems.reduce((s, it) => s + (it?.market_value || 0), 0);
   const otherItemsTotal = otherItems.reduce((s, it) => s + (it?.market_value || 0), 0);
 
-  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed"), [matches]);
+  const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed" && m.status !== "cancelled"), [matches]);
   const receivedMatches = useMemo(
     () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "b" : m.my_item_side === "b"),
     [activeMatches]
@@ -176,7 +179,7 @@ const Matches = () => {
     () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "a" : m.my_item_side === "a"),
     [activeMatches]
   );
-  const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected"), [matches]);
+  const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected" || m.status === "cancelled"), [matches]);
   const displayedMatches =
     activeTab === "received" ? receivedMatches : activeTab === "sent" ? sentMatches : historyMatches;
 
@@ -643,6 +646,10 @@ const Matches = () => {
               ) : selectedMatch.status === "rejected" ? (
                 <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-lg flex items-center justify-center">
                   Proposta Recusada
+                </div>
+              ) : selectedMatch.status === "cancelled" ? (
+                <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-base flex items-center justify-center text-center px-4">
+                  Item indisponível — já trocado em outra negociação
                 </div>
               ) : isSentProposal(selectedMatch) ? (
                 <div className="space-y-3">
