@@ -222,7 +222,7 @@ const Explorar = () => {
   );
 
   // Preload image after next
-  const afterNextItem = items[currentIndex + 2] ?? null;
+  const afterNextItem = items.length > 0 ? items[(currentIndex + 2) % items.length] : null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
@@ -232,7 +232,7 @@ const Explorar = () => {
     }
   }, [afterNextImage]);
 
-  const feedEnded = !isLoading && currentIndex >= items.length;
+  const feedEnded = false;
 
   return (
     <ScreenLayout>
