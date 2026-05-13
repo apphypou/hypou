@@ -644,6 +644,10 @@ const Matches = () => {
                 <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-lg flex items-center justify-center">
                   Proposta Recusada
                 </div>
+              ) : selectedMatch.status === "cancelled" ? (
+                <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-base flex items-center justify-center text-center px-4">
+                  Item indisponível — já trocado em outra negociação
+                </div>
               ) : isSentProposal(selectedMatch) ? (
                 <div className="space-y-3">
                   <div className="w-full h-14 rounded-2xl bg-amber-600 border border-amber-700 text-white font-bold text-base flex items-center justify-center gap-2">
