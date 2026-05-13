@@ -101,8 +101,8 @@ const Explorar = () => {
     refetchOnWindowFocus: false,
   });
 
-  const currentItem = items[currentIndex] ?? null;
-  const nextItem = items[currentIndex + 1] ?? null;
+  const currentItem = items.length > 0 ? items[currentIndex % items.length] : null;
+  const nextItem = items.length > 0 ? items[(currentIndex + 1) % items.length] : null;
 
   const advanceCard = useCallback(() => {
     setEpoch((e) => e + 1);
