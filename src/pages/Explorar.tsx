@@ -101,8 +101,8 @@ const Explorar = () => {
     refetchOnWindowFocus: false,
   });
 
-  const currentItem = items[currentIndex] ?? null;
-  const nextItem = items[currentIndex + 1] ?? null;
+  const currentItem = items.length > 0 ? items[currentIndex % items.length] : null;
+  const nextItem = items.length > 0 ? items[(currentIndex + 1) % items.length] : null;
 
   const advanceCard = useCallback(() => {
     setEpoch((e) => e + 1);
@@ -222,7 +222,7 @@ const Explorar = () => {
   );
 
   // Preload image after next
-  const afterNextItem = items[currentIndex + 2] ?? null;
+  const afterNextItem = items.length > 0 ? items[(currentIndex + 2) % items.length] : null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
@@ -232,7 +232,7 @@ const Explorar = () => {
     }
   }, [afterNextImage]);
 
-  const feedEnded = !isLoading && currentIndex >= items.length;
+  const feedEnded = false;
 
   return (
     <ScreenLayout>
