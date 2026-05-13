@@ -232,7 +232,7 @@ const Matches = () => {
           }`}
         >
           <History className="h-3.5 w-3.5" />
-          Histórico ({historyMatches.length})
+          Concluídas ({historyMatches.length})
         </button>
       </div>
 
@@ -258,7 +258,7 @@ const Matches = () => {
                 ? "Nenhuma proposta recebida"
                 : activeTab === "sent"
                 ? "Nenhuma proposta enviada"
-                : "Nenhuma troca no histórico"}
+                : "Nenhuma troca concluída"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
               {activeTab === "received"
