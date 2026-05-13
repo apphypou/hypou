@@ -114,8 +114,10 @@ const Matches = () => {
   const isSentProposal = (match: MatchWithDetails) =>
     match.status === "proposal" && match.my_item_side === "a";
 
-  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" } | null => {
+  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" | "cancelled" } | null => {
     if (match.status === "completed") return { label: "Concluída", color: "completed" };
+    if (match.status === "cancelled") return { label: "Indisponível", color: "cancelled" };
+    if (match.status === "rejected") return { label: "Recusada", color: "cancelled" };
     if (match.status === "accepted") return { label: "Em negociação", color: "accepted" };
     if (isSentProposal(match)) return { label: "Enviada", color: "sent" };
     const age = Date.now() - new Date(match.created_at).getTime();
@@ -129,6 +131,7 @@ const Matches = () => {
     pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
     sent: "bg-amber-500 text-white border-amber-600",
     completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
+    cancelled: "bg-muted text-muted-foreground border-foreground/10",
   };
 
   const handleConfirmMatch = useCallback(async () => {
