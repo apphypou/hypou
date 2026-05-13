@@ -31,7 +31,7 @@ const Matches = () => {
   const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"active" | "history">("active");
+  const [activeTab, setActiveTab] = useState<"received" | "sent" | "history">("received");
   const [showRating, setShowRating] = useState(false);
 
   // Rating check for completed matches
@@ -168,8 +168,17 @@ const Matches = () => {
   const otherItemsTotal = otherItems.reduce((s, it) => s + (it?.market_value || 0), 0);
 
   const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed"), [matches]);
+  const receivedMatches = useMemo(
+    () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "b" : m.my_item_side === "b"),
+    [activeMatches]
+  );
+  const sentMatches = useMemo(
+    () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "a" : m.my_item_side === "a"),
+    [activeMatches]
+  );
   const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected"), [matches]);
-  const displayedMatches = activeTab === "active" ? activeMatches : historyMatches;
+  const displayedMatches =
+    activeTab === "received" ? receivedMatches : activeTab === "sent" ? sentMatches : historyMatches;
 
   // Check if I already confirmed
   const myConfirmed = selectedMatch
@@ -193,20 +202,30 @@ const Matches = () => {
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-2 px-6 pb-3 shrink-0">
+      <div className="flex gap-2 px-6 pb-3 shrink-0 overflow-x-auto no-scrollbar">
         <button
-          onClick={() => setActiveTab("active")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-            activeTab === "active"
+          onClick={() => setActiveTab("received")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+            activeTab === "received"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
           }`}
         >
-          Ativas ({activeMatches.length})
+          Recebidas ({receivedMatches.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("sent")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+            activeTab === "sent"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-foreground/10 text-foreground/50"
+          }`}
+        >
+          Enviadas ({sentMatches.length})
         </button>
         <button
           onClick={() => setActiveTab("history")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
             activeTab === "history"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -228,21 +247,27 @@ const Matches = () => {
         ) : displayedMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              {activeTab === "active" ? (
-                <Repeat2 className="h-10 w-10 text-primary" />
-              ) : (
+              {activeTab === "history" ? (
                 <History className="h-10 w-10 text-primary/50" />
+              ) : (
+                <Repeat2 className="h-10 w-10 text-primary" />
               )}
             </div>
             <h2 className="text-lg font-bold text-foreground mb-1">
-              {activeTab === "active" ? "Nenhuma proposta ativa" : "Nenhuma troca no histórico"}
+              {activeTab === "received"
+                ? "Nenhuma proposta recebida"
+                : activeTab === "sent"
+                ? "Nenhuma proposta enviada"
+                : "Nenhuma troca no histórico"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              {activeTab === "active"
-                ? "Explore itens e faça sua primeira troca!"
+              {activeTab === "received"
+                ? "Quando alguém te enviar uma proposta, ela aparece aqui."
+                : activeTab === "sent"
+                ? "Explore itens e envie sua primeira proposta!"
                 : "Suas trocas concluídas e recusadas aparecerão aqui."}
             </p>
-            {activeTab === "active" && (
+            {activeTab !== "history" && (
               <Button onClick={() => navigate("/explorar")} className="rounded-full px-6">
                 Explorar itens
               </Button>
