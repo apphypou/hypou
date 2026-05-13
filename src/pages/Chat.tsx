@@ -62,9 +62,61 @@ const Chat = () => {
             </button>
           </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            {conversations.map((conv) => {
-              const hasUnread = conv.unread_count > 0;
+          <div className="flex flex-col gap-6">
+            {(() => {
+              const newHypes = conversations.filter((c) => !c.last_message);
+              const withMessages = conversations.filter((c) => c.last_message);
+              return (
+                <>
+                  {newHypes.length > 0 && (
+                    <section>
+                      <h2 className="text-foreground text-sm font-bold mb-3 px-1">Novos hypes</h2>
+                      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+                        {newHypes.map((conv) => (
+                          <button
+                            key={conv.id}
+                            onClick={() => navigate(`/chat/${conv.id}`)}
+                            className="shrink-0 flex flex-col items-center gap-1.5 w-20"
+                          >
+                            <div className="relative">
+                              {conv.other_user.avatar_url ? (
+                                <img
+                                  src={conv.other_user.avatar_url}
+                                  alt={conv.other_user.display_name || ""}
+                                  className="h-20 w-20 rounded-2xl object-cover border-2 border-primary/60 neon-glow"
+                                />
+                              ) : (
+                                <div className="h-20 w-20 rounded-2xl bg-card border-2 border-primary/60 flex items-center justify-center">
+                                  <span className="text-2xl font-bold text-foreground/40">
+                                    {(conv.other_user.display_name || "?")[0].toUpperCase()}
+                                  </span>
+                                </div>
+                              )}
+                              {conv.other_item.image_url && (
+                                <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background overflow-hidden">
+                                  <img src={conv.other_item.image_url} alt="" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[11px] font-semibold text-foreground/80 truncate w-full text-center">
+                              {conv.other_user.display_name || "Usuário"}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  <section>
+                    <h2 className="text-foreground text-sm font-bold mb-3 px-1">Mensagens</h2>
+                    {withMessages.length === 0 ? (
+                      <p className="text-foreground/40 text-xs px-1">
+                        Mande a primeira mensagem para algum dos seus novos hypes.
+                      </p>
+                    ) : (
+                      <div className="flex flex-col gap-2">
+                        {withMessages.map((conv) => {
+                          const hasUnread = conv.unread_count > 0;
               const lastMsg = conv.last_message;
               const isMyLastMsg = lastMsg?.sender_id === user?.id;
               const timeAgo = lastMsg
