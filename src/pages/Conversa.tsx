@@ -117,6 +117,29 @@ const Conversa = () => {
   // Block dialog
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
+  const [callingKind, setCallingKind] = useState<"video" | "audio" | null>(null);
+
+  const handleStartCall = useCallback(async (kind: "video" | "audio") => {
+    if (!conversationId || callingKind) return;
+    setCallingKind(kind);
+    try {
+      const tk = await startCall(conversationId, kind);
+      navigate(`/chamada/${tk.room_name}`, {
+        state: {
+          token: tk.token,
+          url: tk.url,
+          callSessionId: tk.call_session_id,
+          kind: tk.kind,
+          conversationId: tk.conversation_id,
+          isCaller: true,
+        },
+      });
+    } catch (e: any) {
+      toast({ title: "Não foi possível iniciar a chamada", description: e?.message ?? "Tente novamente", variant: "destructive" });
+    } finally {
+      setCallingKind(null);
+    }
+  }, [conversationId, callingKind, navigate]);
 
   // Check if user accepted chat terms
   const { data: chatTermsAccepted } = useQuery({
