@@ -15,7 +15,7 @@ import {
   AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play, Share2 } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play, Share2, Heart, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { useQuery } from "@tanstack/react-query";
@@ -635,19 +635,31 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               {formatValue(item.market_value)}
             </p>
 
-            {/* "Ver detalhes" pill — affordance clara */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpand(e);
-              }}
-              aria-label="Ver detalhes do item"
-              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform"
-            >
-              <ChevronUp className="h-3 w-3" />
-              Ver detalhes
-            </button>
+            {/* Action buttons — heart (like) + chat (details) */}
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  doExit("like");
+                }}
+                aria-label="Curtir"
+                className="h-14 w-20 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 flex items-center justify-center active:scale-95 transition-transform"
+              >
+                <Heart className="h-6 w-6 text-white" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpand(e);
+                }}
+                aria-label="Ver detalhes"
+                className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center active:scale-[0.98] transition-transform shadow-[0_8px_24px_hsl(var(--primary)/0.4)]"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
         )}
