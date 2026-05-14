@@ -3,6 +3,20 @@ import { Capacitor } from "@capacitor/core";
 import App from "./App.tsx";
 import "./index.css";
 
+// Kill-switch: remove any leftover service worker / caches from previous versions
+// so users don't need to clear cookies after each publish.
+if (!Capacitor.isNativePlatform() && "serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    if (regs.length > 0) {
+      Promise.all(regs.map((r) => r.unregister())).then(() => {
+        if ("caches" in window) {
+          caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+        }
+      });
+    }
+  }).catch(() => {});
+}
+
 // Initialize native plugins when running on a native platform
 if (Capacitor.isNativePlatform()) {
   import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
