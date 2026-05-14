@@ -584,7 +584,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           }}
         >
           {/* Content */}
-          <div className="relative px-5 pt-72 pb-10 pointer-events-auto">
+          <div className="relative px-5 pt-80 pb-10 pointer-events-auto">
             {matchedOwnItem && (
               <div className="flex items-center gap-1.5 mb-2">
                 <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -650,7 +650,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </button>
 
             {/* Action buttons — Flopou / Hypou */}
-            <div className="mt-14 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-3">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
