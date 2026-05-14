@@ -114,8 +114,13 @@ function CallStage({
       onRemoteJoined();
     };
     const onDisconnected = () => onLeave();
+    const onParticipantLeft = () => {
+      // The other side hung up — leave the room too
+      onLeave();
+    };
     room.on(RoomEvent.ParticipantConnected, onConnected);
     room.on(RoomEvent.Disconnected, onDisconnected);
+    room.on(RoomEvent.ParticipantDisconnected, onParticipantLeft);
     // If a remote was already there
     if (room.numParticipants > 1) {
       setConnected(true);
@@ -124,6 +129,7 @@ function CallStage({
     return () => {
       room.off(RoomEvent.ParticipantConnected, onConnected);
       room.off(RoomEvent.Disconnected, onDisconnected);
+      room.off(RoomEvent.ParticipantDisconnected, onParticipantLeft);
     };
   }, [room, onRemoteJoined, onLeave]);
 
