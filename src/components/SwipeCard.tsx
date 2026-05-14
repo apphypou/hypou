@@ -604,7 +604,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           }}
         >
           {/* Content */}
-          <div className="relative px-5 mt-80 pb-10 pointer-events-auto">
+          <div className="relative px-5 mt-80 pb-10 pointer-events-none">
             {matchedOwnItem && (
               <div className="flex items-center gap-1.5 mb-2">
                 <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -663,14 +663,14 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 toggleExpand(e);
               }}
               aria-label="Ver detalhes do item"
-              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform"
+              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform pointer-events-auto"
             >
               <ChevronUp className="h-3 w-3" />
               Ver detalhes
             </button>
 
             {/* Action buttons — Flopou / Hypou */}
-            <div className="mt-6 flex items-center gap-3">
+            <div className="mt-6 flex items-center gap-3 pointer-events-auto">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
