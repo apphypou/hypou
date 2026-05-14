@@ -584,7 +584,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           }}
         >
           {/* Content */}
-          <div className="relative px-5 pt-80 pb-10 pointer-events-auto">
+          <div className="relative px-5 mt-80 pb-10 pointer-events-auto">
             {matchedOwnItem && (
               <div className="flex items-center gap-1.5 mb-2">
                 <Repeat className="h-3 w-3 text-primary shrink-0" />
