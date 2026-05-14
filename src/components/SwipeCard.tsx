@@ -580,7 +580,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           onPointerDown={(e) => e.stopPropagation()}
           style={{
             background:
-              "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.25) 35%, rgba(0,0,0,0.5) 55%, rgba(0,0,0,0.72) 75%, rgba(0,0,0,0.88) 100%)",
+              "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 18%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.88) 75%, rgba(0,0,0,0.98) 100%)",
           }}
         >
           {/* Content */}
