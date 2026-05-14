@@ -243,8 +243,8 @@ function RemoteRenderer({ kind }: { kind: "video" | "audio" }) {
     { onlySubscribed: true },
   );
   const remoteVideo = tracks.find(
-    (t) => t.source === Track.Source.Camera && !t.participant.isLocal,
-  );
+    (t) => t.source === Track.Source.Camera && !t.participant.isLocal && (t as any).publication,
+  ) as any;
 
   if (kind === "video" && remoteVideo) {
     return (
