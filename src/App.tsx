@@ -14,6 +14,7 @@ import OfflineScreen from "@/components/OfflineScreen";
 import PageTransition from "@/components/PageTransition";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
+import IncomingCallSheet from "@/components/IncomingCallSheet";
 
 const GlobalAlerts = () => {
   useGlobalRealtimeAlerts();
