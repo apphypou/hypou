@@ -584,7 +584,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           }}
         >
           {/* Content */}
-          <div className="relative px-5 pt-56 pb-24 pointer-events-auto">
+          <div className="relative px-5 pt-40 pb-24 pointer-events-auto">
             {matchedOwnItem && (
               <div className="flex items-center gap-1.5 mb-2">
                 <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -635,39 +635,34 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               {formatValue(item.market_value)}
             </p>
 
-            {/* "Ver detalhes" pill — affordance clara */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpand(e);
-              }}
-              aria-label="Ver detalhes do item"
-              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform"
-            >
-              <ChevronUp className="h-3 w-3" />
-              Ver detalhes
-            </button>
-
-            {/* Action buttons — Flopou / Hypou */}
-            <div className="mt-4 flex items-center gap-3">
+            {/* "Ver detalhes" + ações Flopou/Hypou na mesma linha */}
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); toggleExpand(e); }}
+                aria-label="Ver detalhes do item"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform"
+              >
+                <ChevronUp className="h-3 w-3" />
+                Ver detalhes
+              </button>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
                 disabled={disabled || standby}
                 aria-label="Flopou"
-                className="flex-1 h-14 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center text-white/90 active:scale-[0.97] transition-transform disabled:opacity-50"
+                className="h-8 w-8 shrink-0 rounded-full bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center text-white/90 active:scale-90 transition-transform disabled:opacity-50"
               >
-                <Repeat className="h-6 w-6" strokeWidth={2.2} />
+                <Repeat className="h-4 w-4" strokeWidth={2.4} />
               </button>
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("like"); }}
                 disabled={disabled || standby}
                 aria-label="Hypou"
-                className="flex-[1.6] h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center active:scale-[0.97] transition-transform shadow-[0_8px_24px_hsl(var(--primary)/0.35)] disabled:opacity-50"
+                className="h-8 w-8 shrink-0 rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-90 transition-transform shadow-[0_4px_14px_hsl(var(--primary)/0.4)] disabled:opacity-50"
               >
-                <Handshake className="h-6 w-6" strokeWidth={2.4} />
+                <Handshake className="h-4 w-4" strokeWidth={2.4} />
               </button>
             </div>
           </div>
