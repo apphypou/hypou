@@ -59,6 +59,7 @@ const AdminWaitlist = lazy(() => import("./pages/admin/AdminWaitlist"));
 const AdminStatus = lazy(() => import("./pages/admin/AdminStatus"));
 const AdminAssistente = lazy(() => import("./pages/admin/AdminAssistente"));
 const AdminLancamento = lazy(() => import("./pages/admin/AdminLancamento"));
+const Chamada = lazy(() => import("./pages/Chamada"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
