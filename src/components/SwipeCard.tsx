@@ -650,7 +650,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </button>
 
             {/* Action buttons — Flopou / Hypou */}
-            <div className="mt-8 flex items-center gap-3 translate-y-6 -mb-6">
+            <div className="mt-10 flex items-center gap-3">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
