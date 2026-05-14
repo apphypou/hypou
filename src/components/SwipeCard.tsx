@@ -579,11 +579,17 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           className="absolute bottom-0 inset-x-0 z-30 rounded-b-[1.5rem] overflow-hidden"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          {/* Soft fade joining image and pedestal */}
-          <div className="h-6 bg-gradient-to-b from-transparent to-black/45 pointer-events-none" />
+          {/* Smooth multi-stop fade joining image and pedestal */}
+          <div
+            className="h-32 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.18) 50%, rgba(0,0,0,0.38) 75%, rgba(0,0,0,0.6) 100%)",
+            }}
+          />
 
           {/* Pedestal */}
-          <div className="relative bg-black/55 dark:bg-black/65 backdrop-blur-2xl border-t border-white/10 px-5 pt-4 pb-24">
+          <div className="relative bg-black/65 backdrop-blur-2xl px-5 pt-2 pb-24">
             {matchedOwnItem && (
               <div className="flex items-center gap-1.5 mb-2">
                 <Repeat className="h-3 w-3 text-primary shrink-0" />
