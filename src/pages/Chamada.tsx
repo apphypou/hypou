@@ -12,6 +12,7 @@ import {
 import { Track, Room, RoomEvent } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, SwitchCamera, Loader2 } from "lucide-react";
 import { endCall, markMissed } from "@/services/callService";
+import { supabase } from "@/integrations/supabase/client";
 import "@livekit/components-styles";
 
 interface CallNavState {
@@ -62,6 +63,27 @@ export default function Chamada() {
     try { await endCall(state!.callSessionId); } catch {/* noop */}
     navigate(-1);
   };
+
+  // Realtime fallback: if the call_session is set to ended/declined/missed by the
+  // other side, force-leave the room (handles abrupt drops).
+  useEffect(() => {
+    if (!state?.callSessionId) return;
+    const channel = supabase
+      .channel(`call-session-${state.callSessionId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "call_sessions", filter: `id=eq.${state.callSessionId}` },
+        (payload) => {
+          const row: any = payload.new;
+          if (["ended", "declined", "missed"].includes(row.status) && !sessionEndedRef.current) {
+            sessionEndedRef.current = true;
+            navigate(-1);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [state?.callSessionId, navigate]);
 
   if (!state?.token) return null;
 
@@ -114,8 +136,13 @@ function CallStage({
       onRemoteJoined();
     };
     const onDisconnected = () => onLeave();
+    const onParticipantLeft = () => {
+      // The other side hung up — leave the room too
+      onLeave();
+    };
     room.on(RoomEvent.ParticipantConnected, onConnected);
     room.on(RoomEvent.Disconnected, onDisconnected);
+    room.on(RoomEvent.ParticipantDisconnected, onParticipantLeft);
     // If a remote was already there
     if (room.numParticipants > 1) {
       setConnected(true);
@@ -124,6 +151,7 @@ function CallStage({
     return () => {
       room.off(RoomEvent.ParticipantConnected, onConnected);
       room.off(RoomEvent.Disconnected, onDisconnected);
+      room.off(RoomEvent.ParticipantDisconnected, onParticipantLeft);
     };
   }, [room, onRemoteJoined, onLeave]);
 
