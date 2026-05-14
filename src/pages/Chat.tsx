@@ -23,7 +23,7 @@ const Chat = () => {
   return (
     <ScreenLayout>
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-8 pb-4 shrink-0">
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-3 pb-4 shrink-0">
         <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
           Chat
         </h1>
