@@ -12,6 +12,7 @@ import {
 import { Track, Room, RoomEvent } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, SwitchCamera, Loader2 } from "lucide-react";
 import { endCall, markMissed } from "@/services/callService";
+import { supabase } from "@/integrations/supabase/client";
 import "@livekit/components-styles";
 
 interface CallNavState {
