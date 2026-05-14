@@ -509,6 +509,26 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
         {/* Top gradient — só pra legibilidade do chrome */}
         <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none z-20" />
 
+        {/* Tap zones para troca de imagens — cobrem o card todo, mas ficam abaixo dos botões (z-30) */}
+        {!expanded && !standby && totalSlides > 1 && (
+          <>
+            <div
+              className="absolute top-0 bottom-0 left-0 w-1/2 z-[25]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
+              }}
+            />
+            <div
+              className="absolute top-0 bottom-0 right-0 w-1/2 z-[25]"
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex((i) => (i + 1) % totalSlides);
+              }}
+            />
+          </>
+        )}
+
         {/* Bottom gradient — sutil, complementa o painel Liquid Glass */}
         {expanded && (
           <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" />
