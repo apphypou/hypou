@@ -650,7 +650,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </button>
 
             {/* Action buttons — Flopou / Hypou */}
-            <div className="mt-4 flex items-center gap-3">
+            <div className="mt-8 flex items-center gap-3">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
@@ -665,7 +665,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                 onClick={(e) => { e.stopPropagation(); doExit("like"); }}
                 disabled={disabled || standby}
                 aria-label="Hypou"
-                className="flex-[1.6] h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center active:scale-[0.97] transition-transform shadow-[0_8px_24px_hsl(var(--primary)/0.35)] disabled:opacity-50"
+                className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center active:scale-[0.97] transition-transform shadow-[0_8px_24px_hsl(var(--primary)/0.35)] disabled:opacity-50"
               >
                 <Handshake className="h-6 w-6" strokeWidth={2.4} />
               </button>
