@@ -119,11 +119,7 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
   });
   if (error) throw error;
 
-  let rows = ((data || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
-
-  // Fallback: if RPC returns nothing (user swiped everything or has no items),
-  // load any active items from other users so the feed never feels empty.
-  if (rows.length === 0) {
+  const loadFallbackRows = async () => {
     const { data: fallback } = await supabase
       .from("items")
       .select("*")
@@ -131,42 +127,41 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
       .neq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(limit);
-    rows = ((fallback || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
-  }
+    return ((fallback || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
+  };
 
-  const itemIds = rows.map((i) => i.id);
-  const ownerIds = [...new Set(rows.map((i) => i.user_id))];
+  const hydrateRows = async (sourceRows: any[]) => {
+    const itemIds = sourceRows.map((i) => i.id);
+    const ownerIds = [...new Set(sourceRows.map((i) => i.user_id))];
 
-  let imageMap: Record<string, any[]> = {};
-  let videoMap: Record<string, any[]> = {};
-  let profileMap: Record<string, any> = {};
+    let imageMap: Record<string, any[]> = {};
+    let videoMap: Record<string, any[]> = {};
+    let profileMap: Record<string, any> = {};
 
-  if (itemIds.length > 0) {
-    const [{ data: images }, { data: videos }] = await Promise.all([
-      supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
-      supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
-    ]);
-    (images || []).forEach((img) => {
-      if (!imageMap[img.item_id]) imageMap[img.item_id] = [];
-      imageMap[img.item_id].push(img);
-    });
-    (videos || []).forEach((vid) => {
-      if (!videoMap[vid.item_id]) videoMap[vid.item_id] = [];
-      videoMap[vid.item_id].push(vid);
-    });
-  }
+    if (itemIds.length > 0) {
+      const [{ data: images }, { data: videos }] = await Promise.all([
+        supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
+        supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
+      ]);
+      (images || []).forEach((img) => {
+        if (!imageMap[img.item_id]) imageMap[img.item_id] = [];
+        imageMap[img.item_id].push(img);
+      });
+      (videos || []).forEach((vid) => {
+        if (!videoMap[vid.item_id]) videoMap[vid.item_id] = [];
+        videoMap[vid.item_id].push(vid);
+      });
+    }
 
-  if (ownerIds.length > 0) {
-    const { data: profiles } = await supabase
-      .from("public_profiles" as any)
-      .select("user_id, display_name, avatar_url, location, created_at")
-      .in("user_id", ownerIds as string[]);
-    (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
-  }
+    if (ownerIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("public_profiles" as any)
+        .select("user_id, display_name, avatar_url, location, created_at")
+        .in("user_id", ownerIds as string[]);
+      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
+    }
 
-  return rows
-    .filter((item) => imageMap[item.id]?.length > 0)
-    .map((item) => ({
+    return sourceRows.filter((item) => imageMap[item.id]?.length > 0).map((item) => ({
       ...item,
       item_images: imageMap[item.id] || [],
       item_videos: videoMap[item.id] || [],
@@ -176,6 +171,19 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
         : null,
       matched_items_count: item.matched_items_count ?? 0,
     }));
+  };
+
+  let rows = ((data || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
+  let items = await hydrateRows(rows);
+
+  // Fallback after hydration: the RPC can return only items without photos,
+  // which are hidden from Explorar. In that case, load active photographed items.
+  if (items.length === 0) {
+    rows = await loadFallbackRows();
+    items = await hydrateRows(rows);
+  }
+
+  return items;
 };
 
 /** Public version for guest mode - no user filtering */
