@@ -7,7 +7,7 @@ import "./index.css";
 if (Capacitor.isNativePlatform()) {
   import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
     StatusBar.setStyle({ style: Style.Dark });
-    StatusBar.setBackgroundColor({ color: "#0a0a0a" });
+    StatusBar.setBackgroundColor({ color: "#1C1C1C" });
   });
 
   import("@capacitor/keyboard").then(({ Keyboard, KeyboardResize }) => {
