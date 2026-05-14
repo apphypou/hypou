@@ -362,25 +362,43 @@ const Conversa = () => {
           </button>
         )}
 
-        {/* Report button */}
+        {/* Call buttons + report */}
         {details && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors">
-                <MoreVertical className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-foreground/10">
-              <DropdownMenuItem onClick={() => setReportOpen(true)} className="text-foreground gap-2">
-                <Flag className="h-4 w-4" />
-                Denunciar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setBlockConfirmOpen(true)} className="text-destructive gap-2 focus:text-destructive">
-                <Ban className="h-4 w-4" />
-                Bloquear
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleStartCall("audio")}
+              disabled={!!callingKind}
+              aria-label="Chamada de áudio"
+              className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
+            >
+              {callingKind === "audio" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => handleStartCall("video")}
+              disabled={!!callingKind}
+              aria-label="Chamada de vídeo"
+              className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
+            >
+              {callingKind === "video" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
+            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+                <DropdownMenuItem onClick={() => setReportOpen(true)} className="text-foreground gap-2">
+                  <Flag className="h-4 w-4" />
+                  Denunciar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setBlockConfirmOpen(true)} className="text-destructive gap-2 focus:text-destructive">
+                  <Ban className="h-4 w-4" />
+                  Bloquear
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </header>
 
