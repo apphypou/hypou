@@ -469,7 +469,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
 
         {/* Slide dots — top center (smaller) */}
         {!expanded && totalSlides > 1 && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+          <div className="absolute top-0.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
             {Array.from({ length: totalSlides }).map((_, i) => (
               <div
                 key={i}
