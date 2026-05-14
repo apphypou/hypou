@@ -64,6 +64,27 @@ export default function Chamada() {
     navigate(-1);
   };
 
+  // Realtime fallback: if the call_session is set to ended/declined/missed by the
+  // other side, force-leave the room (handles abrupt drops).
+  useEffect(() => {
+    if (!state?.callSessionId) return;
+    const channel = supabase
+      .channel(`call-session-${state.callSessionId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "call_sessions", filter: `id=eq.${state.callSessionId}` },
+        (payload) => {
+          const row: any = payload.new;
+          if (["ended", "declined", "missed"].includes(row.status) && !sessionEndedRef.current) {
+            sessionEndedRef.current = true;
+            navigate(-1);
+          }
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [state?.callSessionId, navigate]);
+
   if (!state?.token) return null;
 
   return (
