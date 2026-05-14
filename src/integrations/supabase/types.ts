@@ -35,6 +35,54 @@ export type Database = {
         }
         Relationships: []
       }
+      call_sessions: {
+        Row: {
+          accepted_at: string | null
+          callee_id: string
+          caller_id: string
+          conversation_id: string
+          created_at: string
+          duration_seconds: number
+          ended_at: string | null
+          id: string
+          kind: string
+          room_name: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          callee_id: string
+          caller_id: string
+          conversation_id: string
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          kind: string
+          room_name?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          callee_id?: string
+          caller_id?: string
+          conversation_id?: string
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          kind?: string
+          room_name?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
