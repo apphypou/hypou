@@ -204,11 +204,8 @@ const MeuPerfil = () => {
   return (
     <ScreenLayout>
       {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-6 pb-4">
-        <div className="flex items-center gap-3">
-          <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
-          <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Meu Perfil</span>
-        </div>
+      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-3 pb-4 shrink-0">
+        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">Meu Perfil</h1>
         <IconButton icon={Settings} size="sm" onClick={() => navigate("/configuracoes")} />
       </header>
 
