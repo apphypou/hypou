@@ -122,7 +122,7 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
   const loadFallbackRows = async () => {
     const { data: fallback } = await supabase
       .from("items")
-      .select("*")
+      .select("*, item_images!inner(id)")
       .eq("status", "active")
       .neq("user_id", userId)
       .order("created_at", { ascending: false })
