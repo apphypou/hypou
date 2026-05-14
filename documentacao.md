@@ -599,7 +599,7 @@ conditions = ["Novo", "Seminovo", "Usado", "Bem usado"];
 | `deleteItemImage()` | Remove imagem de item |
 | `uploadItemImage()` | Upload para Storage + registro no banco |
 | `validateItemPrice()` | Validação de preço via Edge Function (IA) |
-| `getRecommendedItems()` | Itens recomendados via RPC `recommended_items` |
+| `getRecommendedItems()` | Itens recomendados via RPC `recommended_items`, com fallback para itens ativos com foto quando a recomendação não exibe cards válidos |
 | `getPublicExploreItems()` | Feed público para modo visitante |
 
 ### `matchService.ts`
@@ -709,6 +709,8 @@ Registro → Trigger handle_new_user() cria profile
               - Remove bloqueados
               - Prioriza mesma categoria
               - Retorna matched_item_id (qual item seu é compatível)
+          → Hidrata imagens/vídeos/perfis e oculta itens sem foto
+          → Se a lista final ficar vazia, busca itens ativos com foto de outros usuários
           → SwipeCard com drag gesture
           → Like → createSwipe("like") + abre SelectItemDialog
           → Dislike → createSwipe("dislike")
