@@ -119,7 +119,21 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
   });
   if (error) throw error;
 
-  const rows = ((data || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
+  let rows = ((data || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
+
+  // Fallback: if RPC returns nothing (user swiped everything or has no items),
+  // load any active items from other users so the feed never feels empty.
+  if (rows.length === 0) {
+    const { data: fallback } = await supabase
+      .from("items")
+      .select("*")
+      .eq("status", "active")
+      .neq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    rows = ((fallback || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
+  }
+
   const itemIds = rows.map((i) => i.id);
   const ownerIds = [...new Set(rows.map((i) => i.user_id))];
 
