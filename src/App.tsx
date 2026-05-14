@@ -128,6 +128,9 @@ const AnimatedRoutes = () => {
           <Route path="/chat/:conversationId" element={
             <ProtectedRoute><PageTransition><Conversa /></PageTransition></ProtectedRoute>
           } />
+          <Route path="/chamada/:roomName" element={
+            <ProtectedRoute><Chamada /></ProtectedRoute>
+          } />
           <Route path="/meu-perfil" element={
             <ProtectedRoute><PageTransition><MeuPerfil /></PageTransition></ProtectedRoute>
           } />
