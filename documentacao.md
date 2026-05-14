@@ -1193,3 +1193,27 @@ Estrutura em duas zonas claras:
 - Top gradient: `h-20 from-black/40 via-black/15 to-transparent` (apenas legibilidade do chrome).
 - Owner chip: rating com 1 decimal (`5.0`).
 - Dots de paginação: container `bg-black/30 backdrop-blur-xl` para contraste em qualquer foto.
+
+## Vídeo & Áudio Chamada no Chat (LiveKit)
+
+Adicionado em 14/05/2026.
+
+**Stack**: LiveKit Cloud (SFU gerenciado, free 10k min/mês) + `livekit-client` + `@livekit/components-react`.
+
+**Banco**:
+- Tabela `call_sessions` (conversation_id, caller_id, callee_id, kind, status, room_name, accepted_at, ended_at, duration_seconds).
+- RLS: apenas participantes; trigger guarda transições (callee aceita/recusa).
+- Trigger AFTER UPDATE injeta mensagem de sistema no chat ao encerrar (com duração).
+- Tabela em `supabase_realtime` publication.
+- UNIQUE parcial impede duas chamadas ativas na mesma conversa.
+
+**Edge function** `livekit-token`: valida JWT, valida participação, cria/lê `call_sessions`, assina `AccessToken` LiveKit (TTL 1h) com grants `roomJoin/canPublish/canSubscribe`. Secrets: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`.
+
+**Frontend**:
+- `src/services/callService.ts` — start/join/accept/decline/end/missed.
+- `src/hooks/useIncomingCalls.ts` — assina realtime de `call_sessions` p/ callee.
+- `src/components/IncomingCallSheet.tsx` — overlay topo Liquid Glass (montado 1× no `App.tsx`).
+- `src/pages/Chamada.tsx` — rota `/chamada/:roomName` (lazy). `LiveKitRoom` full-screen, vídeo remoto cobrindo, self-view PiP, controles (mic, cam, switch camera, hangup). Caller faz markMissed após 45s sem resposta.
+- `src/pages/Conversa.tsx` — botões `Phone` e `Video` no header.
+
+**Capacitor**: WebView moderno (iOS 14.5+ / Android atual) já suporta WebRTC sem plugin extra. v1 funciona apenas com app aberto; CallKit/lockscreen fica para v2.
