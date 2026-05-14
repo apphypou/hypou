@@ -261,7 +261,7 @@ function RemoteRenderer({ kind }: { kind: "video" | "audio" }) {
 
 function LocalCameraView() {
   const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: false }], { onlySubscribed: false });
-  const local = tracks.find((t) => t.participant.isLocal);
+  const local = tracks.find((t) => t.participant.isLocal && (t as any).publication) as any;
   if (!local) return <div className="h-full w-full bg-black" />;
   return (
     <TrackRefContext.Provider value={local}>
