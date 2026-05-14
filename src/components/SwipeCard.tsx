@@ -15,7 +15,7 @@ import {
   AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play, Share2 } from "lucide-react";
+import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play, Share2, Heart, Handshake } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { useQuery } from "@tanstack/react-query";
@@ -648,6 +648,28 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               <ChevronUp className="h-3 w-3" />
               Ver detalhes
             </button>
+
+            {/* Action buttons — Flopou / Hypou */}
+            <div className="mt-4 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
+                disabled={disabled || standby}
+                aria-label="Flopou"
+                className="flex-1 h-14 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center text-white/90 active:scale-[0.97] transition-transform disabled:opacity-50"
+              >
+                <Repeat className="h-6 w-6" strokeWidth={2.2} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); doExit("like"); }}
+                disabled={disabled || standby}
+                aria-label="Hypou"
+                className="flex-[1.6] h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center active:scale-[0.97] transition-transform shadow-[0_8px_24px_hsl(var(--primary)/0.35)] disabled:opacity-50"
+              >
+                <Handshake className="h-6 w-6" strokeWidth={2.4} />
+              </button>
+            </div>
           </div>
         </div>
         )}
