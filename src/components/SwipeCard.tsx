@@ -318,7 +318,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
           rotate: standby || expanded ? 0 : rotate,
           scale: standby ? 0.97 : (expanded ? 1 : liftScale),
           boxShadow: standby || expanded ? undefined : liftShadow,
-          zIndex: standby ? 9 : 60,
+          zIndex: standby ? 9 : 20,
           willChange: standby ? "auto" : "transform",
           transformOrigin: "50% 80%",
           borderRadius: "1.5rem",
