@@ -14,6 +14,7 @@ import OfflineScreen from "@/components/OfflineScreen";
 import PageTransition from "@/components/PageTransition";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
+import IncomingCallSheet from "@/components/IncomingCallSheet";
 
 const GlobalAlerts = () => {
   useGlobalRealtimeAlerts();
@@ -58,6 +59,7 @@ const AdminWaitlist = lazy(() => import("./pages/admin/AdminWaitlist"));
 const AdminStatus = lazy(() => import("./pages/admin/AdminStatus"));
 const AdminAssistente = lazy(() => import("./pages/admin/AdminAssistente"));
 const AdminLancamento = lazy(() => import("./pages/admin/AdminLancamento"));
+const Chamada = lazy(() => import("./pages/Chamada"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -125,6 +127,9 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/chat/:conversationId" element={
             <ProtectedRoute><PageTransition><Conversa /></PageTransition></ProtectedRoute>
+          } />
+          <Route path="/chamada/:roomName" element={
+            <ProtectedRoute><Chamada /></ProtectedRoute>
           } />
           <Route path="/meu-perfil" element={
             <ProtectedRoute><PageTransition><MeuPerfil /></PageTransition></ProtectedRoute>
@@ -198,6 +203,7 @@ const App = () => {
             <AuthProvider>
               <AuthRedirectHandler />
               <GlobalAlerts />
+              <IncomingCallSheet />
               <AnimatedRoutes />
             </AuthProvider>
           </BrowserRouter>
