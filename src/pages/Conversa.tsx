@@ -1,4 +1,5 @@
-import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, MoreVertical, Ban } from "lucide-react";
+import { ArrowLeft, Send, Check, CheckCheck, Loader2, Plus, Image, Video, Mic, X, MicOff, Flag, MoreVertical, Ban, Phone } from "lucide-react";
+import { startCall } from "@/services/callService";
 import { useParams, useNavigate } from "react-router-dom";
 import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
