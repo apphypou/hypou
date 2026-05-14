@@ -371,40 +371,6 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      {/* Hypou / Flopou — pill buttons sitting inside the card (reference style) */}
-      {currentItem && !isLoading && !feedEnded && (
-        <div
-          className="fixed left-0 right-0 z-40 flex justify-center items-center gap-3 px-6 pointer-events-none"
-          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 7.5rem)" }}
-        >
-          <button
-            type="button"
-            aria-label="Recusar item"
-            disabled={swipingRef.current}
-            onClick={() => {
-              haptic("light");
-              cardRef.current?.triggerSwipe("dislike");
-            }}
-            className="pointer-events-auto h-14 w-20 rounded-full bg-black/55 backdrop-blur-2xl border border-white/10 flex items-center justify-center text-white active:scale-95 transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.45)] disabled:opacity-50"
-          >
-            <X className="h-6 w-6" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            aria-label="Curtir item"
-            disabled={swipingRef.current}
-            onClick={() => {
-              haptic("light");
-              cardRef.current?.triggerSwipe("like");
-            }}
-            className="pointer-events-auto h-14 flex-1 max-w-[210px] rounded-full bg-primary text-primary-foreground flex items-center justify-center gap-2 font-bold text-sm uppercase tracking-wider active:scale-95 transition-transform shadow-[0_10px_30px_hsl(var(--primary)/0.4)] disabled:opacity-50"
-          >
-            <Heart className="h-5 w-5 fill-current" strokeWidth={2} />
-            Hypou
-          </button>
-        </div>
-      )}
-
       <BottomNav activeTab="explorar" />
 
       {/* Onboarding Tour for first-time users */}
