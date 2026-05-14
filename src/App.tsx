@@ -203,6 +203,7 @@ const App = () => {
             <AuthProvider>
               <AuthRedirectHandler />
               <GlobalAlerts />
+              <IncomingCallSheet />
               <AnimatedRoutes />
             </AuthProvider>
           </BrowserRouter>
