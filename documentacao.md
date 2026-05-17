@@ -1231,7 +1231,18 @@ Estrutura em duas zonas:
 
 - Top gradient: `h-20 from-black/40 via-black/15 to-transparent` (apenas legibilidade do chrome).
 - Owner chip: rating com 1 decimal (`5.0`).
-- Dots de paginação: container `bg-black/30 backdrop-blur-xl` para contraste em qualquer foto.
+- Dots de paginação: container `bg-scrim/30 backdrop-blur-xl` para contraste em qualquer foto.
+
+## Conversa — Anatomia (atualizado)
+
+Refatorado em subcomponentes (pasta `src/pages/Conversa/`) — `Conversa.tsx` reduzido de 691 → 302 linhas (apenas orquestração de estado e data-fetching):
+
+- **`Conversa.tsx`** — hooks (`useMessages`, `useConversationDetails`, `useSendMessage`, `useUploadChatMedia`), state e handlers (`handleSend`, `handleReport`, `handleBlock`, gravação de áudio, chamadas).
+- **`Conversa/ChatHeader.tsx`** — back, avatar/nome do outro, ícone par de itens, botões `Phone`/`Video`, menu Denunciar/Bloquear.
+- **`Conversa/MessageList.tsx`** — render de mensagens (text/image/video/audio/system) com check/checkcheck. `forwardRef` para o scroll auto.
+- **`Conversa/MessageInput.tsx`** — textarea, menu de anexos, indicador de gravação/upload, botão enviar (gradiente primary→roxo).
+- **`Conversa/ReportDialogs.tsx`** — Dialog de denúncia (motivos chips + descrição) + AlertDialog de confirmação de bloqueio.
+
 
 ## Vídeo & Áudio Chamada no Chat (LiveKit)
 
