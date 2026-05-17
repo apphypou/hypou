@@ -724,10 +724,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                   scale: likeBtnScale,
                   background: likeBtnBg,
                   boxShadow: likeBtnShadow,
+                  color: likeIconColor,
                 }}
-                className="h-16 w-16 rounded-full border border-white/20 backdrop-blur-xl flex items-center justify-center text-white disabled:opacity-50"
+                className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
               >
-                <ThumbsUp className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.25} />
+                <ThumbsUp className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.15} />
               </motion.button>
             </div>
 
