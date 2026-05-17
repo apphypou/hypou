@@ -379,8 +379,12 @@ Adicionados em `index.css` (light + dark) e mapeados em `tailwind.config.ts`:
 | `--glass-surface-strong` | Superfície glass enfatizada (`white/10`) |
 | `--glass-border` | Borda glass padrão (`white/15`) |
 | `--overlay-scrim` | Scrim sobre mídia (`black/35`) |
+| `--on-media` | Texto/ícone fixo branco sobre imagem/vídeo (independente do tema) |
+| `--scrim` | Preto fixo para overlays escuros (independente do tema) |
 
-Classes Tailwind disponíveis: `bg-hype`, `text-hype-foreground`, `bg-flop`, `text-flop-foreground`, etc.
+Classes Tailwind disponíveis: `bg-hype`, `text-hype-foreground`, `bg-flop`, `text-flop-foreground`, `text-on-media`, `bg-scrim/40`, `border-on-media/10`, etc.
+
+> **Regra de uso:** componentes que exibem conteúdo sobre **mídia** (fotos de itens, vídeos shorts, swipe cards) devem usar `text-on-media` / `bg-scrim` em vez de `text-white` / `bg-black`, mantendo a semântica e funcionando em ambos os temas.
 
 ### 6.5 Efeitos Visuais (Utilitários CSS)
 
