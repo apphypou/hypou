@@ -28,8 +28,8 @@ export const SwipeActionButtons = ({
     x,
     [-150, -20, 0],
     [
-      "hsl(var(--flop))",
-      "hsl(var(--flop) / 0.18)",
+      "hsl(var(--foreground) / 0.12)",
+      "hsl(var(--foreground) / 0.08)",
       "hsl(var(--glass-surface))",
     ]
   );
