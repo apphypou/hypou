@@ -15,12 +15,22 @@ import {
   AnimatePresence,
   type PanInfo,
 } from "framer-motion";
-import { MapPin, Image, Package, ChevronUp, ChevronDown, Star, ChevronRight, Shield, Repeat, Play, Share2, Heart, Handshake, ThumbsUp, ThumbsDown } from "lucide-react";
+import {
+  MapPin,
+  Image,
+  Package,
+  ChevronUp,
+  ChevronDown,
+  Star,
+  Repeat,
+  Share2,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { formatValue, translateCondition } from "@/lib/utils";
+import { CardDetailContent } from "./SwipeCard/CardDetailContent";
+import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
+import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
@@ -45,701 +55,463 @@ interface SwipeCardProps {
   matchedOwnItem?: MatchedOwnItem | null;
 }
 
-const getTimeSince = (dateStr: string | null | undefined) => {
-  if (!dateStr) return null;
-  const created = new Date(dateStr);
-  const now = new Date();
-  const months = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30));
-  if (months < 1) return "Novo membro";
-  if (months === 1) return "Há 1 mês";
-  if (months < 12) return `Há ${months} meses`;
-  const years = Math.floor(months / 12);
-  return years === 1 ? "Há 1 ano" : `Há ${years} anos`;
-};
+const SwipeCard = memo(
+  forwardRef<SwipeCardHandle, SwipeCardProps>(
+    (
+      { item, onSwipeComplete, onDragDirectionChange, disabled, standby, matchedOwnItem },
+      ref
+    ) => {
+      const navigate = useNavigate();
+      const x = useMotionValue(0);
+      const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
 
-/* ── Expanded detail content inside card ── */
-const CardDetailContent = ({ item }: { item: any }) => {
-  const navigate = useNavigate();
-  const ownerProfile = item?.profiles as any;
-  const conditionLabel = translateCondition(item?.condition);
-  const { data: rating } = useUserRating(ownerProfile?.user_id);
+      // 3D lift effect — card pops out as it's dragged
+      const absX = useTransform(x, (v) => Math.abs(v));
+      const liftScale = useTransform(absX, [0, 250], [1, 1.06]);
+      const liftShadow = useTransform(
+        absX,
+        [0, 250],
+        [
+          "0 4px 20px rgba(0,0,0,0.15)",
+          "0 30px 60px -10px rgba(0,0,0,0.55), 0 18px 36px -8px rgba(0,0,0,0.4)",
+        ]
+      );
 
-  // Fetch trade count for the owner
-  const { data: tradeCount = 0 } = useQuery({
-    queryKey: ["user-trade-count", ownerProfile?.user_id],
-    queryFn: async () => {
-      const uid = ownerProfile?.user_id;
-      if (!uid) return 0;
-      const { count } = await supabase
-        .from("matches")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "accepted")
-        .or(`user_a_id.eq.${uid},user_b_id.eq.${uid}`);
-      return count || 0;
-    },
-    enabled: !!ownerProfile?.user_id,
-  });
+      // Image + video gallery state
+      const images = item?.item_images || [];
+      const videos = item?.item_videos || [];
+      const hasVideo = videos.length > 0;
+      const totalSlides = images.length + (hasVideo ? 1 : 0);
+      const [activeImageIndex, setActiveImageIndex] = useState(0);
+      const isVideoSlide = hasVideo && activeImageIndex === images.length;
+      const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
+      const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
+      const videoRef = useRef<HTMLVideoElement>(null);
 
-  const memberSince = getTimeSince(ownerProfile?.created_at);
+      // Expanded state
+      const [expanded, setExpanded] = useState(false);
+      const scrollRef = useRef<HTMLDivElement>(null);
 
-  return (
-    <div className="space-y-4 px-4 pb-6 pt-2">
-      {/* Price + tags */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-2xl font-extrabold text-white tracking-tight drop-shadow-md">
-          {formatValue(item.market_value)}
-        </span>
-        <span className="px-2.5 py-0.5 rounded-full bg-white/20 border border-white/20 text-white text-[10px] font-bold tracking-[0.1em] uppercase">
-          {item.category}
-        </span>
-        {conditionLabel && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-white/70 text-[10px] font-bold uppercase">
-            <Package className="h-3 w-3" />
-            {conditionLabel}
-          </span>
-        )}
-      </div>
+      const handleImageTap = useCallback(
+        (e: React.MouseEvent<HTMLDivElement>) => {
+          if (expanded) return;
+          if (totalSlides <= 1) return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          const tapX = e.clientX - rect.left;
+          const half = rect.width / 2;
+          if (tapX > half) {
+            setActiveImageIndex((i) => (i + 1) % totalSlides);
+          } else {
+            setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
+          }
+        },
+        [totalSlides, expanded]
+      );
 
-      {/* Location */}
-      <div className="flex items-center gap-1.5">
-        <MapPin className="h-3.5 w-3.5 text-white/50" />
-        <span className="text-white/70 text-sm">
-          {item.location || ownerProfile?.location || "Local não informado"}
-        </span>
-      </div>
+      const toggleExpand = useCallback((e?: React.MouseEvent) => {
+        e?.stopPropagation();
+        setExpanded((v) => !v);
+      }, []);
 
-      {/* Description */}
-      {item.description && (
-        <div>
-          <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
-            Descrição
-          </h3>
-          <p className="text-white/80 text-sm leading-relaxed">
-            {item.description}
-          </p>
-        </div>
-      )}
-
-      {/* Trade range — simplified */}
-      {(item.margin_down > 0 || item.margin_up > 0) && (
-        <div>
-          <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
-            Aceita trocar por
-          </h3>
-          <p className="text-white/70 text-sm">
-            Itens de {formatValue(Math.round(item.market_value * (1 - (item.margin_down || 0) / 100)))} até {formatValue(Math.round(item.market_value * (1 + (item.margin_up || 0) / 100)))}
-          </p>
-        </div>
-      )}
-
-      {/* Owner profile with trust signals */}
-      {ownerProfile && (
-        <div>
-          <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">
-            Anunciante
-          </h3>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/usuario/${ownerProfile.user_id}`);
-            }}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-          >
-            {ownerProfile.avatar_url ? (
-              <img
-                src={ownerProfile.avatar_url}
-                alt=""
-                className="h-11 w-11 rounded-full object-cover border-2 border-white/20"
-              />
-            ) : (
-              <div className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center border-2 border-white/20">
-                <span className="text-base font-bold text-white/50">
-                  {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
-                </span>
-              </div>
-            )}
-            <div className="flex-1 text-left">
-              <p className="text-white font-bold text-sm">
-                {ownerProfile.display_name || "Usuário"}
-              </p>
-              {/* Trust signals */}
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {rating && (
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs font-semibold text-yellow-400">{rating.average}</span>
-                    <span className="text-[10px] text-white/40">({rating.count})</span>
-                  </div>
-                )}
-                {tradeCount > 0 && (
-                  <div className="flex items-center gap-1">
-                    <Repeat className="h-3 w-3 text-white/40" />
-                    <span className="text-[10px] text-white/50">{tradeCount} {tradeCount === 1 ? "troca" : "trocas"}</span>
-                  </div>
-                )}
-                {memberSince && (
-                  <div className="flex items-center gap-1">
-                    <Shield className="h-3 w-3 text-white/40" />
-                    <span className="text-[10px] text-white/50">{memberSince}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
-  ({ item, onSwipeComplete, onDragDirectionChange, disabled, standby, matchedOwnItem }, ref) => {
-    const navigate = useNavigate();
-    const x = useMotionValue(0);
-    const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
-
-    // Stamp opacity & scale
-    const likeOpacity = useTransform(x, [0, 100], [0, 1]);
-    const dislikeOpacity = useTransform(x, [-100, 0], [1, 0]);
-    const likeStampScale = useTransform(x, [0, 100], [0.5, 1.0]);
-    const dislikeStampScale = useTransform(x, [-100, 0], [1.0, 0.5]);
-
-    // Edge glow
-    const likeGlowOpacity = useTransform(x, [0, 60, 140], [0, 0.25, 0.7]);
-    const dislikeGlowOpacity = useTransform(x, [-140, -60, 0], [0.7, 0.25, 0]);
-
-    // 3D lift effect — card pops out as it's dragged
-    const absX = useTransform(x, (v) => Math.abs(v));
-    const liftScale = useTransform(absX, [0, 250], [1, 1.06]);
-    const liftShadow = useTransform(
-      absX,
-      [0, 250],
-      [
-        "0 4px 20px rgba(0,0,0,0.15)",
-        "0 30px 60px -10px rgba(0,0,0,0.55), 0 18px 36px -8px rgba(0,0,0,0.4)",
-      ]
-    );
-    const isDragging = useTransform(absX, (v) => v > 4);
-
-    // Action buttons — dynamic styling driven by drag
-    const dislikeBtnScale = useTransform(x, [-150, 0, 150], [1.18, 1, 0.92]);
-    const likeBtnScale = useTransform(x, [-150, 0, 150], [0.92, 1, 1.18]);
-    const dislikeBtnBg = useTransform(
-      x,
-      [-150, -20, 0],
-      ["hsl(0 85% 55%)", "hsl(0 70% 50% / 0.18)", "hsl(0 0% 100% / 0.06)"]
-    );
-    const likeBtnBg = useTransform(
-      x,
-      [0, 20, 150],
-      ["hsl(0 0% 100% / 0.06)", "hsl(142 70% 45% / 0.18)", "hsl(142 70% 45%)"]
-    );
-    const dislikeBtnShadow = useTransform(
-      x,
-      [-150, 0],
-      ["0 0 40px hsl(0 90% 55% / 0.7), 0 0 80px hsl(0 90% 55% / 0.4)", "0 4px 12px hsl(0 0% 0% / 0.25)"]
-    );
-    const likeBtnShadow = useTransform(
-      x,
-      [0, 150],
-      ["0 4px 12px hsl(0 0% 0% / 0.25)", "0 0 40px hsl(142 75% 50% / 0.8), 0 0 80px hsl(142 75% 50% / 0.45)"]
-    );
-    const dislikeIconColor = useTransform(x, [-150, -20, 0], ["#ffffff", "#ffffff", "hsl(0 85% 65%)"]);
-    const likeIconColor = useTransform(x, [0, 20, 150], ["hsl(142 75% 50%)", "hsl(142 75% 50%)", "#ffffff"]);
-
-
-    // Image + video gallery state
-    const images = item?.item_images || [];
-    const videos = item?.item_videos || [];
-    const hasVideo = videos.length > 0;
-    const totalSlides = images.length + (hasVideo ? 1 : 0);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
-    const isVideoSlide = hasVideo && activeImageIndex === images.length;
-    const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
-    const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    // Expanded state
-    const [expanded, setExpanded] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
-
-    const handleImageTap = useCallback(
-      (e: React.MouseEvent<HTMLDivElement>) => {
-        if (expanded) return;
-        if (totalSlides <= 1) return;
-        const rect = e.currentTarget.getBoundingClientRect();
-        const tapX = e.clientX - rect.left;
-        const half = rect.width / 2;
-        if (tapX > half) {
-          setActiveImageIndex((i) => (i + 1) % totalSlides);
-        } else {
-          setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
-        }
-      },
-      [totalSlides, expanded]
-    );
-
-    const toggleExpand = useCallback((e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      setExpanded((v) => !v);
-    }, []);
-
-    useEffect(() => {
-      if (disabled || standby) return;
-      const unsubscribe = x.on("change", (latest) => {
-        onDragDirectionChange?.(latest);
-      });
-      return unsubscribe;
-    }, [x, disabled, standby, onDragDirectionChange]);
-
-    const doExit = useCallback(
-      (direction: "like" | "dislike", velocityX?: number) => {
-        if (disabled || standby || expanded) return;
-        const exitX = direction === "like" ? EXIT_X : -EXIT_X;
-        const vel = velocityX != null ? velocityX : (direction === "like" ? 800 : -800);
-        animate(x, exitX, {
-          type: "spring",
-          stiffness: 600,
-          damping: 35,
-          velocity: vel,
-          restSpeed: 100,
-          onComplete: () => onSwipeComplete(direction),
+      useEffect(() => {
+        if (disabled || standby) return;
+        const unsubscribe = x.on("change", (latest) => {
+          onDragDirectionChange?.(latest);
         });
-      },
-      [disabled, standby, expanded, x, onSwipeComplete]
-    );
+        return unsubscribe;
+      }, [x, disabled, standby, onDragDirectionChange]);
 
-    useImperativeHandle(ref, () => ({
-      triggerSwipe: (dir) => doExit(dir),
-    }));
+      const doExit = useCallback(
+        (direction: "like" | "dislike", velocityX?: number) => {
+          if (disabled || standby || expanded) return;
+          const exitX = direction === "like" ? EXIT_X : -EXIT_X;
+          const vel = velocityX != null ? velocityX : direction === "like" ? 800 : -800;
+          animate(x, exitX, {
+            type: "spring",
+            stiffness: 600,
+            damping: 35,
+            velocity: vel,
+            restSpeed: 100,
+            onComplete: () => onSwipeComplete(direction),
+          });
+        },
+        [disabled, standby, expanded, x, onSwipeComplete]
+      );
 
-    const handleDragEnd = useCallback(
-      (_: any, info: PanInfo) => {
-        if (expanded) return;
-        const velocity = info.velocity.x;
-        const offset = info.offset.x;
+      useImperativeHandle(ref, () => ({
+        triggerSwipe: (dir) => doExit(dir),
+      }));
 
-        if (offset > SWIPE_THRESHOLD || velocity > 400) {
-          doExit("like", velocity);
-        } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
-          doExit("dislike", velocity);
-        } else {
-          animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
-        }
-      },
-      [doExit, x, expanded]
-    );
+      const handleDragEnd = useCallback(
+        (_: any, info: PanInfo) => {
+          if (expanded) return;
+          const velocity = info.velocity.x;
+          const offset = info.offset.x;
 
-    const ownerProfile = item?.profiles as any;
-    const conditionLabel = translateCondition(item?.condition);
-    const { data: rating } = useUserRating(ownerProfile?.user_id);
+          if (offset > SWIPE_THRESHOLD || velocity > 400) {
+            doExit("like", velocity);
+          } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
+            doExit("dislike", velocity);
+          } else {
+            animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
+          }
+        },
+        [doExit, x, expanded]
+      );
 
-    return (
-      <motion.div
-        className={`absolute inset-0 w-full h-full ${
-          standby ? "pointer-events-none" : expanded ? "" : "touch-none"
-        }`}
-        style={{
-          x: standby ? 0 : x,
-          rotate: standby || expanded ? 0 : rotate,
-          scale: standby ? 0.97 : (expanded ? 1 : liftScale),
-          boxShadow: standby || expanded ? undefined : liftShadow,
-          zIndex: standby ? 9 : 60,
-          willChange: standby ? "auto" : "transform",
-          transformOrigin: "50% 80%",
-          borderRadius: "1.5rem",
-          ...(standby ? { y: 0, opacity: 0 } : {}),
-        }}
-        drag={standby || expanded ? false : true}
-        dragDirectionLock
-        dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
-        dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
-        onDragEnd={standby || expanded ? undefined : handleDragEnd}
-        initial={standby ? false : { scale: 1, opacity: 1 }}
-        animate={standby ? { scale: 1, opacity: 1 } : undefined}
-      >
-        {/* Liquid glass border — blurred image reflection */}
-        {currentImage && (
-          <div
-            className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0"
-            aria-hidden
-          >
-            <img
-              src={currentImage}
-              alt=""
-              className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
-              draggable={false}
-            />
-            <div className="absolute inset-0 bg-background/30 dark:bg-black/40" />
-          </div>
-        )}
-        {!currentImage && (
-          <div className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0 bg-border dark:bg-primary/30" aria-hidden />
-        )}
+      const ownerProfile = item?.profiles as any;
+      const conditionLabel = translateCondition(item?.condition);
+      const { data: rating } = useUserRating(ownerProfile?.user_id);
 
-        {/* Inner card */}
-        <div className="absolute inset-0 rounded-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
-        {/* Glow borders */}
-        {!standby && !expanded && (
-          <>
-            <motion.div
-              className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
-              style={{
-                opacity: likeGlowOpacity,
-                boxShadow: "inset 0 0 40px hsl(142 71% 45% / 0.4), 0 0 30px hsl(142 71% 45% / 0.3)",
-                border: "2px solid hsl(142 71% 45% / 0.6)",
-              }}
-            />
-            <motion.div
-              className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
-              style={{
-                opacity: dislikeGlowOpacity,
-                boxShadow: "inset 0 0 40px hsl(0 84% 60% / 0.4), 0 0 30px hsl(0 84% 60% / 0.3)",
-                border: "2px solid hsl(0 84% 60% / 0.6)",
-              }}
-            />
-
-            {/* Like/Dislike stamps */}
-            <motion.div
-              className="absolute inset-0 z-50 rounded-[1.5rem] pointer-events-none flex items-center justify-center"
-              style={{ opacity: likeOpacity }}
+      return (
+        <motion.div
+          className={`absolute inset-0 w-full h-full ${
+            standby ? "pointer-events-none" : expanded ? "" : "touch-none"
+          }`}
+          style={{
+            x: standby ? 0 : x,
+            rotate: standby || expanded ? 0 : rotate,
+            scale: standby ? 0.97 : expanded ? 1 : liftScale,
+            boxShadow: standby || expanded ? undefined : liftShadow,
+            zIndex: standby ? 9 : 60,
+            willChange: standby ? "auto" : "transform",
+            transformOrigin: "50% 80%",
+            borderRadius: "1.5rem",
+            ...(standby ? { y: 0, opacity: 0 } : {}),
+          }}
+          drag={standby || expanded ? false : true}
+          dragDirectionLock
+          dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
+          dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
+          onDragEnd={standby || expanded ? undefined : handleDragEnd}
+          initial={standby ? false : { scale: 1, opacity: 1 }}
+          animate={standby ? { scale: 1, opacity: 1 } : undefined}
+        >
+          {/* Liquid glass border — blurred image reflection */}
+          {currentImage && (
+            <div
+              className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0"
+              aria-hidden
             >
-              <motion.span
-                className="text-success text-4xl font-black rotate-[-15deg] border-[3px] border-success px-4 py-2 rounded-xl"
-                style={{ textShadow: "0 0 20px hsl(142 71% 45% / 0.6)", scale: likeStampScale }}
-              >
-                HYPOU
-              </motion.span>
-            </motion.div>
-            <motion.div
-              className="absolute inset-0 z-50 rounded-[1.5rem] pointer-events-none flex items-center justify-center"
-              style={{ opacity: dislikeOpacity }}
-            >
-              <motion.span
-                className="text-danger text-4xl font-black rotate-[15deg] border-[3px] border-danger px-4 py-2 rounded-xl"
-                style={{ textShadow: "0 0 20px hsl(0 84% 60% / 0.6)", scale: dislikeStampScale }}
-              >
-                FLOPOU
-              </motion.span>
-            </motion.div>
-          </>
-        )}
-
-        {/* ===== FULL IMAGE / VIDEO ===== */}
-        <div className="absolute inset-0 w-full h-full" onClick={standby ? undefined : handleImageTap}>
-          {isVideoSlide && currentVideo ? (
-            <video
-              ref={videoRef}
-              key={`video-${activeImageIndex}`}
-              className="w-full h-full object-cover object-center"
-              src={currentVideo}
-              autoPlay
-              loop
-              muted
-              playsInline
-              draggable={false}
-            />
-          ) : currentImage ? (
-            <img
-              key={activeImageIndex}
-              alt={item.name}
-              className="w-full h-full object-cover object-center"
-              src={currentImage}
-              draggable={false}
-            />
-          ) : (
-            <div className="w-full h-full bg-muted flex items-center justify-center">
-              <Image className="h-16 w-16 text-foreground/10" />
+              <img
+                src={currentImage}
+                alt=""
+                className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
+                draggable={false}
+              />
+              <div className="absolute inset-0 bg-background/30 dark:bg-black/40" />
             </div>
           )}
-        </div>
-
-        {/* Owner mini-profile — top left with trust badge */}
-        {ownerProfile && !expanded && (
-          <button
-            type="button"
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/usuario/${ownerProfile.user_id}`);
-            }}
-            className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
-          >
-            {ownerProfile.avatar_url ? (
-              <img
-                src={ownerProfile.avatar_url}
-                alt=""
-                className="h-5 w-5 rounded-full object-cover border border-white/30 shrink-0"
-              />
-            ) : (
-              <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
-                {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
-              </div>
-            )}
-            <span className="text-white text-[11px] font-semibold drop-shadow-md truncate min-w-0">
-              {(() => {
-                const full = ownerProfile.display_name || "Usuário";
-                const first = full.split(" ")[0];
-                return full.includes(" ") ? `${first}...` : first;
-              })()}
-            </span>
-            {rating && (
-              <div className="flex items-center gap-0.5 shrink-0">
-                <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
-                <span className="text-yellow-400 text-[10px] font-bold">{Number(rating.average).toFixed(1)}</span>
-              </div>
-            )}
-          </button>
-        )}
-
-
-        {/* Slide dots — top center (smaller) */}
-        {!expanded && totalSlides > 1 && (
-          <div className="absolute top-0.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
-            {Array.from({ length: totalSlides }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1 rounded-full transition-all duration-200 ${
-                  i === activeImageIndex ? "w-3.5 bg-white" : "w-1 bg-white/40"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Share — top right */}
-        {!expanded && (
-          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const shareUrl = `${window.location.origin}/item/${item.id}`;
-                const shareData = {
-                  title: `${item.name} — Hypou`,
-                  text: `Olha esse item no Hypou: ${item.name} por ${formatValue(item.market_value)}! Quer trocar?`,
-                  url: shareUrl,
-                };
-                if (navigator.share) {
-                  navigator.share(shareData).catch(() => {});
-                } else {
-                  navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`);
-                }
-              }}
-              className="h-8 w-8 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 flex items-center justify-center"
-            >
-              <Share2 className="h-3.5 w-3.5 text-white" />
-            </button>
-          </div>
-        )}
-
-        {/* Top gradient — só pra legibilidade do chrome */}
-        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none z-20" />
-
-        {/* Tap zones para troca de imagens — cobrem o card todo, mas ficam abaixo dos botões (z-30) */}
-        {!expanded && !standby && totalSlides > 1 && (
-          <>
+          {!currentImage && (
             <div
-              className="absolute top-0 bottom-0 left-0 w-1/2 z-[25]"
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
-              }}
+              className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0 bg-border dark:bg-primary/30"
+              aria-hidden
             />
+          )}
+
+          {/* Inner card */}
+          <div className="absolute inset-0 rounded-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
+            {!standby && !expanded && <SwipeOverlays x={x} />}
+
+            {/* ===== FULL IMAGE / VIDEO ===== */}
             <div
-              className="absolute top-0 bottom-0 right-0 w-1/2 z-[25]"
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveImageIndex((i) => (i + 1) % totalSlides);
-              }}
-            />
-          </>
-        )}
-
-        {/* Bottom gradient — sutil, complementa o painel Liquid Glass */}
-        {expanded && (
-          <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" />
-        )}
-
-        {/* ===== EXPANDED SCROLLABLE OVERLAY ===== */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 30 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute inset-x-3 bottom-3 top-3 z-30 flex flex-col rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+              className="absolute inset-0 w-full h-full"
+              onClick={standby ? undefined : handleImageTap}
             >
-              {/* Collapse button at top */}
+              {isVideoSlide && currentVideo ? (
+                <video
+                  ref={videoRef}
+                  key={`video-${activeImageIndex}`}
+                  className="w-full h-full object-cover object-center"
+                  src={currentVideo}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  draggable={false}
+                />
+              ) : currentImage ? (
+                <img
+                  key={activeImageIndex}
+                  alt={item.name}
+                  className="w-full h-full object-cover object-center"
+                  src={currentImage}
+                  draggable={false}
+                />
+              ) : (
+                <div className="w-full h-full bg-muted flex items-center justify-center">
+                  <Image className="h-16 w-16 text-foreground/10" />
+                </div>
+              )}
+            </div>
+
+            {/* Owner mini-profile */}
+            {ownerProfile && !expanded && (
               <button
-                onClick={toggleExpand}
-                className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-white/60 shrink-0"
+                type="button"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/usuario/${ownerProfile.user_id}`);
+                }}
+                className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
               >
-                <ChevronDown className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Recolher</span>
+                {ownerProfile.avatar_url ? (
+                  <img
+                    src={ownerProfile.avatar_url}
+                    alt=""
+                    className="h-5 w-5 rounded-full object-cover border border-white/30 shrink-0"
+                  />
+                ) : (
+                  <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
+                    {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
+                  </div>
+                )}
+                <span className="text-white text-[11px] font-semibold drop-shadow-md truncate min-w-0">
+                  {(() => {
+                    const full = ownerProfile.display_name || "Usuário";
+                    const first = full.split(" ")[0];
+                    return full.includes(" ") ? `${first}...` : first;
+                  })()}
+                </span>
+                {rating && (
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <Star className="h-2.5 w-2.5 text-yellow-400 fill-yellow-400" />
+                    <span className="text-yellow-400 text-[10px] font-bold">
+                      {Number(rating.average).toFixed(1)}
+                    </span>
+                  </div>
+                )}
               </button>
+            )}
 
-              {/* Scrollable detail content */}
+            {/* Slide dots */}
+            {!expanded && totalSlides > 1 && (
+              <div className="absolute top-0.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+                {Array.from({ length: totalSlides }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full transition-all duration-200 ${
+                      i === activeImageIndex ? "w-3.5 bg-white" : "w-1 bg-white/40"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Share */}
+            {!expanded && (
+              <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const shareUrl = `${window.location.origin}/item/${item.id}`;
+                    const shareData = {
+                      title: `${item.name} — Hypou`,
+                      text: `Olha esse item no Hypou: ${item.name} por ${formatValue(item.market_value)}! Quer trocar?`,
+                      url: shareUrl,
+                    };
+                    if (navigator.share) {
+                      navigator.share(shareData).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`);
+                    }
+                  }}
+                  className="h-8 w-8 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 flex items-center justify-center"
+                >
+                  <Share2 className="h-3.5 w-3.5 text-white" />
+                </button>
+              </div>
+            )}
+
+            {/* Top gradient */}
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none z-20" />
+
+            {/* Tap zones */}
+            {!expanded && !standby && totalSlides > 1 && (
+              <>
+                <div
+                  className="absolute top-0 bottom-0 left-0 w-1/2 z-[25]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
+                  }}
+                />
+                <div
+                  className="absolute top-0 bottom-0 right-0 w-1/2 z-[25]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((i) => (i + 1) % totalSlides);
+                  }}
+                />
+              </>
+            )}
+
+            {expanded && (
+              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" />
+            )}
+
+            {/* ===== EXPANDED OVERLAY ===== */}
+            <AnimatePresence>
+              {expanded && (
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 30 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                  className="absolute inset-x-3 bottom-3 top-3 z-30 flex flex-col rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+                >
+                  <button
+                    onClick={toggleExpand}
+                    className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-white/60 shrink-0"
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                      Recolher
+                    </span>
+                  </button>
+
+                  <div
+                    ref={scrollRef}
+                    className="flex-1 overflow-y-auto no-scrollbar overscroll-contain"
+                    onTouchMove={(e) => e.stopPropagation()}
+                  >
+                    <div className="px-4 pb-2">
+                      <h2 className="text-white text-xl font-bold tracking-tight drop-shadow-md">
+                        {item.name}
+                      </h2>
+                      {matchedOwnItem && (
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Repeat className="h-3 w-3 text-primary shrink-0" />
+                          {matchedOwnItem.image_url ? (
+                            <img
+                              src={matchedOwnItem.image_url}
+                              alt={matchedOwnItem.name}
+                              className="h-5 w-5 rounded-full object-cover border border-primary/50"
+                            />
+                          ) : (
+                            <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
+                              <Package className="h-2.5 w-2.5 text-primary" />
+                            </div>
+                          )}
+                          <span className="text-white/70 text-xs font-medium">
+                            Compatível com{" "}
+                            <span className="text-primary font-semibold">
+                              {matchedOwnItem.name}
+                            </span>
+                            {(matchedOwnItem.count ?? 0) > 1 && (
+                              <span className="text-white/40">
+                                {" "}
+                                e +{(matchedOwnItem.count ?? 0) - 1}{" "}
+                                {(matchedOwnItem.count ?? 0) - 1 === 1
+                                  ? "item seu"
+                                  : "itens seus"}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <CardDetailContent item={item} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ===== COMPACT INFO ===== */}
+            {activeImageIndex === 0 && !expanded && (
               <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto no-scrollbar overscroll-contain"
-                onTouchMove={(e) => e.stopPropagation()}
+                className="absolute bottom-0 inset-x-0 z-30 rounded-b-[1.5rem] overflow-hidden pointer-events-none"
+                onPointerDown={(e) => e.stopPropagation()}
+                style={{
+                  background:
+                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 18%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.88) 75%, rgba(0,0,0,0.98) 100%)",
+                }}
               >
-                {/* Item name header */}
-                <div className="px-4 pb-2">
-                  <h2 className="text-white text-xl font-bold tracking-tight drop-shadow-md">
-                    {item.name}
-                  </h2>
+                <div className="relative px-5 mt-80 pb-10 pointer-events-none">
                   {matchedOwnItem && (
-                    <div className="flex items-center gap-1.5 mt-2">
+                    <div className="flex items-center gap-1.5 mb-2">
                       <Repeat className="h-3 w-3 text-primary shrink-0" />
                       {matchedOwnItem.image_url ? (
                         <img
                           src={matchedOwnItem.image_url}
                           alt={matchedOwnItem.name}
-                          className="h-5 w-5 rounded-full object-cover border border-primary/50"
+                          className="h-4 w-4 rounded-full object-cover border border-primary/50"
                         />
                       ) : (
-                        <div className="h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
-                          <Package className="h-2.5 w-2.5 text-primary" />
+                        <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
+                          <Package className="h-2 w-2 text-primary" />
                         </div>
                       )}
-                      <span className="text-white/70 text-xs font-medium">
-                        Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
+                      <span className="text-white/70 text-[10px] font-medium truncate">
+                        Compatível com{" "}
+                        <span className="text-primary font-semibold">
+                          {matchedOwnItem.name}
+                        </span>
                         {(matchedOwnItem.count ?? 0) > 1 && (
-                          <span className="text-white/40"> e +{(matchedOwnItem.count ?? 0) - 1} {(matchedOwnItem.count ?? 0) - 1 === 1 ? 'item seu' : 'itens seus'}</span>
+                          <span className="text-white/50">
+                            {" "}
+                            +{(matchedOwnItem.count ?? 0) - 1}
+                          </span>
                         )}
                       </span>
                     </div>
                   )}
-                </div>
-                <CardDetailContent item={item} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
-        {/* ===== COMPACT INFO — Liquid Glass pedestal ===== */}
-        {activeImageIndex === 0 && !expanded && (
-        <div
-          className="absolute bottom-0 inset-x-0 z-30 rounded-b-[1.5rem] overflow-hidden pointer-events-none"
-          onPointerDown={(e) => e.stopPropagation()}
-          style={{
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 18%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.88) 75%, rgba(0,0,0,0.98) 100%)",
-          }}
-        >
-          {/* Content */}
-          <div className="relative px-5 mt-80 pb-10 pointer-events-none">
-            {matchedOwnItem && (
-              <div className="flex items-center gap-1.5 mb-2">
-                <Repeat className="h-3 w-3 text-primary shrink-0" />
-                {matchedOwnItem.image_url ? (
-                  <img
-                    src={matchedOwnItem.image_url}
-                    alt={matchedOwnItem.name}
-                    className="h-4 w-4 rounded-full object-cover border border-primary/50"
-                  />
-                ) : (
-                  <div className="h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center border border-primary/50">
-                    <Package className="h-2 w-2 text-primary" />
+                  <div className="flex items-center gap-1.5 mb-2 overflow-hidden">
+                    <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white text-[10px] font-semibold tracking-wide uppercase shrink-0">
+                      {item.category}
+                    </span>
+                    {conditionLabel && (
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 shrink-0">
+                        <Package className="h-2.5 w-2.5" /> {conditionLabel}
+                      </span>
+                    )}
+                    {item.location && (
+                      <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 truncate min-w-0">
+                        <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
+                        <span className="truncate">{item.location}</span>
+                      </span>
+                    )}
                   </div>
-                )}
-                <span className="text-white/70 text-[10px] font-medium truncate">
-                  Compatível com <span className="text-primary font-semibold">{matchedOwnItem.name}</span>
-                  {(matchedOwnItem.count ?? 0) > 1 && (
-                    <span className="text-white/50"> +{(matchedOwnItem.count ?? 0) - 1}</span>
-                  )}
-                </span>
+
+                  <h2 className="text-white text-[22px] font-bold tracking-tight leading-tight truncate">
+                    {item.name}
+                  </h2>
+
+                  <p className="text-white/70 text-[15px] font-medium tracking-tight mt-0.5">
+                    {formatValue(item.market_value)}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(e);
+                    }}
+                    aria-label="Ver detalhes do item"
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform pointer-events-auto"
+                  >
+                    <ChevronUp className="h-3 w-3" />
+                    Ver detalhes
+                  </button>
+
+                  <SwipeActionButtons
+                    x={x}
+                    disabled={disabled}
+                    standby={standby}
+                    onDislike={() => doExit("dislike")}
+                    onLike={() => doExit("like")}
+                  />
+                </div>
               </div>
             )}
-
-            {/* Tags — uma linha unificada */}
-            <div className="flex items-center gap-1.5 mb-2 overflow-hidden">
-              <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white text-[10px] font-semibold tracking-wide uppercase shrink-0">
-                {item.category}
-              </span>
-              {conditionLabel && (
-                <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 shrink-0">
-                  <Package className="h-2.5 w-2.5" /> {conditionLabel}
-                </span>
-              )}
-              {item.location && (
-                <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 truncate min-w-0">
-                  <MapPin className="h-2.5 w-2.5 shrink-0" /> <span className="truncate">{item.location}</span>
-                </span>
-              )}
-            </div>
-
-            {/* Title */}
-            <h2 className="text-white text-[22px] font-bold tracking-tight leading-tight truncate">
-              {item.name}
-            </h2>
-
-            {/* Price — secundário */}
-            <p className="text-white/70 text-[15px] font-medium tracking-tight mt-0.5">
-              {formatValue(item.market_value)}
-            </p>
-
-            {/* "Ver detalhes" pill — affordance clara */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpand(e);
-              }}
-              aria-label="Ver detalhes do item"
-              className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform pointer-events-auto"
-            >
-              <ChevronUp className="h-3 w-3" />
-              Ver detalhes
-            </button>
-
-            {/* Action buttons — Flopou (👎 vermelho) / Hypou (👍 azul) */}
-            <div className="mt-6 flex items-center justify-center gap-8 pointer-events-auto">
-              <motion.button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
-                disabled={disabled || standby}
-                aria-label="Flopou"
-                whileTap={{ scale: 0.88 }}
-                style={{
-                  scale: dislikeBtnScale,
-                  background: dislikeBtnBg,
-                  boxShadow: dislikeBtnShadow,
-                  color: dislikeIconColor,
-                }}
-                className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
-              >
-                <ThumbsDown className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.15} />
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); doExit("like"); }}
-                disabled={disabled || standby}
-                aria-label="Hypou"
-                whileTap={{ scale: 0.88 }}
-                style={{
-                  scale: likeBtnScale,
-                  background: likeBtnBg,
-                  boxShadow: likeBtnShadow,
-                  color: likeIconColor,
-                }}
-                className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
-              >
-                <ThumbsUp className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.15} />
-              </motion.button>
-            </div>
-
           </div>
-        </div>
-        )}
-        </div>{/* close inner card */}
-      </motion.div>
-    );
-  }
-));
+        </motion.div>
+      );
+    }
+  )
+);
 
 SwipeCard.displayName = "SwipeCard";
 
