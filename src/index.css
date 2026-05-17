@@ -122,6 +122,10 @@
     --glass-border: 0 0% 100% / 0.15;
     --overlay-scrim: 0 0% 0% / 0.35;
 
+    /* Context-fixed */
+    --on-media: 0 0% 100%;
+    --scrim: 0 0% 0%;
+
     --radius: 1rem;
 
     --sidebar-background: 0 0% 13%;
