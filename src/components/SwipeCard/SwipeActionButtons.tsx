@@ -68,7 +68,7 @@ export const SwipeActionButtons = ({
   const likeIconColor = useTransform(
     x,
     [0, 20, 150],
-    ["hsl(var(--hype-glow))", "hsl(var(--hype-glow))", "hsl(var(--hype-foreground))"]
+    ["hsl(var(--primary))", "hsl(var(--primary))", "hsl(var(--hype-foreground))"]
   );
 
   return (
