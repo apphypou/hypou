@@ -695,27 +695,41 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
               Ver detalhes
             </button>
 
-            {/* Action buttons — Flopou / Hypou */}
-            <div className="mt-6 flex items-center gap-3 pointer-events-auto">
-              <button
+            {/* Action buttons — Flopou (👎 vermelho) / Hypou (👍 azul) */}
+            <div className="mt-6 flex items-center justify-center gap-8 pointer-events-auto">
+              <motion.button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
                 disabled={disabled || standby}
                 aria-label="Flopou"
-                className="flex-1 h-14 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl flex items-center justify-center text-white/90 active:scale-[0.97] transition-transform disabled:opacity-50"
+                whileTap={{ scale: 0.88 }}
+                style={{
+                  scale: dislikeBtnScale,
+                  background: dislikeBtnBg,
+                  boxShadow: dislikeBtnShadow,
+                  color: dislikeIconColor,
+                }}
+                className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
               >
-                <Repeat className="h-6 w-6" strokeWidth={2.2} />
-              </button>
-              <button
+                <ThumbsDown className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.15} />
+              </motion.button>
+              <motion.button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("like"); }}
                 disabled={disabled || standby}
                 aria-label="Hypou"
-                className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center active:scale-[0.97] transition-transform shadow-[0_8px_24px_hsl(var(--primary)/0.35)] disabled:opacity-50"
+                whileTap={{ scale: 0.88 }}
+                style={{
+                  scale: likeBtnScale,
+                  background: likeBtnBg,
+                  boxShadow: likeBtnShadow,
+                }}
+                className="h-16 w-16 rounded-full border border-white/20 backdrop-blur-xl flex items-center justify-center text-white disabled:opacity-50"
               >
-                <Handshake className="h-6 w-6" strokeWidth={2.4} />
-              </button>
+                <ThumbsUp className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.25} />
+              </motion.button>
             </div>
+
           </div>
         </div>
         )}
