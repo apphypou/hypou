@@ -68,6 +68,9 @@ export default {
           foreground: "hsl(var(--flop-foreground))",
           glow: "hsl(var(--flop-glow))",
         },
+        /* Context-fixed tokens for media overlays (always white on imagery/video) */
+        "on-media": "hsl(var(--on-media))",
+        scrim: "hsl(var(--scrim))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
