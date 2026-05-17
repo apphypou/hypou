@@ -1,160 +1,93 @@
-# Plano: Vídeo & Áudio Chamada no Chat (LiveKit Cloud)
+# Revisão de Componentização & Tokenização
 
-Stack: **LiveKit Cloud** (servidor SFU gerenciado) + **livekit-client** + **@livekit/components-react** no front + Edge Function Supabase para emissão de tokens + Capacitor para permissões nativas.
+## Diagnóstico
 
-Por que LiveKit: open-source, free tier 10k min/mês, SDK JS roda direto no WebView do Capacitor (sem plugin nativo extra), suporta vídeo+áudio, screen-share futuro, gravação opcional, e migrável para self-host depois sem reescrever cliente.
+### 1. Tokenização (violações do design system)
+Regra do projeto: nunca usar cores cruas em componentes. Encontrado:
 
----
+- **106 ocorrências** de `text-white` / `bg-black` / `bg-white` / `text-black`
+- **72 ocorrências** de `hsl(...)` inline (deveria ser `hsl(var(--token))`)
+- **24 hex codes** (`#xxxxxx`) hardcoded
 
-## Fluxo de produto
+Piores ofensores:
+| Arquivo | text/bg-white/black | hsl() inline |
+|---|---|---|
+| `SwipeCard.tsx` | 41 | 12 |
+| `ShortCard.tsx` | 17 | – |
+| `Shorts.tsx` | 11 | – |
+| `AdminDashboard.tsx` | – | 19 |
+| `Match.tsx` / `Baixar.tsx` | – | 9 cada |
+| `Item.tsx` | 8 | – |
 
-1. Usuário abre uma `Conversa` (já existente).
-2. No header do chat aparecem 2 botões: `Phone` (áudio) e `Video` (vídeo).
-3. Ao tocar, cria-se um `call_session` no banco (status `ringing`) e o iniciador entra na sala LiveKit.
-4. O outro participante recebe um **toast persistente / tela de incoming call** via Supabase Realtime (mesmo canal já usado no chat).
-5. Aceitar → entra na sala. Recusar → marca `declined`. Sem resposta em 45s → `missed`.
-6. Tela de chamada full-screen: vídeo remoto grande, self-view PiP, controles (mute, câmera on/off, flip camera, hangup).
-7. Ao encerrar: salva duração no banco e injeta uma mensagem de sistema no chat (`📞 Chamada de vídeo · 02:14`).
+### 2. Componentização (arquivos grandes / responsabilidades misturadas)
+- `SwipeCard.tsx` — **746 linhas**: motion values, galeria, botões like/dislike, overlays, gradientes, info card. Mistura lógica de gesto + UI.
+- `Conversa.tsx` — **691 linhas**: chat + mídia + banners de troca + header.
+- `MeuPerfil.tsx` — 441 linhas.
+- `Explorar.tsx` — 402 linhas (provavelmente OK, mas verificar).
 
----
+### 3. shadcn / variantes
+- `IconButton.tsx` e `NeonButton.tsx` definem estilos manuais com `cn(...)` em vez de usar `cva` (padrão shadcn). `button.tsx` shadcn já existe — duplicação de responsabilidade.
+- `GlassCard.tsx` usa classe utilitária `.glass-card` do CSS, mas não há variants (hoverable é boolean) — poderia virar `cva` com variants `variant: default | hover | interactive`.
 
-## Arquitetura
-
-```text
-[Cliente A]                [Supabase]                 [Cliente B]
-    │  start call            │                           │
-    ├──insert call_sessions──►│                           │
-    │                         │──realtime INSERT─────────►│  (incoming UI)
-    ├──invoke livekit-token──►│                           │
-    │◄──token + room name─────┤                           │
-    │                         │◄──invoke livekit-token───┤
-    │                         │──token────────────────────►│
-    │                         │                           │
-    └──────► LiveKit Cloud SFU ◄──────────────────────────┘
-              (mídia P2P/SFU)
-```
-
-Sinalização de "tocar/aceitar/recusar" passa pelo **Supabase Realtime** (tabela já com publication). Mídia passa pelo **LiveKit SFU**. Sem servidor de signaling próprio.
-
----
-
-## Banco de dados (1 migration)
-
-Tabela `call_sessions`:
-- `conversation_id` → vincula ao chat existente
-- `caller_id`, `callee_id`
-- `room_name` (uuid único)
-- `kind` ('video' | 'audio')
-- `status` ('ringing' | 'accepted' | 'declined' | 'missed' | 'ended')
-- `started_at`, `accepted_at`, `ended_at`, `duration_seconds`
-
-RLS:
-- SELECT/INSERT/UPDATE: apenas participantes da `conversation` (reaproveita `is_conversation_participant`).
-- Trigger guard: só o `callee` pode mudar para `accepted`/`declined`; só os 2 participantes para `ended`.
-
-Adicionar à publication `supabase_realtime` (padrão já usado).
-
-Mensagem de sistema ao encerrar via trigger AFTER UPDATE quando `status='ended'`: insere row em `messages` com `message_type='system'` e o resumo da chamada.
+### 4. Tokens semânticos faltando
+Cores usadas repetidamente em componentes que merecem token próprio:
+- Verde (Hypou): `hsl(142 75% 50%)` → criar `--hype` / `--hype-foreground`
+- Vermelho (Flopou): já tem `--danger` ✓ (mas SwipeCard usa hex)
+- Overlays glass: `rgba(255,255,255,0.06)` repetido → token `--glass-surface`
+- Cyan glow shadow: padronizar via utility `.neon-glow-*`
 
 ---
 
-## Edge Function: `livekit-token`
+## Plano de execução (incremental, sem mudar comportamento)
 
-- Auth obrigatória (valida JWT do caller).
-- Input: `{ conversation_id, kind, action: 'start' | 'join', call_session_id? }`.
-- Valida que o usuário é participante da conversa (RPC).
-- Em `start`: cria a row `call_sessions`. Em `join`: valida que pertence à sessão.
-- Gera **AccessToken** assinado via `livekit-server-sdk` (npm) com:
-  - `identity` = `user.id`
-  - `name` = display_name
-  - `room` = `room_name`
-  - grants: `roomJoin`, `canPublish`, `canSubscribe`
-  - TTL 10 min
-- Retorna `{ token, url, room_name, call_session_id }`.
+### Fase 1 — Tokens (index.css + tailwind.config.ts)
+1. Adicionar tokens: `--hype`, `--hype-foreground`, `--glass-surface`, `--glass-border`, `--overlay-strong`, `--overlay-soft`.
+2. Mapear em `tailwind.config.ts` (`colors.hype`, `colors.glass.*`).
+3. Criar utilities CSS para padrões repetidos: `.glass-button`, `.shadow-glow-primary`, `.shadow-glow-hype`, `.shadow-glow-danger`.
 
-Secrets necessários (Supabase): `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL` (ex: `wss://hypou-xxxxx.livekit.cloud`).
+### Fase 2 — Refator de SwipeCard (alta prioridade)
+Quebrar `SwipeCard.tsx` (746 linhas) em:
+- `SwipeCard/index.tsx` — orquestrador + gestos
+- `SwipeCard/CardGallery.tsx` — galeria de imagens + taps
+- `SwipeCard/SwipeActionButtons.tsx` — botões Hypou/Flopou (com motion values via props)
+- `SwipeCard/SwipeOverlays.tsx` — overlays "HYPOU"/"FLOPOU" sobre a carta
+- `SwipeCard/CardInfo.tsx` — info do item (título, preço, localização)
 
----
+Substituir todos os `hsl(...)` inline pelos novos tokens.
 
-## Frontend
+### Fase 3 — Padronizar botões via cva
+- Converter `NeonButton` para `cva` com variants `primary | outline | ghost` × sizes.
+- Converter `IconButton` para `cva` ou consolidar com `Button` do shadcn (`variant=ghost size=icon`).
+- Avaliar se `NeonButton` deve virar variant do `Button` shadcn em vez de componente paralelo.
 
-Dependências novas:
-- `livekit-client`
-- `@livekit/components-react` (UI primitives prontas: `RoomAudioRenderer`, `ParticipantTile`, etc.)
-- `@livekit/components-styles` (CSS base — vamos sobrescrever com nossos tokens semânticos)
+### Fase 4 — Limpeza de cores cruas restantes
+Substituir em ordem por arquivo:
+- `ShortCard.tsx`, `Shorts.tsx`, `Item.tsx`, `Matches.tsx`, `ListaEspera.tsx`, `Chamada.tsx`, demais.
+- Regra: `text-white` → `text-foreground` (ou `text-primary-foreground` no contexto de fundo primary); `bg-black` → `bg-background` ou overlay token.
 
-Componentes/arquivos:
+### Fase 5 — Quebrar Conversa.tsx (691 linhas)
+- `Conversa/ChatHeader.tsx` (com TradeContextCard)
+- `Conversa/MessageList.tsx`
+- `Conversa/MessageInput.tsx` (texto + mídia)
+- `Conversa/TradeBanners.tsx`
 
-1. `src/services/callService.ts` — `startCall()`, `joinCall()`, `endCall()`, `declineCall()` (insert/update na `call_sessions` + invoke da edge function).
-2. `src/hooks/useIncomingCalls.ts` — assina realtime em `call_sessions` filtrando `callee_id = auth.uid() AND status='ringing'`. Dispara state global.
-3. `src/components/IncomingCallSheet.tsx` — overlay fullscreen com avatar, nome, botões aceitar/recusar; toca ringtone (`<audio>` em loop). Renderizado uma vez no `App.tsx` (igual ao `Toaster`).
-4. `src/components/CallRoom.tsx` — wrapper do `LiveKitRoom`. Layout fullscreen Liquid Glass: vídeo remoto cobre tudo, self-view PiP arrastável (framer-motion), barra de controles flutuante embaixo (mute, camera toggle, switch camera, end). Reutiliza tokens (`bg-background`, `text-foreground`, `--primary`).
-5. `src/pages/Call.tsx` — rota `/chamada/:roomName` (lazy). Lê token via state ou refetch e monta `CallRoom`. Sai com `navigate(-1)`.
-6. `src/pages/Conversa.tsx` (edição) — adiciona `Phone` + `Video` no header, chamando `startCall(kind)` e navegando para `/chamada/...`.
-
-UX state:
-- Timeout de 45s sem `accepted` → caller marca `missed` e fecha.
-- `useGlobalRealtimeAlerts` atualizado para ignorar `call_sessions` (já tem o hook próprio).
-- Background/foreground (Capacitor `App` plugin): se app vai pra background durante call, pausa câmera mas mantém áudio.
+### Fase 6 — Atualizar `documentacao.md`
+Registrar novos tokens, estrutura de pastas dos componentes refatorados, e padrão `cva` adotado.
 
 ---
 
-## Capacitor / Mobile
+## Detalhes técnicos
 
-Permissões:
-- `iOS Info.plist`: `NSCameraUsageDescription`, `NSMicrophoneUsageDescription` (textos em PT).
-- `AndroidManifest`: `CAMERA`, `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, `BLUETOOTH_CONNECT`.
-- Pedido em runtime via `navigator.mediaDevices.getUserMedia` (LiveKit faz isso, mas adicionamos pré-check com toast amigável).
+**Por que `cva`?** É o padrão oficial shadcn — gera classes determinísticas, suporta `VariantProps<typeof variants>` para tipagem automática, evita o `cn` manual espalhado.
 
-WebView:
-- iOS WKWebView 14.5+ suporta WebRTC ✅
-- Android WebView atualizada idem ✅
-- Sem precisar de plugin nativo (mantém fluxo mais simples). Caso futuro queiramos PiP nativo / call-kit, plugamos `@capacitor-community/call-kit`.
+**Por que quebrar SwipeCard agora?** Foi modificado 5x nas últimas mensagens (botões like/dislike). Arquivo grande + edições frequentes = alto risco de regressão. Quebrar isola superfícies de mudança.
 
-`capacitor.config.ts`: garantir `Permissions` do plugin de Camera já presente cobre o caso. Sem mudanças extras imediatas.
-
-Background/lockscreen:
-- v1: chamada só funciona com app aberto (limitação WebView).
-- v2 (futuro, fora deste plano): plugin nativo CallKit/ConnectionService para tocar com tela bloqueada.
+**Estratégia de migração de cores:** PR/commit por arquivo, validando visualmente. Tokens criados antes de qualquer substituição para evitar quebra intermediária.
 
 ---
 
-## Segurança
+## Escopo desta proposta
 
-- Token só é emitido pela edge function após validar participação na conversa.
-- TTL curto (10 min) — refresh automático se a call passar disso.
-- `call_sessions` com RLS estrita.
-- LiveKit API secret nunca vai pro cliente.
-- Bloqueio: se um dos usuários estiver em `blocked_users`, a edge function recusa.
+Posso executar **tudo de uma vez** ou **uma fase por vez** (recomendo fase-a-fase para revisar visual). Qual prefere?
 
----
-
-## Telemetria & limites
-
-- Log de duração total por dia em `admin/status` (KPI futuro).
-- Limite suave: 1 chamada ativa por usuário (UPSERT impede duplicado via UNIQUE parcial `WHERE status IN ('ringing','accepted')`).
-
----
-
-## Tarefas (ordem de implementação)
-
-1. **Migration** `call_sessions` + RLS + trigger guard + trigger de mensagem-sistema + publication.
-2. **Secrets**: pedir ao usuário `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`.
-3. **Edge function** `livekit-token` com validação + emissão.
-4. **Service + hook** (`callService`, `useIncomingCalls`).
-5. **UI Incoming** (`IncomingCallSheet` + ringtone asset).
-6. **UI Call Room** (`CallRoom`, página `/chamada/:roomName`, rota lazy).
-7. **Integração Conversa**: botões no header.
-8. **Permissões nativas**: editar Info.plist e AndroidManifest (será aplicado ao rodar `npx cap sync`).
-9. **Memória do projeto**: criar `mem://features/chat/video-call-architecture` documentando.
-10. **Doc**: atualizar `documentacao.md`.
-
----
-
-## O que o usuário precisa fazer
-
-1. Criar conta gratuita em **livekit.io** → criar um project → copiar `API Key`, `API Secret` e `WS URL` (ex: `wss://seuprojeto.livekit.cloud`).
-2. Quando eu pedir, colar esses 3 secrets no Lovable Cloud.
-3. Após o deploy, rodar `npx cap sync` no fork local para aplicar permissões nativas.
-
-Quer que eu siga com esse plano?
+Sugestão: começar por **Fase 1 + Fase 2** (tokens + SwipeCard) que dá o maior ganho imediato.
