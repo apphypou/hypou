@@ -697,7 +697,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
             </button>
 
             {/* Action buttons — Flopou (👎 vermelho) / Hypou (👍 azul) */}
-            <div className="mt-6 flex items-center justify-center gap-8 pointer-events-auto">
+            <div className="mt-10 mb-2 flex items-center justify-center gap-16 pointer-events-auto">
               <motion.button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); doExit("dislike"); }}
