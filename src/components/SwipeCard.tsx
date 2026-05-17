@@ -233,7 +233,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeBtnBg = useTransform(
       x,
       [0, 20, 150],
-      ["hsl(184 85% 50%)", "hsl(184 85% 50% / 0.85)", "hsl(184 95% 55%)"]
+      ["hsl(0 0% 100% / 0.06)", "hsl(184 85% 50% / 0.18)", "hsl(184 85% 50%)"]
     );
     const dislikeBtnShadow = useTransform(
       x,
@@ -243,9 +243,10 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeBtnShadow = useTransform(
       x,
       [0, 150],
-      ["0 8px 24px hsl(184 85% 50% / 0.45)", "0 0 40px hsl(184 95% 55% / 0.8), 0 0 80px hsl(184 95% 55% / 0.45)"]
+      ["0 4px 12px hsl(0 0% 0% / 0.25)", "0 0 40px hsl(184 95% 55% / 0.8), 0 0 80px hsl(184 95% 55% / 0.45)"]
     );
     const dislikeIconColor = useTransform(x, [-150, -20, 0], ["#ffffff", "#ffffff", "hsl(0 85% 65%)"]);
+    const likeIconColor = useTransform(x, [0, 20, 150], ["hsl(184 95% 55%)", "hsl(184 95% 55%)", "#ffffff"]);
 
 
     // Image + video gallery state
@@ -723,10 +724,11 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
                   scale: likeBtnScale,
                   background: likeBtnBg,
                   boxShadow: likeBtnShadow,
+                  color: likeIconColor,
                 }}
-                className="h-16 w-16 rounded-full border border-white/20 backdrop-blur-xl flex items-center justify-center text-white disabled:opacity-50"
+                className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
               >
-                <ThumbsUp className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.25} />
+                <ThumbsUp className="h-7 w-7" strokeWidth={2.4} fill="currentColor" fillOpacity={0.15} />
               </motion.button>
             </div>
 
