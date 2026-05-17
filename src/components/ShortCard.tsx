@@ -118,7 +118,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
 
   return (
     <div
-      className="relative h-[100dvh] w-full bg-black flex items-center justify-center"
+      className="relative h-[100dvh] w-full bg-scrim flex items-center justify-center"
       onClick={togglePlay}
     >
       <video
@@ -157,14 +157,14 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
           >
-            <div className="h-18 w-18 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center">
+            <div className="h-18 w-18 rounded-full bg-scrim/30 backdrop-blur-md flex items-center justify-center">
               {playing ? (
-                <svg className="h-10 w-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-10 w-10 text-on-media" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="6" y="4" width="4" height="16" rx="1" />
                   <rect x="14" y="4" width="4" height="16" rx="1" />
                 </svg>
               ) : (
-                <svg className="h-10 w-10 text-white ml-1" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-10 w-10 text-on-media ml-1" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="6,4 20,12 6,20" />
                 </svg>
               )}
@@ -176,16 +176,16 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
       {/* Mute toggle */}
       <button
         onClick={toggleMute}
-        className="absolute top-16 left-4 z-20 h-8 w-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+        className="absolute top-16 left-4 z-20 h-8 w-8 rounded-full bg-scrim/30 backdrop-blur-sm flex items-center justify-center"
       >
         {muted ? (
-          <svg className="h-3.5 w-3.5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="h-3.5 w-3.5 text-on-media/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19" fill="currentColor" opacity="0.3" />
             <line x1="22" y1="9" x2="16" y2="15" />
             <line x1="16" y1="9" x2="22" y2="15" />
           </svg>
         ) : (
-          <svg className="h-3.5 w-3.5 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="h-3.5 w-3.5 text-on-media/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19" fill="currentColor" opacity="0.3" />
             <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
@@ -204,7 +204,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
             }}
           >
             <div className="p-[2px] rounded-full bg-gradient-to-br from-primary via-primary/80 to-primary/40">
-              <Avatar className="h-11 w-11 border-2 border-black">
+              <Avatar className="h-11 w-11 border-2 border-scrim">
                 <AvatarImage src={video.profile.avatar_url || undefined} />
                 <AvatarFallback className="bg-muted text-foreground text-sm font-bold">
                   {(video.profile.display_name || "U")[0]}
@@ -223,28 +223,28 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
             animate={liked ? { scale: [1, 1.3, 1] } : {}}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
             className={`h-11 w-11 rounded-full flex items-center justify-center transition-all ${
-              liked ? "bg-red-500/20" : "bg-black/30 backdrop-blur-sm"
+              liked ? "bg-red-500/20" : "bg-scrim/30 backdrop-blur-sm"
             }`}
           >
             <Heart className={`h-6 w-6 transition-all ${
-              liked ? "text-red-500 fill-red-500" : "text-white"
+              liked ? "text-red-500 fill-red-500" : "text-on-media"
             }`} />
           </motion.div>
-          <span className="text-white text-[11px] font-bold drop-shadow-lg">{formatCount(likeCount)}</span>
+          <span className="text-on-media text-[11px] font-bold drop-shadow-lg">{formatCount(likeCount)}</span>
         </button>
 
         {/* Views */}
         <div className="flex flex-col items-center gap-1">
-          <div className="h-9 w-9 rounded-full bg-black/20 flex items-center justify-center">
-            <Eye className="h-5 w-5 text-white/60" />
+          <div className="h-9 w-9 rounded-full bg-scrim/20 flex items-center justify-center">
+            <Eye className="h-5 w-5 text-on-media/60" />
           </div>
-          <span className="text-white/60 text-[10px] font-bold">{formatCount(video.view_count)}</span>
+          <span className="text-on-media/60 text-[10px] font-bold">{formatCount(video.view_count)}</span>
         </div>
       </div>
 
       {/* Bottom overlay — item info + trade CTA */}
       <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
-        <div className="bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-20 pb-6 px-4">
+        <div className="bg-gradient-to-t from-scrim/90 via-scrim/50 to-transparent pt-20 pb-6 px-4">
           <div className="pointer-events-auto pr-16">
             {/* Username */}
             {video.profile && (
@@ -255,7 +255,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
                 }}
                 className="mb-2 flex items-center gap-1.5"
               >
-                <span className="text-white font-extrabold text-sm drop-shadow-lg">
+                <span className="text-on-media font-extrabold text-sm drop-shadow-lg">
                   @{video.profile.display_name || "Usuário"}
                 </span>
               </button>
@@ -269,11 +269,11 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
                 </span>
 
                 <div>
-                  <h3 className="text-white font-bold text-lg leading-tight drop-shadow-lg">
+                  <h3 className="text-on-media font-bold text-lg leading-tight drop-shadow-lg">
                     {video.item.name}
                   </h3>
                   {video.item.market_value > 0 && (
-                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm font-bold">
+                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-on-media/10 backdrop-blur-sm text-on-media text-sm font-bold">
                       {formatValue(video.item.market_value)}
                     </span>
                   )}
@@ -297,7 +297,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
       </div>
 
       {/* Progress bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-white/10">
+      <div className="absolute bottom-0 left-0 right-0 z-20 h-[3px] bg-on-media/10">
         <div
           className="h-full bg-primary transition-[width] duration-200 ease-linear rounded-r-full"
           style={{ width: `${progress}%` }}

@@ -84,17 +84,17 @@ const Item = () => {
       <div className="absolute top-0 inset-x-0 z-30 flex items-center justify-between p-4">
         <button
           onClick={() => navigate(-1)}
-          className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-scrim/40 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
           aria-label="Voltar"
         >
-          <ArrowLeft className="h-5 w-5 text-white" />
+          <ArrowLeft className="h-5 w-5 text-on-media" />
         </button>
         <button
           onClick={handleShare}
-          className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-xl border border-white/10 flex items-center justify-center"
+          className="h-10 w-10 rounded-full bg-scrim/40 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
           aria-label="Compartilhar"
         >
-          <Share2 className="h-5 w-5 text-white" />
+          <Share2 className="h-5 w-5 text-on-media" />
         </button>
       </div>
 
@@ -116,7 +116,7 @@ const Item = () => {
               <button
                 key={i}
                 onClick={() => setActiveImg(i)}
-                className={`h-1.5 rounded-full transition-all ${i === activeImg ? "w-5 bg-white" : "w-1.5 bg-white/40"}`}
+                className={`h-1.5 rounded-full transition-all ${i === activeImg ? "w-5 bg-on-media" : "w-1.5 bg-on-media/40"}`}
               />
             ))}
           </div>
@@ -134,12 +134,12 @@ const Item = () => {
           <h1 className="text-2xl font-bold text-foreground leading-tight">{item.name}</h1>
           <div className="flex flex-wrap gap-2">
             {item.category && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-on-media/5 border border-on-media/10 text-muted-foreground">
                 {item.category}
               </span>
             )}
             {conditionLabel && (
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-muted-foreground">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-on-media/5 border border-on-media/10 text-muted-foreground">
                 {conditionLabel}
               </span>
             )}
@@ -153,7 +153,7 @@ const Item = () => {
         {owner && (
           <button
             onClick={() => navigate(`/usuario/${owner.user_id}`)}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 active:scale-[0.99] transition"
+            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-on-media/5 border border-on-media/10 active:scale-[0.99] transition"
           >
             {owner.avatar_url ? (
               <img src={owner.avatar_url} alt={owner.display_name} className="h-10 w-10 rounded-full object-cover" />

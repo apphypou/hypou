@@ -56,7 +56,7 @@ export function RealtimeActivityFeed() {
                   >
                     {/* Timeline dot */}
                     <div className={`absolute -left-6 top-1 h-[18px] w-[18px] rounded-full border-2 border-background flex items-center justify-center ${config.dot}`}>
-                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <div className="h-1.5 w-1.5 rounded-full bg-on-media" />
                     </div>
 
                     <div className="flex-1 min-w-0 bg-muted/30 rounded-xl px-3 py-2.5">

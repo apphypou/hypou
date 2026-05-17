@@ -102,7 +102,7 @@ const cardVariants = {
 
 const ProductCardEl = forwardRef<HTMLDivElement, { card: ProductCard }>(({ card }, ref) => (
   <div ref={ref} className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
-    <div className="h-[145px] flex items-center justify-center overflow-hidden bg-white">
+    <div className="h-[145px] flex items-center justify-center overflow-hidden bg-on-media">
       <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} loading="lazy" />
     </div>
     <div className="p-2 space-y-1">

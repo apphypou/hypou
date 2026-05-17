@@ -133,8 +133,8 @@ const Shorts = () => {
 
   if (isLoading) {
     return (
-      <div className="h-[100dvh] w-full bg-black flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      <div className="h-[100dvh] w-full bg-scrim flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-on-media" />
       </div>
     );
   }
@@ -169,28 +169,28 @@ const Shorts = () => {
   };
 
   return (
-    <div className="relative h-[100dvh] w-full bg-black overflow-hidden">
+    <div className="relative h-[100dvh] w-full bg-scrim overflow-hidden">
       {/* Header — simplified, no social tabs */}
       <div className="absolute top-0 left-0 right-0 z-40 pointer-events-none">
-        <div className="bg-gradient-to-b from-black/60 via-black/30 to-transparent">
+        <div className="bg-gradient-to-b from-scrim/60 via-scrim/30 to-transparent">
           <div className="flex items-center justify-between px-4 pt-[calc(env(safe-area-inset-top,12px)+16px)] pb-2 pointer-events-auto">
             <button
               onClick={() => navigate(-1)}
               className="h-10 w-10 flex items-center justify-center rounded-full"
             >
-              <ArrowLeft className="h-5 w-5 text-white drop-shadow-lg" />
+              <ArrowLeft className="h-5 w-5 text-on-media drop-shadow-lg" />
             </button>
 
-            <h1 className="text-white font-extrabold text-base drop-shadow-lg">
+            <h1 className="text-on-media font-extrabold text-base drop-shadow-lg">
               Vitrine
             </h1>
 
             <Sheet>
               <SheetTrigger asChild>
                 <button className="h-10 w-10 flex items-center justify-center rounded-full relative">
-                  <SlidersHorizontal className="h-5 w-5 text-white drop-shadow-lg" />
+                  <SlidersHorizontal className="h-5 w-5 text-on-media drop-shadow-lg" />
                   {category && (
-                    <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-black" />
+                    <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-primary border-2 border-scrim" />
                   )}
                 </button>
               </SheetTrigger>
@@ -257,8 +257,8 @@ const Shorts = () => {
               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
               className="flex flex-col items-center gap-1"
             >
-              <div className="h-8 w-[3px] rounded-full bg-white/40" />
-              <span className="text-white/40 text-[10px] font-medium">Deslize para ver mais</span>
+              <div className="h-8 w-[3px] rounded-full bg-on-media/40" />
+              <span className="text-on-media/40 text-[10px] font-medium">Deslize para ver mais</span>
             </motion.div>
           </motion.div>
         )}
@@ -305,10 +305,10 @@ const Shorts = () => {
                 key={idx}
                 className={`rounded-full transition-all duration-300 ${
                   idx === visibleIndex
-                    ? "h-4 w-1.5 bg-white"
+                    ? "h-4 w-1.5 bg-on-media"
                     : dist === 1
-                    ? "h-2 w-1.5 bg-white/40"
-                    : "h-1.5 w-1.5 bg-white/20"
+                    ? "h-2 w-1.5 bg-on-media/40"
+                    : "h-1.5 w-1.5 bg-on-media/20"
                 }`}
               />
             );

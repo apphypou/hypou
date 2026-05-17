@@ -86,7 +86,7 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-scrim/70 backdrop-blur-sm"
         onClick={(e) => e.target === e.currentTarget && handleClose()}
       >
         <motion.div
@@ -95,7 +95,7 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 24 }}
           transition={{ type: "spring", stiffness: 340, damping: 28 }}
-          className="relative mx-6 max-w-[340px] w-full rounded-3xl bg-card/95 backdrop-blur-xl border border-white/[0.06] p-7 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.5)]"
+          className="relative mx-6 max-w-[340px] w-full rounded-3xl bg-card/95 backdrop-blur-xl border border-on-media/[0.06] p-7 shadow-[0_24px_80px_-12px_rgba(0,0,0,0.5)]"
         >
           {/* Close */}
           <button

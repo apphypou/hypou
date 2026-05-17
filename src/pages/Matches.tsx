@@ -127,9 +127,9 @@ const Matches = () => {
 
   const badgeStyles: Record<string, string> = {
     new: "bg-primary text-primary-foreground border-primary/50",
-    accepted: "bg-success text-white border-success/50",
+    accepted: "bg-success text-on-media border-success/50",
     pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
-    sent: "bg-amber-500 text-white border-amber-600",
+    sent: "bg-amber-500 text-on-media border-amber-600",
     completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
     cancelled: "bg-muted text-muted-foreground border-foreground/10",
   };
@@ -625,7 +625,7 @@ const Matches = () => {
                     <button
                       onClick={handleConfirmTrade}
                       disabled={confirmingTrade}
-                      className="flex-[2] h-14 rounded-2xl bg-success text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(142_71%_45%/0.3)] disabled:opacity-50"
+                      className="flex-[2] h-14 rounded-2xl bg-success text-on-media font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(142_71%_45%/0.3)] disabled:opacity-50"
                     >
                       {confirmingTrade ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -653,7 +653,7 @@ const Matches = () => {
                 </div>
               ) : isSentProposal(selectedMatch) ? (
                 <div className="space-y-3">
-                  <div className="w-full h-14 rounded-2xl bg-amber-600 border border-amber-700 text-white font-bold text-base flex items-center justify-center gap-2">
+                  <div className="w-full h-14 rounded-2xl bg-amber-600 border border-amber-700 text-on-media font-bold text-base flex items-center justify-center gap-2">
                     <Clock className="h-5 w-5" />
                     Aguardando resposta
                   </div>
@@ -717,12 +717,12 @@ const Matches = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center"
+            className="fixed inset-0 z-[200] bg-scrim/90 backdrop-blur-md flex items-center justify-center"
             onClick={() => setZoomedImage(null)}
           >
             <button
               onClick={() => setZoomedImage(null)}
-              className="absolute top-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              className="absolute top-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-on-media/10 text-on-media hover:bg-on-media/20 transition-colors"
               style={{ marginTop: "env(safe-area-inset-top)" }}
             >
               <XIcon className="h-5 w-5" />
