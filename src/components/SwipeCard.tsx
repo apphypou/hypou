@@ -233,7 +233,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeBtnBg = useTransform(
       x,
       [0, 20, 150],
-      ["hsl(210 95% 55%)", "hsl(210 90% 55% / 0.85)", "hsl(210 100% 60%)"]
+      ["hsl(184 85% 50%)", "hsl(184 85% 50% / 0.85)", "hsl(184 95% 55%)"]
     );
     const dislikeBtnShadow = useTransform(
       x,
@@ -243,7 +243,7 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     const likeBtnShadow = useTransform(
       x,
       [0, 150],
-      ["0 8px 24px hsl(210 95% 55% / 0.45)", "0 0 40px hsl(210 100% 60% / 0.8), 0 0 80px hsl(210 100% 60% / 0.45)"]
+      ["0 8px 24px hsl(184 85% 50% / 0.45)", "0 0 40px hsl(184 95% 55% / 0.8), 0 0 80px hsl(184 95% 55% / 0.45)"]
     );
     const dislikeIconColor = useTransform(x, [-150, -20, 0], ["#ffffff", "#ffffff", "hsl(0 85% 65%)"]);
 
