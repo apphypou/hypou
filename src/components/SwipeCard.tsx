@@ -222,6 +222,32 @@ const SwipeCard = memo(forwardRef<SwipeCardHandle, SwipeCardProps>(
     );
     const isDragging = useTransform(absX, (v) => v > 4);
 
+    // Action buttons — dynamic styling driven by drag
+    const dislikeBtnScale = useTransform(x, [-150, 0, 150], [1.18, 1, 0.92]);
+    const likeBtnScale = useTransform(x, [-150, 0, 150], [0.92, 1, 1.18]);
+    const dislikeBtnBg = useTransform(
+      x,
+      [-150, -20, 0],
+      ["hsl(0 85% 55%)", "hsl(0 70% 50% / 0.18)", "hsl(0 0% 100% / 0.06)"]
+    );
+    const likeBtnBg = useTransform(
+      x,
+      [0, 20, 150],
+      ["hsl(210 95% 55%)", "hsl(210 90% 55% / 0.85)", "hsl(210 100% 60%)"]
+    );
+    const dislikeBtnShadow = useTransform(
+      x,
+      [-150, 0],
+      ["0 0 40px hsl(0 90% 55% / 0.7), 0 0 80px hsl(0 90% 55% / 0.4)", "0 4px 12px hsl(0 0% 0% / 0.25)"]
+    );
+    const likeBtnShadow = useTransform(
+      x,
+      [0, 150],
+      ["0 8px 24px hsl(210 95% 55% / 0.45)", "0 0 40px hsl(210 100% 60% / 0.8), 0 0 80px hsl(210 100% 60% / 0.45)"]
+    );
+    const dislikeIconColor = useTransform(x, [-150, -20, 0], ["#ffffff", "#ffffff", "hsl(0 85% 65%)"]);
+
+
     // Image + video gallery state
     const images = item?.item_images || [];
     const videos = item?.item_videos || [];
