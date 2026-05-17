@@ -58,6 +58,16 @@ export default {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
         },
+        hype: {
+          DEFAULT: "hsl(var(--hype))",
+          foreground: "hsl(var(--hype-foreground))",
+          glow: "hsl(var(--hype-glow))",
+        },
+        flop: {
+          DEFAULT: "hsl(var(--flop))",
+          foreground: "hsl(var(--flop-foreground))",
+          glow: "hsl(var(--flop-glow))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
