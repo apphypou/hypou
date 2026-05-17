@@ -185,7 +185,7 @@ function CallStage({
   return (
     <div className="absolute inset-0 flex flex-col">
       {/* Remote video area */}
-      <div className="flex-1 relative bg-black overflow-hidden">
+      <div className="flex-1 relative bg-scrim overflow-hidden">
         <RemoteRenderer kind={kind} />
         {!connected && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-foreground/80">
@@ -201,7 +201,7 @@ function CallStage({
 
         {/* Local self-view PiP (only for video calls) */}
         {kind === "video" && (
-          <div className="absolute top-[max(env(safe-area-inset-top),1rem)] right-4 w-28 h-40 rounded-2xl overflow-hidden border border-foreground/10 shadow-2xl bg-black">
+          <div className="absolute top-[max(env(safe-area-inset-top),1rem)] right-4 w-28 h-40 rounded-2xl overflow-hidden border border-foreground/10 shadow-2xl bg-scrim">
             <LocalCameraView />
           </div>
         )}
@@ -290,7 +290,7 @@ function RemoteRenderer({ kind }: { kind: "video" | "audio" }) {
 function LocalCameraView() {
   const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: false }], { onlySubscribed: false });
   const local = tracks.find((t) => t.participant.isLocal && (t as any).publication) as any;
-  if (!local) return <div className="h-full w-full bg-black" />;
+  if (!local) return <div className="h-full w-full bg-scrim" />;
   return (
     <TrackRefContext.Provider value={local}>
       <VideoTrack trackRef={local} className="!h-full !w-full object-cover" />

@@ -70,7 +70,7 @@ const useCountdown = (target: Date) => {
 
 const CountdownBlock = ({ value, label }: { value: number; label: string }) => (
   <div className="flex flex-col items-center gap-1">
-    <div className="rounded-xl sm:rounded-2xl w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center bg-white/5 backdrop-blur-sm border border-white/10 shadow-sm">
+    <div className="rounded-xl sm:rounded-2xl w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center bg-on-media/5 backdrop-blur-sm border border-on-media/10 shadow-sm">
       <AnimatePresence mode="popLayout">
         <motion.span
           key={value}
@@ -200,7 +200,7 @@ const ThankYouScreen = ({
           href={whatsappUrl || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20"
+          className="inline-flex items-center justify-center gap-2 w-full h-12 rounded-xl bg-green-500 text-on-media text-sm font-bold hover:bg-green-600 transition-all shadow-lg shadow-green-500/20"
         >
           <MessageCircle className="w-5 h-5" />
           Entrar no grupo do WhatsApp
@@ -214,14 +214,14 @@ const ThankYouScreen = ({
         transition={{ delay: 0.6 }}
         className="w-full"
       >
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="rounded-2xl border border-on-media/10 bg-on-media/5 p-4">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
             Suba na fila — compartilhe seu link
           </p>
           <p className="text-[10px] text-muted-foreground mb-3">
             Cada amigo que entra pelo seu link = <span className="text-primary font-bold">você sobe na fila</span>
           </p>
-          <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/10 text-xs text-muted-foreground font-mono overflow-hidden">
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-on-media/5 border border-on-media/10 text-xs text-muted-foreground font-mono overflow-hidden">
             <span className="truncate flex-1">{shareUrl}</span>
           </div>
         </div>
@@ -229,14 +229,14 @@ const ThankYouScreen = ({
         <div className="flex gap-3 mt-3">
           <button
             onClick={handleCopy}
-            className="flex-1 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:border-primary/40 transition-all"
+            className="flex-1 h-12 rounded-xl bg-on-media/5 border border-on-media/10 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:border-primary/40 transition-all"
           >
             {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
             {copied ? "Copiado!" : "Copiar"}
           </button>
           <button
             onClick={handleShare}
-            className="flex-1 h-12 rounded-xl bg-primary text-white flex items-center justify-center gap-2 text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+            className="flex-1 h-12 rounded-xl bg-primary text-on-media flex items-center justify-center gap-2 text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
           >
             <Share2 className="w-4 h-4" />
             Compartilhar
@@ -403,7 +403,7 @@ const ListaEspera = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Seu melhor email"
-                    className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-white/5 border border-white/10 text-sm sm:text-base text-foreground placeholder:text-muted-foreground font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
+                    className="w-full h-12 sm:h-14 pl-12 pr-4 rounded-2xl bg-on-media/5 border border-on-media/10 text-sm sm:text-base text-foreground placeholder:text-muted-foreground font-medium focus:outline-none focus:border-primary focus:shadow-[0_0_20px_hsl(var(--primary)/0.12)] transition-all duration-300"
                   />
                 </div>
                 <NeonButton type="submit" icon={ArrowRight} disabled={loading}>

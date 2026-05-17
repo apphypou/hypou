@@ -77,7 +77,7 @@ const Baixar = () => {
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <motion.div
             className="absolute -left-[10%] -top-[10%] h-[60%] w-[60%] rounded-full blur-3xl"
-            style={{ background: "radial-gradient(circle, hsl(184 100% 50% / 0.55) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.55) 0%, transparent 70%)" }}
             animate={reduceMotion ? {} : { x: [0, 40, 0], y: [0, 30, 0] }}
             transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -149,7 +149,7 @@ const Baixar = () => {
                 className="pointer-events-none absolute inset-0 -z-10 blur-3xl"
                 style={{
                   background:
-                    "radial-gradient(ellipse 60% 50% at 50% 50%, hsl(184 100% 50% / 0.3) 0%, transparent 70%)",
+                    "radial-gradient(ellipse 60% 50% at 50% 50%, hsl(var(--primary) / 0.3) 0%, transparent 70%)",
                 }}
               />
               <motion.img
@@ -196,7 +196,7 @@ const Baixar = () => {
                 variants={fadeUp}
                 className="mt-8 hidden items-center gap-4 lg:flex"
               >
-                <div className="rounded-2xl bg-white p-2 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.4)]">
+                <div className="rounded-2xl bg-on-media p-2 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.4)]">
                   {qrUrl && (
                     <img
                       src={qrUrl}
@@ -248,7 +248,7 @@ const Baixar = () => {
               className="pointer-events-none absolute inset-0 -z-10 blur-3xl"
               style={{
                 background:
-                  "radial-gradient(ellipse 60% 50% at 50% 50%, hsl(184 100% 50% / 0.3) 0%, transparent 70%)",
+                  "radial-gradient(ellipse 60% 50% at 50% 50%, hsl(var(--primary) / 0.3) 0%, transparent 70%)",
               }}
             />
 
@@ -310,7 +310,7 @@ const Baixar = () => {
             className="absolute inset-0"
             style={{
               background: `
-                radial-gradient(ellipse 60% 60% at 50% 50%, hsl(184 100% 50% / 0.25) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 60% at 50% 50%, hsl(var(--primary) / 0.25) 0%, transparent 70%),
                 radial-gradient(ellipse 40% 40% at 30% 50%, hsl(270 70% 55% / 0.15) 0%, transparent 60%)
               `,
             }}

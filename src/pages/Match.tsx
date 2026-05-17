@@ -227,7 +227,7 @@ const Match = () => {
 
       {/* Footer Actions */}
       <div className="p-6 pb-8 w-full max-w-md mx-auto relative z-10 flex flex-col gap-4">
-        <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" onClick={handleStartChat} className="shadow-[0_0_20px_hsl(184_100%_50%/0.4)] hover:shadow-[0_0_30px_hsl(184_100%_50%/0.6)]">
+        <NeonButton variant="primary" icon={MessageSquare} iconPosition="left" onClick={handleStartChat} className="shadow-[0_0_20px_hsl(var(--primary)/0.4)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)]">
           Iniciar conversa
         </NeonButton>
         <NeonButton variant="ghost" size="sm" onClick={() => navigate("/explorar")}>

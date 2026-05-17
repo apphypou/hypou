@@ -199,7 +199,7 @@ const SwipeCard = memo(
                 className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
                 draggable={false}
               />
-              <div className="absolute inset-0 bg-background/30 dark:bg-black/40" />
+              <div className="absolute inset-0 bg-background/30 dark:bg-scrim/40" />
             </div>
           )}
           {!currentImage && (
@@ -254,20 +254,20 @@ const SwipeCard = memo(
                   e.stopPropagation();
                   navigate(`/usuario/${ownerProfile.user_id}`);
                 }}
-                className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 hover:border-white/30 active:scale-95 transition-all cursor-pointer"
+                className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-scrim/35 backdrop-blur-xl border border-on-media/10 hover:border-on-media/30 active:scale-95 transition-all cursor-pointer"
               >
                 {ownerProfile.avatar_url ? (
                   <img
                     src={ownerProfile.avatar_url}
                     alt=""
-                    className="h-5 w-5 rounded-full object-cover border border-white/30 shrink-0"
+                    className="h-5 w-5 rounded-full object-cover border border-on-media/30 shrink-0"
                   />
                 ) : (
-                  <div className="h-5 w-5 rounded-full bg-white/20 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
+                  <div className="h-5 w-5 rounded-full bg-on-media/20 flex items-center justify-center text-on-media text-[9px] font-bold shrink-0">
                     {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
                   </div>
                 )}
-                <span className="text-white text-[11px] font-semibold drop-shadow-md truncate min-w-0">
+                <span className="text-on-media text-[11px] font-semibold drop-shadow-md truncate min-w-0">
                   {(() => {
                     const full = ownerProfile.display_name || "Usuário";
                     const first = full.split(" ")[0];
@@ -287,12 +287,12 @@ const SwipeCard = memo(
 
             {/* Slide dots */}
             {!expanded && totalSlides > 1 && (
-              <div className="absolute top-0.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-xl border border-white/10">
+              <div className="absolute top-0.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10">
                 {Array.from({ length: totalSlides }).map((_, i) => (
                   <div
                     key={i}
                     className={`h-1 rounded-full transition-all duration-200 ${
-                      i === activeImageIndex ? "w-3.5 bg-white" : "w-1 bg-white/40"
+                      i === activeImageIndex ? "w-3.5 bg-on-media" : "w-1 bg-on-media/40"
                     }`}
                   />
                 ))}
@@ -317,15 +317,15 @@ const SwipeCard = memo(
                       navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`);
                     }
                   }}
-                  className="h-8 w-8 rounded-full bg-black/30 backdrop-blur-xl border border-white/10 flex items-center justify-center"
+                  className="h-8 w-8 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
                 >
-                  <Share2 className="h-3.5 w-3.5 text-white" />
+                  <Share2 className="h-3.5 w-3.5 text-on-media" />
                 </button>
               </div>
             )}
 
             {/* Top gradient */}
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 via-black/15 to-transparent pointer-events-none z-20" />
+            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-scrim/40 via-scrim/15 to-transparent pointer-events-none z-20" />
 
             {/* Tap zones */}
             {!expanded && !standby && totalSlides > 1 && (
@@ -348,7 +348,7 @@ const SwipeCard = memo(
             )}
 
             {expanded && (
-              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/80 via-black/60 to-black/40" />
+              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-scrim/80 via-scrim/60 to-scrim/40" />
             )}
 
             {/* ===== EXPANDED OVERLAY ===== */}
@@ -359,11 +359,11 @@ const SwipeCard = memo(
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 30 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute inset-x-3 bottom-3 top-3 z-30 flex flex-col rounded-2xl bg-white/15 dark:bg-white/10 backdrop-blur-2xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+                  className="absolute inset-x-3 bottom-3 top-3 z-30 flex flex-col rounded-2xl bg-on-media/15 dark:bg-on-media/10 backdrop-blur-2xl border border-on-media/20 dark:border-on-media/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
                 >
                   <button
                     onClick={toggleExpand}
-                    className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-white/60 shrink-0"
+                    className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-on-media/60 shrink-0"
                   >
                     <ChevronDown className="h-4 w-4" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">
@@ -377,7 +377,7 @@ const SwipeCard = memo(
                     onTouchMove={(e) => e.stopPropagation()}
                   >
                     <div className="px-4 pb-2">
-                      <h2 className="text-white text-xl font-bold tracking-tight drop-shadow-md">
+                      <h2 className="text-on-media text-xl font-bold tracking-tight drop-shadow-md">
                         {item.name}
                       </h2>
                       {matchedOwnItem && (
@@ -394,13 +394,13 @@ const SwipeCard = memo(
                               <Package className="h-2.5 w-2.5 text-primary" />
                             </div>
                           )}
-                          <span className="text-white/70 text-xs font-medium">
+                          <span className="text-on-media/70 text-xs font-medium">
                             Compatível com{" "}
                             <span className="text-primary font-semibold">
                               {matchedOwnItem.name}
                             </span>
                             {(matchedOwnItem.count ?? 0) > 1 && (
-                              <span className="text-white/40">
+                              <span className="text-on-media/40">
                                 {" "}
                                 e +{(matchedOwnItem.count ?? 0) - 1}{" "}
                                 {(matchedOwnItem.count ?? 0) - 1 === 1
@@ -443,13 +443,13 @@ const SwipeCard = memo(
                           <Package className="h-2 w-2 text-primary" />
                         </div>
                       )}
-                      <span className="text-white/70 text-[10px] font-medium truncate">
+                      <span className="text-on-media/70 text-[10px] font-medium truncate">
                         Compatível com{" "}
                         <span className="text-primary font-semibold">
                           {matchedOwnItem.name}
                         </span>
                         {(matchedOwnItem.count ?? 0) > 1 && (
-                          <span className="text-white/50">
+                          <span className="text-on-media/50">
                             {" "}
                             +{(matchedOwnItem.count ?? 0) - 1}
                           </span>
@@ -459,27 +459,27 @@ const SwipeCard = memo(
                   )}
 
                   <div className="flex items-center gap-1.5 mb-2 overflow-hidden">
-                    <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white text-[10px] font-semibold tracking-wide uppercase shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-on-media/10 border border-on-media/10 text-on-media text-[10px] font-semibold tracking-wide uppercase shrink-0">
                       {item.category}
                     </span>
                     {conditionLabel && (
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-on-media/10 border border-on-media/10 text-on-media/80 text-[10px] font-semibold uppercase flex items-center gap-1 shrink-0">
                         <Package className="h-2.5 w-2.5" /> {conditionLabel}
                       </span>
                     )}
                     {item.location && (
-                      <span className="px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/80 text-[10px] font-semibold uppercase flex items-center gap-1 truncate min-w-0">
+                      <span className="px-2 py-0.5 rounded-full bg-on-media/10 border border-on-media/10 text-on-media/80 text-[10px] font-semibold uppercase flex items-center gap-1 truncate min-w-0">
                         <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
                         <span className="truncate">{item.location}</span>
                       </span>
                     )}
                   </div>
 
-                  <h2 className="text-white text-[22px] font-bold tracking-tight leading-tight truncate">
+                  <h2 className="text-on-media text-[22px] font-bold tracking-tight leading-tight truncate">
                     {item.name}
                   </h2>
 
-                  <p className="text-white/70 text-[15px] font-medium tracking-tight mt-0.5">
+                  <p className="text-on-media/70 text-[15px] font-medium tracking-tight mt-0.5">
                     {formatValue(item.market_value)}
                   </p>
 
@@ -490,7 +490,7 @@ const SwipeCard = memo(
                       toggleExpand(e);
                     }}
                     aria-label="Ver detalhes do item"
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-white/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform pointer-events-auto"
+                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-on-media/10 border border-on-media/15 backdrop-blur-md text-on-media/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform pointer-events-auto"
                   >
                     <ChevronUp className="h-3 w-3" />
                     Ver detalhes

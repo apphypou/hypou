@@ -379,8 +379,12 @@ Adicionados em `index.css` (light + dark) e mapeados em `tailwind.config.ts`:
 | `--glass-surface-strong` | Superfície glass enfatizada (`white/10`) |
 | `--glass-border` | Borda glass padrão (`white/15`) |
 | `--overlay-scrim` | Scrim sobre mídia (`black/35`) |
+| `--on-media` | Texto/ícone fixo branco sobre imagem/vídeo (independente do tema) |
+| `--scrim` | Preto fixo para overlays escuros (independente do tema) |
 
-Classes Tailwind disponíveis: `bg-hype`, `text-hype-foreground`, `bg-flop`, `text-flop-foreground`, etc.
+Classes Tailwind disponíveis: `bg-hype`, `text-hype-foreground`, `bg-flop`, `text-flop-foreground`, `text-on-media`, `bg-scrim/40`, `border-on-media/10`, etc.
+
+> **Regra de uso:** componentes que exibem conteúdo sobre **mídia** (fotos de itens, vídeos shorts, swipe cards) devem usar `text-on-media` / `bg-scrim` em vez de `text-white` / `bg-black`, mantendo a semântica e funcionando em ambos os temas.
 
 ### 6.5 Efeitos Visuais (Utilitários CSS)
 
@@ -1227,7 +1231,18 @@ Estrutura em duas zonas:
 
 - Top gradient: `h-20 from-black/40 via-black/15 to-transparent` (apenas legibilidade do chrome).
 - Owner chip: rating com 1 decimal (`5.0`).
-- Dots de paginação: container `bg-black/30 backdrop-blur-xl` para contraste em qualquer foto.
+- Dots de paginação: container `bg-scrim/30 backdrop-blur-xl` para contraste em qualquer foto.
+
+## Conversa — Anatomia (atualizado)
+
+Refatorado em subcomponentes (pasta `src/pages/Conversa/`) — `Conversa.tsx` reduzido de 691 → 302 linhas (apenas orquestração de estado e data-fetching):
+
+- **`Conversa.tsx`** — hooks (`useMessages`, `useConversationDetails`, `useSendMessage`, `useUploadChatMedia`), state e handlers (`handleSend`, `handleReport`, `handleBlock`, gravação de áudio, chamadas).
+- **`Conversa/ChatHeader.tsx`** — back, avatar/nome do outro, ícone par de itens, botões `Phone`/`Video`, menu Denunciar/Bloquear.
+- **`Conversa/MessageList.tsx`** — render de mensagens (text/image/video/audio/system) com check/checkcheck. `forwardRef` para o scroll auto.
+- **`Conversa/MessageInput.tsx`** — textarea, menu de anexos, indicador de gravação/upload, botão enviar (gradiente primary→roxo).
+- **`Conversa/ReportDialogs.tsx`** — Dialog de denúncia (motivos chips + descrição) + AlertDialog de confirmação de bloqueio.
+
 
 ## Vídeo & Áudio Chamada no Chat (LiveKit)
 

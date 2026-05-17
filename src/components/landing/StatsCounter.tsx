@@ -46,7 +46,7 @@ const StatsCounter = () => {
         <div
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 50% 60% at 50% 50%, hsl(184 100% 50% / 0.10) 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse 50% 60% at 50% 50%, hsl(var(--primary) / 0.10) 0%, transparent 70%)`,
           }}
         />
       </div>

@@ -102,7 +102,7 @@ const cardVariants = {
 
 const ProductCardEl = forwardRef<HTMLDivElement, { card: ProductCard }>(({ card }, ref) => (
   <div ref={ref} className="glass-card rounded-2xl overflow-hidden shadow-2xl" style={{ width: 136 }}>
-    <div className="h-[145px] flex items-center justify-center overflow-hidden bg-white">
+    <div className="h-[145px] flex items-center justify-center overflow-hidden bg-on-media">
       <img src={card.image} alt={card.name} className="w-full h-full object-contain" width={512} height={512} loading="lazy" />
     </div>
     <div className="p-2 space-y-1">
@@ -157,8 +157,8 @@ const Index = () => {
           className="absolute inset-0"
           style={{
             background: `
-              radial-gradient(ellipse 60% 50% at 50% 35%, hsl(184 100% 50% / 0.18) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 35% at 45% 32%, hsl(184 100% 60% / 0.10) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 50% at 50% 35%, hsl(var(--primary) / 0.18) 0%, transparent 70%),
+              radial-gradient(ellipse 40% 35% at 45% 32%, hsl(var(--primary) / 0.10) 0%, transparent 50%),
               radial-gradient(ellipse 45% 40% at 55% 45%, hsl(270 60% 50% / 0.06) 0%, transparent 50%)
             `,
           }}

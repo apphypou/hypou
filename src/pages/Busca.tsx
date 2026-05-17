@@ -308,8 +308,8 @@ const Busca = () => {
                           Sem foto
                         </div>
                       )}
-                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                        <span className="text-white text-xs font-bold">
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-scrim/60 to-transparent p-2">
+                        <span className="text-on-media text-xs font-bold">
                           {formatValue(item.market_value)}
                         </span>
                       </div>

@@ -14,7 +14,7 @@ const GlassCard = ({ children, hoverable = false, className, onClick }: GlassCar
       onClick={onClick}
       className={cn(
         "glass-card rounded-[2rem] overflow-hidden transition-all duration-300",
-        hoverable && "hover:border-primary/30 hover:shadow-[0_0_10px_hsl(184_100%_50%/0.1)]",
+        hoverable && "hover:border-primary/30 hover:shadow-[0_0_10px_hsl(var(--primary)/0.1)]",
         className
       )}
     >

@@ -426,7 +426,7 @@ const PerfilUsuario = () => {
             <button
               onClick={handleReport}
               disabled={!reportReason || reporting}
-              className="w-full py-3 rounded-full bg-destructive text-white font-bold text-sm uppercase tracking-wider disabled:opacity-30 flex items-center justify-center gap-2 hover:bg-destructive/90 transition-all"
+              className="w-full py-3 rounded-full bg-destructive text-on-media font-bold text-sm uppercase tracking-wider disabled:opacity-30 flex items-center justify-center gap-2 hover:bg-destructive/90 transition-all"
             >
               {reporting && <Loader2 className="h-4 w-4 animate-spin" />}
               Enviar Denúncia
