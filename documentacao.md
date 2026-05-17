@@ -365,26 +365,55 @@ Todas as cores são definidas em **HSL** via variáveis CSS em `index.css` e ref
 | `--border` | `0 0% 100% / 0.03` | Ultra-sutil (3% opacidade) |
 | `--input` | `0 0% 100% / 0.05` | 5% opacidade |
 
-### 6.4 Efeitos Visuais (Utilitários CSS)
+### 6.4 Tokens semânticos de marca (Hypou / Flopou / Glass)
+
+Adicionados em `index.css` (light + dark) e mapeados em `tailwind.config.ts`:
+
+| Token | Uso |
+|-------|-----|
+| `--hype` / `--hype-foreground` | Botão Hypou (like) e overlays verdes |
+| `--hype-glow` | Glow do botão Hypou ao arrastar |
+| `--flop` / `--flop-foreground` | Botão Flopou (dislike) e overlays vermelhos |
+| `--flop-glow` | Glow do botão Flopou ao arrastar |
+| `--glass-surface` | Superfície glass base (`white/6`) |
+| `--glass-surface-strong` | Superfície glass enfatizada (`white/10`) |
+| `--glass-border` | Borda glass padrão (`white/15`) |
+| `--overlay-scrim` | Scrim sobre mídia (`black/35`) |
+
+Classes Tailwind disponíveis: `bg-hype`, `text-hype-foreground`, `bg-flop`, `text-flop-foreground`, etc.
+
+### 6.5 Efeitos Visuais (Utilitários CSS)
 
 | Classe | Descrição |
 |--------|-----------|
-| `.glass-panel` | Fundo sólido com sombra suave (light) / fundo translúcido (dark) |
+| `.glass-panel` | Fundo sólido com sombra suave (light) / translúcido (dark) |
 | `.glass-card` | Card com `backdrop-blur(12px)`, borda ultra-sutil no dark |
-| `.neon-glow` | Box-shadow com cor primary a 30% opacidade |
-| `.text-glow` | Text-shadow ciano (apenas no dark mode) |
+| `.glass-button` | Superfície glass para botões sobre mídia (usa tokens `--glass-*`) |
+| `.neon-glow` / `.neon-glow-hover` | Box-shadow primary 30% / 40% |
+| `.shadow-glow-hype` | Halo verde (Hypou) — usado pelo SwipeActionButtons |
+| `.shadow-glow-flop` | Halo vermelho (Flopou) — usado pelo SwipeActionButtons |
+| `.text-glow` | Text-shadow ciano (apenas dark) |
 | `.gradient-text` | Texto com gradiente foreground → primary |
 | `.no-scrollbar` | Oculta scrollbar (webkit + Firefox) |
 | `.animate-float` | Animação flutuante (6s infinite) |
 
-### 6.5 Responsividade
+### 6.6 Padrão de componentização (cva)
+
+`NeonButton` e `IconButton` foram migrados para `class-variance-authority` (padrão shadcn), expondo `VariantProps` tipados:
+
+- `NeonButton` → `variant: primary | outline | ghost` × `size: sm | md | lg`
+- `IconButton` → `variant: default | glass | ghost` × `size: sm | md | lg`
+
+Regra do projeto: **não usar cores cruas** (`text-white`, `bg-black`, `hsl(...)` inline) em componentes — usar sempre tokens semânticos.
+
+### 6.7 Responsividade
 
 - **Mobile-first** (viewport principal: 390×844 CSS px)
 - `viewport-fit=cover` para suporte a notch/safe-areas
 - `env(safe-area-inset-*)` usado em headers e botões fixos
-- Container Tailwind: `max-w-2xl: 1400px`, centralizado
 
 ---
+
 
 ## 7. Componentes Base
 
@@ -1175,18 +1204,24 @@ Substituído modelo de "recarregar a página" por sincronização em tempo real 
 
 ## SwipeCard — Anatomia (atualizado)
 
-Estrutura em duas zonas claras:
-- **Imagem**: `object-cover object-center`, sempre preenche a área visível.
-- **Pedestal Liquid Glass** (bottom): `bg-black/55 backdrop-blur-2xl` com `border-t border-white/10`, cantos inferiores `rounded-b-[1.5rem]`, fade de 24px (`from-transparent to-black/45`) na junção com a imagem.
-- Painel exibe: matched item (opcional) → tags unificadas (categoria/condição/local) → título 22px bold → preço 15px medium /70 → pílula "Ver detalhes".
-- Padding inferior do painel: `pb-24` para não conflitar com os botões flutuantes.
+Refatorado em subcomponentes (pasta `src/components/SwipeCard/`):
+
+- **`SwipeCard.tsx`** (orquestrador) — gestos, motion values (`x`, `rotate`, `liftScale`), galeria, expanded panel, mini-perfil do dono.
+- **`SwipeCard/SwipeOverlays.tsx`** — glow nas bordas + stamps "HYPOU"/"FLOPOU" reagindo ao drag. Usa tokens `--hype` / `--flop`.
+- **`SwipeCard/SwipeActionButtons.tsx`** — botões Hypou (👍 verde) / Flopou (👎 vermelho) com cores e glows derivados do drag via `useTransform`. Usa tokens `--hype`, `--hype-glow`, `--flop`, `--flop-glow`, `--glass-surface`.
+- **`SwipeCard/CardDetailContent.tsx`** — conteúdo do painel expandido (preço, descrição, trade range, perfil do anunciante).
+
+Estrutura em duas zonas:
+- **Imagem**: `object-cover object-center` preenche a área visível.
+- **Pedestal Liquid Glass** (bottom): tags → título → preço → "Ver detalhes" → botões Hypou/Flopou centralizados.
 
 ## Botões Hypou / Flopou (Explorar)
 
-- Posição: `fixed bottom: safe-area + 8.5rem` (respiro real do BottomNav).
-- Tamanho: 64×64, `rounded-full`, Liquid Glass.
-- Tints semânticos: Flopou usa `border-danger/25` + ícone `text-danger/90`; Hypou usa `border-primary/30` + `text-primary` + glow externo `0 8px 30px hsl(primary/0.25)`.
-- Microlabel `text-[9px] uppercase tracking-widest` abaixo de cada botão reforça vocabulário da marca.
+- Tamanho: 64×64, `rounded-full`, `glass-button`.
+- **Estado idle**: fundo `--glass-surface`, ícone tintado (Flopou → `--flop`, Hypou → `--hype-glow`).
+- **Drag para esquerda** (Flopou): botão escala 1.18×, fundo interpola para `--flop`, ícone vira `--flop-foreground`, halo `shadow-glow-flop`.
+- **Drag para direita** (Hypou): mesma lógica espelhada com `--hype` / `--hype-glow`.
+- Toda a interpolação de cor usa tokens via `hsl(var(--token))` — zero cor hardcoded.
 
 ## Chrome do card
 
