@@ -48,9 +48,9 @@
     --hype: 142 71% 45%;
     --hype-foreground: 0 0% 100%;
     --hype-glow: 142 75% 50%;
-    --flop: 0 84% 60%;
+    --flop: 355 95% 58%;
     --flop-foreground: 0 0% 100%;
-    --flop-glow: 0 90% 55%;
+    --flop-glow: 355 100% 62%;
 
     /* Glass surfaces (used over imagery/dark backgrounds) */
     --glass-surface: 0 0% 100% / 0.06;
@@ -112,9 +112,9 @@
     --hype: 142 71% 45%;
     --hype-foreground: 0 0% 100%;
     --hype-glow: 142 75% 50%;
-    --flop: 0 84% 60%;
+    --flop: 355 95% 58%;
     --flop-foreground: 0 0% 100%;
-    --flop-glow: 0 90% 55%;
+    --flop-glow: 355 100% 62%;
 
     /* Glass surfaces (used over imagery/dark backgrounds) */
     --glass-surface: 0 0% 100% / 0.06;
