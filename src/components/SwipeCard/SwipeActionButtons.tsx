@@ -47,7 +47,7 @@ export const SwipeActionButtons = ({
     x,
     [-150, 0],
     [
-      "0 0 40px hsl(var(--flop-glow) / 0.7), 0 0 80px hsl(var(--flop-glow) / 0.4)",
+      "0 8px 24px hsl(0 0% 0% / 0.35)",
       "0 4px 12px hsl(0 0% 0% / 0.25)",
     ]
   );
