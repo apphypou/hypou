@@ -26,7 +26,7 @@ export const SwipeActionButtons = ({
 
   const dislikeBtnBg = useTransform(
     x,
-    [-150, -20, 0],
+    [-60, -20, 0],
     [
       "hsl(var(--flop))",
       "hsl(var(--flop) / 0.18)",
@@ -35,7 +35,7 @@ export const SwipeActionButtons = ({
   );
   const likeBtnBg = useTransform(
     x,
-    [0, 20, 150],
+    [0, 20, 60],
     [
       "hsl(var(--glass-surface))",
       "hsl(var(--hype) / 0.18)",
