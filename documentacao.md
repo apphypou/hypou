@@ -365,26 +365,55 @@ Todas as cores são definidas em **HSL** via variáveis CSS em `index.css` e ref
 | `--border` | `0 0% 100% / 0.03` | Ultra-sutil (3% opacidade) |
 | `--input` | `0 0% 100% / 0.05` | 5% opacidade |
 
-### 6.4 Efeitos Visuais (Utilitários CSS)
+### 6.4 Tokens semânticos de marca (Hypou / Flopou / Glass)
+
+Adicionados em `index.css` (light + dark) e mapeados em `tailwind.config.ts`:
+
+| Token | Uso |
+|-------|-----|
+| `--hype` / `--hype-foreground` | Botão Hypou (like) e overlays verdes |
+| `--hype-glow` | Glow do botão Hypou ao arrastar |
+| `--flop` / `--flop-foreground` | Botão Flopou (dislike) e overlays vermelhos |
+| `--flop-glow` | Glow do botão Flopou ao arrastar |
+| `--glass-surface` | Superfície glass base (`white/6`) |
+| `--glass-surface-strong` | Superfície glass enfatizada (`white/10`) |
+| `--glass-border` | Borda glass padrão (`white/15`) |
+| `--overlay-scrim` | Scrim sobre mídia (`black/35`) |
+
+Classes Tailwind disponíveis: `bg-hype`, `text-hype-foreground`, `bg-flop`, `text-flop-foreground`, etc.
+
+### 6.5 Efeitos Visuais (Utilitários CSS)
 
 | Classe | Descrição |
 |--------|-----------|
-| `.glass-panel` | Fundo sólido com sombra suave (light) / fundo translúcido (dark) |
+| `.glass-panel` | Fundo sólido com sombra suave (light) / translúcido (dark) |
 | `.glass-card` | Card com `backdrop-blur(12px)`, borda ultra-sutil no dark |
-| `.neon-glow` | Box-shadow com cor primary a 30% opacidade |
-| `.text-glow` | Text-shadow ciano (apenas no dark mode) |
+| `.glass-button` | Superfície glass para botões sobre mídia (usa tokens `--glass-*`) |
+| `.neon-glow` / `.neon-glow-hover` | Box-shadow primary 30% / 40% |
+| `.shadow-glow-hype` | Halo verde (Hypou) — usado pelo SwipeActionButtons |
+| `.shadow-glow-flop` | Halo vermelho (Flopou) — usado pelo SwipeActionButtons |
+| `.text-glow` | Text-shadow ciano (apenas dark) |
 | `.gradient-text` | Texto com gradiente foreground → primary |
 | `.no-scrollbar` | Oculta scrollbar (webkit + Firefox) |
 | `.animate-float` | Animação flutuante (6s infinite) |
 
-### 6.5 Responsividade
+### 6.6 Padrão de componentização (cva)
+
+`NeonButton` e `IconButton` foram migrados para `class-variance-authority` (padrão shadcn), expondo `VariantProps` tipados:
+
+- `NeonButton` → `variant: primary | outline | ghost` × `size: sm | md | lg`
+- `IconButton` → `variant: default | glass | ghost` × `size: sm | md | lg`
+
+Regra do projeto: **não usar cores cruas** (`text-white`, `bg-black`, `hsl(...)` inline) em componentes — usar sempre tokens semânticos.
+
+### 6.7 Responsividade
 
 - **Mobile-first** (viewport principal: 390×844 CSS px)
 - `viewport-fit=cover` para suporte a notch/safe-areas
 - `env(safe-area-inset-*)` usado em headers e botões fixos
-- Container Tailwind: `max-w-2xl: 1400px`, centralizado
 
 ---
+
 
 ## 7. Componentes Base
 
