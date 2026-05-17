@@ -1204,18 +1204,24 @@ Substituído modelo de "recarregar a página" por sincronização em tempo real 
 
 ## SwipeCard — Anatomia (atualizado)
 
-Estrutura em duas zonas claras:
-- **Imagem**: `object-cover object-center`, sempre preenche a área visível.
-- **Pedestal Liquid Glass** (bottom): `bg-black/55 backdrop-blur-2xl` com `border-t border-white/10`, cantos inferiores `rounded-b-[1.5rem]`, fade de 24px (`from-transparent to-black/45`) na junção com a imagem.
-- Painel exibe: matched item (opcional) → tags unificadas (categoria/condição/local) → título 22px bold → preço 15px medium /70 → pílula "Ver detalhes".
-- Padding inferior do painel: `pb-24` para não conflitar com os botões flutuantes.
+Refatorado em subcomponentes (pasta `src/components/SwipeCard/`):
+
+- **`SwipeCard.tsx`** (orquestrador) — gestos, motion values (`x`, `rotate`, `liftScale`), galeria, expanded panel, mini-perfil do dono.
+- **`SwipeCard/SwipeOverlays.tsx`** — glow nas bordas + stamps "HYPOU"/"FLOPOU" reagindo ao drag. Usa tokens `--hype` / `--flop`.
+- **`SwipeCard/SwipeActionButtons.tsx`** — botões Hypou (👍 verde) / Flopou (👎 vermelho) com cores e glows derivados do drag via `useTransform`. Usa tokens `--hype`, `--hype-glow`, `--flop`, `--flop-glow`, `--glass-surface`.
+- **`SwipeCard/CardDetailContent.tsx`** — conteúdo do painel expandido (preço, descrição, trade range, perfil do anunciante).
+
+Estrutura em duas zonas:
+- **Imagem**: `object-cover object-center` preenche a área visível.
+- **Pedestal Liquid Glass** (bottom): tags → título → preço → "Ver detalhes" → botões Hypou/Flopou centralizados.
 
 ## Botões Hypou / Flopou (Explorar)
 
-- Posição: `fixed bottom: safe-area + 8.5rem` (respiro real do BottomNav).
-- Tamanho: 64×64, `rounded-full`, Liquid Glass.
-- Tints semânticos: Flopou usa `border-danger/25` + ícone `text-danger/90`; Hypou usa `border-primary/30` + `text-primary` + glow externo `0 8px 30px hsl(primary/0.25)`.
-- Microlabel `text-[9px] uppercase tracking-widest` abaixo de cada botão reforça vocabulário da marca.
+- Tamanho: 64×64, `rounded-full`, `glass-button`.
+- **Estado idle**: fundo `--glass-surface`, ícone tintado (Flopou → `--flop`, Hypou → `--hype-glow`).
+- **Drag para esquerda** (Flopou): botão escala 1.18×, fundo interpola para `--flop`, ícone vira `--flop-foreground`, halo `shadow-glow-flop`.
+- **Drag para direita** (Hypou): mesma lógica espelhada com `--hype` / `--hype-glow`.
+- Toda a interpolação de cor usa tokens via `hsl(var(--token))` — zero cor hardcoded.
 
 ## Chrome do card
 
