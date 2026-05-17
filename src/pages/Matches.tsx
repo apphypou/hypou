@@ -602,7 +602,7 @@ const Matches = () => {
                   {existingRating === null && (
                     <button
                       onClick={() => setShowRating(true)}
-                      className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.3)]"
+                      className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(var(--primary)/0.3)]"
                     >
                       <Star className="h-4 w-4" />
                       Avaliar troca
@@ -691,7 +691,7 @@ const Matches = () => {
                   <button
                     onClick={handleConfirmMatch}
                     disabled={confirming}
-                    className="flex-[2] h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(184_100%_50%/0.4)] disabled:opacity-50 transition-all active:scale-[0.97]"
+                    className="flex-[2] h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(var(--primary)/0.4)] disabled:opacity-50 transition-all active:scale-[0.97]"
                   >
                     {confirming ? (
                       <Loader2 className="h-5 w-5 animate-spin" />

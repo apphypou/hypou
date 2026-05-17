@@ -158,7 +158,7 @@ const Index = () => {
           style={{
             background: `
               radial-gradient(ellipse 60% 50% at 50% 35%, hsl(var(--primary) / 0.18) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 35% at 45% 32%, hsl(184 100% 60% / 0.10) 0%, transparent 50%),
+              radial-gradient(ellipse 40% 35% at 45% 32%, hsl(var(--primary) / 0.10) 0%, transparent 50%),
               radial-gradient(ellipse 45% 40% at 55% 45%, hsl(270 60% 50% / 0.06) 0%, transparent 50%)
             `,
           }}
