@@ -14,10 +14,12 @@ import OfflineScreen from "@/components/OfflineScreen";
 import PageTransition from "@/components/PageTransition";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
+import { usePushRegistration } from "@/hooks/usePushRegistration";
 import IncomingCallSheet from "@/components/IncomingCallSheet";
 
 const GlobalAlerts = () => {
   useGlobalRealtimeAlerts();
+  usePushRegistration();
   return null;
 };
 
@@ -60,6 +62,7 @@ const AdminStatus = lazy(() => import("./pages/admin/AdminStatus"));
 const AdminAssistente = lazy(() => import("./pages/admin/AdminAssistente"));
 const AdminLancamento = lazy(() => import("./pages/admin/AdminLancamento"));
 const Chamada = lazy(() => import("./pages/Chamada"));
+const ChamadasPerdidas = lazy(() => import("./pages/ChamadasPerdidas"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -130,6 +133,9 @@ const AnimatedRoutes = () => {
           } />
           <Route path="/chamada/:roomName" element={
             <ProtectedRoute><Chamada /></ProtectedRoute>
+          } />
+          <Route path="/chamadas" element={
+            <ProtectedRoute><PageTransition><ChamadasPerdidas /></PageTransition></ProtectedRoute>
           } />
           <Route path="/meu-perfil" element={
             <ProtectedRoute><PageTransition><MeuPerfil /></PageTransition></ProtectedRoute>
