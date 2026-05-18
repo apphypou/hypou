@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, PhoneMissed } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import { useConversations } from "@/hooks/useMessages";
@@ -27,13 +27,22 @@ const Chat = () => {
         <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
           Chat
         </h1>
-        <div className="flex items-center gap-1">
-          <span className="text-primary text-xs font-semibold">
-            {conversations.filter((c) => c.unread_count > 0).length} nova{conversations.filter((c) => c.unread_count > 0).length !== 1 ? "s" : ""}
-          </span>
-          {conversations.some((c) => c.unread_count > 0) && (
-            <span className="h-1.5 w-1.5 rounded-full bg-primary neon-glow" />
-          )}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/chamadas")}
+            aria-label="Chamadas perdidas"
+            className="h-9 w-9 rounded-full bg-card/60 backdrop-blur-xl border border-foreground/5 flex items-center justify-center active:scale-95 transition"
+          >
+            <PhoneMissed className="h-4 w-4 text-foreground/70" />
+          </button>
+          <div className="flex items-center gap-1">
+            <span className="text-primary text-xs font-semibold">
+              {conversations.filter((c) => c.unread_count > 0).length} nova{conversations.filter((c) => c.unread_count > 0).length !== 1 ? "s" : ""}
+            </span>
+            {conversations.some((c) => c.unread_count > 0) && (
+              <span className="h-1.5 w-1.5 rounded-full bg-primary neon-glow" />
+            )}
+          </div>
         </div>
       </header>
 
