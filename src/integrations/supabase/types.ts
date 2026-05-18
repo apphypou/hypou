@@ -109,6 +109,33 @@ export type Database = {
           },
         ]
       }
+      device_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -922,6 +949,10 @@ export type Database = {
           updated_at: string
           user_id: string
         }[]
+      }
+      notify_push: {
+        Args: { p_body: string; p_data?: Json; p_title: string; p_user: string }
+        Returns: undefined
       }
       recommended_items: {
         Args: { p_limit?: number; p_user_id: string }
