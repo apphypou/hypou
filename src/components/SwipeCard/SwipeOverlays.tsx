@@ -42,8 +42,10 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
         style={{ opacity: likeOpacity }}
       >
         <motion.span
-          className="text-success text-4xl font-black rotate-[-15deg] border-[3px] border-success px-4 py-2 rounded-xl"
+          className="text-4xl font-black rotate-[-15deg] border-[3px] px-4 py-2 rounded-xl"
           style={{
+            color: "hsl(var(--hype))",
+            borderColor: "hsl(var(--hype))",
             textShadow: "0 0 20px hsl(var(--hype) / 0.6)",
             scale: likeStampScale,
           }}
@@ -56,8 +58,10 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
         style={{ opacity: dislikeOpacity }}
       >
         <motion.span
-          className="text-danger text-4xl font-black rotate-[15deg] border-[3px] border-danger px-4 py-2 rounded-xl"
+          className="text-4xl font-black rotate-[15deg] border-[3px] px-4 py-2 rounded-xl"
           style={{
+            color: "hsl(var(--flop))",
+            borderColor: "hsl(var(--flop))",
             textShadow: "0 0 20px hsl(var(--flop) / 0.6)",
             scale: dislikeStampScale,
           }}
