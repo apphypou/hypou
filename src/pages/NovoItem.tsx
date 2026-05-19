@@ -381,7 +381,10 @@ const NovoItem = () => {
           </label>
           {videoPreview ? (
             <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-primary/30">
-              <video src={videoPreview} className="w-full h-full object-cover" controls preload="metadata" />
+              <video src={videoPreview} poster={videoThumb || undefined} className="w-full h-full object-cover bg-black" controls preload="metadata" playsInline />
+              <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <Check className="h-3 w-3" /> Vídeo pronto
+              </div>
               <button
                 type="button"
                 onClick={removeVideo}
