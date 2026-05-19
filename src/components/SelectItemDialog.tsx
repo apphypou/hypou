@@ -110,11 +110,15 @@ const SelectItemDialog = ({
             Você curtiu! 🎯 Monte sua oferta
           </DrawerTitle>
           {targetItemName ? (
-            <p className="text-xs text-muted-foreground mt-1">
-              Combine até {MAX_ITEMS} itens para trocar por{" "}
-              <span className="font-semibold text-primary">{targetItemName}</span>
-              {targetItemValue ? <> ({formatValue(targetItemValue)})</> : null}
-            </p>
+            <div className="mt-1 space-y-0.5">
+              <p className="text-xs text-muted-foreground">
+                Combine até {MAX_ITEMS} itens para trocar por
+              </p>
+              <p className="text-sm font-bold text-primary">
+                {targetItemName}
+                {targetItemValue ? <> · {formatValue(targetItemValue)}</> : null}
+              </p>
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground mt-1">
               Selecione até {MAX_ITEMS} itens para oferecer.
