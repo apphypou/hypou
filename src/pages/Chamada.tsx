@@ -131,27 +131,38 @@ function CallStage({
 
   // Track remote participants
   useEffect(() => {
-    const onConnected = (_p: any) => {
+    const markConnected = () => {
       setConnected(true);
       onRemoteJoined();
     };
-    const onDisconnected = () => onLeave();
-    const onParticipantLeft = () => {
-      // The other side hung up — leave the room too
-      onLeave();
+    const checkExisting = () => {
+      if (room.remoteParticipants.size > 0 || room.numParticipants > 1) {
+        markConnected();
+      }
     };
+    const onConnected = (_p: any) => markConnected();
+    const onDisconnected = () => onLeave();
+    const onParticipantLeft = () => onLeave();
+    const onRoomConnected = () => checkExisting();
+    const onTrackSubscribed = (_t: any, _pub: any, participant: any) => {
+      if (!participant?.isLocal) markConnected();
+    };
+
     room.on(RoomEvent.ParticipantConnected, onConnected);
     room.on(RoomEvent.Disconnected, onDisconnected);
     room.on(RoomEvent.ParticipantDisconnected, onParticipantLeft);
-    // If a remote was already there
-    if (room.numParticipants > 1) {
-      setConnected(true);
-      onRemoteJoined();
-    }
+    room.on(RoomEvent.Connected, onRoomConnected);
+    room.on(RoomEvent.TrackSubscribed, onTrackSubscribed);
+
+    // If a remote was already there when we mounted/joined
+    checkExisting();
+
     return () => {
       room.off(RoomEvent.ParticipantConnected, onConnected);
       room.off(RoomEvent.Disconnected, onDisconnected);
       room.off(RoomEvent.ParticipantDisconnected, onParticipantLeft);
+      room.off(RoomEvent.Connected, onRoomConnected);
+      room.off(RoomEvent.TrackSubscribed, onTrackSubscribed);
     };
   }, [room, onRemoteJoined, onLeave]);
 
