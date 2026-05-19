@@ -107,7 +107,7 @@ const SelectItemDialog = ({
       <DrawerContent className="max-h-[88vh]">
         <DrawerHeader className="text-center pb-2">
           <DrawerTitle className="text-lg font-extrabold text-foreground">
-            Você curtiu! 🎯 Monte sua oferta
+            Você curtiu! Monte sua oferta
           </DrawerTitle>
           {targetItemName ? (
             <div className="mt-1 space-y-0.5">
