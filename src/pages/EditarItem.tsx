@@ -227,7 +227,7 @@ const EditarItem = () => {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+      await queryClient.refetchQueries({ queryKey: ["my-items", user.id], exact: true });
       queryClient.invalidateQueries({ queryKey: ["item-detail", itemId] });
       queryClient.invalidateQueries({ queryKey: ["shorts-feed"] });
       toast({ title: "Item atualizado com sucesso!" });
