@@ -63,12 +63,12 @@ export const SwipeActionButtons = ({
   const dislikeIconColor = useTransform(
     x,
     [-60, -10, 0],
-    ["hsl(var(--flop-foreground))", "hsl(var(--flop-foreground))", "hsl(var(--foreground) / 0.6)"]
+    ["hsl(var(--flop-foreground))", "hsl(var(--flop-foreground))", "hsl(var(--foreground))"]
   );
   const likeIconColor = useTransform(
     x,
     [0, 10, 60],
-    ["hsl(var(--foreground) / 0.6)", "hsl(var(--hype-foreground))", "hsl(var(--hype-foreground))"]
+    ["hsl(var(--foreground))", "hsl(var(--hype-foreground))", "hsl(var(--hype-foreground))"]
   );
 
   return (
