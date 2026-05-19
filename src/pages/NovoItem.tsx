@@ -58,6 +58,7 @@ const NovoItem = () => {
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [videoThumb, setVideoThumb] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
