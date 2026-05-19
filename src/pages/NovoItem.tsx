@@ -140,8 +140,10 @@ const NovoItem = () => {
 
   const removeVideo = () => {
     if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoThumb) URL.revokeObjectURL(videoThumb);
     setVideoFile(null);
     setVideoPreview(null);
+    setVideoThumb(null);
   };
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
