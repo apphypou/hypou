@@ -219,7 +219,9 @@ const NovoItem = () => {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+      // Aguarda o refetch concluir ANTES de navegar para evitar exibir cache antigo
+      await queryClient.refetchQueries({ queryKey: ["my-items", user.id], exact: true });
+      queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] });
       toast({ title: "Item cadastrado com sucesso!" });
       navigate("/meu-perfil");
     } catch (err: any) {
