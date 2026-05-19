@@ -122,8 +122,8 @@ export const MessageInput = ({
               placeholder="Digite sua mensagem..."
               rows={1}
               disabled={isRecording || uploading}
-              className="flex-1 bg-transparent border-0 text-foreground focus:outline-none placeholder:text-foreground/30 resize-none text-sm max-h-32 disabled:opacity-50 py-2"
-              style={{ minHeight: "28px" }}
+              className="flex-1 bg-transparent border-0 text-foreground focus:outline-none placeholder:text-foreground/30 resize-none max-h-32 disabled:opacity-50 py-2"
+              style={{ minHeight: "28px", fontSize: "16px" }}
             />
             <div className="flex items-center gap-1 shrink-0">
               <button
