@@ -92,10 +92,9 @@ export const SwipeActionButtons = ({
       >
         <ThumbsDown
           className="h-7 w-7"
-          strokeWidth={2.2}
-          stroke="hsl(var(--foreground))"
+          strokeWidth={2.4}
           fill="currentColor"
-          fillOpacity={1}
+          fillOpacity={0.15}
         />
       </motion.button>
       <motion.button
@@ -117,10 +116,9 @@ export const SwipeActionButtons = ({
       >
         <ThumbsUp
           className="h-7 w-7"
-          strokeWidth={2.2}
-          stroke="hsl(var(--foreground))"
+          strokeWidth={2.4}
           fill="currentColor"
-          fillOpacity={1}
+          fillOpacity={0.15}
         />
       </motion.button>
     </div>
