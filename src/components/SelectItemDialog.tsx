@@ -132,28 +132,28 @@ const SelectItemDialog = ({
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : myItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <div className="h-20 w-20 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center mb-5">
                 {isFirstTime ? (
-                  <Sparkles className="h-7 w-7 text-primary" />
+                  <Sparkles className="h-9 w-9 text-primary" strokeWidth={1.8} />
                 ) : (
-                  <Package className="h-7 w-7 text-primary" />
+                  <Package className="h-9 w-9 text-primary" strokeWidth={1.8} />
                 )}
               </div>
-              <p className="text-foreground font-bold text-base mb-1">
-                {isFirstTime ? "Cadastre seu primeiro item!" : "Nenhum item ativo"}
-              </p>
-              <p className="text-muted-foreground text-xs mb-4">
+              <h3 className="text-foreground font-bold text-lg leading-tight mb-2">
+                {isFirstTime ? "Cadastre seu primeiro item" : "Nenhum item ativo"}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-[260px] mb-6">
                 {isFirstTime
-                  ? "Para propor trocas, você precisa cadastrar pelo menos um item seu."
+                  ? "Para propor trocas, cadastre pelo menos um item seu."
                   : "Cadastre um novo item para poder propor trocas."}
               </p>
               <Button
                 onClick={() => { onClose(); navigate("/novo-item"); }}
-                className="rounded-full px-6"
+                className="rounded-full px-6 h-11"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                {isFirstTime ? "Cadastrar meu primeiro item" : "Cadastrar item"}
+                <Plus className="h-4 w-4 mr-1.5" />
+                Cadastrar item
               </Button>
             </div>
           ) : (
