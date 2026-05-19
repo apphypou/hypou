@@ -45,12 +45,12 @@
     --danger-foreground: 0 0% 100%;
 
     /* Brand semantic — Hypou (like) / Flopou (dislike) */
-    --hype: 142 71% 45%;
-    --hype-foreground: 0 0% 100%;
-    --hype-glow: 142 75% 50%;
-    --flop: 355 95% 58%;
+    --hype: 178 98% 54%;
+    --hype-foreground: 0 0% 10%;
+    --hype-glow: 178 98% 60%;
+    --flop: 331 100% 58%;
     --flop-foreground: 0 0% 100%;
-    --flop-glow: 355 100% 62%;
+    --flop-glow: 331 100% 65%;
 
     /* Glass surfaces (used over imagery/dark backgrounds) */
     --glass-surface: 0 0% 100% / 0.06;
