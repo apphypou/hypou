@@ -105,8 +105,36 @@ const NovoItem = () => {
       return;
     }
     if (videoPreview) URL.revokeObjectURL(videoPreview);
+    if (videoThumb) URL.revokeObjectURL(videoThumb);
     setVideoFile(file);
-    setVideoPreview(URL.createObjectURL(file));
+    const url = URL.createObjectURL(file);
+    setVideoPreview(url);
+    setVideoThumb(null);
+
+    // Generate poster thumbnail from first frame
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.muted = true;
+    v.playsInline = true;
+    v.src = url;
+    v.onloadeddata = () => {
+      const seekTo = Math.min(0.1, (v.duration || 1) / 2);
+      v.currentTime = seekTo;
+    };
+    v.onseeked = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = v.videoWidth;
+        canvas.height = v.videoHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) setVideoThumb(URL.createObjectURL(blob));
+        }, "image/jpeg", 0.8);
+      } catch {}
+    };
+    toast({ title: "Vídeo adicionado!", description: "Pré-visualização gerada com sucesso." });
   };
 
   const removeVideo = () => {
