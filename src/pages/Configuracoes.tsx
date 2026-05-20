@@ -201,6 +201,14 @@ const Configuracoes = () => {
       onClick: () => setCategoriesDialogOpen(true),
     },
     {
+      icon: BellOff,
+      label: disablePendingResume ? "Reativar lembrete de proposta" : "Desativar lembrete de proposta",
+      description: disablePendingResume
+        ? "Voltar a mostrar 'Monte sua oferta' ao retornar ao Explorar"
+        : "Não mostrar 'Monte sua oferta' ao retornar ao Explorar",
+      onClick: togglePendingResume,
+    },
+    {
       icon: FileText,
       label: "Termos de Uso",
       description: "Leia os termos da plataforma",
