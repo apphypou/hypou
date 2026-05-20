@@ -1,4 +1,4 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check, BellOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
@@ -51,6 +51,23 @@ const Configuracoes = () => {
 
   // Blocked users state
   const [blockedDialogOpen, setBlockedDialogOpen] = useState(false);
+
+  // Pending-resume preference (mostra "Você curtiu! Monte sua oferta" ao voltar para o Explorar)
+  const [disablePendingResume, setDisablePendingResume] = useState(
+    typeof window !== "undefined" && localStorage.getItem("hypou:disable-pending-resume") === "1"
+  );
+  const togglePendingResume = () => {
+    const next = !disablePendingResume;
+    setDisablePendingResume(next);
+    if (next) {
+      localStorage.setItem("hypou:disable-pending-resume", "1");
+      sessionStorage.removeItem("hypou:pending-like-item");
+      toast({ title: "Lembrete desativado", description: "Não vamos mais reabrir a proposta ao voltar para o Explorar." });
+    } else {
+      localStorage.removeItem("hypou:disable-pending-resume");
+      toast({ title: "Lembrete ativado" });
+    }
+  };
 
   // Categories preferences state
   const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false);
@@ -182,6 +199,14 @@ const Configuracoes = () => {
       label: "Categorias de Interesse",
       description: "Editar o que aparece no Explorar",
       onClick: () => setCategoriesDialogOpen(true),
+    },
+    {
+      icon: BellOff,
+      label: disablePendingResume ? "Reativar lembrete de proposta" : "Desativar lembrete de proposta",
+      description: disablePendingResume
+        ? "Voltar a mostrar 'Monte sua oferta' ao retornar ao Explorar"
+        : "Não mostrar 'Monte sua oferta' ao retornar ao Explorar",
+      onClick: togglePendingResume,
     },
     {
       icon: FileText,
