@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import ItemPreviewDialog from "@/components/ItemPreviewDialog";
 
 interface TradeItem {
   id?: string;
