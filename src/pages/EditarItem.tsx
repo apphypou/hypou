@@ -53,7 +53,9 @@ const EditarItem = () => {
   const itemInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoCameraInputRef = useRef<HTMLInputElement>(null);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [videoMenuOpen, setVideoMenuOpen] = useState(false);
 
   const { data: item, isLoading } = useQuery({
     queryKey: ["item-detail", itemId],
@@ -316,6 +318,7 @@ const EditarItem = () => {
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleNewPhotos} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
+      <input ref={videoCameraInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleVideoSelect} />
 
       <Sheet open={photoMenuOpen} onOpenChange={setPhotoMenuOpen}>
         <SheetContent side="bottom" className="bg-card border-t border-foreground/10 rounded-t-3xl pb-8">
