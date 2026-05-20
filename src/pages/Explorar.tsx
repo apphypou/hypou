@@ -391,7 +391,11 @@ const Explorar = () => {
       {!isGuest && (
         <SelectItemDialog
           open={showSelectItem}
-          onClose={() => { setShowSelectItem(false); setPendingLikeItem(null); }}
+          onClose={() => {
+            setShowSelectItem(false);
+            setPendingLikeItem(null);
+            try { sessionStorage.removeItem(PENDING_LIKE_KEY); } catch { /* */ }
+          }}
           onConfirm={handleProposalConfirm}
           targetItemName={pendingLikeItem?.name}
           targetItemValue={pendingLikeItem?.market_value}
