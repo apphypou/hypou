@@ -15,11 +15,13 @@ import PageTransition from "@/components/PageTransition";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
+import { useAppLifecycleSync } from "@/hooks/useAppLifecycleSync";
 import IncomingCallSheet from "@/components/IncomingCallSheet";
 
 const GlobalAlerts = () => {
   useGlobalRealtimeAlerts();
   usePushRegistration();
+  useAppLifecycleSync();
   return null;
 };
 
@@ -68,9 +70,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: 1000 * 60 * 30, // 30 min cache for offline resilience
-      staleTime: 1000 * 60 * 5, // 5 min — avoid refetch flicker between tabs
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      staleTime: 1000 * 30, // 30s — realtime mantém fresh; refetch leve no foco
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: "always",
+      refetchOnMount: true,
       retry: 1,
     },
   },
