@@ -35,8 +35,8 @@ const useConversationDetails = (conversationId: string | null) => {
         .from("matches")
         .select(`
           id, status, user_a_id, user_b_id,
-          item_a:item_a_id (name, item_images (image_url, position)),
-          item_b:item_b_id (name, item_images (image_url, position))
+          item_a:item_a_id (id, name, item_images (image_url, position)),
+          item_b:item_b_id (id, name, item_images (image_url, position))
         `)
         .eq("id", conv.match_id)
         .single();
