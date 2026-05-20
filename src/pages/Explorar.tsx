@@ -57,9 +57,14 @@ const Explorar = () => {
   }, [user, onboardingProfile, navigate]);
 
   // Restore pending proposal context if user came back from /novo-item
+  // Pode ser desativado em Configurações (hypou:disable-pending-resume)
   useEffect(() => {
     if (!user) return;
     try {
+      if (localStorage.getItem("hypou:disable-pending-resume") === "1") {
+        sessionStorage.removeItem(PENDING_LIKE_KEY);
+        return;
+      }
       const raw = sessionStorage.getItem(PENDING_LIKE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
