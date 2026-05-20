@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 
 import { categories as allCategories } from "@/constants/categories";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 const CATEGORIES = [
   { label: "Todos", value: "" },
@@ -38,6 +39,15 @@ const Shorts = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Live: novos vídeos / curtidas refletem sem reload
+  useRealtimeInvalidate(
+    [
+      { table: "item_videos", invalidateKeys: [["shorts-feed"]] },
+      { table: "video_likes", invalidateKeys: [["shorts-feed"]] },
+    ],
+    true
+  );
 
   const { data: videos = [], isLoading } = useQuery({
     queryKey: ["shorts-feed", sort, category],

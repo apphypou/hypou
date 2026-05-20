@@ -1,93 +1,93 @@
-# Revisão de Componentização & Tokenização
+# Plano: Zero-Reload — sincronização realtime universal
 
-## Diagnóstico
+## Objetivo
+Tudo que o usuário vê (chat, chamadas perdidas, itens novos, propostas, perfil, notificações, badges) deve atualizar sozinho via Supabase Realtime + React Query, mesmo após:
+- voltar de background (Capacitor / aba inativa)
+- perda momentânea de conexão
+- troca de rota
 
-### 1. Tokenização (violações do design system)
-Regra do projeto: nunca usar cores cruas em componentes. Encontrado:
+## Diagnóstico atual
 
-- **106 ocorrências** de `text-white` / `bg-black` / `bg-white` / `text-black`
-- **72 ocorrências** de `hsl(...)` inline (deveria ser `hsl(var(--token))`)
-- **24 hex codes** (`#xxxxxx`) hardcoded
+O que já funciona:
+- `useRealtimeInvalidate` em `useProfile`, `useMatches`, `useNotifications`, `useConversations`, `useMessages`
+- `useGlobalRealtimeAlerts` (toasts globais de notif/proposta/msg)
+- `useIncomingCalls` (chamada entrando ao vivo)
+- Invalidations manuais após `NovoItem` / `EditarItem`
 
-Piores ofensores:
-| Arquivo | text/bg-white/black | hsl() inline |
-|---|---|---|
-| `SwipeCard.tsx` | 41 | 12 |
-| `ShortCard.tsx` | 17 | – |
-| `Shorts.tsx` | 11 | – |
-| `AdminDashboard.tsx` | – | 19 |
-| `Match.tsx` / `Baixar.tsx` | – | 9 cada |
-| `Item.tsx` | 8 | – |
+Gaps que ainda forçam reload percebido:
+1. **Reconexão Realtime**: Supabase Realtime cai quando o app fica em background no mobile (Capacitor) ou aba dorme. Não há código que force `removeAllChannels` + reassinar nem `queryClient.invalidateQueries()` no `resume`/`visibilitychange`/`online`.
+2. **React Query defaults**: não há config explícita de `refetchOnWindowFocus`, `refetchOnReconnect`, `refetchOnMount`. Em mobile o "focus" mal dispara — precisa hook customizado p/ Capacitor `App` lifecycle.
+3. **Tabelas sem realtime invalidate**: `item_videos`, `favorites`, `swipes`, `blocked_users`, `user_categories`, `call_sessions` (lista global), `reports`. Algumas dessas alimentam telas (Shorts, MeuPerfil favoritos, Configurações bloqueados, ChamadasPerdidas).
+4. **`ChamadasPerdidas`**: provavelmente só faz fetch no mount; nova chamada perdida não aparece sem reload.
+5. **`useConversations`** usa `refetchInterval: 30s` como fallback — sintoma de que o realtime não é confiável; trataremos a causa.
+6. **Publicação `supabase_realtime`**: precisamos auditar se todas as tabelas alvo estão na publication com `REPLICA IDENTITY FULL` (faltam confirmação: `item_videos`, `favorites`, `swipes`, `call_sessions`, `user_categories`).
+7. **Canais duplicados**: cada hook cria seu canal com nome randômico — sob hot route changes pode acumular. Vamos centralizar.
 
-### 2. Componentização (arquivos grandes / responsabilidades misturadas)
-- `SwipeCard.tsx` — **746 linhas**: motion values, galeria, botões like/dislike, overlays, gradientes, info card. Mistura lógica de gesto + UI.
-- `Conversa.tsx` — **691 linhas**: chat + mídia + banners de troca + header.
-- `MeuPerfil.tsx` — 441 linhas.
-- `Explorar.tsx` — 402 linhas (provavelmente OK, mas verificar).
+## Solução (camadas)
 
-### 3. shadcn / variantes
-- `IconButton.tsx` e `NeonButton.tsx` definem estilos manuais com `cn(...)` em vez de usar `cva` (padrão shadcn). `button.tsx` shadcn já existe — duplicação de responsabilidade.
-- `GlassCard.tsx` usa classe utilitária `.glass-card` do CSS, mas não há variants (hoverable é boolean) — poderia virar `cva` com variants `variant: default | hover | interactive`.
+### 1. Camada de transporte resiliente
+Criar `src/lib/realtimeManager.ts`:
+- Wrapper único sobre `supabase.realtime` que:
+  - escuta `SYSTEM` events (`CHANNEL_ERROR`, `TIMED_OUT`, `CLOSED`) e reassina automaticamente
+  - expõe `forceReconnect()` que faz `supabase.removeAllChannels()` + reassina os canais registrados
+  - mantém registro de canais ativos (set) para debug
 
-### 4. Tokens semânticos faltando
-Cores usadas repetidamente em componentes que merecem token próprio:
-- Verde (Hypou): `hsl(142 75% 50%)` → criar `--hype` / `--hype-foreground`
-- Vermelho (Flopou): já tem `--danger` ✓ (mas SwipeCard usa hex)
-- Overlays glass: `rgba(255,255,255,0.06)` repetido → token `--glass-surface`
-- Cyan glow shadow: padronizar via utility `.neon-glow-*`
+### 2. Hook global de "app awake"
+Criar `src/hooks/useAppLifecycleSync.ts`, montado uma vez em `App.tsx` ao lado de `useGlobalRealtimeAlerts`:
+- Escuta `visibilitychange`, `window.online`, `window.focus`
+- No Capacitor: escuta `App.addListener('appStateChange', state.isActive)` e `Network.addListener('networkStatusChange')`
+- Em qualquer evento de "voltei ativo":
+  1. `realtimeManager.forceReconnect()`
+  2. `queryClient.invalidateQueries()` (invalida tudo — barato porque é só refetch das ativas)
 
----
+### 3. Defaults globais do React Query
+Em `src/main.tsx` configurar `QueryClient`:
+```
+defaultOptions: {
+  queries: {
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: 'always',
+    refetchOnMount: true,
+    staleTime: 30_000,
+  }
+}
+```
+(mantendo gcTime atual de 30min)
 
-## Plano de execução (incremental, sem mudar comportamento)
+### 4. Cobrir tabelas faltantes com realtime invalidate
+Adicionar `useRealtimeInvalidate` em:
+- `useFavorites` (criar se não existir) → `favorites` filtrado por `user_id`
+- `useBlockedUsers` (Configuracoes) → `blocked_users` filtrado por `blocker_id`
+- `Shorts.tsx` → `item_videos` + `video_likes`
+- `ChamadasPerdidas.tsx` → `call_sessions` filtrado por `callee_id` (eventos UPDATE com status `missed`/`ended`)
+- `Busca.tsx` → `items` (INSERT/UPDATE) — invalida `search-items`
+- `Explorar.tsx` → `items` INSERT global → invalida `explore-items` e `recommended-items`
 
-### Fase 1 — Tokens (index.css + tailwind.config.ts)
-1. Adicionar tokens: `--hype`, `--hype-foreground`, `--glass-surface`, `--glass-border`, `--overlay-strong`, `--overlay-soft`.
-2. Mapear em `tailwind.config.ts` (`colors.hype`, `colors.glass.*`).
-3. Criar utilities CSS para padrões repetidos: `.glass-button`, `.shadow-glow-primary`, `.shadow-glow-hype`, `.shadow-glow-danger`.
+### 5. Migration: garantir publication completa
+Adicionar à publication `supabase_realtime` e setar `REPLICA IDENTITY FULL` para:
+`item_videos`, `video_likes`, `favorites`, `swipes`, `call_sessions`, `user_categories`, `blocked_users`, `site_settings`.
 
-### Fase 2 — Refator de SwipeCard (alta prioridade)
-Quebrar `SwipeCard.tsx` (746 linhas) em:
-- `SwipeCard/index.tsx` — orquestrador + gestos
-- `SwipeCard/CardGallery.tsx` — galeria de imagens + taps
-- `SwipeCard/SwipeActionButtons.tsx` — botões Hypou/Flopou (com motion values via props)
-- `SwipeCard/SwipeOverlays.tsx` — overlays "HYPOU"/"FLOPOU" sobre a carta
-- `SwipeCard/CardInfo.tsx` — info do item (título, preço, localização)
+### 6. Remover fallbacks de polling agora redundantes
+- `useConversations`: remover `refetchInterval: 30000` (passa a confiar no realtime + lifecycle sync).
+- Confirmar que nenhum componente faz `window.location.reload()`.
 
-Substituir todos os `hsl(...)` inline pelos novos tokens.
+### 7. Mutations: invalidation pattern padronizado
+Criar helper `invalidateAfterMutation(queryClient, scopes)` para padronizar invalidações em `NovoItem`, `EditarItem`, `MeuPerfil`, `Matches`, `Conversa` — evita esquecer alguma chave.
 
-### Fase 3 — Padronizar botões via cva
-- Converter `NeonButton` para `cva` com variants `primary | outline | ghost` × sizes.
-- Converter `IconButton` para `cva` ou consolidar com `Button` do shadcn (`variant=ghost size=icon`).
-- Avaliar se `NeonButton` deve virar variant do `Button` shadcn em vez de componente paralelo.
-
-### Fase 4 — Limpeza de cores cruas restantes
-Substituir em ordem por arquivo:
-- `ShortCard.tsx`, `Shorts.tsx`, `Item.tsx`, `Matches.tsx`, `ListaEspera.tsx`, `Chamada.tsx`, demais.
-- Regra: `text-white` → `text-foreground` (ou `text-primary-foreground` no contexto de fundo primary); `bg-black` → `bg-background` ou overlay token.
-
-### Fase 5 — Quebrar Conversa.tsx (691 linhas)
-- `Conversa/ChatHeader.tsx` (com TradeContextCard)
-- `Conversa/MessageList.tsx`
-- `Conversa/MessageInput.tsx` (texto + mídia)
-- `Conversa/TradeBanners.tsx`
-
-### Fase 6 — Atualizar `documentacao.md`
-Registrar novos tokens, estrutura de pastas dos componentes refatorados, e padrão `cva` adotado.
-
----
+## Telas que ficam 100% live após o plano
+Explorar, MeuPerfil (itens/stats/avaliações), Partidas, Chat (lista), Conversa (mensagens/status), Notificações (sino), Chamada entrante, Chamadas Perdidas, Shorts (likes/views), Busca, Configurações (bloqueados), Perfil de outro usuário.
 
 ## Detalhes técnicos
+- Capacitor: usar `@capacitor/app` (`appStateChange`) e `@capacitor/network`. Já existem no projeto? Validar em `package.json` na implementação — se faltar `@capacitor/network`, instalar.
+- `realtimeManager` deve evitar reconexão em <2s do último reconnect (debounce) para não bater no servidor.
+- Toda `useRealtimeInvalidate` nova com `filter` específico (`user_id=eq.${uid}`) para minimizar tráfego.
+- Atualizar `documentacao.md` com a nova arquitetura (camada lifecycle + manager).
 
-**Por que `cva`?** É o padrão oficial shadcn — gera classes determinísticas, suporta `VariantProps<typeof variants>` para tipagem automática, evita o `cn` manual espalhado.
-
-**Por que quebrar SwipeCard agora?** Foi modificado 5x nas últimas mensagens (botões like/dislike). Arquivo grande + edições frequentes = alto risco de regressão. Quebrar isola superfícies de mudança.
-
-**Estratégia de migração de cores:** PR/commit por arquivo, validando visualmente. Tokens criados antes de qualquer substituição para evitar quebra intermediária.
-
----
-
-## Escopo desta proposta
-
-Posso executar **tudo de uma vez** ou **uma fase por vez** (recomendo fase-a-fase para revisar visual). Qual prefere?
-
-Sugestão: começar por **Fase 1 + Fase 2** (tokens + SwipeCard) que dá o maior ganho imediato.
+## Entregáveis
+1. `src/lib/realtimeManager.ts`
+2. `src/hooks/useAppLifecycleSync.ts` (montado em `App.tsx`)
+3. QueryClient defaults em `src/main.tsx`
+4. Realtime invalidate adicionados nos hooks/páginas listados
+5. Migration Supabase: publication + replica identity
+6. Limpeza dos `refetchInterval` redundantes
+7. Atualização de `documentacao.md`

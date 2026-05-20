@@ -24,6 +24,7 @@ import SwipeCard, { type SwipeCardHandle } from "@/components/SwipeCard";
 import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptics";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 const PENDING_LIKE_KEY = "hypou:pending-like-item";
 
@@ -93,6 +94,15 @@ const Explorar = () => {
 
   const dragDirectionValue = useMotionValue(0);
 
+  // Live: novos itens publicados aparecem sem reload
+  useRealtimeInvalidate(
+    [
+      { table: "items", event: "INSERT", invalidateKeys: [["explore-items"], ["recommended-items"]] },
+      { table: "items", event: "UPDATE", invalidateKeys: [["explore-items"], ["recommended-items"]] },
+    ],
+    true
+  );
+
   // Fetch items — recommended for logged-in, public for guests
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["explore-items", user?.id],
@@ -102,8 +112,7 @@ const Explorar = () => {
       }
       return getPublicExploreItems();
     },
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
+    staleTime: 60 * 1000,
   });
 
   const currentItem = items.length > 0 ? items[currentIndex % items.length] : null;

@@ -31,7 +31,6 @@ export const useConversations = () => {
     queryKey: ["conversations", user?.id],
     queryFn: () => getConversations(user!.id),
     enabled: !!user,
-    refetchInterval: 30000, // Refresh every 30s as fallback
   });
 };
 
