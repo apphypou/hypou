@@ -1267,3 +1267,20 @@ Adicionado em 14/05/2026.
 - `src/pages/Conversa.tsx` — botões `Phone` e `Video` no header.
 
 **Capacitor**: WebView moderno (iOS 14.5+ / Android atual) já suporta WebRTC sem plugin extra. v1 funciona apenas com app aberto; CallKit/lockscreen fica para v2.
+
+---
+
+## Zero-Reload Realtime Sync (2026-05)
+
+Toda a UI atualiza ao vivo. Nunca é preciso recarregar a página para ver: novo item próprio, proposta, mensagem, chamada perdida, favorito, bloqueado, vídeo ou item no Explorar/Busca.
+
+**Camadas:**
+
+1. **`src/lib/realtimeManager.ts`** — `forceReconnect()` derruba e religa o WebSocket Supabase Realtime (debounce 2s). Os canais já assinados via `supabase.channel()` reassinam sozinhos.
+2. **`src/hooks/useAppLifecycleSync.ts`** — montado em `<GlobalAlerts/>` (App.tsx). Escuta `visibilitychange`, `window.focus`, `window.online` e `@capacitor/app` `appStateChange`. Em qualquer "voltei ativo" chama `forceReconnect()` + `queryClient.invalidateQueries()`.
+3. **QueryClient defaults** (`App.tsx`): `refetchOnWindowFocus: true`, `refetchOnReconnect: 'always'`, `refetchOnMount: true`, `staleTime: 30s`, `gcTime: 30min`.
+4. **`useRealtimeInvalidate`** cobre: profiles, items, item_images, matches, match_items, messages, conversations, notifications, ratings, call_sessions (entrada e perdidas), favorites, blocked_users, item_videos, video_likes (Shorts), items (Busca/Explorar).
+5. **Publication `supabase_realtime`** inclui agora também `favorites`, `swipes`, `user_categories`, `video_likes`, `site_settings` (REPLICA IDENTITY FULL).
+6. Removido `refetchInterval: 30000` de `useConversations` — confiamos no realtime + lifecycle sync.
+
+**Dependência nova:** `@capacitor/app` (lifecycle no nativo).
