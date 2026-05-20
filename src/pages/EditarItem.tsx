@@ -53,7 +53,9 @@ const EditarItem = () => {
   const itemInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoCameraInputRef = useRef<HTMLInputElement>(null);
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [videoMenuOpen, setVideoMenuOpen] = useState(false);
 
   const { data: item, isLoading } = useQuery({
     queryKey: ["item-detail", itemId],
@@ -316,6 +318,7 @@ const EditarItem = () => {
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleNewPhotos} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
+      <input ref={videoCameraInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleVideoSelect} />
 
       <Sheet open={photoMenuOpen} onOpenChange={setPhotoMenuOpen}>
         <SheetContent side="bottom" className="bg-card border-t border-foreground/10 rounded-t-3xl pb-8">
@@ -333,6 +336,30 @@ const EditarItem = () => {
             <button
               type="button"
               onClick={() => { setPhotoMenuOpen(false); itemInputRef.current?.click(); }}
+              className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
+            >
+              <Plus className="h-5 w-5" /> Escolher da galeria
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={videoMenuOpen} onOpenChange={setVideoMenuOpen}>
+        <SheetContent side="bottom" className="bg-card border-t border-foreground/10 rounded-t-3xl pb-8">
+          <SheetHeader>
+            <SheetTitle className="text-foreground text-center">Adicionar vídeo</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => { setVideoMenuOpen(false); videoCameraInputRef.current?.click(); }}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2"
+            >
+              <Video className="h-5 w-5" /> Gravar vídeo
+            </button>
+            <button
+              type="button"
+              onClick={() => { setVideoMenuOpen(false); videoInputRef.current?.click(); }}
               className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
             >
               <Plus className="h-5 w-5" /> Escolher da galeria
@@ -446,7 +473,7 @@ const EditarItem = () => {
           ) : (
             <button
               type="button"
-              onClick={() => videoInputRef.current?.click()}
+              onClick={() => setVideoMenuOpen(true)}
               className="w-full py-4 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-card/80 transition-all"
             >
               <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
