@@ -314,7 +314,32 @@ const EditarItem = () => {
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleNewPhotos} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
+
+      <Sheet open={photoMenuOpen} onOpenChange={setPhotoMenuOpen}>
+        <SheetContent side="bottom" className="bg-card border-t border-foreground/10 rounded-t-3xl pb-8">
+          <SheetHeader>
+            <SheetTitle className="text-foreground text-center">Adicionar foto</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => { setPhotoMenuOpen(false); cameraInputRef.current?.click(); }}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2"
+            >
+              <Camera className="h-5 w-5" /> Tirar foto
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPhotoMenuOpen(false); itemInputRef.current?.click(); }}
+              className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
+            >
+              <Plus className="h-5 w-5" /> Escolher da galeria
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="bg-card border-foreground/10">
