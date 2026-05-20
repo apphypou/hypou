@@ -384,7 +384,7 @@ const NovoItem = () => {
               ))}
               {itemPreviews.length < 5 && (
                 <div
-                  onClick={() => isNativePlatform() ? handleItemPhotos() : itemInputRef.current?.click()}
+                  onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
                   className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
                 >
                   <Plus className="h-6 w-6 text-primary/50" />
@@ -393,7 +393,7 @@ const NovoItem = () => {
             </div>
           ) : (
             <div
-              onClick={() => isNativePlatform() ? handleItemPhotos() : itemInputRef.current?.click()}
+              onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
               className="relative w-full aspect-[16/10] rounded-3xl bg-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/80 dashed-border-glow"
             >
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">
