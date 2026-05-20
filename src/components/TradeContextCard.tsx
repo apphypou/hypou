@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import ItemPreviewDialog from "@/components/ItemPreviewDialog";
 
 interface TradeItem {
   id?: string;
@@ -27,16 +28,17 @@ const getItemImage = (item: TradeItem | null) => {
 };
 
 const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardProps) => {
-  const navigate = useNavigate();
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const status = statusConfig[matchStatus] || statusConfig.proposal;
   const myImg = getItemImage(myItem);
   const otherImg = getItemImage(otherItem);
 
   const openItem = (item: TradeItem | null) => {
-    if (item?.id) navigate(`/item/${item.id}`);
+    if (item?.id) setPreviewId(item.id);
   };
 
   return (
+    <>
     <div className="flex items-center gap-3 px-4 py-3 border-b border-foreground/5 bg-card/50 shrink-0">
       {/* My item */}
       <button
@@ -76,6 +78,8 @@ const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardPr
         )}
       </button>
     </div>
+    <ItemPreviewDialog itemId={previewId} open={!!previewId} onOpenChange={(o) => !o && setPreviewId(null)} />
+    </>
   );
 };
 
