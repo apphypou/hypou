@@ -78,6 +78,8 @@ const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardPr
         )}
       </button>
     </div>
+    <ItemPreviewDialog itemId={previewId} open={!!previewId} onOpenChange={(o) => !o && setPreviewId(null)} />
+    </>
   );
 };
 
