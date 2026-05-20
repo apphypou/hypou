@@ -51,7 +51,9 @@ const EditarItem = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const itemInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
 
   const { data: item, isLoading } = useQuery({
     queryKey: ["item-detail", itemId],
