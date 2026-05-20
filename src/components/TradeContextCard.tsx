@@ -1,7 +1,8 @@
 import { ArrowLeftRight } from "lucide-react";
-import { formatValue } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface TradeItem {
+  id?: string;
   name: string;
   item_images?: { image_url: string; position: number }[];
 }
@@ -26,21 +27,31 @@ const getItemImage = (item: TradeItem | null) => {
 };
 
 const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardProps) => {
+  const navigate = useNavigate();
   const status = statusConfig[matchStatus] || statusConfig.proposal;
   const myImg = getItemImage(myItem);
   const otherImg = getItemImage(otherItem);
 
+  const openItem = (item: TradeItem | null) => {
+    if (item?.id) navigate(`/item/${item.id}`);
+  };
+
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-foreground/5 bg-card/50 shrink-0">
       {/* My item */}
-      <div className="flex-1 flex items-center gap-2 min-w-0">
+      <button
+        type="button"
+        onClick={() => openItem(myItem)}
+        disabled={!myItem?.id}
+        className="flex-1 flex items-center gap-2 min-w-0 rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-left"
+      >
         {myImg ? (
           <img src={myImg} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
         ) : (
           <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
         )}
         <span className="text-xs font-semibold text-foreground truncate">{myItem?.name || "Meu item"}</span>
-      </div>
+      </button>
 
       {/* Swap icon + status badge */}
       <div className="flex flex-col items-center gap-1 shrink-0">
@@ -51,14 +62,19 @@ const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardPr
       </div>
 
       {/* Other item */}
-      <div className="flex-1 flex items-center gap-2 min-w-0 justify-end">
+      <button
+        type="button"
+        onClick={() => openItem(otherItem)}
+        disabled={!otherItem?.id}
+        className="flex-1 flex items-center gap-2 min-w-0 justify-end rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-right"
+      >
         <span className="text-xs font-semibold text-foreground truncate text-right">{otherItem?.name || "Item"}</span>
         {otherImg ? (
           <img src={otherImg} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
         ) : (
           <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
         )}
-      </div>
+      </button>
     </div>
   );
 };
