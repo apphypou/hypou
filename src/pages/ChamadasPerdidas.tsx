@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Phone, Video, PhoneMissed, PhoneOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useQuery } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { startCall, joinCall } from "@/services/callService";
 import { toast } from "@/hooks/use-toast";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 interface MissedCall {
   id: string;
@@ -23,32 +24,44 @@ interface MissedCall {
 export default function ChamadasPerdidas() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState<MissedCall[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user) return;
-    (async () => {
+  // Live updates: nova chamada perdida aparece sem reload
+  useRealtimeInvalidate(
+    user
+      ? [
+          {
+            table: "call_sessions",
+            filter: `callee_id=eq.${user.id}`,
+            invalidateKeys: [["missed-calls", user.id]],
+          },
+        ]
+      : [],
+    !!user
+  );
+
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ["missed-calls", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
       const { data } = await supabase
         .from("call_sessions")
         .select("*")
-        .eq("callee_id", user.id)
+        .eq("callee_id", user!.id)
         .in("status", ["missed", "declined"])
         .order("started_at", { ascending: false })
         .limit(50);
-
       const calls = (data || []) as any[];
       const callerIds = Array.from(new Set(calls.map((c) => c.caller_id)));
+      if (callerIds.length === 0) return [] as MissedCall[];
       const { data: profiles } = await supabase
         .from("public_profiles" as any)
         .select("user_id, display_name, avatar_url")
         .in("user_id", callerIds);
       const map = new Map((profiles || []).map((p: any) => [p.user_id, p]));
+      return calls.map((c) => ({ ...c, other_user: map.get(c.caller_id) })) as MissedCall[];
+    },
+  });
 
-      setItems(calls.map((c) => ({ ...c, other_user: map.get(c.caller_id) })));
-      setLoading(false);
-    })();
-  }, [user?.id]);
 
   const callBack = async (mc: MissedCall) => {
     try {
