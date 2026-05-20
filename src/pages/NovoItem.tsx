@@ -20,6 +20,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import { categories, conditions } from "@/constants/categories";
 
@@ -44,7 +45,9 @@ const NovoItem = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const itemInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
 
   const [itemName, setItemName] = useState("");
   const [itemValue, setItemValue] = useState("");
@@ -296,7 +299,33 @@ const NovoItem = () => {
   return (
     <ScreenLayout>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleItemPhotos} />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleItemPhotos} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
+
+      {/* Sheet de seleção de fonte da foto (resolve Chrome Android escondendo câmera quando multiple) */}
+      <Sheet open={photoMenuOpen} onOpenChange={setPhotoMenuOpen}>
+        <SheetContent side="bottom" className="bg-card border-t border-foreground/10 rounded-t-3xl pb-8">
+          <SheetHeader>
+            <SheetTitle className="text-foreground text-center">Adicionar foto</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              type="button"
+              onClick={() => { setPhotoMenuOpen(false); cameraInputRef.current?.click(); }}
+              className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2"
+            >
+              <Camera className="h-5 w-5" /> Tirar foto
+            </button>
+            <button
+              type="button"
+              onClick={() => { setPhotoMenuOpen(false); itemInputRef.current?.click(); }}
+              className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
+            >
+              <Plus className="h-5 w-5" /> Escolher da galeria
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={priceAlert.open} onOpenChange={(open) => setPriceAlert((prev) => ({ ...prev, open }))}>
         <AlertDialogContent className="bg-card border-foreground/10">
@@ -355,7 +384,7 @@ const NovoItem = () => {
               ))}
               {itemPreviews.length < 5 && (
                 <div
-                  onClick={() => isNativePlatform() ? handleItemPhotos() : itemInputRef.current?.click()}
+                  onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
                   className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
                 >
                   <Plus className="h-6 w-6 text-primary/50" />
@@ -364,7 +393,7 @@ const NovoItem = () => {
             </div>
           ) : (
             <div
-              onClick={() => isNativePlatform() ? handleItemPhotos() : itemInputRef.current?.click()}
+              onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
               className="relative w-full aspect-[16/10] rounded-3xl bg-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/80 dashed-border-glow"
             >
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">
