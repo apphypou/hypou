@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getBlockedUsers, unblockUser } from "@/services/reportService";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import { saveUserCategories } from "@/services/profileService";
 import { categories as ALL_CATEGORIES } from "@/constants/categories";
 import {
@@ -73,6 +74,13 @@ const Configuracoes = () => {
   const [categoriesDialogOpen, setCategoriesDialogOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [savingCategories, setSavingCategories] = useState(false);
+
+  useRealtimeInvalidate(
+    user
+      ? [{ table: "blocked_users", filter: `blocker_id=eq.${user.id}`, invalidateKeys: [["blocked-users", user.id]] }]
+      : [],
+    !!user
+  );
 
   const { data: blockedUsers = [], refetch: refetchBlocked } = useQuery({
     queryKey: ["blocked-users", user?.id],

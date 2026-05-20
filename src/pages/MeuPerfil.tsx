@@ -31,6 +31,7 @@ import { uploadVideo } from "@/services/videoService";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import { createProposal } from "@/services/matchService";
 import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
@@ -52,6 +53,12 @@ const MeuPerfil = () => {
 
   // Favorites
   const [showFavorites, setShowFavorites] = useState(false);
+  useRealtimeInvalidate(
+    user
+      ? [{ table: "favorites", filter: `user_id=eq.${user.id}`, invalidateKeys: [["my-favorites", user.id]] }]
+      : [],
+    !!user
+  );
   const { data: favorites = [], isLoading: loadingFavorites } = useQuery({
     queryKey: ["my-favorites", user?.id],
     queryFn: () => getFavorites(user!.id),

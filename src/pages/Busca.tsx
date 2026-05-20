@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "framer-motion";
 import { categories, conditions } from "@/constants/categories";
+import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 
 const SORT_OPTIONS = [
   { value: "recent" as const, label: "Mais recentes" },
@@ -51,6 +52,12 @@ const Busca = () => {
   }), [debouncedQuery, category, condition, sort]);
 
   const hasFilters = !!debouncedQuery || !!category || !!condition;
+
+  // Live: novos itens / mudanças aparecem sem reload
+  useRealtimeInvalidate(
+    [{ table: "items", invalidateKeys: [["search-items"]] }],
+    !!user && hasFilters
+  );
 
   const { data: results = [], isLoading } = useQuery({
     queryKey: ["search-items", user?.id, filters],
