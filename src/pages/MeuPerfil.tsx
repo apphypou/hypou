@@ -183,7 +183,7 @@ const MeuPerfil = () => {
 
   const statsList = [
     { value: String(stats?.totalTrades ?? 0), label: "Trocas", highlight: false },
-    { value: ratingDisplay, label: "Rating", highlight: !!stats?.rating },
+    { value: ratingDisplay, label: "avaliações", highlight: !!stats?.rating },
     { value: String(stats?.totalProposals ?? 0), label: "Propostas", highlight: false },
   ];
 
