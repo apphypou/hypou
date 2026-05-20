@@ -413,7 +413,7 @@ const EditarItem = () => {
             ))}
             {totalImages < 5 && (
               <div
-                onClick={() => isNativePlatform() ? handleNewPhotos() : itemInputRef.current?.click()}
+                onClick={() => isNativePlatform() ? handleNewPhotos() : setPhotoMenuOpen(true)}
                 className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
               >
                 <Plus className="h-6 w-6 text-primary/50" />
