@@ -43,6 +43,8 @@
     --success-foreground: 0 0% 100%;
     --danger: 0 72% 55%;
     --danger-foreground: 0 0% 100%;
+    --pink: 330 85% 65%;
+    --pink-foreground: 0 0% 100%;
 
     /* Brand semantic — Hypou (like) / Flopou (dislike) */
     --hype: 178 98% 54%;
@@ -107,6 +109,8 @@
     --success-foreground: 0 0% 100%;
     --danger: 0 84% 60%;
     --danger-foreground: 0 0% 100%;
+    --pink: 330 90% 68%;
+    --pink-foreground: 0 0% 100%;
 
     /* Brand semantic — Hypou (like) / Flopou (dislike) */
     --hype: 178 98% 54%;

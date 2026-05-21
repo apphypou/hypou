@@ -58,6 +58,10 @@ export default {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
         },
+        pink: {
+          DEFAULT: "hsl(var(--pink))",
+          foreground: "hsl(var(--pink-foreground))",
+        },
         hype: {
           DEFAULT: "hsl(var(--hype))",
           foreground: "hsl(var(--hype-foreground))",
