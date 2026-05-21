@@ -215,28 +215,42 @@ const SelectItemDialog = ({
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
                     Sua oferta ({selectedIds.length}/{MAX_ITEMS})
                   </p>
-                  <p className="text-foreground font-bold text-base">{formatValue(sum)}</p>
+                  <p className={`font-bold text-base ${rangeStatus === "low" ? "text-pink" : "text-foreground"}`}>
+                    {formatValue(sum)}
+                  </p>
                 </div>
                 {rangeStatus && (
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
                     rangeStatus === "ok"
                       ? "bg-success/15 text-success"
                       : rangeStatus === "low"
-                        ? "bg-warning/15 text-warning"
+                        ? "bg-pink/15 text-pink"
                         : "bg-warning/15 text-warning"
                   }`}>
-                    {rangeStatus === "ok" ? "Dentro da faixa" : rangeStatus === "low" ? "Abaixo" : "Acima"}
+                    {rangeStatus === "ok" ? "Dentro da faixa" : rangeStatus === "low" ? "Abaixo do mínimo" : "Acima"}
                   </span>
                 )}
               </div>
             )}
+            {rangeStatus === "low" && (
+              <div className="rounded-xl bg-pink/10 border border-pink/30 px-4 py-3">
+                <p className="text-pink text-xs font-bold leading-relaxed">
+                  Faltam {formatValue(Math.max(0, targetMin - sum))} para atingir o valor mínimo aceito ({formatValue(targetMin)}).
+                </p>
+                <p className="text-pink/90 text-xs mt-1 leading-relaxed">
+                  Adicione outro item ou complete com um valor em dinheiro na conversa.
+                </p>
+              </div>
+            )}
             <Button
               onClick={handleConfirm}
-              disabled={selectedIds.length === 0 || loading}
+              disabled={selectedIds.length === 0 || rangeStatus === "low" || loading}
               className="w-full h-12 rounded-xl font-bold text-base"
             >
               {loading ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
+              ) : rangeStatus === "low" ? (
+                `Valor mínimo: ${formatValue(targetMin)}`
               ) : (
                 `Enviar proposta${selectedIds.length > 1 ? ` (${selectedIds.length} itens)` : ""}`
               )}
