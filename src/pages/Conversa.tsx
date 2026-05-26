@@ -14,6 +14,7 @@ import { ChatHeader } from "./Conversa/ChatHeader";
 import { MessageList } from "./Conversa/MessageList";
 import { MessageInput } from "./Conversa/MessageInput";
 import { ReportDialogs } from "./Conversa/ReportDialogs";
+import RatingDialog from "@/components/RatingDialog";
 
 // Fetch conversation details including match status
 const useConversationDetails = (conversationId: string | null) => {
