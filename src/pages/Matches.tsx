@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { formatValue } from "@/lib/utils";
+import { cdnMedium, cdnThumb } from "@/lib/imageUrl";
 import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
 
@@ -293,7 +294,7 @@ const Matches = () => {
                   {/* Image */}
                   <div className="relative aspect-[4/3] w-full">
                     {mainImage ? (
-                      <img alt={otherItemCard.name} className="h-full w-full object-cover" src={mainImage} />
+                      <img alt={otherItemCard.name} className="h-full w-full object-cover" src={cdnMedium(mainImage)} />
                     ) : (
                       <div className="h-full w-full bg-muted flex items-center justify-center">
                         <Repeat2 className="h-10 w-10 text-foreground/10" />
@@ -332,7 +333,7 @@ const Matches = () => {
                           <img
                             alt={match.other_user.display_name || "Usuário"}
                             className="h-7 w-7 rounded-full object-cover border-2 border-primary/30"
-                            src={match.other_user.avatar_url}
+                            src={cdnThumb(match.other_user.avatar_url)}
                           />
                         ) : (
                           <div className="h-7 w-7 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
@@ -388,7 +389,7 @@ const Matches = () => {
               <div className="relative w-full bg-background overflow-hidden" style={{ minHeight: '45vh' }}>
                 {otherImages[0]?.image_url ? (
                   <img
-                    src={otherImages[0].image_url}
+                    src={cdnMedium(otherImages[0].image_url)}
                     alt={otherItem?.name || "Item"}
                     className="w-full h-full absolute inset-0 object-cover"
                   />
@@ -410,7 +411,7 @@ const Matches = () => {
                 >
                   {selectedMatch.other_user.avatar_url ? (
                     <img
-                      src={selectedMatch.other_user.avatar_url}
+                      src={cdnThumb(selectedMatch.other_user.avatar_url)}
                       alt=""
                       className="h-8 w-8 rounded-full object-cover border-2 border-background"
                     />
@@ -468,7 +469,7 @@ const Matches = () => {
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <img src={img} alt={it.name} className="w-full h-full object-cover" />
+                                    <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
                                   )}
@@ -486,7 +487,7 @@ const Matches = () => {
                         <>
                           <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
                             {myImages[0]?.image_url ? (
-                              <img src={myImages[0].image_url} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
+                              <img src={cdnMedium(myImages[0].image_url)} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                             )}
@@ -517,7 +518,7 @@ const Matches = () => {
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <img src={img} alt={it.name} className="w-full h-full object-cover" />
+                                    <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
                                   )}
@@ -535,7 +536,7 @@ const Matches = () => {
                         <>
                           <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
                             {otherImages[0]?.image_url ? (
-                              <img src={otherImages[0].image_url} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
+                              <img src={cdnMedium(otherImages[0].image_url)} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                             )}
@@ -579,7 +580,7 @@ const Matches = () => {
                     <div className="flex gap-2 overflow-x-auto no-scrollbar">
                       {otherImages.slice(1).map((img, i) => (
                         <button key={i} onClick={() => setZoomedImage(img.image_url)} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
-                          <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+                          <img src={cdnMedium(img.image_url)} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}
                     </div>
