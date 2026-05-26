@@ -28,6 +28,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
+import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
