@@ -103,8 +103,8 @@ const Item = () => {
       <div className="relative w-full aspect-square bg-card overflow-hidden">
         {heroImage ? (
           <>
-            <img src={heroImage} alt={item.name} className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50" />
-            <img src={heroImage} alt={item.name} className="relative w-full h-full object-contain" />
+            <img src={cdnBlur(heroImage)} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50" />
+            <img src={cdnFull(heroImage)} alt={item.name} className="relative w-full h-full object-contain" />
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
