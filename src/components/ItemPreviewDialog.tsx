@@ -65,7 +65,7 @@ const ItemPreviewDialog = ({ itemId, open, onOpenChange }: ItemPreviewDialogProp
         {/* Image */}
         <div className="relative aspect-square w-full bg-muted overflow-hidden">
           {current ? (
-            <img src={current} alt={item?.name || ""} className="w-full h-full object-cover" />
+            <img src={cdnFull(current)} alt={item?.name || ""} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-foreground/40 text-xs">
               {isLoading ? "Carregando..." : "Sem foto"}
