@@ -7,6 +7,7 @@ import { formatValue, CONDITION_MAP } from "@/lib/utils";
 import NeonButton from "@/components/NeonButton";
 import HypouLogo from "@/components/HypouLogo";
 import { useAuth } from "@/hooks/useAuth";
+import { cdnFull, cdnBlur } from "@/lib/imageUrl";
 
 const Item = () => {
   const { itemId } = useParams();
