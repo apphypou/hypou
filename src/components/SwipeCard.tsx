@@ -195,7 +195,7 @@ const SwipeCard = memo(
               aria-hidden
             >
               <img
-                src={currentImage}
+                src={cdnBlur(currentImage)}
                 alt=""
                 className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
                 draggable={false}
