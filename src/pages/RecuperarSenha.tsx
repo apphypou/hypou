@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, ArrowLeft, Send } from "lucide-react";
 import logoHypou from "@/assets/logo-hypou.png";
 import { supabase } from "@/integrations/supabase/client";
