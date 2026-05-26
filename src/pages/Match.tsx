@@ -108,6 +108,17 @@ const Match = () => {
     enabled: !!matchId,
   });
 
+  // Show celebration only once per match — afterwards skip straight to chat
+  useEffect(() => {
+    if (!matchId) return;
+    const seenKey = `match-celebrated-${matchId}`;
+    if (localStorage.getItem(seenKey) && convData?.id) {
+      navigate(`/chat/${convData.id}`, { replace: true });
+    } else if (match) {
+      localStorage.setItem(seenKey, "1");
+    }
+  }, [matchId, convData?.id, match, navigate]);
+
   const handleStartChat = () => {
     if (convData?.id) {
       navigate(`/chat/${convData.id}`);
