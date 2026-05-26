@@ -241,8 +241,10 @@ const Explorar = () => {
 
   useEffect(() => {
     if (afterNextImage) {
-      const img = new window.Image();
-      img.src = afterNextImage;
+      import("@/lib/imageUrl").then(({ cdnFull }) => {
+        const img = new window.Image();
+        img.src = cdnFull(afterNextImage);
+      });
     }
   }, [afterNextImage]);
 
