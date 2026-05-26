@@ -94,6 +94,12 @@ export const ChatHeader = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+              {onOpenRate && (
+                <DropdownMenuItem onClick={onOpenRate} className="text-foreground gap-2">
+                  <Star className="h-4 w-4" />
+                  Avaliar
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={onOpenReport} className="text-foreground gap-2">
                 <Flag className="h-4 w-4" />
                 Denunciar
