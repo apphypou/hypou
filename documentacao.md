@@ -598,7 +598,7 @@ conditions = ["Novo", "Seminovo", "Usado", "Bem usado"];
 - **Sign Up:** Email + senha + display_name (via `raw_user_meta_data`)
 - **Sign In:** Email + senha (`signInWithPassword`)
 - **Sign Out:** `supabase.auth.signOut()`
-- **Recuperação de senha:** Magic link via email
+- **Recuperação de senha:** Código OTP de 6 dígitos enviado por email (sem link de fallback, garantindo compatibilidade total com apps nativos Capacitor)
 - **Sessão:** Gerenciada via `onAuthStateChange` listener
 
 ### 9.2 Guards de Rota
@@ -915,6 +915,12 @@ Os uploads seguem o padrão `{userId}/{itemId}/{filename}` para garantir que o R
 ### `delete-account`
 - **Propósito:** Exclusão de conta (LGPD)
 - **Acesso:** Autenticado (própria conta)
+
+### `send-auth-email`
+- **Propósito:** Enviar emails de autenticação customizados (signup, recuperação de senha, magic link, invite, troca de email)
+- **Templates:** `signupTemplate`, `recoveryTemplate`, `magicLinkTemplate`, `emailChangeTemplate`, `inviteTemplate`
+- **Design:** Tema escuro Hypou (BG `#1C1C1C`, PRIMARY `#18FDF6`), tipografia Plus Jakarta Sans, bloco de código com token em destaque
+- **Nota:** O template de recuperação (`recoveryTemplate`) **não inclui link de fallback** — apenas o código OTP, evitando que links de email abram em browser externo em apps nativos
 
 ---
 
