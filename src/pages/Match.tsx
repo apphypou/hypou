@@ -9,6 +9,7 @@ import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
 import { useState, useEffect, useRef } from "react";
 import { formatValue } from "@/lib/utils";
+import { cdnMedium } from "@/lib/imageUrl";
 
 // Confetti particle component
 const Confetti = () => {
