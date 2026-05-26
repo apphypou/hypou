@@ -88,7 +88,16 @@ const ResetPassword = () => {
     setLoading(false);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      const msg = (error.message || "").toLowerCase();
+      const friendly =
+        msg.includes("different from the old password") || msg.includes("same as the old password") || msg.includes("same password")
+          ? "A nova senha precisa ser diferente da atual."
+        : msg.includes("at least") || msg.includes("weak") || msg.includes("short")
+          ? "Senha muito curta (mín. 6 caracteres)."
+        : msg.includes("rate limit")
+          ? "Muitas tentativas, aguarde um momento."
+        : "Não foi possível atualizar a senha. Tente novamente.";
+      toast({ title: "Erro", description: friendly, variant: "destructive" });
     } else {
       toast({ title: "Senha atualizada com sucesso!" });
       navigate("/explorar");

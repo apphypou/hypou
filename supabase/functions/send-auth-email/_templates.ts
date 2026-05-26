@@ -7,7 +7,7 @@ const PRIMARY = "#18FDF6";
 const TEXT = "#FAFAFA";
 const MUTED = "#A1A1AA";
 const BORDER = "rgba(255,255,255,0.06)";
-const LOGO_URL = "https://hypou.app/logo-hypou.png";
+const LOGO_URL = "https://hypou.lovable.app/logo-hypou.png";
 
 function shell(title: string, preheader: string, bodyHtml: string): string {
   return `<!DOCTYPE html>
