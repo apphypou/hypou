@@ -11,6 +11,7 @@ const RecuperarSenha = () => {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +25,8 @@ const RecuperarSenha = () => {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     } else {
       setSent(true);
+      toast({ title: "Código enviado!", description: "Confira seu e-mail." });
+      setTimeout(() => navigate(`/reset-password?email=${encodeURIComponent(email)}`), 600);
     }
   };
 
