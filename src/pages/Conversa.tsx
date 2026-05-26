@@ -237,7 +237,19 @@ const Conversa = () => {
         onStartCall={handleStartCall}
         onOpenReport={() => setReportOpen(true)}
         onOpenBlock={() => setBlockConfirmOpen(true)}
+        onOpenRate={() => setRateOpen(true)}
       />
+
+      {details && user && (
+        <RatingDialog
+          open={rateOpen}
+          onClose={() => setRateOpen(false)}
+          matchId={details.match_id}
+          raterId={user.id}
+          ratedId={details.other_user_id}
+          ratedName={details.other_user.display_name || "Usuário"}
+        />
+      )}
 
       {details && (
         <TradeContextCard
