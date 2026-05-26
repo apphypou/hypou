@@ -18,6 +18,7 @@ interface ChatHeaderProps {
   onStartCall: (kind: "video" | "audio") => void;
   onOpenReport: () => void;
   onOpenBlock: () => void;
+  onOpenRate?: () => void;
 }
 
 export const ChatHeader = ({
