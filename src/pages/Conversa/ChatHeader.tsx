@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2, Phone, Video, MoreVertical, Flag, Ban } from "lucide-react";
+import { ArrowLeft, Loader2, Phone, Video, MoreVertical, Flag, Ban, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ interface ChatHeaderProps {
   onStartCall: (kind: "video" | "audio") => void;
   onOpenReport: () => void;
   onOpenBlock: () => void;
+  onOpenRate?: () => void;
 }
 
 export const ChatHeader = ({
@@ -26,6 +27,7 @@ export const ChatHeader = ({
   onStartCall,
   onOpenReport,
   onOpenBlock,
+  onOpenRate,
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
 
@@ -92,6 +94,12 @@ export const ChatHeader = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+              {onOpenRate && (
+                <DropdownMenuItem onClick={onOpenRate} className="text-foreground gap-2">
+                  <Star className="h-4 w-4" />
+                  Avaliar
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem onClick={onOpenReport} className="text-foreground gap-2">
                 <Flag className="h-4 w-4" />
                 Denunciar

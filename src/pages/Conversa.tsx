@@ -14,6 +14,7 @@ import { ChatHeader } from "./Conversa/ChatHeader";
 import { MessageList } from "./Conversa/MessageList";
 import { MessageInput } from "./Conversa/MessageInput";
 import { ReportDialogs } from "./Conversa/ReportDialogs";
+import RatingDialog from "@/components/RatingDialog";
 
 // Fetch conversation details including match status
 const useConversationDetails = (conversationId: string | null) => {
@@ -94,6 +95,7 @@ const Conversa = () => {
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [callingKind, setCallingKind] = useState<"video" | "audio" | null>(null);
+  const [rateOpen, setRateOpen] = useState(false);
 
   const handleStartCall = useCallback(async (kind: "video" | "audio") => {
     if (!conversationId || callingKind) return;
@@ -235,7 +237,19 @@ const Conversa = () => {
         onStartCall={handleStartCall}
         onOpenReport={() => setReportOpen(true)}
         onOpenBlock={() => setBlockConfirmOpen(true)}
+        onOpenRate={() => setRateOpen(true)}
       />
+
+      {details && user && (
+        <RatingDialog
+          open={rateOpen}
+          onClose={() => setRateOpen(false)}
+          matchId={details.match_id}
+          raterId={user.id}
+          ratedId={details.other_user_id}
+          ratedName={details.other_user.display_name || "Usuário"}
+        />
+      )}
 
       {details && (
         <TradeContextCard
