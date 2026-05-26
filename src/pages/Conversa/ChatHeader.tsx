@@ -27,6 +27,7 @@ export const ChatHeader = ({
   onStartCall,
   onOpenReport,
   onOpenBlock,
+  onOpenRate,
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
 
