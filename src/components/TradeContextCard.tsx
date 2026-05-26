@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import ItemPreviewDialog from "@/components/ItemPreviewDialog";
+import { cdnThumb } from "@/lib/imageUrl";
 
 interface TradeItem {
   id?: string;
