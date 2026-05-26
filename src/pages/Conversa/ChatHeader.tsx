@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2, Phone, Video, MoreVertical, Flag, Ban } from "lucide-react";
+import { ArrowLeft, Loader2, Phone, Video, MoreVertical, Flag, Ban, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
