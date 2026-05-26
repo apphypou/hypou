@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { formatValue } from "@/lib/utils";
+import { cdnFull } from "@/lib/imageUrl";
 
 interface ItemPreviewDialogProps {
   itemId: string | null;
