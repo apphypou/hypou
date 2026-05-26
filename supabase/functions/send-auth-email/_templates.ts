@@ -89,8 +89,7 @@ export function recoveryTemplate(url: string, token: string): { subject: string;
     `Seu código: ${token}`,
     `${heading("Redefinir sua senha")}
      ${paragraph("Use o código abaixo no app pra criar uma nova senha.")}
-     ${codeBlock(token)}
-     ${fallbackLink(url, "redefinir pelo link")}`,
+     ${codeBlock(token)}`,
   );
   return { subject: `Código de recuperação Hypou: ${token}`, html };
 }
