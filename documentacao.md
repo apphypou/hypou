@@ -1290,3 +1290,9 @@ Toda a UI atualiza ao vivo. Nunca é preciso recarregar a página para ver: novo
 6. Removido `refetchInterval: 30000` de `useConversations` — confiamos no realtime + lifecycle sync.
 
 **Dependência nova:** `@capacitor/app` (lifecycle no nativo).
+
+
+## Update 2026-05-26 — Reset de senha
+- Tratamento amigável de erros do supabase.auth.updateUser em ResetPassword.tsx (PT-BR): senha igual à anterior, senha curta, rate limit.
+- LOGO_URL dos templates de e-mail (send-auth-email/_templates.ts) atualizado para https://hypou.lovable.app/logo-hypou.png (domínio publicado real).
+
