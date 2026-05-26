@@ -95,6 +95,7 @@ const Conversa = () => {
   const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const [callingKind, setCallingKind] = useState<"video" | "audio" | null>(null);
+  const [rateOpen, setRateOpen] = useState(false);
 
   const handleStartCall = useCallback(async (kind: "video" | "audio") => {
     if (!conversationId || callingKind) return;
