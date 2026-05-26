@@ -28,6 +28,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
+import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
@@ -194,7 +195,7 @@ const SwipeCard = memo(
               aria-hidden
             >
               <img
-                src={currentImage}
+                src={cdnBlur(currentImage)}
                 alt=""
                 className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
                 draggable={false}
@@ -235,7 +236,7 @@ const SwipeCard = memo(
                   key={activeImageIndex}
                   alt={item.name}
                   className="w-full h-full object-cover object-center"
-                  src={currentImage}
+                  src={cdnFull(currentImage)}
                   draggable={false}
                 />
               ) : (
@@ -385,7 +386,7 @@ const SwipeCard = memo(
                           <Repeat className="h-3 w-3 text-primary shrink-0" />
                           {matchedOwnItem.image_url ? (
                             <img
-                              src={matchedOwnItem.image_url}
+                              src={cdnThumb(matchedOwnItem.image_url)}
                               alt={matchedOwnItem.name}
                               className="h-5 w-5 rounded-full object-cover border border-primary/50"
                             />
@@ -434,7 +435,7 @@ const SwipeCard = memo(
                       <Repeat className="h-3 w-3 text-primary shrink-0" />
                       {matchedOwnItem.image_url ? (
                         <img
-                          src={matchedOwnItem.image_url}
+                          src={cdnThumb(matchedOwnItem.image_url)}
                           alt={matchedOwnItem.name}
                           className="h-4 w-4 rounded-full object-cover border border-primary/50"
                         />

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { formatValue } from "@/lib/utils";
+import { cdnThumb } from "@/lib/imageUrl";
 
 const MAX_ITEMS = 3;
 
@@ -180,7 +181,7 @@ const SelectItemDialog = ({
                   >
                     <div className="h-14 w-14 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
                       {image ? (
-                        <img src={image} alt={item.name} className="h-full w-full object-cover" />
+                        <img src={cdnThumb(image)} alt={item.name} className="h-full w-full object-cover" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center text-lg">📦</div>
                       )}

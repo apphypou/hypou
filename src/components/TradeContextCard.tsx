@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowLeftRight } from "lucide-react";
 import ItemPreviewDialog from "@/components/ItemPreviewDialog";
+import { cdnThumb } from "@/lib/imageUrl";
 
 interface TradeItem {
   id?: string;
@@ -48,7 +49,7 @@ const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardPr
         className="flex-1 flex items-center gap-2 min-w-0 rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-left"
       >
         {myImg ? (
-          <img src={myImg} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
+          <img src={cdnThumb(myImg)} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
         ) : (
           <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
         )}
@@ -72,7 +73,7 @@ const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardPr
       >
         <span className="text-xs font-semibold text-foreground truncate text-right">{otherItem?.name || "Item"}</span>
         {otherImg ? (
-          <img src={otherImg} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
+          <img src={cdnThumb(otherImg)} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
         ) : (
           <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
         )}

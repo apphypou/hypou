@@ -9,6 +9,7 @@ import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
 import { useState, useEffect, useRef } from "react";
 import { formatValue } from "@/lib/utils";
+import { cdnMedium } from "@/lib/imageUrl";
 
 // Confetti particle component
 const Confetti = () => {
@@ -182,7 +183,7 @@ const Match = () => {
           <div className="relative z-10 animate-float">
             <div className="w-32 h-32 rounded-full border-4 border-background overflow-hidden shadow-2xl ring-2 ring-primary/50 translate-x-4">
               {myImage ? (
-                <img src={myImage} alt={myItem.name} className="w-full h-full object-cover" />
+                <img src={cdnMedium(myImage)} alt={myItem.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-card flex items-center justify-center text-2xl">📦</div>
               )}
@@ -198,7 +199,7 @@ const Match = () => {
           <div className="relative z-20 animate-float-delayed">
             <div className="w-32 h-32 rounded-full border-4 border-background overflow-hidden shadow-2xl ring-2 ring-primary/50 -translate-x-4">
               {theirImage ? (
-                <img src={theirImage} alt={theirItem.name} className="w-full h-full object-cover" />
+                <img src={cdnMedium(theirImage)} alt={theirItem.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-card flex items-center justify-center text-2xl">📦</div>
               )}

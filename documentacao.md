@@ -1296,3 +1296,8 @@ Toda a UI atualiza ao vivo. Nunca é preciso recarregar a página para ver: novo
 - Tratamento amigável de erros do supabase.auth.updateUser em ResetPassword.tsx (PT-BR): senha igual à anterior, senha curta, rate limit.
 - LOGO_URL dos templates de e-mail (send-auth-email/_templates.ts) atualizado para https://hypou.lovable.app/logo-hypou.png (domínio publicado real).
 
+
+## Update 2026-05-26 — Otimização de imagens
+- src/lib/imageUrl.ts (cdnFull/cdnMedium/cdnThumb/cdnBlur) reescreve URLs públicas do Supabase Storage para /storage/v1/render/image/public/ com width+quality. Sem backfill no bucket: o CDN serve variantes recomprimidas on-the-fly.
+- Aplicado em SwipeCard (fullscreen+blur+thumb), Item, Match, Matches, ItemPreviewDialog, SelectItemDialog, TradeContextCard, Explorar prefetch.
+
