@@ -386,7 +386,7 @@ const SwipeCard = memo(
                           <Repeat className="h-3 w-3 text-primary shrink-0" />
                           {matchedOwnItem.image_url ? (
                             <img
-                              src={matchedOwnItem.image_url}
+                              src={cdnThumb(matchedOwnItem.image_url)}
                               alt={matchedOwnItem.name}
                               className="h-5 w-5 rounded-full object-cover border border-primary/50"
                             />
