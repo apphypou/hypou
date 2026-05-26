@@ -236,7 +236,7 @@ const SwipeCard = memo(
                   key={activeImageIndex}
                   alt={item.name}
                   className="w-full h-full object-cover object-center"
-                  src={currentImage}
+                  src={cdnFull(currentImage)}
                   draggable={false}
                 />
               ) : (
