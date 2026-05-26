@@ -164,21 +164,35 @@ const Conversa = () => {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      // iOS Safari não suporta webm/opus — detectar formato suportado
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+          ? "audio/webm"
+          : MediaRecorder.isTypeSupported("audio/mp4")
+            ? "audio/mp4"
+            : "";
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       audioChunksRef.current = [];
       recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const file = new File([blob], `audio_${Date.now()}.webm`, { type: "audio/webm" });
+        const actualType = recorder.mimeType || mimeType || "audio/webm";
+        const ext = actualType.includes("mp4") ? "m4a" : actualType.includes("ogg") ? "ogg" : "webm";
+        const blob = new Blob(audioChunksRef.current, { type: actualType });
+        const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
         await handleFileSelect(file, "audio");
       };
       recorder.start();
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
       setShowAttachMenu(false);
-    } catch {
-      toast({ title: "Erro", description: "Não foi possível acessar o microfone.", variant: "destructive" });
+    } catch (err: any) {
+      let description = "Não foi possível acessar o microfone.";
+      if (err?.name === "NotAllowedError") description = "Permissão negada. Libere o microfone nas configurações.";
+      else if (err?.name === "NotFoundError") description = "Nenhum microfone encontrado.";
+      else if (err?.name === "NotReadableError") description = "Microfone em uso por outro app.";
+      toast({ title: "Erro", description, variant: "destructive" });
     }
   }, [handleFileSelect]);
 
