@@ -162,6 +162,25 @@ const Conversa = () => {
     }
   }, [uploadMedia, send]);
 
+  const isSilentAudio = async (blob: Blob): Promise<boolean> => {
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      const audioContext = new AudioContext();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+        const data = audioBuffer.getChannelData(channel);
+        for (let i = 0; i < data.length; i++) {
+          if (Math.abs(data[i]) > 0.015) {
+            return false;
+          }
+        }
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -193,6 +212,11 @@ const Conversa = () => {
         // Áudios muito curtos (< 500ms) geralmente são toques acidentais
         if (blob.size < 1500) {
           toast({ title: "Segure para gravar", description: "Mantenha o botão pressionado para gravar áudio." });
+          return;
+        }
+        const silent = await isSilentAudio(blob);
+        if (silent) {
+          toast({ title: "Áudio vazio", description: "Não detectamos som no áudio gravado. Tente novamente." });
           return;
         }
         const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
