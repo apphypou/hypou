@@ -890,7 +890,7 @@ Triggers legados duplicados (`on_new_match`, `on_trade_confirmation`) foram remo
 | Vídeo | MP4, WebM | 50 MB |
 | Áudio | WebM, OGG, MPEG/MP3, MP4/M4A/AAC | 10 MB |
 
-> **Áudio no iPhone/Safari:** a gravação do chat detecta suporte do `MediaRecorder` e, em navegadores Apple, prioriza `audio/mp4`/M4A em vez de WebM. A validação normaliza MIME com `codecs` e aceita extensão `.m4a` mesmo quando o Safari omite `file.type`.
+> **Áudio no iPhone/Safari:** a gravação do chat detecta suporte do `MediaRecorder` e, em navegadores Apple, prioriza `audio/mp4`/M4A em vez de WebM. A validação normaliza MIME com `codecs` e aceita extensão `.m4a` mesmo quando o Safari omite `file.type`. Para evitar falsos positivos de “áudio vazio”, o chat detecta som em tempo real pelo `AnalyserNode` durante a gravação, em vez de reprocessar o arquivo final com `decodeAudioData`.
 
 ### Política de Pastas
 
