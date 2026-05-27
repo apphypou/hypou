@@ -13,7 +13,7 @@ const formatTime = (dateStr: string) => {
   return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
-const renderMessageContent = (msg: any) => {
+const renderMessageContent = (msg: any, isMine: boolean) => {
   const type = msg.message_type || "text";
   const mediaUrl = msg.media_url;
 
@@ -33,16 +33,7 @@ const renderMessageContent = (msg: any) => {
     );
   }
   if (type === "audio" && mediaUrl) {
-    return (
-      <audio
-        src={mediaUrl}
-        controls
-        controlsList="nodownload noplaybackrate"
-        className="max-w-full min-w-[180px] [&::-webkit-media-controls-panel]:bg-transparent [&::-webkit-media-controls-panel]:shadow-none"
-        preload="none"
-        style={{ height: "36px" }}
-      />
-    );
+    return <AudioPlayer src={mediaUrl} mine={isMine} />;
   }
   return <p className="text-sm leading-relaxed break-words">{msg.content}</p>;
 };
