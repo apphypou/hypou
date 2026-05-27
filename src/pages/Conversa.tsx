@@ -181,7 +181,7 @@ const Conversa = () => {
       console.log("[audio] recorder created", { mimeType: recorder.mimeType, sessionId });
 
       recorder.ondataavailable = (e) => {
-        if (sessionId !== recordingSessionRef.current || mediaRecorderRef.current !== recorder) {
+        if (sessionId !== recordingSessionRef.current) {
           console.warn("[audio] stale chunk ignored", { sessionId, size: e.data?.size || 0 });
           return;
         }
@@ -196,13 +196,15 @@ const Conversa = () => {
       };
 
       recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (recordingStreamRef.current === stream) recordingStreamRef.current = null;
+        if (mediaRecorderRef.current === recorder) mediaRecorderRef.current = null;
+
         // ignora se for de uma sessão antiga
         if (sessionId !== recordingSessionRef.current) {
           console.warn("[audio] stale onstop ignored", sessionId);
           return;
         }
-        recordingStreamRef.current?.getTracks().forEach((t) => t.stop());
-        recordingStreamRef.current = null;
 
         if (cancelRecordingRef.current) {
           cancelRecordingRef.current = false;
@@ -260,7 +262,6 @@ const Conversa = () => {
         console.error("[audio] stop error", e);
       }
     }
-    mediaRecorderRef.current = null;
     setIsRecording(false);
   }, []);
 
