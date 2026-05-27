@@ -87,9 +87,8 @@ const Conversa = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const cancelRecordingRef = useRef(false);
   const recordingStartedAtRef = useRef(0);
-  const soundDetectedRef = useRef(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserFrameRef = useRef<number | null>(null);
+  const recordingSessionRef = useRef(0);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [reportOpen, setReportOpen] = useState(false);
@@ -169,75 +168,73 @@ const Conversa = () => {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      soundDetectedRef.current = false;
+      recordingStreamRef.current = stream;
       recordingStartedAtRef.current = Date.now();
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 512;
-      source.connect(analyser);
-      audioContextRef.current = audioContext;
-      const samples = new Uint8Array(analyser.fftSize);
-      const detectSound = () => {
-        analyser.getByteTimeDomainData(samples);
-        for (let i = 0; i < samples.length; i++) {
-          if (Math.abs(samples[i] - 128) > 3) {
-            soundDetectedRef.current = true;
-            break;
-          }
-        }
-        analyserFrameRef.current = requestAnimationFrame(detectSound);
-      };
-      detectSound();
-      // iOS/Safari não reproduz WebM de forma confiável — preferir M4A/MP4 nele.
+      const sessionId = ++recordingSessionRef.current;
+
       const isAppleBrowser = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document;
       const candidates = isAppleBrowser
         ? ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm"]
         : ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
       const mimeType = candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || "";
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      console.log("[audio] recorder created", { mimeType: recorder.mimeType, sessionId });
       audioChunksRef.current = [];
+
       recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
-      recorder.onstop = async () => {
-        if (analyserFrameRef.current !== null) {
-          cancelAnimationFrame(analyserFrameRef.current);
-          analyserFrameRef.current = null;
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+          console.log("[audio] chunk", e.data.size, "total chunks:", audioChunksRef.current.length);
         }
-        audioContextRef.current?.close().catch(() => undefined);
-        audioContextRef.current = null;
-        stream.getTracks().forEach((t) => t.stop());
+      };
+
+      recorder.onerror = (ev: any) => {
+        console.error("[audio] recorder error", ev?.error || ev);
+      };
+
+      recorder.onstop = async () => {
+        // ignora se for de uma sessão antiga
+        if (sessionId !== recordingSessionRef.current) {
+          console.warn("[audio] stale onstop ignored", sessionId);
+          return;
+        }
+        recordingStreamRef.current?.getTracks().forEach((t) => t.stop());
+        recordingStreamRef.current = null;
+
         if (cancelRecordingRef.current) {
           cancelRecordingRef.current = false;
           audioChunksRef.current = [];
+          console.log("[audio] cancelled by user");
           return;
         }
+
         const actualType = (recorder.mimeType || mimeType || "audio/webm").split(";")[0];
-        const ext = actualType.includes("mp4") || actualType.includes("aac") || actualType.includes("m4a") ? "m4a" : actualType.includes("ogg") ? "ogg" : "webm";
+        const ext = actualType.includes("mp4") || actualType.includes("aac") || actualType.includes("m4a")
+          ? "m4a"
+          : actualType.includes("ogg") ? "ogg" : "webm";
         const blob = new Blob(audioChunksRef.current, { type: actualType });
-        if (!blob.size) {
-          toast({ title: "Erro", description: "Áudio vazio. Tente gravar novamente.", variant: "destructive" });
-          return;
-        }
-        // Áudios muito curtos (< 500ms) geralmente são toques acidentais
-        if (blob.size < 1500) {
+        const durationMs = Date.now() - recordingStartedAtRef.current;
+        console.log("[audio] onstop", { size: blob.size, durationMs, actualType, ext });
+
+        if (durationMs < 400) {
           toast({ title: "Segure para gravar", description: "Mantenha o botão pressionado para gravar áudio." });
           return;
         }
-        const durationMs = Date.now() - recordingStartedAtRef.current;
-        if (durationMs > 700 && !soundDetectedRef.current) {
-          toast({ title: "Áudio vazio", description: "Não detectamos som no áudio gravado. Tente novamente." });
+        if (!blob.size) {
+          toast({ title: "Erro", description: "Áudio vazio. Tente novamente.", variant: "destructive" });
           return;
         }
         const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
         await handleFileSelect(file, "audio");
       };
-      recorder.start(250);
+
+      // start emitindo chunks frequentes (melhor reliability em mobile)
+      recorder.start(100);
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
       setShowAttachMenu(false);
     } catch (err: any) {
+      console.error("[audio] startRecording error", err);
       let description = "Não foi possível acessar o microfone.";
       if (err?.name === "NotAllowedError") description = "Permissão negada. Libere o microfone nas configurações.";
       else if (err?.name === "NotFoundError") description = "Nenhum microfone encontrado.";
@@ -248,8 +245,17 @@ const Conversa = () => {
 
   const stopRecording = useCallback((cancel = false) => {
     cancelRecordingRef.current = cancel;
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      try {
+        // força flush do último buffer antes do stop (importante em mobile)
+        if (recorder.state === "recording" && typeof recorder.requestData === "function") {
+          try { recorder.requestData(); } catch { /* ignore */ }
+        }
+        recorder.stop();
+      } catch (e) {
+        console.error("[audio] stop error", e);
+      }
     }
     mediaRecorderRef.current = null;
     setIsRecording(false);

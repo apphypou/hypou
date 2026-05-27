@@ -20,17 +20,19 @@ const fixDuration = (audio: HTMLAudioElement): Promise<number> =>
       resolve(audio.duration);
       return;
     }
-    const onSeeked = () => {
+    let done = false;
+    const finish = (d: number) => {
+      if (done) return;
+      done = true;
       audio.removeEventListener("durationchange", onDur);
       audio.removeEventListener("seeked", onSeeked);
-      audio.currentTime = 0;
-      resolve(isFinite(audio.duration) ? audio.duration : 0);
+      try { audio.currentTime = 0; } catch { /* */ }
+      resolve(isFinite(d) && d > 0 ? d : 0);
     };
+    const onSeeked = () => finish(audio.duration);
     const onDur = () => {
       if (isFinite(audio.duration) && audio.duration > 0 && audio.duration !== Infinity) {
-        audio.removeEventListener("durationchange", onDur);
-        audio.removeEventListener("seeked", onSeeked);
-        resolve(audio.duration);
+        finish(audio.duration);
       }
     };
     audio.addEventListener("durationchange", onDur);
@@ -38,8 +40,10 @@ const fixDuration = (audio: HTMLAudioElement): Promise<number> =>
     try {
       audio.currentTime = 1e101;
     } catch {
-      resolve(0);
+      finish(0);
     }
+    // safety timeout — never block UI for more than 1.5s
+    setTimeout(() => finish(audio.duration), 1500);
   });
 
 export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
@@ -48,8 +52,15 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
+  const [errored, setErrored] = useState(false);
 
   useEffect(() => {
+    setDuration(0);
+    setCurrent(0);
+    setPlaying(false);
+    setReady(false);
+    setErrored(false);
+
     const audio = new Audio();
     audio.preload = "metadata";
     audio.src = src;
@@ -60,21 +71,31 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
       setDuration(d);
       setReady(true);
     };
+    const onCanPlay = () => setReady(true);
     const onTime = () => setCurrent(audio.currentTime);
     const onEnd = () => {
       setPlaying(false);
       setCurrent(0);
     };
+    const onError = () => {
+      console.error("[audio] player error", audio.error, src);
+      setErrored(true);
+      setReady(true);
+    };
 
     audio.addEventListener("loadedmetadata", onLoaded);
+    audio.addEventListener("canplay", onCanPlay);
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("ended", onEnd);
+    audio.addEventListener("error", onError);
 
     return () => {
       audio.pause();
       audio.removeEventListener("loadedmetadata", onLoaded);
+      audio.removeEventListener("canplay", onCanPlay);
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("ended", onEnd);
+      audio.removeEventListener("error", onError);
       audioRef.current = null;
     };
   }, [src]);
@@ -86,7 +107,10 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
       a.pause();
       setPlaying(false);
     } else {
-      a.play().then(() => setPlaying(true)).catch(() => {});
+      a.play().then(() => setPlaying(true)).catch((e) => {
+        console.error("[audio] play() failed", e);
+        setErrored(true);
+      });
     }
   };
 
@@ -99,7 +123,6 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
   };
 
   const progress = duration > 0 ? (current / duration) * 100 : 0;
-  const remaining = ready ? duration - current : 0;
 
   // Mine bubble is cyan; use WHITE accents (not black) for legibility.
   const accent = mine ? "bg-white" : "bg-primary";
@@ -130,7 +153,11 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
           />
         </div>
         <span className={`text-[10px] font-mono tabular-nums ${accentText}`}>
-          {ready ? formatTime(playing || current > 0 ? current : duration) : "--:--"}
+          {errored
+            ? "erro ao carregar"
+            : ready
+              ? formatTime(playing || current > 0 ? current : duration)
+              : "0:00"}
         </span>
       </div>
     </div>
