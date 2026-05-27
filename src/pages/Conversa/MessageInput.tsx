@@ -38,9 +38,11 @@ export const MessageInput = ({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [duration, setDuration] = useState(0);
   const cancelRef = useRef(false);
-  const startYRef = useRef(0);
+  const holdingRef = useRef(false);
+  const startXRef = useRef(0);
   const [slideOffset, setSlideOffset] = useState(0);
-  const willCancel = slideOffset < -60;
+  const CANCEL_THRESHOLD = 80;
+  const willCancel = slideOffset < -CANCEL_THRESHOLD;
 
   const handleImagePick = () => fileInputRef.current?.click();
   const handleVideoPick = () => videoInputRef.current?.click();
@@ -65,27 +67,30 @@ export const MessageInput = ({
     }
   };
 
-  // Hold-to-record handlers (mouse + touch)
+  // Hold-to-record handlers (WhatsApp-style: slide LEFT to cancel)
   const handleHoldStart = (e: React.PointerEvent) => {
     if (hasText || uploading || sending) return;
     e.preventDefault();
     cancelRef.current = false;
-    startYRef.current = e.clientY;
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    holdingRef.current = true;
+    startXRef.current = e.clientX;
+    setSlideOffset(0);
+    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
     onStartRecording();
   };
 
   const handleHoldMove = (e: React.PointerEvent) => {
-    if (!isRecording) return;
-    const delta = e.clientY - startYRef.current;
-    setSlideOffset(Math.min(0, delta));
-    if (delta < -80) cancelRef.current = true;
-    else cancelRef.current = false;
+    if (!holdingRef.current) return;
+    const delta = e.clientX - startXRef.current;
+    const clamped = Math.min(0, delta);
+    setSlideOffset(clamped);
+    cancelRef.current = clamped < -CANCEL_THRESHOLD;
   };
 
   const handleHoldEnd = (e: React.PointerEvent) => {
-    if (!isRecording) return;
-    (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+    if (!holdingRef.current) return;
+    holdingRef.current = false;
+    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
     onStopRecording(cancelRef.current);
     cancelRef.current = false;
     setSlideOffset(0);
@@ -145,30 +150,26 @@ export const MessageInput = ({
 
         {isRecording ? (
           <div className="flex items-center gap-3">
-            <div className="flex-1 flex items-center gap-3 bg-card/60 backdrop-blur-xl border border-destructive/30 rounded-full pl-5 pr-3 h-11">
+            <div className="flex-1 flex items-center gap-3 bg-card/60 backdrop-blur-xl border border-destructive/30 rounded-full pl-5 pr-3 h-11 overflow-hidden">
               <div className="h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" />
               <span className="text-sm font-mono text-foreground/80 tabular-nums">{formatDuration(duration)}</span>
-              <span className={`flex-1 text-xs text-center transition-colors ${willCancel ? "text-destructive font-semibold" : "text-foreground/50"}`}>
-                {willCancel ? "Solte para cancelar" : "← Arraste para cancelar"}
-              </span>
-              <button
-                onPointerDown={(e) => { cancelRef.current = true; onStopRecording(true); }}
-                className="h-9 w-9 rounded-full bg-destructive/15 text-destructive flex items-center justify-center shrink-0"
-                aria-label="Cancelar"
+              <span
+                style={{ transform: `translateX(${slideOffset}px)` }}
+                className={`flex-1 text-xs text-center transition-colors ${willCancel ? "text-destructive font-semibold" : "text-foreground/50"}`}
               >
-                <Trash2 className="h-4 w-4" />
-              </button>
+                {willCancel ? "Solte para cancelar" : "‹ Arraste para cancelar"}
+              </span>
             </div>
             <button
               onPointerDown={handleHoldStart}
               onPointerMove={handleHoldMove}
               onPointerUp={handleHoldEnd}
               onPointerCancel={handleHoldEnd}
-              style={{ transform: `translateY(${slideOffset}px) scale(${willCancel ? 0.9 : 1.15})` }}
-              className="h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center shadow-lg bg-gradient-to-br from-destructive to-destructive/70 transition-transform"
-              aria-label="Solte para enviar"
+              style={{ transform: `translateX(${slideOffset}px) scale(${willCancel ? 0.9 : 1.15})` }}
+              className={`h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center shadow-lg transition-transform select-none touch-none ${willCancel ? "bg-gradient-to-br from-destructive to-destructive/70" : "bg-gradient-to-br from-primary to-[hsl(260_85%_65%)]"}`}
+              aria-label="Solte para enviar, arraste para cancelar"
             >
-              <Mic className="h-5 w-5" />
+              {willCancel ? <Trash2 className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
             </button>
           </div>
         ) : (
