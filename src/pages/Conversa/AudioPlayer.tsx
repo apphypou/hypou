@@ -101,10 +101,11 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
   const progress = duration > 0 ? (current / duration) * 100 : 0;
   const remaining = ready ? duration - current : 0;
 
-  const accent = mine ? "bg-primary-foreground" : "bg-primary";
-  const trackBg = mine ? "bg-primary-foreground/25" : "bg-foreground/10";
-  const accentText = mine ? "text-primary-foreground/80" : "text-foreground/70";
-  const btnBg = mine ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/15 text-primary";
+  // Mine bubble is cyan; use WHITE accents (not black) for legibility.
+  const accent = mine ? "bg-white" : "bg-primary";
+  const trackBg = mine ? "bg-white/30" : "bg-foreground/10";
+  const accentText = mine ? "text-white/85" : "text-foreground/70";
+  const btnBg = mine ? "bg-white/25 text-white" : "bg-primary/15 text-primary";
 
   return (
     <div className="flex items-center gap-3 min-w-[200px]">
