@@ -85,6 +85,7 @@ const Conversa = () => {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const cancelRecordingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [reportOpen, setReportOpen] = useState(false);
