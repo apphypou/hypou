@@ -86,6 +86,10 @@ const Conversa = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const cancelRecordingRef = useRef(false);
+  const recordingStartedAtRef = useRef(0);
+  const soundDetectedRef = useRef(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserFrameRef = useRef<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [reportOpen, setReportOpen] = useState(false);
@@ -162,28 +166,29 @@ const Conversa = () => {
     }
   }, [uploadMedia, send]);
 
-  const isSilentAudio = async (blob: Blob): Promise<boolean> => {
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      const audioContext = new AudioContext();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-        const data = audioBuffer.getChannelData(channel);
-        for (let i = 0; i < data.length; i++) {
-          if (Math.abs(data[i]) > 0.015) {
-            return false;
-          }
-        }
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      soundDetectedRef.current = false;
+      recordingStartedAtRef.current = Date.now();
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      audioContextRef.current = audioContext;
+      const samples = new Uint8Array(analyser.fftSize);
+      const detectSound = () => {
+        analyser.getByteTimeDomainData(samples);
+        for (let i = 0; i < samples.length; i++) {
+          if (Math.abs(samples[i] - 128) > 3) {
+            soundDetectedRef.current = true;
+            break;
+          }
+        }
+        analyserFrameRef.current = requestAnimationFrame(detectSound);
+      };
+      detectSound();
       // iOS/Safari não reproduz WebM de forma confiável — preferir M4A/MP4 nele.
       const isAppleBrowser = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document;
       const candidates = isAppleBrowser
@@ -196,6 +201,12 @@ const Conversa = () => {
         if (e.data.size > 0) audioChunksRef.current.push(e.data);
       };
       recorder.onstop = async () => {
+        if (analyserFrameRef.current !== null) {
+          cancelAnimationFrame(analyserFrameRef.current);
+          analyserFrameRef.current = null;
+        }
+        audioContextRef.current?.close().catch(() => undefined);
+        audioContextRef.current = null;
         stream.getTracks().forEach((t) => t.stop());
         if (cancelRecordingRef.current) {
           cancelRecordingRef.current = false;
@@ -214,8 +225,8 @@ const Conversa = () => {
           toast({ title: "Segure para gravar", description: "Mantenha o botão pressionado para gravar áudio." });
           return;
         }
-        const silent = await isSilentAudio(blob);
-        if (silent) {
+        const durationMs = Date.now() - recordingStartedAtRef.current;
+        if (durationMs > 700 && !soundDetectedRef.current) {
           toast({ title: "Áudio vazio", description: "Não detectamos som no áudio gravado. Tente novamente." });
           return;
         }
