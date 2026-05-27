@@ -1,5 +1,6 @@
 import { Loader2, Check, CheckCheck } from "lucide-react";
 import { forwardRef } from "react";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface MessageListProps {
   messages: any[];
