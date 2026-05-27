@@ -69,6 +69,20 @@ const useConversationDetails = (conversationId: string | null) => {
   });
 };
 
+const isLikelyPlayableAudio = async (blob: Blob, type: string) => {
+  const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
+  if (type.includes("webm")) return startsWith(0x1a, 0x45, 0xdf, 0xa3);
+  if (type.includes("ogg")) return startsWith(0x4f, 0x67, 0x67, 0x53);
+  if (type.includes("aac")) {
+    return startsWith(0xff, 0xf1) || startsWith(0xff, 0xf9) || (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70);
+  }
+  if (type.includes("mp4") || type.includes("aac") || type.includes("m4a")) {
+    return header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70;
+  }
+  return true;
+};
+
 const Conversa = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { data: messages = [], isLoading } = useMessages(conversationId || null);
@@ -84,7 +98,6 @@ const Conversa = () => {
   const [uploading, setUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const cancelRecordingRef = useRef(false);
   const recordingStartedAtRef = useRef(0);
   const recordingSessionRef = useRef(0);
@@ -178,13 +191,17 @@ const Conversa = () => {
         : ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
       const mimeType = candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || "";
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const chunks: Blob[] = [];
       console.log("[audio] recorder created", { mimeType: recorder.mimeType, sessionId });
-      audioChunksRef.current = [];
 
       recorder.ondataavailable = (e) => {
+        if (sessionId !== recordingSessionRef.current) {
+          console.warn("[audio] stale chunk ignored", { sessionId, size: e.data?.size || 0 });
+          return;
+        }
         if (e.data && e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-          console.log("[audio] chunk", e.data.size, "total chunks:", audioChunksRef.current.length);
+          chunks.push(e.data);
+          console.log("[audio] chunk", e.data.size, "total chunks:", chunks.length);
         }
       };
 
@@ -193,17 +210,18 @@ const Conversa = () => {
       };
 
       recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (recordingStreamRef.current === stream) recordingStreamRef.current = null;
+        if (mediaRecorderRef.current === recorder) mediaRecorderRef.current = null;
+
         // ignora se for de uma sessão antiga
         if (sessionId !== recordingSessionRef.current) {
           console.warn("[audio] stale onstop ignored", sessionId);
           return;
         }
-        recordingStreamRef.current?.getTracks().forEach((t) => t.stop());
-        recordingStreamRef.current = null;
 
         if (cancelRecordingRef.current) {
           cancelRecordingRef.current = false;
-          audioChunksRef.current = [];
           console.log("[audio] cancelled by user");
           return;
         }
@@ -212,9 +230,10 @@ const Conversa = () => {
         const ext = actualType.includes("mp4") || actualType.includes("aac") || actualType.includes("m4a")
           ? "m4a"
           : actualType.includes("ogg") ? "ogg" : "webm";
-        const blob = new Blob(audioChunksRef.current, { type: actualType });
+        const blob = new Blob(chunks, { type: actualType });
         const durationMs = Date.now() - recordingStartedAtRef.current;
-        console.log("[audio] onstop", { size: blob.size, durationMs, actualType, ext });
+        const firstBytes = Array.from(new Uint8Array(await blob.slice(0, 4).arrayBuffer())).map((b) => b.toString(16).padStart(2, "0")).join(" ");
+        console.log("[audio] onstop", { size: blob.size, chunks: chunks.length, durationMs, actualType, ext, firstBytes });
 
         if (durationMs < 400) {
           toast({ title: "Segure para gravar", description: "Mantenha o botão pressionado para gravar áudio." });
@@ -222,6 +241,11 @@ const Conversa = () => {
         }
         if (!blob.size) {
           toast({ title: "Erro", description: "Áudio vazio. Tente novamente.", variant: "destructive" });
+          return;
+        }
+        if (!(await isLikelyPlayableAudio(blob, actualType))) {
+          console.error("[audio] invalid audio container", { actualType, firstBytes, size: blob.size });
+          toast({ title: "Erro", description: "Falha ao finalizar o áudio. Grave novamente.", variant: "destructive" });
           return;
         }
         const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
@@ -257,7 +281,6 @@ const Conversa = () => {
         console.error("[audio] stop error", e);
       }
     }
-    mediaRecorderRef.current = null;
     setIsRecording(false);
   }, []);
 

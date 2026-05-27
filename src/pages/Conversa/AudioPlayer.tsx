@@ -46,6 +46,16 @@ const fixDuration = (audio: HTMLAudioElement): Promise<number> =>
     setTimeout(() => finish(audio.duration), 1500);
   });
 
+const findPlayableOffset = (buffer: ArrayBuffer) => {
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i <= bytes.length - 4; i++) {
+    if (bytes[i] === 0x1a && bytes[i + 1] === 0x45 && bytes[i + 2] === 0xdf && bytes[i + 3] === 0xa3) return i;
+    if (bytes[i] === 0x4f && bytes[i + 1] === 0x67 && bytes[i + 2] === 0x67 && bytes[i + 3] === 0x53) return i;
+    if (i >= 4 && bytes[i] === 0x66 && bytes[i + 1] === 0x74 && bytes[i + 2] === 0x79 && bytes[i + 3] === 0x70) return i - 4;
+  }
+  return -1;
+};
+
 export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [duration, setDuration] = useState(0);
@@ -55,6 +65,10 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
   const [errored, setErrored] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    let repairing = false;
+    let repairedUrl: string | null = null;
+
     setDuration(0);
     setCurrent(0);
     setPlaying(false);
@@ -77,7 +91,25 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
       setPlaying(false);
       setCurrent(0);
     };
-    const onError = () => {
+    const onError = async () => {
+      if (!repairing && !repairedUrl && src.startsWith("http")) {
+        repairing = true;
+        try {
+          const response = await fetch(src, { cache: "no-store" });
+          const buffer = await response.arrayBuffer();
+          const offset = findPlayableOffset(buffer);
+          if (!cancelled && offset > 0) {
+            console.warn("[audio] repairing corrupted prefix", { offset, src });
+            repairedUrl = URL.createObjectURL(new Blob([buffer.slice(offset)], { type: "audio/webm" }));
+            setErrored(false);
+            audio.src = repairedUrl;
+            audio.load();
+            return;
+          }
+        } catch (e) {
+          console.error("[audio] repair failed", e);
+        }
+      }
       console.error("[audio] player error", audio.error, src);
       setErrored(true);
       setReady(true);
@@ -90,12 +122,14 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
     audio.addEventListener("error", onError);
 
     return () => {
+      cancelled = true;
       audio.pause();
       audio.removeEventListener("loadedmetadata", onLoaded);
       audio.removeEventListener("canplay", onCanPlay);
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("ended", onEnd);
       audio.removeEventListener("error", onError);
+      if (repairedUrl) URL.revokeObjectURL(repairedUrl);
       audioRef.current = null;
     };
   }, [src]);
