@@ -52,6 +52,12 @@ describe("fileValidation", () => {
   it("13 validateChatMedia roteia para áudio", () => {
     expect(validateChatMedia(makeFile("x.webm", "audio/webm", 100), "audio")).toBeNull();
   });
+  it("13.1 aceita áudio MP4/M4A do iPhone mesmo com codecs no MIME", () => {
+    expect(validateAudioFile(makeFile("a.m4a", "audio/mp4;codecs=mp4a.40.2", 1024))).toBeNull();
+  });
+  it("13.2 aceita áudio do iPhone quando Safari omite o MIME", () => {
+    expect(validateAudioFile(makeFile("a.m4a", "", 1024))).toBeNull();
+  });
   it("14 detecta HEIC pelo MIME", () => {
     expect(isHeicFile(makeFile("foto.heic", "image/heic", 100))).toBe(true);
   });
