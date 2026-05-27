@@ -177,11 +177,21 @@ const Conversa = () => {
       };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
+        if (cancelRecordingRef.current) {
+          cancelRecordingRef.current = false;
+          audioChunksRef.current = [];
+          return;
+        }
         const actualType = (recorder.mimeType || mimeType || "audio/webm").split(";")[0];
         const ext = actualType.includes("mp4") || actualType.includes("aac") || actualType.includes("m4a") ? "m4a" : actualType.includes("ogg") ? "ogg" : "webm";
         const blob = new Blob(audioChunksRef.current, { type: actualType });
         if (!blob.size) {
           toast({ title: "Erro", description: "Áudio vazio. Tente gravar novamente.", variant: "destructive" });
+          return;
+        }
+        // Áudios muito curtos (< 500ms) geralmente são toques acidentais
+        if (blob.size < 1500) {
+          toast({ title: "Segure para gravar", description: "Mantenha o botão pressionado para gravar áudio." });
           return;
         }
         const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
@@ -200,8 +210,11 @@ const Conversa = () => {
     }
   }, [handleFileSelect]);
 
-  const stopRecording = useCallback(() => {
-    mediaRecorderRef.current?.stop();
+  const stopRecording = useCallback((cancel = false) => {
+    cancelRecordingRef.current = cancel;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
     mediaRecorderRef.current = null;
     setIsRecording(false);
   }, []);
