@@ -69,6 +69,17 @@ const useConversationDetails = (conversationId: string | null) => {
   });
 };
 
+const isLikelyPlayableAudio = async (blob: Blob, type: string) => {
+  const header = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+  const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
+  if (type.includes("webm")) return startsWith(0x1a, 0x45, 0xdf, 0xa3);
+  if (type.includes("ogg")) return startsWith(0x4f, 0x67, 0x67, 0x53);
+  if (type.includes("mp4") || type.includes("aac") || type.includes("m4a")) {
+    return header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70;
+  }
+  return true;
+};
+
 const Conversa = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { data: messages = [], isLoading } = useMessages(conversationId || null);
@@ -227,6 +238,11 @@ const Conversa = () => {
         }
         if (!blob.size) {
           toast({ title: "Erro", description: "Áudio vazio. Tente novamente.", variant: "destructive" });
+          return;
+        }
+        if (!(await isLikelyPlayableAudio(blob, actualType))) {
+          console.error("[audio] invalid audio container", { actualType, firstBytes, size: blob.size });
+          toast({ title: "Erro", description: "Falha ao finalizar o áudio. Grave novamente.", variant: "destructive" });
           return;
         }
         const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
