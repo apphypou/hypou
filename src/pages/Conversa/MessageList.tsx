@@ -77,7 +77,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
                       : "bg-card border border-foreground/5 text-foreground rounded-bl-md"
                   }`}
                 >
-                  {renderMessageContent(msg)}
+                  {renderMessageContent(msg, isMine)}
                   <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
                     <span className={`text-[10px] ${isMine ? "text-primary-foreground/60" : "text-foreground/30"}`}>
                       {formatTime(msg.created_at)}
