@@ -1,7 +1,7 @@
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_HEIC_TYPES = ['image/heic', 'image/heif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm'];
-const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mpeg'];
+const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/x-m4a', 'audio/m4a'];
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_HEIC_SIZE = 15 * 1024 * 1024; // 15MB (raw HEIC, will be compressed)
