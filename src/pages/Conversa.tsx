@@ -164,26 +164,30 @@ const Conversa = () => {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // iOS Safari não suporta webm/opus — detectar formato suportado
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : MediaRecorder.isTypeSupported("audio/webm")
-          ? "audio/webm"
-          : MediaRecorder.isTypeSupported("audio/mp4")
-            ? "audio/mp4"
-            : "";
+      // iOS/Safari não reproduz WebM de forma confiável — preferir M4A/MP4 nele.
+      const isAppleBrowser = /iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent) && "ontouchend" in document;
+      const candidates = isAppleBrowser
+        ? ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/aac", "audio/webm;codecs=opus", "audio/webm"]
+        : ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
+      const mimeType = candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || "";
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       audioChunksRef.current = [];
-      recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
       recorder.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
-        const actualType = recorder.mimeType || mimeType || "audio/webm";
-        const ext = actualType.includes("mp4") ? "m4a" : actualType.includes("ogg") ? "ogg" : "webm";
+        const actualType = (recorder.mimeType || mimeType || "audio/webm").split(";")[0];
+        const ext = actualType.includes("mp4") || actualType.includes("aac") || actualType.includes("m4a") ? "m4a" : actualType.includes("ogg") ? "ogg" : "webm";
         const blob = new Blob(audioChunksRef.current, { type: actualType });
+        if (!blob.size) {
+          toast({ title: "Erro", description: "Áudio vazio. Tente gravar novamente.", variant: "destructive" });
+          return;
+        }
         const file = new File([blob], `audio_${Date.now()}.${ext}`, { type: actualType });
         await handleFileSelect(file, "audio");
       };
-      recorder.start();
+      recorder.start(250);
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
       setShowAttachMenu(false);
