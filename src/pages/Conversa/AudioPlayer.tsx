@@ -102,6 +102,7 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
   const remaining = ready ? duration - current : 0;
 
   const accent = mine ? "bg-primary-foreground" : "bg-primary";
+  const trackBg = mine ? "bg-primary-foreground/25" : "bg-foreground/10";
   const accentText = mine ? "text-primary-foreground/80" : "text-foreground/70";
   const btnBg = mine ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/15 text-primary";
 
@@ -115,7 +116,7 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
       </button>
       <div className="flex-1 flex flex-col gap-1">
-        <div className="relative h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+        <div className={`relative h-1.5 rounded-full ${trackBg} overflow-hidden`}>
           <div className={`absolute inset-y-0 left-0 ${accent} rounded-full`} style={{ width: `${progress}%` }} />
           <input
             type="range"
