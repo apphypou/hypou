@@ -1,5 +1,6 @@
 import { Loader2, Check, CheckCheck } from "lucide-react";
 import { forwardRef } from "react";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface MessageListProps {
   messages: any[];
@@ -12,7 +13,7 @@ const formatTime = (dateStr: string) => {
   return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
-const renderMessageContent = (msg: any) => {
+const renderMessageContent = (msg: any, isMine: boolean) => {
   const type = msg.message_type || "text";
   const mediaUrl = msg.media_url;
 
@@ -32,16 +33,7 @@ const renderMessageContent = (msg: any) => {
     );
   }
   if (type === "audio" && mediaUrl) {
-    return (
-      <audio
-        src={mediaUrl}
-        controls
-        controlsList="nodownload noplaybackrate"
-        className="max-w-full min-w-[180px] [&::-webkit-media-controls-panel]:bg-transparent [&::-webkit-media-controls-panel]:shadow-none"
-        preload="none"
-        style={{ height: "36px" }}
-      />
-    );
+    return <AudioPlayer src={mediaUrl} mine={isMine} />;
   }
   return <p className="text-sm leading-relaxed break-words">{msg.content}</p>;
 };
@@ -85,7 +77,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
                       : "bg-card border border-foreground/5 text-foreground rounded-bl-md"
                   }`}
                 >
-                  {renderMessageContent(msg)}
+                  {renderMessageContent(msg, isMine)}
                   <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
                     <span className={`text-[10px] ${isMine ? "text-primary-foreground/60" : "text-foreground/30"}`}>
                       {formatTime(msg.created_at)}
