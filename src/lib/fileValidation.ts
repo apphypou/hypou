@@ -1,7 +1,8 @@
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_HEIC_TYPES = ['image/heic', 'image/heif'];
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm'];
-const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/x-m4a', 'audio/m4a'];
+const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/aac', 'audio/x-m4a', 'audio/m4a'];
+const ALLOWED_AUDIO_EXTENSIONS = ['webm', 'ogg', 'mp3', 'mpeg', 'mp4', 'm4a', 'aac'];
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_HEIC_SIZE = 15 * 1024 * 1024; // 15MB (raw HEIC, will be compressed)
@@ -40,7 +41,9 @@ export const validateVideoFile = (file: File): string | null => {
 };
 
 export const validateAudioFile = (file: File): string | null => {
-  if (!ALLOWED_AUDIO_TYPES.includes(file.type)) {
+  const mimeType = file.type.toLowerCase().split(';')[0].trim();
+  const ext = file.name.toLowerCase().split('.').pop() || '';
+  if (!ALLOWED_AUDIO_TYPES.includes(mimeType) && !ALLOWED_AUDIO_EXTENSIONS.includes(ext)) {
     return 'Tipo de áudio não permitido.';
   }
   if (file.size > MAX_AUDIO_SIZE) {
