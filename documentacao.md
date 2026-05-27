@@ -890,7 +890,7 @@ Triggers legados duplicados (`on_new_match`, `on_trade_confirmation`) foram remo
 | Vídeo | MP4, WebM | 50 MB |
 | Áudio | WebM, OGG, MPEG/MP3, MP4/M4A/AAC | 10 MB |
 
-> **Áudio no iPhone/Safari:** a gravação do chat detecta suporte do `MediaRecorder` e, em navegadores Apple, prioriza `audio/mp4`/M4A em vez de WebM. A validação normaliza MIME com `codecs` e aceita extensão `.m4a` mesmo quando o Safari omite `file.type`. Para evitar falsos positivos de “áudio vazio”, o chat detecta som em tempo real pelo `AnalyserNode` durante a gravação, em vez de reprocessar o arquivo final com `decodeAudioData`.
+> **Áudio no iPhone/Safari:** a gravação do chat detecta suporte do `MediaRecorder` e, em navegadores Apple, prioriza `audio/mp4`/M4A em vez de WebM. A validação normaliza MIME com `codecs` e aceita extensão `.m4a` mesmo quando o Safari omite `file.type`. O `MediaRecorder` é iniciado com `start(100)` para chunks frequentes e, no `stopRecording`, chamamos `requestData()` antes do `stop()` para forçar o flush do último buffer (crítico em mobile). A montagem do Blob ocorre no `onstop` e é validada apenas por duração mínima (400ms) + tamanho real do Blob — não há mais detecção de silêncio por `AnalyserNode`, que gerava falsos positivos. Um `sessionId` incremental ignora `onstop` de gravações antigas. O `AudioPlayer` reseta estado ao trocar o `src`, escuta `canplay` + `error`, e tem timeout de segurança de 1.5s no `fixDuration` para nunca travar a UI.
 
 ### Política de Pastas
 
