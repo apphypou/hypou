@@ -888,7 +888,9 @@ Triggers legados duplicados (`on_new_match`, `on_trade_confirmation`) foram remo
 |------|----------|----------------|
 | Imagem | JPEG, PNG, WebP | 5 MB |
 | Vídeo | MP4, WebM | 50 MB |
-| Áudio | WebM, OGG, MPEG | 10 MB |
+| Áudio | WebM, OGG, MPEG/MP3, MP4/M4A/AAC | 10 MB |
+
+> **Áudio no iPhone/Safari:** a gravação do chat detecta suporte do `MediaRecorder` e, em navegadores Apple, prioriza `audio/mp4`/M4A em vez de WebM. A validação normaliza MIME com `codecs` e aceita extensão `.m4a` mesmo quando o Safari omite `file.type`.
 
 ### Política de Pastas
 
@@ -1243,7 +1245,7 @@ Estrutura em duas zonas:
 
 Refatorado em subcomponentes (pasta `src/pages/Conversa/`) — `Conversa.tsx` reduzido de 691 → 302 linhas (apenas orquestração de estado e data-fetching):
 
-- **`Conversa.tsx`** — hooks (`useMessages`, `useConversationDetails`, `useSendMessage`, `useUploadChatMedia`), state e handlers (`handleSend`, `handleReport`, `handleBlock`, gravação de áudio, chamadas).
+- **`Conversa.tsx`** — hooks (`useMessages`, `useConversationDetails`, `useSendMessage`, `useUploadChatMedia`), state e handlers (`handleSend`, `handleReport`, `handleBlock`, gravação de áudio com fallback iPhone/Safari para M4A, chamadas).
 - **`Conversa/ChatHeader.tsx`** — back, avatar/nome do outro, ícone par de itens, botões `Phone`/`Video`, menu Denunciar/Bloquear.
 - **`Conversa/MessageList.tsx`** — render de mensagens (text/image/video/audio/system) com check/checkcheck. `forwardRef` para o scroll auto.
 - **`Conversa/MessageInput.tsx`** — textarea, menu de anexos, indicador de gravação/upload, botão enviar (gradiente primary→roxo).

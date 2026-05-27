@@ -36,8 +36,9 @@ const renderMessageContent = (msg: any) => {
       <audio
         src={mediaUrl}
         controls
+        controlsList="nodownload noplaybackrate"
         className="max-w-full min-w-[180px] [&::-webkit-media-controls-panel]:bg-transparent [&::-webkit-media-controls-panel]:shadow-none"
-        preload="metadata"
+        preload="none"
         style={{ height: "36px" }}
       />
     );
