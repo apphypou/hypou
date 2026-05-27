@@ -84,7 +84,6 @@ const Conversa = () => {
   const [uploading, setUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
   const cancelRecordingRef = useRef(false);
   const recordingStartedAtRef = useRef(0);
   const recordingSessionRef = useRef(0);
@@ -178,13 +177,17 @@ const Conversa = () => {
         : ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", "audio/mp4"];
       const mimeType = candidates.find((candidate) => MediaRecorder.isTypeSupported(candidate)) || "";
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+      const chunks: Blob[] = [];
       console.log("[audio] recorder created", { mimeType: recorder.mimeType, sessionId });
-      audioChunksRef.current = [];
 
       recorder.ondataavailable = (e) => {
+        if (sessionId !== recordingSessionRef.current || mediaRecorderRef.current !== recorder) {
+          console.warn("[audio] stale chunk ignored", { sessionId, size: e.data?.size || 0 });
+          return;
+        }
         if (e.data && e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-          console.log("[audio] chunk", e.data.size, "total chunks:", audioChunksRef.current.length);
+          chunks.push(e.data);
+          console.log("[audio] chunk", e.data.size, "total chunks:", chunks.length);
         }
       };
 
@@ -203,7 +206,6 @@ const Conversa = () => {
 
         if (cancelRecordingRef.current) {
           cancelRecordingRef.current = false;
-          audioChunksRef.current = [];
           console.log("[audio] cancelled by user");
           return;
         }
@@ -212,9 +214,10 @@ const Conversa = () => {
         const ext = actualType.includes("mp4") || actualType.includes("aac") || actualType.includes("m4a")
           ? "m4a"
           : actualType.includes("ogg") ? "ogg" : "webm";
-        const blob = new Blob(audioChunksRef.current, { type: actualType });
+        const blob = new Blob(chunks, { type: actualType });
         const durationMs = Date.now() - recordingStartedAtRef.current;
-        console.log("[audio] onstop", { size: blob.size, durationMs, actualType, ext });
+        const firstBytes = Array.from(new Uint8Array(await blob.slice(0, 4).arrayBuffer())).map((b) => b.toString(16).padStart(2, "0")).join(" ");
+        console.log("[audio] onstop", { size: blob.size, chunks: chunks.length, durationMs, actualType, ext, firstBytes });
 
         if (durationMs < 400) {
           toast({ title: "Segure para gravar", description: "Mantenha o botão pressionado para gravar áudio." });
