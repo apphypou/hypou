@@ -74,7 +74,9 @@ const isLikelyPlayableAudio = async (blob: Blob, type: string) => {
   const startsWith = (...bytes: number[]) => bytes.every((byte, index) => header[index] === byte);
   if (type.includes("webm")) return startsWith(0x1a, 0x45, 0xdf, 0xa3);
   if (type.includes("ogg")) return startsWith(0x4f, 0x67, 0x67, 0x53);
-  if (type.includes("aac")) return startsWith(0xff, 0xf1) || startsWith(0xff, 0xf9);
+  if (type.includes("aac")) {
+    return startsWith(0xff, 0xf1) || startsWith(0xff, 0xf9) || (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70);
+  }
   if (type.includes("mp4") || type.includes("aac") || type.includes("m4a")) {
     return header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70;
   }
