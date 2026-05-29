@@ -236,7 +236,7 @@ const Matches = () => {
           }`}
         >
           <History className="h-3.5 w-3.5" />
-          Concluídas ({historyMatches.length})
+          Histórico ({historyMatches.length})
         </button>
       </div>
 
