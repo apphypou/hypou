@@ -47,7 +47,7 @@ const useConversationDetails = (conversationId: string | null) => {
       const { data: match } = await supabase
         .from("matches")
         .select(`
-          id, status, user_a_id, user_b_id,
+          id, status, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
           item_a:item_a_id (id, name, item_images (image_url, position)),
           item_b:item_b_id (id, name, item_images (image_url, position))
         `)
@@ -75,6 +75,8 @@ const useConversationDetails = (conversationId: string | null) => {
         other_item: otherItem as any,
         my_item: myItem as any,
         is_user_b: !isUserA,
+        my_confirmed: isUserA ? !!(match as any).confirmed_by_a : !!(match as any).confirmed_by_b,
+        other_confirmed: isUserA ? !!(match as any).confirmed_by_b : !!(match as any).confirmed_by_a,
       };
     },
     enabled: !!conversationId && !!user,
