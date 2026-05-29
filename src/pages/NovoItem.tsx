@@ -67,6 +67,7 @@ const NovoItem = () => {
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
+  const createdItemIdRef = useRef<string | null>(null);
 
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
