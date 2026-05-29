@@ -1,37 +1,104 @@
-## O que encontrei
+# Auditoria Profunda de Bugs — Hypou
 
-O problema mais provável está em três pontos do fluxo atual:
+## Objetivo
+Produzir **um único arquivo** `AUDITORIA_BUGS.md` em `/dev-server/` com inventário detalhado de falhas de lógica de negócio, brechas de segurança, race conditions, validações ausentes e fluxos quebrados. **Nenhum arquivo de código será alterado.**
 
-1. O `MediaRecorder` pode parar antes de emitir o último `dataavailable`, principalmente em mobile/Safari/Chrome mobile. Hoje o código monta o Blob direto no `onstop`, então às vezes ele fica com `audioChunksRef` vazio e mostra “Áudio vazio”.
-2. A detecção de silêncio via `AnalyserNode` usa um limiar muito baixo/instável e pode dar falso negativo dependendo do microfone, volume, Bluetooth ou permissões do navegador.
-3. O player tenta corrigir duração WebM com seek extremo, mas se o metadata não carregar ou a URL/codec vier ruim, ele fica em `--:--` e o play pode não tocar nada sem mostrar erro claro.
+## Escopo da revisão
 
-## Plano de correção
+### 1. Autenticação & contas
+- Cadastro/login (e-mail+senha, Google, Apple), recuperação de senha, `/reset-password`
+- `onboarding_completed` guard, sessões expiradas, refresh tokens
+- Edge function `delete-account` e cascata de dados
+- Acesso público (`/explorar`) vs `GuestPromptDialog`
 
-1. **Tornar a gravação resiliente**
-   - Criar um controle de sessão de gravação com ID único para evitar eventos atrasados de gravações antigas.
-   - No `stopRecording`, chamar `recorder.requestData()` antes de `recorder.stop()` quando possível.
-   - Aguardar o ciclo correto de `dataavailable` antes de montar o Blob.
-   - Não zerar refs cedo demais enquanto o `onstop` ainda precisa delas.
+### 2. Itens & cadastro
+- `NovoItem` / `EditarItem`: validações, upload de fotos/vídeo, limites de tamanho, idempotência (já corrigida) e retry
+- `validate-item-price` (Gemini/Tavily): fail-open, abuso, custo
+- RLS de `items`, `item_images`, `item_videos`
+- Status `active`/`inactive` e ciclo de vida após troca concluída
 
-2. **Remover falso “áudio vazio”**
-   - Trocar a validação agressiva de silêncio por validação objetiva: duração mínima + tamanho real do Blob.
-   - Manter bloqueio apenas para Blob realmente vazio ou gravação extremamente curta.
-   - Se houver Blob válido, enviar mesmo que o detector de som não tenha marcado fala.
+### 3. Swipe & recomendação
+- RPC `recommended_items`, filtros (bloqueados, já swiped, sem foto)
+- Threshold de swipe, loop epoch, feed finito, race em likes rápidos
+- `GuestPromptDialog` em ações de swipe
 
-3. **Melhorar compatibilidade de formato**
-   - Escolher MIME type com fallback mais seguro por navegador.
-   - Preservar `recorder.mimeType` real no arquivo enviado.
-   - Evitar extensão incompatível com o tipo final.
+### 4. Match / Propostas
+- RPC `create_proposal` (limite 3 itens, valor mínimo, item próprio, bloqueio)
+- Triggers `enforce_matches_update_guard`, `check_trade_completion`, `handle_trade_completion`, `deactivate_items_on_trade_completion`
+- Aceitar/recusar/cancelar (apenas papéis corretos), transições terminais
+- Confirmação dupla in-chat × tela de Trocas, duplicidade de propostas
+- 4 abas (Recebidas/Enviadas/Canceladas/Concluídas) — consistência de filtros e contagens
 
-4. **Corrigir player que fica `--:--` / não toca**
-   - Adicionar handlers de `canplay`, `loadedmetadata`, `durationchange` e `error`.
-   - Se não conseguir duração, ainda permitir tocar e mostrar `0:00`/tempo atual em vez de travar.
-   - Resetar corretamente estado ao trocar o `src`.
+### 5. Chat & mídia
+- `is_conversation_participant`, mensagens de sistema, `enforce_messages_update_guard`
+- Áudio (bug recente de "vazio"), upload de imagem/vídeo, tamanho
+- `TradeContextCard` e estado vs `matches.status`
+- Acesso a chat só com `accepted` — verificar bypass via URL `/conversa/:id`
 
-5. **Adicionar logs temporários seguros de diagnóstico**
-   - Registrar no console: MIME escolhido, chunks recebidos, tamanho final, duração estimada, erro de play/load.
-   - Assim, se ainda falhar no seu aparelho, a próxima mensagem já traz o motivo exato nos logs.
+### 6. Chamadas (LiveKit)
+- `call_sessions` triggers, status `ringing/accepted/declined/missed/ended`
+- `IncomingCallSheet`, race entre múltiplas calls, token edge function
 
-6. **Atualizar `documentacao.md`**
-   - Documentar o novo fluxo de gravação resiliente, porque altera arquitetura do áudio no chat.
+### 7. Avaliações & dupla confirmação
+- `ratings` RLS, prevenção de auto-rating, edição/duplicidade
+- Trigger `check_trade_completion` requer ambos `confirmed_by_*`
+
+### 8. Notificações & realtime
+- Triggers `notify_on_*`, `tr_push_*`, `notify_push` (vault `project_url`)
+- `useRealtimeInvalidate`, `useGlobalRealtimeAlerts`, badges de unread
+
+### 9. Moderação
+- `blocked_users` + `reports`, filtro `getBlockedUserIds` em todas as superfícies
+- Painel admin: `has_role`, RBAC, edge functions admin
+
+### 10. Geolocalização
+- `nearby_items` PostGIS, `LocationSearch`, profile lat/lng nulos
+
+### 11. Segurança transversal
+- Rodar `supabase--linter` + `security--run_security_scan`
+- Revisar `GRANT`s, `SECURITY DEFINER` functions, RLS `USING (true)`
+- Storage buckets públicos (`item-images`, `chat-media`)
+- Validação client-side vs server-side, XSS em campos livres
+
+### 12. Estado & UX crítica
+- Race conditions: duplo submit, rapid swipes, cancelar+aceitar simultâneo
+- Refresh em rotas profundas, deep links Capacitor
+- Offline (`OfflineScreen`), expired session redirect
+- Cálculos financeiros (BRL inteiros), faixa de troca (margin_up/down)
+
+## Metodologia
+1. **Leitura estática:** todos os arquivos em `src/pages`, `src/services`, `src/hooks`, `supabase/functions`
+2. **Revisão SQL:** triggers, RLS e RPCs (já listados no contexto)
+3. **Linter Supabase + Security Scan**
+4. **Consultas de leitura ao banco** para detectar inconsistências reais (ex: matches órfãos, itens sem owner, ratings duplicados)
+5. **Browser de teste**: percorrer fluxos críticos (cadastro, swipe, proposta, chat, confirmação, cancelamento) com inputs adversariais — apenas leitura/observação
+6. **Sem edição de código**
+
+## Formato do relatório
+Cada bug terá:
+
+```
+### [SEV] Título
+- Local: arquivo:linha ou tabela/função
+- Fluxo afetado:
+- Papel do usuário:
+- Reprodução:
+- Esperado:
+- Observado:
+- Impacto de negócio:
+- Risco técnico:
+- Causa-raiz provável:
+- Correção sugerida:
+- Classificação: Blocking | Risky | Improvement
+```
+
+Agrupado em:
+- 🔴 **Critical** (perda de dados, RCE, bypass de auth/RLS, dinheiro/troca incorreta)
+- 🟠 **High** (fluxos quebrados, abuso possível, race conditions)
+- 🟡 **Medium** (validações ausentes, UX que confunde regras de negócio)
+- 🟢 **Low** (melhorias, hardening, observabilidade)
+
+Inclui sumário executivo no topo: contagem por severidade, top 5 riscos, recomendações prioritárias.
+
+## Entregável
+Arquivo único: `/dev-server/AUDITORIA_BUGS.md`. Nenhuma outra mudança no projeto.
