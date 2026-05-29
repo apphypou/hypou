@@ -10,6 +10,18 @@ import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { createReport, blockUser } from "@/services/reportService";
 import { startCall } from "@/services/callService";
+import { confirmTrade } from "@/services/matchService";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ChatHeader } from "./Conversa/ChatHeader";
 import { MessageList } from "./Conversa/MessageList";
 import { MessageInput } from "./Conversa/MessageInput";
