@@ -10,6 +10,18 @@ import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { createReport, blockUser } from "@/services/reportService";
 import { startCall } from "@/services/callService";
+import { confirmTrade } from "@/services/matchService";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ChatHeader } from "./Conversa/ChatHeader";
 import { MessageList } from "./Conversa/MessageList";
 import { MessageInput } from "./Conversa/MessageInput";
@@ -35,7 +47,7 @@ const useConversationDetails = (conversationId: string | null) => {
       const { data: match } = await supabase
         .from("matches")
         .select(`
-          id, status, user_a_id, user_b_id,
+          id, status, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
           item_a:item_a_id (id, name, item_images (image_url, position)),
           item_b:item_b_id (id, name, item_images (image_url, position))
         `)
@@ -63,6 +75,8 @@ const useConversationDetails = (conversationId: string | null) => {
         other_item: otherItem as any,
         my_item: myItem as any,
         is_user_b: !isUserA,
+        my_confirmed: isUserA ? !!(match as any).confirmed_by_a : !!(match as any).confirmed_by_b,
+        other_confirmed: isUserA ? !!(match as any).confirmed_by_b : !!(match as any).confirmed_by_a,
       };
     },
     enabled: !!conversationId && !!user,
@@ -113,6 +127,31 @@ const Conversa = () => {
   const [blocking, setBlocking] = useState(false);
   const [callingKind, setCallingKind] = useState<"video" | "audio" | null>(null);
   const [rateOpen, setRateOpen] = useState(false);
+  const [confirmTradeOpen, setConfirmTradeOpen] = useState(false);
+  const [confirmingTrade, setConfirmingTrade] = useState(false);
+
+  const handleConfirmTrade = useCallback(async () => {
+    if (!user || !details?.match_id) return;
+    setConfirmingTrade(true);
+    try {
+      await confirmTrade(details.match_id, user.id);
+      await queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
+      await queryClient.invalidateQueries({ queryKey: ["matches", user.id] });
+      const bothDone = details.other_confirmed;
+      toast({
+        title: bothDone ? "Troca concluída! ✅" : "Entrega confirmada! ✅",
+        description: bothDone
+          ? "Os dois confirmaram. Avalie seu trocador!"
+          : "Aguardando o outro lado confirmar para concluir.",
+      });
+      setConfirmTradeOpen(false);
+      if (bothDone) setRateOpen(true);
+    } catch (err: any) {
+      toast({ title: "Erro ao confirmar troca", description: err?.message, variant: "destructive" });
+    } finally {
+      setConfirmingTrade(false);
+    }
+  }, [user, details, conversationId, queryClient]);
 
   const handleStartCall = useCallback(async (kind: "video" | "audio") => {
     if (!conversationId || callingKind) return;
@@ -354,6 +393,42 @@ const Conversa = () => {
           matchStatus={details.match_status}
         />
       )}
+
+      {details?.match_status === "accepted" && (
+        <div className="shrink-0 px-4 py-2 border-b border-foreground/5 bg-card/30">
+          {details.my_confirmed ? (
+            <div className="flex items-center justify-center gap-2 text-xs font-semibold text-success py-1.5">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>Você confirmou — aguardando o outro lado</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmTradeOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold active:scale-[0.98] transition neon-glow"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {details.other_confirmed ? "Concluir troca" : "Já troquei, confirmar entrega"}
+            </button>
+          )}
+        </div>
+      )}
+
+      <AlertDialog open={confirmTradeOpen} onOpenChange={setConfirmTradeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar entrega da troca?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Confirme apenas se vocês já trocaram os itens pessoalmente. Quando os dois confirmarem, a troca é concluída e a conversa é encerrada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={confirmingTrade}>Ainda não</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTrade} disabled={confirmingTrade}>
+              {confirmingTrade ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, já troquei"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <MessageList
         ref={scrollRef}
