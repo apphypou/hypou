@@ -32,7 +32,7 @@ const Matches = () => {
   const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"received" | "sent" | "history">("received");
+  const [activeTab, setActiveTab] = useState<"received" | "sent" | "cancelled" | "completed">("received");
   const [showRating, setShowRating] = useState(false);
 
   // Rating check for completed matches
