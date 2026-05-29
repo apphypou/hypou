@@ -232,15 +232,25 @@ const Matches = () => {
           Enviadas ({sentMatches.length})
         </button>
         <button
-          onClick={() => setActiveTab("history")}
+          onClick={() => setActiveTab("cancelled")}
+          className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+            activeTab === "cancelled"
+              ? "bg-primary text-primary-foreground"
+              : "bg-card border border-foreground/10 text-foreground/50"
+          }`}
+        >
+          Canceladas ({cancelledMatches.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("completed")}
           className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
-            activeTab === "history"
+            activeTab === "completed"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
           }`}
         >
           <History className="h-3.5 w-3.5" />
-          Histórico ({historyMatches.length})
+          Concluídas ({completedMatches.length})
         </button>
       </div>
 
@@ -255,7 +265,7 @@ const Matches = () => {
         ) : displayedMatches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              {activeTab === "history" ? (
+              {activeTab === "completed" || activeTab === "cancelled" ? (
                 <History className="h-10 w-10 text-primary/50" />
               ) : (
                 <Repeat2 className="h-10 w-10 text-primary" />
@@ -266,6 +276,8 @@ const Matches = () => {
                 ? "Nenhuma proposta recebida"
                 : activeTab === "sent"
                 ? "Nenhuma proposta enviada"
+                : activeTab === "cancelled"
+                ? "Nenhuma proposta cancelada"
                 : "Nenhuma troca concluída"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
@@ -273,13 +285,15 @@ const Matches = () => {
                 ? "Quando alguém te enviar uma proposta, ela aparece aqui."
                 : activeTab === "sent"
                 ? "Explore itens e envie sua primeira proposta!"
-                : "Suas trocas concluídas e recusadas aparecerão aqui."}
+                : activeTab === "cancelled"
+                ? "Propostas canceladas ou recusadas aparecem aqui."
+                : "Suas trocas concluídas aparecem aqui."}
             </p>
-            {activeTab !== "history" && (
+            {activeTab === "received" || activeTab === "sent" ? (
               <Button onClick={() => navigate("/explorar")} className="rounded-full px-6">
                 Explorar itens
               </Button>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 pb-6">
