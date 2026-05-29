@@ -25,7 +25,7 @@ export const validateImageFile = (file: File): string | null => {
     return 'Tipo de arquivo não permitido. Use JPG, PNG, WebP ou HEIC (iPhone).';
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    return 'Imagem muito grande. Máximo 5MB.';
+    return 'Imagem muito grande. Máximo 10MB.';
   }
   return null;
 };
