@@ -180,9 +180,13 @@ const Matches = () => {
     () => activeMatches.filter((m) => m.status === "proposal" ? m.my_item_side === "a" : m.my_item_side === "a"),
     [activeMatches]
   );
-  const historyMatches = useMemo(() => matches.filter((m) => m.status === "completed" || m.status === "rejected" || m.status === "cancelled"), [matches]);
+  const cancelledMatches = useMemo(() => matches.filter((m) => m.status === "rejected" || m.status === "cancelled"), [matches]);
+  const completedMatches = useMemo(() => matches.filter((m) => m.status === "completed"), [matches]);
   const displayedMatches =
-    activeTab === "received" ? receivedMatches : activeTab === "sent" ? sentMatches : historyMatches;
+    activeTab === "received" ? receivedMatches
+    : activeTab === "sent" ? sentMatches
+    : activeTab === "cancelled" ? cancelledMatches
+    : completedMatches;
 
   // Check if I already confirmed
   const myConfirmed = selectedMatch
