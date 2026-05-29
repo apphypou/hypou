@@ -214,16 +214,16 @@ const NovoItem = () => {
       if (videoFile) {
         const { supabase: sb } = await import("@/integrations/supabase/client");
         const ext = videoFile.name.split(".").pop();
-        const videoPath = `${user.id}/${item.id}/video.${ext}`;
+        const videoPath = `${user.id}/${itemId}/video.${ext}`;
         const { error: vUpErr } = await sb.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
         if (!vUpErr) {
           const { data: vUrl } = sb.storage.from("item-videos").getPublicUrl(videoPath);
           // Use the first uploaded image as thumbnail
-          const { data: imgs } = await sb.from("item_images").select("image_url").eq("item_id", item.id).order("position").limit(1);
+          const { data: imgs } = await sb.from("item_images").select("image_url").eq("item_id", itemId).order("position").limit(1);
           const thumbnail = imgs?.[0]?.image_url || null;
           
           await sb.from("item_videos").insert({
-            item_id: item.id,
+            item_id: itemId,
             user_id: user.id,
             video_url: vUrl.publicUrl,
             thumbnail_url: thumbnail,
