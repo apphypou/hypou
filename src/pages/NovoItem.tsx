@@ -182,26 +182,32 @@ const NovoItem = () => {
 
   const saveItem = async () => {
     if (!user) return;
+    if (saving) return; // hard guard against double submit
     setSaving(true);
     try {
-      const item = await createItem({
-        user_id: user.id,
-        name: itemName.trim(),
-        description: itemDesc.trim().slice(0, 500) || undefined,
-        category,
-        market_value: valueCents,
-        margin_up: valorization,
-        margin_down: devalorization,
-        location: location.trim() || undefined,
-      });
+      let itemId = createdItemIdRef.current;
+      if (!itemId) {
+        const item = await createItem({
+          user_id: user.id,
+          name: itemName.trim(),
+          description: itemDesc.trim().slice(0, 500) || undefined,
+          category,
+          market_value: valueCents,
+          margin_up: valorization,
+          margin_down: devalorization,
+          location: location.trim() || undefined,
+        });
+        itemId = item.id;
+        createdItemIdRef.current = itemId;
 
-      if (condition) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        await supabase.from("items").update({ condition }).eq("id", item.id);
+        if (condition) {
+          const { supabase } = await import("@/integrations/supabase/client");
+          await supabase.from("items").update({ condition }).eq("id", itemId);
+        }
       }
 
       for (let i = 0; i < itemPhotos.length; i++) {
-        await uploadItemImage(user.id, item.id, itemPhotos[i], i);
+        await uploadItemImage(user.id, itemId, itemPhotos[i], i);
       }
 
       // Upload optional video for Shorts
