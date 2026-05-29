@@ -25,8 +25,8 @@ describe("fileValidation", () => {
   it("04 rejeita GIF", () => {
     expect(validateImageFile(makeFile("a.gif", "image/gif", 1024))).toMatch(/não permitido/);
   });
-  it("05 rejeita imagem >5MB", () => {
-    expect(validateImageFile(makeFile("a.jpg", "image/jpeg", 6 * 1024 * 1024))).toMatch(/5MB/);
+  it("05 rejeita imagem >10MB", () => {
+    expect(validateImageFile(makeFile("a.jpg", "image/jpeg", 11 * 1024 * 1024))).toMatch(/10MB/);
   });
   it("06 aceita MP4 50MB exato", () => {
     expect(validateVideoFile(makeFile("v.mp4", "video/mp4", 50 * 1024 * 1024))).toBeNull();
