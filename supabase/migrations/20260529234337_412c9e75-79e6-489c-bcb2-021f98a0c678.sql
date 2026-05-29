@@ -1,0 +1,1 @@
+DELETE FROM items WHERE id IN ('096f8848-deb1-4a53-a2fb-45da6bf98108','8666414b-a99d-4d8d-8e77-fcb41b5c4295','34308e58-6fd8-4a39-b9b6-0eba73fc7bd9');
