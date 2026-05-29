@@ -1250,6 +1250,7 @@ Refatorado em subcomponentes (pasta `src/pages/Conversa/`) — `Conversa.tsx` re
 - **`Conversa/MessageList.tsx`** — render de mensagens (text/image/video/audio/system) com check/checkcheck. `forwardRef` para o scroll auto.
 - **`Conversa/MessageInput.tsx`** — textarea, menu de anexos, indicador de gravação/upload, botão enviar (gradiente primary→roxo).
 - **`Conversa/ReportDialogs.tsx`** — Dialog de denúncia (motivos chips + descrição) + AlertDialog de confirmação de bloqueio.
+- **Confirmação de troca in-chat** (29/05/2026): quando `match.status === "accepted"`, o chat exibe abaixo do `TradeContextCard` o botão "Já troquei, confirmar entrega" (ou "Concluir troca" se o outro lado já confirmou). Abre `AlertDialog` e chama `confirmTrade()`. Quando o usuário já confirmou, mostra "Você confirmou — aguardando o outro lado". Ao concluir (ambos confirmados), abre automaticamente o `RatingDialog`. `useConversationDetails` agora retorna `my_confirmed`/`other_confirmed`.
 
 
 ## Vídeo & Áudio Chamada no Chat (LiveKit)
