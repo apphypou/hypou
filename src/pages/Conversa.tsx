@@ -127,6 +127,31 @@ const Conversa = () => {
   const [blocking, setBlocking] = useState(false);
   const [callingKind, setCallingKind] = useState<"video" | "audio" | null>(null);
   const [rateOpen, setRateOpen] = useState(false);
+  const [confirmTradeOpen, setConfirmTradeOpen] = useState(false);
+  const [confirmingTrade, setConfirmingTrade] = useState(false);
+
+  const handleConfirmTrade = useCallback(async () => {
+    if (!user || !details?.match_id) return;
+    setConfirmingTrade(true);
+    try {
+      await confirmTrade(details.match_id, user.id);
+      await queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
+      await queryClient.invalidateQueries({ queryKey: ["matches", user.id] });
+      const bothDone = details.other_confirmed;
+      toast({
+        title: bothDone ? "Troca concluída! ✅" : "Entrega confirmada! ✅",
+        description: bothDone
+          ? "Os dois confirmaram. Avalie seu trocador!"
+          : "Aguardando o outro lado confirmar para concluir.",
+      });
+      setConfirmTradeOpen(false);
+      if (bothDone) setRateOpen(true);
+    } catch (err: any) {
+      toast({ title: "Erro ao confirmar troca", description: err?.message, variant: "destructive" });
+    } finally {
+      setConfirmingTrade(false);
+    }
+  }, [user, details, conversationId, queryClient]);
 
   const handleStartCall = useCallback(async (kind: "video" | "audio") => {
     if (!conversationId || callingKind) return;
