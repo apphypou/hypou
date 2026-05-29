@@ -4,7 +4,7 @@ const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm'];
 const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/aac', 'audio/x-m4a', 'audio/m4a'];
 const ALLOWED_AUDIO_EXTENSIONS = ['webm', 'ogg', 'mp3', 'mpeg', 'mp4', 'm4a', 'aac'];
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_HEIC_SIZE = 15 * 1024 * 1024; // 15MB (raw HEIC, will be compressed)
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024; // 10MB
@@ -25,7 +25,7 @@ export const validateImageFile = (file: File): string | null => {
     return 'Tipo de arquivo não permitido. Use JPG, PNG, WebP ou HEIC (iPhone).';
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    return 'Imagem muito grande. Máximo 5MB.';
+    return 'Imagem muito grande. Máximo 10MB.';
   }
   return null;
 };
