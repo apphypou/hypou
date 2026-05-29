@@ -285,17 +285,19 @@ const MeuPerfil = () => {
             ))}
           </div>
 
+          {/* ===== CADASTRAR NOVO ITEM (CTA central) ===== */}
+          <button
+            onClick={() => navigate("/novo-item")}
+            className="w-full mb-6 rounded-2xl bg-primary text-primary-foreground py-4 font-bold text-base tracking-wide uppercase flex items-center justify-center gap-2 neon-glow active:scale-[0.98] transition-all"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Cadastrar novo item
+          </button>
+
           {/* ===== MEUS ITENS ===== */}
             <div className="w-full flex flex-col gap-4">
               <div className="flex items-center justify-between px-1">
                 <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Itens</h2>
-                <button
-                  onClick={() => navigate("/novo-item")}
-                  className="text-primary text-xs font-bold tracking-wide uppercase hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  Novo Item
-                </button>
               </div>
 
               {items.length === 0 ? (
@@ -307,12 +309,6 @@ const MeuPerfil = () => {
                   <p className="text-foreground/40 text-sm text-center max-w-xs leading-relaxed">
                     Cadastre seu primeiro item para começar a receber propostas de troca!
                   </p>
-                  <button
-                    onClick={() => navigate("/novo-item")}
-                    className="mt-1 px-6 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold transition-all hover:opacity-90"
-                  >
-                    Cadastrar primeiro item
-                  </button>
                 </GlassCard>
               ) : (
                 <div className="space-y-3 pb-24">
