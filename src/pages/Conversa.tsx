@@ -394,6 +394,42 @@ const Conversa = () => {
         />
       )}
 
+      {details?.match_status === "accepted" && (
+        <div className="shrink-0 px-4 py-2 border-b border-foreground/5 bg-card/30">
+          {details.my_confirmed ? (
+            <div className="flex items-center justify-center gap-2 text-xs font-semibold text-success py-1.5">
+              <CheckCircle2 className="h-4 w-4" />
+              <span>Você confirmou — aguardando o outro lado</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmTradeOpen(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-bold active:scale-[0.98] transition neon-glow"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {details.other_confirmed ? "Concluir troca" : "Já troquei, confirmar entrega"}
+            </button>
+          )}
+        </div>
+      )}
+
+      <AlertDialog open={confirmTradeOpen} onOpenChange={setConfirmTradeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar entrega da troca?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Confirme apenas se vocês já trocaram os itens pessoalmente. Quando os dois confirmarem, a troca é concluída e a conversa é encerrada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={confirmingTrade}>Ainda não</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmTrade} disabled={confirmingTrade}>
+              {confirmingTrade ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, já troquei"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <MessageList
         ref={scrollRef}
         messages={messages}
