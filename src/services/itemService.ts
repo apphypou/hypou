@@ -92,6 +92,8 @@ export const validateItemPrice = async (
   reason: string;
   suggestedMin: number;
   suggestedMax: number;
+  /** C4: true quando o validador não conseguiu opinar (timeout, sem chave, parse falho) */
+  unavailable?: boolean;
 }> => {
   try {
     const { data, error } = await supabase.functions.invoke("validate-item-price", {
@@ -103,10 +105,12 @@ export const validateItemPrice = async (
       reason: data.reason ?? "",
       suggestedMin: data.suggested_min_cents ?? 0,
       suggestedMax: data.suggested_max_cents ?? 0,
+      unavailable: !!data.unavailable,
     };
   } catch (err) {
-    console.error("Price validation failed, allowing item:", err);
-    return { valid: true, reason: "", suggestedMin: 0, suggestedMax: 0 };
+    console.error("Price validation failed:", err);
+    // C4: marca como unavailable em vez de fail-open silencioso
+    return { valid: true, reason: "Validação indisponível", suggestedMin: 0, suggestedMax: 0, unavailable: true };
   }
 };
 
