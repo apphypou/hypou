@@ -1304,3 +1304,21 @@ Toda a UI atualiza ao vivo. Nunca é preciso recarregar a página para ver: novo
 - src/lib/imageUrl.ts (cdnFull/cdnMedium/cdnThumb/cdnBlur) reescreve URLs públicas do Supabase Storage para /storage/v1/render/image/public/ com width+quality. Sem backfill no bucket: o CDN serve variantes recomprimidas on-the-fly.
 - Aplicado em SwipeCard (fullscreen+blur+thumb), Item, Match, Matches, ItemPreviewDialog, SelectItemDialog, TradeContextCard, Explorar prefetch.
 
+
+---
+
+## Auditoria de bugs aplicada em 2026-06-01
+
+Correções de segurança, integridade e UX descritas em `AUDITORIA_BUGS.md` (ver seção "Status pós-correção"). Mudanças de arquitetura relevantes:
+
+- **Trigger `enforce_matches_update_guard`** agora aplica regras de identidade por transição: só `user_b` aceita/recusa, só `user_a` cancela, `completed` exige `OLD.status='accepted'` + duas confirmações reais.
+- **Trigger `create_conversation_on_accept`** cria a `conversation` server-side quando o match vira `accepted` (idempotente via UNIQUE `conversations.match_id`).
+- **Trigger `enforce_rating_integrity`** garante que avaliações só ocorram entre participantes de um match `completed` e sem auto-avaliação. UNIQUE `(rater_id, match_id)` impede notas duplicadas.
+- **Trigger `enforce_item_value_lock`** impede alterar `market_value` de item com proposta ativa/aceita.
+- **CHECK constraint `matches_status_check`** restringe `status` ao enum de domínio.
+- **RPCs `recommended_items` e `nearby_items`** revogadas para `anon` e validam `auth.uid()` internamente.
+- **Tabela `ai_validation_throttle`** substitui o rate-limit em memória da edge function `validate-item-price`.
+- **Edge function `validate-item-price`** distingue `unavailable` de `valid` — o cliente exige confirmação explícita quando o validador falha; sanitiza descrição contra prompt injection.
+- **Edge function `delete-account`** estendida para limpar `messages`, `call_sessions`, `device_tokens`, `item_videos`, `match_items`, `ai_validation_throttle` e arquivos em todos os buckets de mídia do usuário.
+- **Chat**: trava em `rejected`/`cancelled`/`completed`; lista de conversas só mostra `accepted`/`completed`; ChatHeader esconde chamadas quando travado; preview ignora mensagens de sistema.
+
