@@ -7,6 +7,7 @@ export const createItem = async (data: {
   name: string;
   description?: string;
   category: string;
+  condition?: string;
   market_value: number;
   location?: string;
   margin_up: number;
