@@ -187,11 +187,13 @@ const NovoItem = () => {
     try {
       let itemId = createdItemIdRef.current;
       if (!itemId) {
+        // H6: condition no payload original (sem UPDATE separado)
         const item = await createItem({
           user_id: user.id,
           name: itemName.trim(),
           description: itemDesc.trim().slice(0, 500) || undefined,
           category,
+          condition,
           market_value: valueCents,
           margin_up: valorization,
           margin_down: devalorization,
@@ -199,11 +201,6 @@ const NovoItem = () => {
         });
         itemId = item.id;
         createdItemIdRef.current = itemId;
-
-        if (condition) {
-          const { supabase } = await import("@/integrations/supabase/client");
-          await supabase.from("items").update({ condition }).eq("id", itemId);
-        }
       }
 
       for (let i = 0; i < itemPhotos.length; i++) {
@@ -218,10 +215,9 @@ const NovoItem = () => {
         const { error: vUpErr } = await sb.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
         if (!vUpErr) {
           const { data: vUrl } = sb.storage.from("item-videos").getPublicUrl(videoPath);
-          // Use the first uploaded image as thumbnail
           const { data: imgs } = await sb.from("item_images").select("image_url").eq("item_id", itemId).order("position").limit(1);
           const thumbnail = imgs?.[0]?.image_url || null;
-          
+
           await sb.from("item_videos").insert({
             item_id: itemId,
             user_id: user.id,
@@ -231,7 +227,6 @@ const NovoItem = () => {
         }
       }
 
-      // Aguarda o refetch concluir ANTES de navegar para evitar exibir cache antigo
       await queryClient.refetchQueries({ queryKey: ["my-items", user.id], exact: true });
       queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] });
       toast({ title: "Item cadastrado com sucesso!" });
