@@ -187,10 +187,7 @@ export const acceptProposal = async (matchId: string, currentUserId: string) => 
     .eq("status", "proposal");
   if (updateError) throw updateError;
 
-  const { error: convError } = await supabase
-    .from("conversations")
-    .insert({ match_id: matchId });
-  if (convError && !convError.message?.includes("duplicate")) throw convError;
+  // H5: conversa é criada server-side via trigger create_conversation_on_accept (idempotente)
 };
 
 export const rejectProposal = async (matchId: string, currentUserId: string) => {
@@ -223,9 +220,10 @@ export const cancelProposal = async (matchId: string, currentUserId: string) => 
   if (match.user_a_id !== currentUserId) throw new Error("Apenas quem enviou pode cancelar a proposta");
   if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
 
+  // C3: registra como 'cancelled' (não 'rejected')
   const { error } = await supabase
     .from("matches")
-    .update({ status: "rejected" })
+    .update({ status: "cancelled" })
     .eq("id", matchId)
     .eq("status", "proposal");
   if (error) throw error;
@@ -234,7 +232,7 @@ export const cancelProposal = async (matchId: string, currentUserId: string) => 
 export const confirmTrade = async (matchId: string, userId: string) => {
   const { data: match, error: fetchErr } = await supabase
     .from("matches")
-    .select("user_a_id, user_b_id, status")
+    .select("user_a_id, user_b_id, status, confirmed_by_a, confirmed_by_b")
     .eq("id", matchId)
     .single();
 
@@ -246,11 +244,14 @@ export const confirmTrade = async (matchId: string, userId: string) => {
   if (!isUserA && !isUserB) throw new Error("Você não faz parte desta troca");
 
   const updateField = isUserA ? "confirmed_by_a" : "confirmed_by_b";
+  // H4: idempotente — evita UPDATEs redundantes e ruído de realtime
+  if ((isUserA && (match as any).confirmed_by_a) || (isUserB && (match as any).confirmed_by_b)) return;
 
   const { error } = await supabase
     .from("matches")
     .update({ [updateField]: true })
-    .eq("id", matchId);
+    .eq("id", matchId)
+    .eq(updateField, false);
   if (error) throw error;
 };
 
