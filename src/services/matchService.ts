@@ -271,6 +271,10 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
   const isUserA = data.user_a_id === userId;
   const otherUserId = isUserA ? data.user_b_id : data.user_a_id;
 
+  // M14: filtra match com usuário bloqueado
+  const blockedIds = await getBlockedUserIds(userId);
+  if (blockedIds.includes(otherUserId)) return null;
+
   const { data: profile } = await supabase
     .from("public_profiles" as any)
     .select("user_id, display_name, avatar_url, location")
