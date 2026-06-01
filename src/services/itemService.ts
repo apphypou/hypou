@@ -188,6 +188,29 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
     items = await hydrateRows(rows);
   }
 
+  // Loop fallback: if the user already swiped through everything new,
+  // re-surface items they previously interacted with so the feed never feels empty.
+  if (items.length === 0) {
+    const { data: swipes } = await supabase
+      .from("swipes")
+      .select("item_id")
+      .eq("swiper_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    const swipedIds = [...new Set((swipes || []).map((s: any) => s.item_id))];
+    if (swipedIds.length > 0) {
+      const { data: seen } = await supabase
+        .from("items")
+        .select("*")
+        .in("id", swipedIds)
+        .eq("status", "active");
+      const seenRows = ((seen || []) as any[]).filter(
+        (i) => !blockedIds.includes(i.user_id) && i.user_id !== userId
+      );
+      items = await hydrateRows(seenRows);
+    }
+  }
+
   return items;
 };
 
