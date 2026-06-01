@@ -260,8 +260,13 @@ const NovoItem = () => {
       toast({ title: "Selecione a condição do item", variant: "destructive" });
       return;
     }
-    if (valueCents <= 0) {
-      toast({ title: "Informe o valor de mercado", variant: "destructive" });
+    // H10: validação de faixa de preço client-side (R$ 1 .. R$ 500.000)
+    if (valueCents < 100) {
+      toast({ title: "Valor mínimo de R$ 1,00", variant: "destructive" });
+      return;
+    }
+    if (valueCents > 50_000_000) {
+      toast({ title: "Valor máximo de R$ 500.000,00", variant: "destructive" });
       return;
     }
     if (!location.trim()) {
@@ -276,6 +281,17 @@ const NovoItem = () => {
     setValidating(true);
     try {
       const validation = await validateItemPrice(itemName.trim(), category, condition, valueCents);
+      if (validation.unavailable) {
+        // C4: validador indisponível → exigir confirmação explícita
+        setPriceAlert({
+          open: true,
+          reason: "Não conseguimos validar este preço agora. Confirme que ele reflete o mercado para prosseguir.",
+          suggestedMin: 0,
+          suggestedMax: 0,
+        });
+        setValidating(false);
+        return;
+      }
       if (!validation.valid) {
         setPriceAlert({
           open: true,
@@ -287,7 +303,15 @@ const NovoItem = () => {
         return;
       }
     } catch {
-      // Fail-open
+      // Erro inesperado: tratar como indisponível
+      setPriceAlert({
+        open: true,
+        reason: "Não conseguimos validar este preço agora. Confirme que ele reflete o mercado para prosseguir.",
+        suggestedMin: 0,
+        suggestedMax: 0,
+      });
+      setValidating(false);
+      return;
     }
     setValidating(false);
     await saveItem();
