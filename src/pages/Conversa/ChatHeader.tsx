@@ -74,22 +74,26 @@ export const ChatHeader = ({
 
       {details && (
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => onStartCall("audio")}
-            disabled={!!callingKind}
-            aria-label="Chamada de áudio"
-            className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
-          >
-            {callingKind === "audio" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
-          </button>
-          <button
-            onClick={() => onStartCall("video")}
-            disabled={!!callingKind}
-            aria-label="Chamada de vídeo"
-            className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
-          >
-            {callingKind === "video" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
-          </button>
+          {!locked && (
+            <>
+              <button
+                onClick={() => onStartCall("audio")}
+                disabled={!!callingKind}
+                aria-label="Chamada de áudio"
+                className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
+              >
+                {callingKind === "audio" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={() => onStartCall("video")}
+                disabled={!!callingKind}
+                aria-label="Chamada de vídeo"
+                className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
+              >
+                {callingKind === "video" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
+              </button>
+            </>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors">
