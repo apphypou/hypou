@@ -108,32 +108,39 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     }
   }
 
-  return filteredMatches.map((m: any) => {
-    const isUserA = m.user_a_id === userId;
-    const otherId = isUserA ? m.user_b_id : m.user_a_id;
-    const otherItem = isUserA ? m.item_b : m.item_a;
-    const myItem = isUserA ? m.item_a : m.item_b;
-    const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
-    const convId = conv?.id;
+  return filteredMatches
+    // H2: chat só lista conversas de propostas aceitas ou trocas concluídas
+    .filter((m: any) => m.status === "accepted" || m.status === "completed")
+    .map((m: any) => {
+      const isUserA = m.user_a_id === userId;
+      const otherId = isUserA ? m.user_b_id : m.user_a_id;
+      const otherItem = isUserA ? m.item_b : m.item_a;
+      const myItem = isUserA ? m.item_a : m.item_b;
+      const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
+      const convId = conv?.id;
 
-    if (!convId) return null; // Skip matches without a real conversation
+      if (!convId) return null;
 
-    return {
-      id: convId,
-      match_id: m.id,
-      created_at: conv?.created_at || m.created_at,
-      other_user: profileMap[otherId] || { user_id: otherId, display_name: null, avatar_url: null },
-      other_item: {
-        name: otherItem?.name || "Item",
-        market_value: otherItem?.market_value || 0,
-        image_url: otherItem?.item_images?.[0]?.image_url || null,
-      },
-      my_item: { name: myItem?.name || "Item" },
-      last_message: convId ? (lastMessages[convId] || null) : null,
-      unread_count: convId ? (unreadCounts[convId] || 0) : 0,
-      match_status: m.status,
-    };
-  }).filter(Boolean) as ConversationWithDetails[];
+      const lastMsg = lastMessages[convId] || null;
+      // M3: ignora mensagens de sistema no preview da lista
+      const previewMsg = lastMsg && lastMsg.message_type === "system" ? null : lastMsg;
+
+      return {
+        id: convId,
+        match_id: m.id,
+        created_at: conv?.created_at || m.created_at,
+        other_user: profileMap[otherId] || { user_id: otherId, display_name: null, avatar_url: null },
+        other_item: {
+          name: otherItem?.name || "Item",
+          market_value: otherItem?.market_value || 0,
+          image_url: otherItem?.item_images?.[0]?.image_url || null,
+        },
+        my_item: { name: myItem?.name || "Item" },
+        last_message: previewMsg,
+        unread_count: unreadCounts[convId] || 0,
+        match_status: m.status,
+      };
+    }).filter(Boolean) as ConversationWithDetails[];
 };
 
 export const getMessages = async (conversationId: string): Promise<Message[]> => {
