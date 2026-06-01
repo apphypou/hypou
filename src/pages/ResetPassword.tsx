@@ -75,6 +75,11 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // M10: bloqueia troca de senha sem fluxo de recovery verificado
+    if (!verifiedSession) {
+      toast({ title: "Sessão de recuperação inválida", description: "Solicite um novo e-mail de recuperação.", variant: "destructive" });
+      return;
+    }
     if (password !== confirm) {
       toast({ title: "As senhas não coincidem", variant: "destructive" });
       return;

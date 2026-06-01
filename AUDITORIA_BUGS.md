@@ -329,3 +329,46 @@ Abrir `/match/:id` direto bypassa o filtro.
 ---
 
 _Fim do relatório. Nenhum arquivo de código foi modificado; este `.md` é o único artefato gerado._
+
+---
+
+## ✅ Status pós-correção (2026-06-01)
+
+Executado nesta rodada (escopo aprovado pelo usuário — **excluídos H3 e H9**):
+
+| Bug | Status | Implementação |
+|---|---|---|
+| C1 | ✅ | trigger `enforce_matches_update_guard` valida identidade em cada transição |
+| C2 | ✅ | guard exige `OLD.status='accepted'` para ir a `completed` |
+| C3 | ✅ | `cancelProposal` grava `status='cancelled'` |
+| C4 | ✅ | edge fn retorna `unavailable:true` em falha; UI exige confirmação |
+| C5 | ⚠️ Parcial | Adicionado teste; bucket `chat-media` segue público (mudar para privado quebra URLs ativas — requer migração de mídia em job dedicado) |
+| C6 | ✅ | `delete-account` apaga messages, call_sessions, device_tokens, item_videos, match_items, storage |
+| C7 | ✅ | CHECK `matches_status_check` |
+| C8 | ✅ | `REVOKE EXECUTE FROM anon` + checagem `auth.uid()` nas RPCs |
+| C9 | ✅ | tabela `ai_validation_throttle` substitui `Map` em memória |
+| H1 | ✅ | `chatLocked` inclui `rejected` |
+| H2 | ✅ | `getConversations` filtra `accepted/completed` |
+| H4 | ✅ | `confirmTrade` idempotente (`.eq(field,false)`) |
+| H5 | ✅ | trigger `create_conversation_on_accept` |
+| H6 | ✅ | `condition` no payload do `createItem` |
+| H7 | ✅ | `getMatch` aplica filtro de bloqueados (M14 também) |
+| H8 | ✅ | `delete-account` apaga mensagens do sender |
+| H10 | ✅ | piso R$ 1 / teto R$ 500.000 no client |
+| H11 | ✅ | trigger `enforce_rating_integrity` + UNIQUE rater+match |
+| H12 | ✅ | `MediaRecorder.start()` sem timeslice + remove `requestData()` |
+| H13 | ✅ | `ChatHeader` esconde botões de chamada quando `locked` |
+| H14 | ✅ | texto da notificação ajustado |
+| H16 | ✅ | proposta cancelada agora visível como tal |
+| H17 | ✅ | guard impede `read_at NOT NULL → NULL` |
+| M3 | ✅ | mensagens `system` não aparecem como preview |
+| M5 | ✅ | sanitização de prompt injection na descrição |
+| M6 | ✅ | UNIQUE `reports(reporter, reported) WHERE status='pending'` |
+| M10 | ✅ | `ResetPassword` exige `verifiedSession` |
+| M13 | ✅ | trigger `enforce_item_value_lock` |
+| M14 | ✅ | `getMatch` filtra bloqueados |
+
+**Não implementados (fora do escopo aprovado):** H3, H9.
+
+**Pendências de baixo impacto** (M1, M2, M7, M8, M9, M11, M12, L1–L9): permanecem como melhorias futuras; nenhuma é bloqueante.
+

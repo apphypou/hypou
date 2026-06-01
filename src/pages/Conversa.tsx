@@ -291,8 +291,9 @@ const Conversa = () => {
         await handleFileSelect(file, "audio");
       };
 
-      // start emitindo chunks frequentes (melhor reliability em mobile)
-      recorder.start(100);
+      // H12: usar start() sem timeslice — o último chunk é entregue automaticamente no onstop,
+      // evitando chunks tardios em alguns Android/iOS.
+      recorder.start();
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
       setShowAttachMenu(false);
@@ -311,10 +312,7 @@ const Conversa = () => {
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
       try {
-        // força flush do último buffer antes do stop (importante em mobile)
-        if (recorder.state === "recording" && typeof recorder.requestData === "function") {
-          try { recorder.requestData(); } catch { /* ignore */ }
-        }
+        // H12: não chama requestData() — deixa o navegador entregar o último chunk no onstop
         recorder.stop();
       } catch (e) {
         console.error("[audio] stop error", e);
@@ -354,7 +352,11 @@ const Conversa = () => {
     }
   };
 
-  const chatLocked = details?.match_status === "completed" || details?.match_status === "cancelled";
+  // H1: inclui 'rejected' e 'cancelled' no lock (chat só ativo em accepted)
+  const chatLocked =
+    details?.match_status === "completed" ||
+    details?.match_status === "cancelled" ||
+    details?.match_status === "rejected";
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
@@ -373,6 +375,7 @@ const Conversa = () => {
         onOpenReport={() => setReportOpen(true)}
         onOpenBlock={() => setBlockConfirmOpen(true)}
         onOpenRate={() => setRateOpen(true)}
+        locked={chatLocked}
       />
 
       {details && user && (
