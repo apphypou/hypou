@@ -377,6 +377,7 @@ const Conversa = () => {
         onOpenReport={() => setReportOpen(true)}
         onOpenBlock={() => setBlockConfirmOpen(true)}
         onOpenRate={() => setRateOpen(true)}
+        locked={chatLocked}
       />
 
       {details && user && (
