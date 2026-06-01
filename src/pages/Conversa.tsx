@@ -354,7 +354,11 @@ const Conversa = () => {
     }
   };
 
-  const chatLocked = details?.match_status === "completed" || details?.match_status === "cancelled";
+  // H1: inclui 'rejected' e 'cancelled' no lock (chat só ativo em accepted)
+  const chatLocked =
+    details?.match_status === "completed" ||
+    details?.match_status === "cancelled" ||
+    details?.match_status === "rejected";
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
