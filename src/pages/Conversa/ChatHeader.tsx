@@ -19,6 +19,8 @@ interface ChatHeaderProps {
   onOpenReport: () => void;
   onOpenBlock: () => void;
   onOpenRate?: () => void;
+  /** H13: quando true, esconde botões de chamada (chat encerrado) */
+  locked?: boolean;
 }
 
 export const ChatHeader = ({
@@ -28,6 +30,7 @@ export const ChatHeader = ({
   onOpenReport,
   onOpenBlock,
   onOpenRate,
+  locked = false,
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
 
