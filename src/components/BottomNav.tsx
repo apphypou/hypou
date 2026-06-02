@@ -58,12 +58,12 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
               )}
               <item.icon
                 className={`h-5 w-5 relative z-10 transition-colors duration-200 ${
-                  isActive ? "text-background" : "text-muted-foreground"
+                  isActive ? "text-background" : "text-foreground/80"
                 }`}
               />
               <span
                 className={`relative z-10 text-[10px] font-semibold leading-none transition-colors duration-200 ${
-                  isActive ? "text-background" : "text-muted-foreground"
+                  isActive ? "text-background" : "text-foreground/80"
                 }`}
               >
                 {item.label}
