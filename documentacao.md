@@ -1322,3 +1322,13 @@ Correções de segurança, integridade e UX descritas em `AUDITORIA_BUGS.md` (ve
 - **Edge function `delete-account`** estendida para limpar `messages`, `call_sessions`, `device_tokens`, `item_videos`, `match_items`, `ai_validation_throttle` e arquivos em todos os buckets de mídia do usuário.
 - **Chat**: trava em `rejected`/`cancelled`/`completed`; lista de conversas só mostra `accepted`/`completed`; ChatHeader esconde chamadas quando travado; preview ignora mensagens de sistema.
 
+
+
+## Update 2026-06-02 — Re-proposta após rejeição/cancelamento
+
+- RPC `public.create_proposal` atualizada: quando existe um match anterior com status `rejected` ou `cancelled` entre os mesmos itens (`item_a_id`, `item_b_id`) e iniciado pelo usuário atual, o registro antigo e seus `match_items` são removidos antes de criar a nova proposta. Isso evita conflito com a UNIQUE `(item_a_id, item_b_id)` e permite que o usuário re-proponha sem ver "Proposta já existe".
+- Comportamento da aba "Enviadas" inalterado — segue filtrando estados terminais; agora o re-envio aparece corretamente.
+
+## Update 2026-06-02 — Ajustes de UI
+- Logo Hypou ampliada nas telas `Login` e `Cadastro` para reforço de marca.
+- `BottomNav` com maior contraste sobre imagens claras: bg `bg-background/95` (light) e `/85` (dark), shadow reforçada, inativos em `text-foreground/80`.
