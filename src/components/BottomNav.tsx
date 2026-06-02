@@ -38,7 +38,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
 
   return (
     <div className="fixed left-5 right-5 z-50 flex justify-center" style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))" }}>
-      <nav className="bg-background/80 dark:bg-background/40 backdrop-blur-2xl border border-foreground/8 rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_4px_30px_rgba(0,0,0,0.2)]">
+      <nav className="bg-background/95 dark:bg-background/85 backdrop-blur-2xl border border-foreground/10 rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative shadow-[0_8px_32px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
