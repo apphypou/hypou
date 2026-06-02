@@ -1,73 +1,125 @@
-# Welcome to your Lovable project
+# Hypou — Troque o que tá parado
 
-## Project info
+> Plataforma de trocas inteligentes baseada em swipe + match.
+> Dê match, negocie e troque com segurança.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**URL:** [https://hypou.lovable.app](https://hypou.lovable.app)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Visão Geral
 
-**Use Lovable**
+Hypou é uma plataforma brasileira de troca de itens do dia a dia. A mecânica é simples: os usuários navegam por um feed de itens com swipe (à la Tinder), curtem os que interessam e, quando há interesse mútuo, um **match** é formado. A partir daí, os usuários conversam via chat integrado para combinar a troca.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Principais recursos
+- **Feed de swipe** com recomendações inteligentes baseadas em valor e proximidade geográfica
+- **Match + Chat** para negociar trocas diretamente
+- **Avaliação de confiança** entre usuários após cada troca
+- **Painel administrativo** com KPIs, moderação e assistente IA
+- **Chamada de vídeo** integrada via LiveKit
+- **100% gratuito** — sem taxas, sem pagamentos
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## Stack Tecnológica
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+| Camada | Tecnologia |
+|--------|-----------|
+| Framework | React 18 + TypeScript |
+| Build | Vite 5 |
+| Estilos | Tailwind CSS 3 + shadcn/ui |
+| Animações | Framer Motion |
+| Estado servidor | TanStack React Query |
+| Backend | Supabase (Auth, Postgres, Storage, Realtime, Edge Functions) |
+| Mobile | Capacitor (iOS/Android) |
+| Testes | Vitest + Testing Library |
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+---
 
-Follow these steps:
+## Estrutura do Projeto
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+├── components/          # UI reutilizável + shadcn/ui
+│   ├── admin/           # Componentes do painel admin
+│   ├── landing/         # Seções da landing page
+│   └── ui/              # 40+ componentes Radix/shadcn
+├── pages/               # Telas da aplicação
+│   └── admin/           # Telas do painel admin
+├── hooks/               # Lógica de estado e queries
+├── services/            # Acesso a dados (Supabase SDK)
+├── lib/                 # Utilitários e helpers
+├── constants/           # Dados estáticos (categorias, etc.)
+├── integrations/
+│   └── supabase/        # Cliente SDK + tipos gerados
+└── test/                # Testes unitários e e2e
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Scripts disponíveis
 
-**Use GitHub Codespaces**
+```bash
+# Ambiente de desenvolvimento
+bun dev
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Build para produção
+bun build
 
-## What technologies are used for this project?
+# Preview do build
+bun preview
 
-This project is built with:
+# Lint
+bun lint
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Testes
+bun test
+bun test:watch
+```
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Principais fluxos
 
-## Can I connect a custom domain to my Lovable project?
+1. **Explorar** — Swipe cards de itens, curta os que interessam
+2. **Propor troca** — Selecione um item seu para oferecer em troca
+3. **Match** — Quando o dono aceita, abre-se o chat
+4. **Negociar** — Chat com mídia, chamada de vídeo e banner de contexto da troca
+5. **Confirmar** — Ambos confirmam a entrega; troca finalizada
+6. **Avaliar** — Rating de 1-5 estrelas para construir reputação
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Arquitetura de Dados
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **Supabase Postgres** com RLS (Row Level Security) em todas as tabelas
+- **Supabase Realtime** para atualizações ao vivo (matches, mensagens, notificações)
+- **Supabase Storage** para fotos de itens, avatares e mídia de chat
+- **Edge Functions** para validação de preços com IA, push notifications e exclusão de conta
+
+---
+
+## Mobile (Capacitor)
+
+O app é empacotado como PWA e também como app nativo via Capacitor:
+
+```bash
+# Sincronizar plataformas nativas
+npx cap sync
+
+# Rodar no Android
+npx cap run android
+
+# Rodar no iOS
+npx cap run ios
+```
+
+---
+
+## Licença
+
+Projeto privado. Todos os direitos reservados.
+
+---
+
+> Desenvolvido com ❤️ no Brasil.
