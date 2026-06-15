@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { validateChatMedia, prepareImageForUpload } from "@/lib/fileValidation";
+import { getLatestNonSystemMessagesByConversation } from "@/lib/conversationPreview";
 import { getBlockedUserIds } from "@/services/reportService";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'system';
@@ -84,7 +85,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
   const profileMap: Record<string, any> = {};
   ((profiles || []) as any[]).forEach((p) => { profileMap[p.user_id] = p; });
 
-  // Fetch last message for each conversation
+  // Fetch last visible message for each conversation.
   const lastMessages: Record<string, Message> = {};
   const unreadCounts: Record<string, number> = {};
 
@@ -97,10 +98,9 @@ export const getConversations = async (userId: string): Promise<ConversationWith
       .order("created_at", { ascending: false });
 
     if (allMessages) {
+      Object.assign(lastMessages, getLatestNonSystemMessagesByConversation(allMessages as Message[]));
+
       for (const msg of allMessages as Message[]) {
-        if (!lastMessages[msg.conversation_id]) {
-          lastMessages[msg.conversation_id] = msg;
-        }
         if (msg.sender_id !== userId && !msg.read_at) {
           unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
         }
@@ -121,9 +121,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
 
       if (!convId) return null;
 
-      const lastMsg = lastMessages[convId] || null;
-      // M3: ignora mensagens de sistema no preview da lista
-      const previewMsg = lastMsg && lastMsg.message_type === "system" ? null : lastMsg;
+      const previewMsg = lastMessages[convId] || null;
 
       return {
         id: convId,

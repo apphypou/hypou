@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getAuthRedirectUrl } from "@/lib/authRedirect";
 
 const Cadastro = () => {
   const [email, setEmail] = useState("");
@@ -160,7 +161,7 @@ const Cadastro = () => {
               localStorage.setItem("postLoginRedirect", "/onboarding");
               await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: `${window.location.origin}/onboarding` },
+                options: { redirectTo: getAuthRedirectUrl("/onboarding") },
               });
             }}
             className="flex items-center justify-center w-14 h-14 rounded-full bg-secondary border border-border hover:bg-accent transition-all"
@@ -178,7 +179,7 @@ const Cadastro = () => {
               localStorage.setItem("postLoginRedirect", "/onboarding");
               await supabase.auth.signInWithOAuth({
                 provider: "apple",
-                options: { redirectTo: `${window.location.origin}/onboarding` },
+                options: { redirectTo: getAuthRedirectUrl("/onboarding") },
               });
             }}
             className="flex items-center justify-center w-14 h-14 rounded-full bg-secondary border border-border hover:bg-accent transition-all"

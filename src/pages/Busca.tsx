@@ -18,6 +18,8 @@ const SORT_OPTIONS = [
   { value: "price_desc" as const, label: "Maior preço" },
 ];
 
+const EMPTY_RESULTS: any[] = [];
+
 const Busca = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -59,7 +61,7 @@ const Busca = () => {
     !!user && hasFilters
   );
 
-  const { data: results = [], isLoading } = useQuery({
+  const { data: results = EMPTY_RESULTS, isLoading } = useQuery({
     queryKey: ["search-items", user?.id, filters],
     queryFn: () => searchItems(user!.id, filters),
     enabled: !!user && hasFilters,
@@ -250,18 +252,18 @@ const Busca = () => {
       {/* Results */}
       <main className="flex-1 w-full px-5 overflow-y-auto no-scrollbar pb-28">
         {!hasFilters ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"
+              className="h-16 w-16 rounded-2xl bg-primary/8 border border-primary/10 flex items-center justify-center mb-5"
             >
-              <Search className="h-10 w-10 text-primary/50" />
+              <Search className="h-7 w-7 text-primary/60" />
             </motion.div>
-            <h2 className="text-lg font-bold text-foreground mb-1">Busque por itens</h2>
-            <p className="text-muted-foreground text-sm max-w-xs">
-              Digite o nome do item ou use os filtros para encontrar o que procura.
+            <h2 className="text-xl font-bold text-foreground">Busque por algo que você quer trocar</h2>
+            <p className="mt-2 text-muted-foreground text-sm leading-relaxed max-w-[280px]">
+              Digite um item, cidade ou categoria para encontrar oportunidades melhores.
             </p>
           </div>
         ) : isLoading ? (

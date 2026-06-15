@@ -55,13 +55,13 @@ const Chat = () => {
               <SkeletonConversation />
             </div>
         ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-            <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              <MessageSquare className="h-10 w-10 text-primary/50" />
+          <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+            <div className="h-16 w-16 rounded-2xl bg-primary/8 border border-primary/10 flex items-center justify-center mb-5">
+              <MessageSquare className="h-7 w-7 text-primary/60" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-2">Nenhuma conversa ainda</h2>
-            <p className="text-muted-foreground text-sm max-w-xs mb-6 leading-relaxed">
-              Quando alguém aceitar sua proposta de troca, a conversa aparecerá aqui para vocês combinarem a entrega.
+            <h2 className="text-xl font-bold text-foreground">Comece uma conversa por uma troca</h2>
+            <p className="mt-2 max-w-[280px] text-sm leading-relaxed text-muted-foreground mb-6">
+              Quando uma proposta for aceita, o chat abre aqui para combinar detalhes com segurança.
             </p>
             <button
               onClick={() => navigate("/explorar")}
@@ -88,24 +88,32 @@ const Chat = () => {
                             className="shrink-0 flex flex-col items-center gap-1.5 w-20"
                           >
                             <div className="relative">
-                              {conv.other_user.avatar_url ? (
+                              {conv.other_item.image_url ? (
                                 <img
-                                  src={conv.other_user.avatar_url}
-                                  alt={conv.other_user.display_name || ""}
+                                  src={conv.other_item.image_url}
+                                  alt={conv.other_item.name || ""}
                                   className="h-20 w-20 rounded-2xl object-cover border-2 border-primary/60 neon-glow"
                                 />
                               ) : (
                                 <div className="h-20 w-20 rounded-2xl bg-card border-2 border-primary/60 flex items-center justify-center">
-                                  <span className="text-2xl font-bold text-foreground/40">
-                                    {(conv.other_user.display_name || "?")[0].toUpperCase()}
+                                  <span className="px-2 text-center text-[10px] font-bold leading-tight text-foreground/40">
+                                    {conv.other_item.name || "Item"}
                                   </span>
                                 </div>
                               )}
-                              {conv.other_item.image_url && (
-                                <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background overflow-hidden">
-                                  <img src={conv.other_item.image_url} alt="" className="w-full h-full object-cover" />
-                                </div>
-                              )}
+                              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background overflow-hidden bg-card flex items-center justify-center">
+                                {conv.other_user.avatar_url ? (
+                                  <img
+                                    src={conv.other_user.avatar_url}
+                                    alt={conv.other_user.display_name || ""}
+                                    className="h-full w-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-[10px] font-bold text-foreground/40">
+                                    {(conv.other_user.display_name || "?")[0].toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <span className="text-[11px] font-semibold text-foreground/80 truncate w-full text-center">
                               {conv.other_user.display_name || "Usuário"}
@@ -143,10 +151,19 @@ const Chat = () => {
                   }`}
                 >
                   {/* Avatar — clickable to user profile */}
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/usuario/${conv.other_user.user_id}`);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        navigate(`/usuario/${conv.other_user.user_id}`);
+                      }
                     }}
                     className="relative shrink-0"
                   >
@@ -169,7 +186,7 @@ const Chat = () => {
                         <img src={conv.other_item.image_url} alt="" className="w-full h-full object-cover" />
                       </div>
                     )}
-                  </button>
+                  </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">

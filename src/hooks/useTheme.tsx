@@ -15,7 +15,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("hypou-theme") as Theme | null;
       if (stored) return stored;
-      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      return "dark";
     }
     return "dark";
   });

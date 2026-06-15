@@ -210,10 +210,10 @@ const Matches = () => {
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-2 px-6 pb-3 shrink-0 overflow-x-auto no-scrollbar">
+      <div className="grid grid-cols-4 gap-1.5 px-4 pb-3 shrink-0">
         <button
           onClick={() => setActiveTab("received")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
             activeTab === "received"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -223,7 +223,7 @@ const Matches = () => {
         </button>
         <button
           onClick={() => setActiveTab("sent")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
             activeTab === "sent"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -233,7 +233,7 @@ const Matches = () => {
         </button>
         <button
           onClick={() => setActiveTab("cancelled")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${
+          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
             activeTab === "cancelled"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -243,13 +243,12 @@ const Matches = () => {
         </button>
         <button
           onClick={() => setActiveTab("completed")}
-          className={`px-4 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
             activeTab === "completed"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
           }`}
         >
-          <History className="h-3.5 w-3.5" />
           Concluídas ({completedMatches.length})
         </button>
       </div>
@@ -263,28 +262,28 @@ const Matches = () => {
             <SkeletonMatchCard />
           </div>
         ) : displayedMatches.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="h-20 w-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center justify-center py-16 text-center px-4">
+            <div className="h-16 w-16 rounded-2xl bg-primary/8 border border-primary/10 flex items-center justify-center mb-5">
               {activeTab === "completed" || activeTab === "cancelled" ? (
-                <History className="h-10 w-10 text-primary/50" />
+                <History className="h-7 w-7 text-primary/55" />
               ) : (
-                <Repeat2 className="h-10 w-10 text-primary" />
+                <Repeat2 className="h-7 w-7 text-primary/70" />
               )}
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-1">
+            <h2 className="text-xl font-bold text-foreground">
               {activeTab === "received"
-                ? "Nenhuma proposta recebida"
+                ? "Nenhuma proposta por enquanto"
                 : activeTab === "sent"
                 ? "Nenhuma proposta enviada"
                 : activeTab === "cancelled"
                 ? "Nenhuma proposta cancelada"
                 : "Nenhuma troca concluída"}
             </h2>
-            <p className="text-muted-foreground text-sm mb-6 max-w-xs">
+            <p className="mt-2 text-muted-foreground text-sm leading-relaxed mb-6 max-w-[280px]">
               {activeTab === "received"
-                ? "Quando alguém te enviar uma proposta, ela aparece aqui."
+                ? "Curta itens e monte uma oferta para iniciar sua primeira troca."
                 : activeTab === "sent"
-                ? "Explore itens e envie sua primeira proposta!"
+                ? "Explore itens e monte uma oferta para enviar sua primeira proposta."
                 : activeTab === "cancelled"
                 ? "Propostas canceladas ou recusadas aparecem aqui."
                 : "Suas trocas concluídas aparecem aqui."}

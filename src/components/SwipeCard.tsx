@@ -349,7 +349,7 @@ const SwipeCard = memo(
             )}
 
             {expanded && (
-              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-scrim/80 via-scrim/60 to-scrim/40" />
+              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-scrim/76 via-scrim/44 to-scrim/12" />
             )}
 
             {/* ===== EXPANDED OVERLAY ===== */}
@@ -360,7 +360,7 @@ const SwipeCard = memo(
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 30 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute inset-x-3 bottom-3 top-3 z-30 flex flex-col rounded-2xl bg-on-media/15 dark:bg-on-media/10 backdrop-blur-2xl border border-on-media/20 dark:border-on-media/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden"
+                  className="absolute inset-x-3 bottom-3 top-[18%] z-30 flex flex-col rounded-2xl bg-scrim/34 backdrop-blur-2xl border border-on-media/14 shadow-[0_8px_32px_rgba(0,0,0,0.16)] overflow-hidden"
                 >
                   <button
                     onClick={toggleExpand}
@@ -422,14 +422,16 @@ const SwipeCard = memo(
             {/* ===== COMPACT INFO ===== */}
             {activeImageIndex === 0 && !expanded && (
               <div
-                className="absolute bottom-0 inset-x-0 z-30 rounded-b-[1.5rem] overflow-hidden pointer-events-none"
+                className="absolute bottom-0 inset-x-0 z-30 max-h-[300px] rounded-b-[1.5rem] overflow-hidden pointer-events-none"
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
+                  height: "42%",
+                  minHeight: "240px",
                   background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 18%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.7) 55%, rgba(0,0,0,0.88) 75%, rgba(0,0,0,0.98) 100%)",
+                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 42%, rgba(0,0,0,0.28) 70%, rgba(0,0,0,0.76) 100%)",
                 }}
               >
-                <div className="relative px-5 mt-80 pb-10 pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 px-5 pb-6 pointer-events-none">
                   {matchedOwnItem && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -460,16 +462,16 @@ const SwipeCard = memo(
                   )}
 
                   <div className="flex items-center gap-1.5 mb-2 overflow-hidden">
-                    <span className="px-2 py-0.5 rounded-full bg-on-media/10 border border-on-media/10 text-on-media text-[10px] font-semibold tracking-wide uppercase shrink-0">
+                    <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-md">
                       {item.category}
                     </span>
                     {conditionLabel && (
-                      <span className="px-2 py-0.5 rounded-full bg-on-media/10 border border-on-media/10 text-on-media/80 text-[10px] font-semibold uppercase flex items-center gap-1 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media/80 text-[9.5px] font-semibold uppercase flex items-center gap-1 shrink-0 backdrop-blur-md">
                         <Package className="h-2.5 w-2.5" /> {conditionLabel}
                       </span>
                     )}
                     {item.location && (
-                      <span className="px-2 py-0.5 rounded-full bg-on-media/10 border border-on-media/10 text-on-media/80 text-[10px] font-semibold uppercase flex items-center gap-1 truncate min-w-0">
+                      <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media/80 text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-md">
                         <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
                         <span className="truncate">{item.location}</span>
                       </span>

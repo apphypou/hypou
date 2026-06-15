@@ -244,7 +244,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
 
       {/* Bottom overlay — item info + trade CTA */}
       <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
-        <div className="bg-gradient-to-t from-scrim/90 via-scrim/50 to-transparent pt-20 pb-6 px-4">
+        <div className="bg-gradient-to-t from-scrim/90 via-scrim/48 to-transparent px-4 pb-[calc(1rem+var(--safe-area-bottom))] pt-20">
           <div className="pointer-events-auto pr-16">
             {/* Username */}
             {video.profile && (
@@ -287,7 +287,7 @@ const ShortCard = ({ video, isVisible, onLikeUpdate, onTradePress }: ShortCardPr
                 e.stopPropagation();
                 onTradePress?.(video);
               }}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-sm font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 active:scale-[0.97] transition-transform shadow-[0_4px_20px_hsl(var(--primary)/0.4)]"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-extrabold uppercase tracking-wider text-primary-foreground shadow-[0_8px_20px_hsl(var(--primary)/0.22)] transition-transform active:scale-[0.98]"
             >
               <ArrowLeftRight className="h-4 w-4" />
               Quero Trocar

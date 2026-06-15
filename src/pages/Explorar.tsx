@@ -252,18 +252,14 @@ const Explorar = () => {
 
   return (
     <ScreenLayout>
-      {/* Compact header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-3 pb-2 shrink-0">
-        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-          Explorar
-        </h1>
-        <div className="flex items-center gap-2">
-          {!isGuest && <NotificationBell />}
+      {!isGuest && (
+        <div className="absolute right-[4.75rem] top-3 z-50">
+          <NotificationBell />
         </div>
-      </header>
+      )}
 
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full px-4 pb-32 pt-4 z-50" style={{ perspective: "1200px" }}>
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full pb-28 pt-0 z-10" style={{ perspective: "1200px" }}>
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />

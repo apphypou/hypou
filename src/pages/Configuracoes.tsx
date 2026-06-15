@@ -1,11 +1,10 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Sun, Moon, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check, BellOff } from "lucide-react";
+import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check, BellOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
 import IconButton from "@/components/IconButton";
 import GlassCard from "@/components/GlassCard";
 import { useAuth } from "@/hooks/useAuth";
-import { useTheme } from "@/hooks/useTheme";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -35,7 +34,6 @@ import { Input } from "@/components/ui/input";
 const Configuracoes = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -184,12 +182,6 @@ const Configuracoes = () => {
   };
 
   const menuItems = [
-    {
-      icon: theme === "dark" ? Sun : Moon,
-      label: theme === "dark" ? "Modo Claro" : "Modo Escuro",
-      description: theme === "dark" ? "Trocar para o tema claro" : "Trocar para o tema escuro",
-      onClick: toggleTheme,
-    },
     {
       icon: Lock,
       label: "Alterar Senha",

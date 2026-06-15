@@ -35,7 +35,10 @@ export const ChatHeader = ({
   const navigate = useNavigate();
 
   return (
-    <header className="relative z-40 flex items-center gap-3 px-4 pt-4 pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl shrink-0">
+    <header
+      className="relative z-40 flex items-center gap-3 px-4 pb-3 border-b border-foreground/5 bg-background/80 backdrop-blur-xl shrink-0"
+      style={{ paddingTop: "calc(var(--safe-area-top) + 0.75rem)" }}
+    >
       <button
         onClick={() => navigate("/chat")}
         className="h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all"

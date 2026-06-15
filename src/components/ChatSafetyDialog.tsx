@@ -62,8 +62,8 @@ const ChatSafetyDialog = ({ open, userId, onAccepted }: ChatSafetyDialogProps) =
               className="p-6"
             >
               <DialogHeader className="mb-5">
-                <div className="mx-auto mb-3 h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Shield className="h-7 w-7 text-primary" />
+                <div className="mx-auto mb-3 h-14 w-14 rounded-full bg-pink/10 flex items-center justify-center">
+                  <Shield className="h-7 w-7 text-pink" />
                 </div>
                 <DialogTitle className="text-center text-lg">
                   Negocie com segurança
@@ -77,7 +77,7 @@ const ChatSafetyDialog = ({ open, userId, onAccepted }: ChatSafetyDialogProps) =
                 {tips.map((tip, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="h-8 w-8 shrink-0 rounded-lg bg-card flex items-center justify-center border border-foreground/5">
-                      <tip.icon className="h-4 w-4 text-primary" />
+                      <tip.icon className="h-4 w-4 text-pink" />
                     </div>
                     <p className="text-sm text-foreground/80 pt-1">{tip.text}</p>
                   </div>
@@ -86,7 +86,8 @@ const ChatSafetyDialog = ({ open, userId, onAccepted }: ChatSafetyDialogProps) =
 
               <button
                 onClick={() => setStep(2)}
-                className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all active:scale-95 neon-glow"
+                className="w-full h-12 rounded-xl bg-pink text-on-media font-bold text-sm transition-all active:scale-95"
+                style={{ boxShadow: "0 0 24px hsl(var(--pink) / 0.35)" }}
               >
                 Continuar
               </button>
@@ -141,6 +142,7 @@ const ChatSafetyDialog = ({ open, userId, onAccepted }: ChatSafetyDialogProps) =
                 <Checkbox
                   checked={accepted}
                   onCheckedChange={(v) => setAccepted(v === true)}
+                  className="border-pink text-on-media data-[state=checked]:bg-pink data-[state=checked]:border-pink"
                 />
                 <span className="text-sm text-foreground/80">
                   Li e aceito os termos de uso
@@ -150,7 +152,8 @@ const ChatSafetyDialog = ({ open, userId, onAccepted }: ChatSafetyDialogProps) =
               <button
                 onClick={handleAccept}
                 disabled={!accepted || saving}
-                className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 neon-glow"
+                className="w-full h-12 rounded-xl bg-pink text-on-media font-bold text-sm transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100"
+                style={{ boxShadow: "0 0 24px hsl(var(--pink) / 0.35)" }}
               >
                 {saving ? "Salvando..." : "Aceitar e Continuar"}
               </button>

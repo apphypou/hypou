@@ -1,4 +1,5 @@
 import { Navigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +12,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRouteProps) => {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     // Unified key — shared with Explorar to avoid duplicate fetches
@@ -37,7 +39,8 @@ const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRoutePr
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    const redirect = `${location.pathname}${location.search}`;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />;
   }
 
   if (requireOnboarding && profile && !profile.onboarding_completed) {

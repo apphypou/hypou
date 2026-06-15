@@ -29,9 +29,24 @@ export default function Chamada() {
   const navigate = useNavigate();
   const state = location.state as CallNavState | undefined;
 
-  const [missedTimer, setMissedTimer] = useState<number | null>(null);
+  const missedTimerRef = useRef<number | null>(null);
   const remoteJoinedRef = useRef(false);
   const sessionEndedRef = useRef(false);
+  const callStatusRef = useRef<"ringing" | "accepted" | "connected">("ringing");
+  const [callStatus, setCallStatus] = useState<"ringing" | "accepted" | "connected">("ringing");
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  const updateCallStatus = (next: "ringing" | "accepted" | "connected") => {
+    callStatusRef.current = next;
+    setCallStatus(next);
+  };
+
+  const clearMissedTimer = () => {
+    if (missedTimerRef.current) {
+      clearTimeout(missedTimerRef.current);
+      missedTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     if (!state?.token) {
@@ -43,14 +58,14 @@ export default function Chamada() {
   useEffect(() => {
     if (!state?.isCaller) return;
     const t = window.setTimeout(async () => {
-      if (!remoteJoinedRef.current && !sessionEndedRef.current) {
+      if (!remoteJoinedRef.current && callStatusRef.current === "ringing" && !sessionEndedRef.current) {
         sessionEndedRef.current = true;
         try { await markMissed(state.callSessionId); } catch {/* noop */}
         navigate(-1);
       }
     }, 45000);
-    setMissedTimer(t);
-    return () => clearTimeout(t);
+    missedTimerRef.current = t;
+    return clearMissedTimer;
   }, [state?.isCaller, state?.callSessionId, navigate]);
 
   const handleLeave = async () => {
@@ -59,7 +74,7 @@ export default function Chamada() {
       return;
     }
     sessionEndedRef.current = true;
-    if (missedTimer) clearTimeout(missedTimer);
+    clearMissedTimer();
     try { await endCall(state!.callSessionId); } catch {/* noop */}
     navigate(-1);
   };
@@ -75,8 +90,13 @@ export default function Chamada() {
         { event: "UPDATE", schema: "public", table: "call_sessions", filter: `id=eq.${state.callSessionId}` },
         (payload) => {
           const row: any = payload.new;
+          if (row.status === "accepted") {
+            updateCallStatus("accepted");
+            clearMissedTimer();
+          }
           if (["ended", "declined", "missed"].includes(row.status) && !sessionEndedRef.current) {
             sessionEndedRef.current = true;
+            clearMissedTimer();
             navigate(-1);
           }
         },
@@ -95,6 +115,10 @@ export default function Chamada() {
         connect
         video={state.kind === "video"}
         audio
+        onError={(error) => {
+          console.error("[call] LiveKit error", error);
+          setConnectionError(error?.message ?? "Falha ao conectar a chamada.");
+        }}
         onDisconnected={handleLeave}
         data-lk-theme="default"
         className="!h-full !w-full !bg-background"
@@ -103,8 +127,14 @@ export default function Chamada() {
         <CallStage
           kind={state.kind}
           isCaller={state.isCaller}
+          callStatus={callStatus}
+          connectionError={connectionError}
           onLeave={handleLeave}
-          onRemoteJoined={() => { remoteJoinedRef.current = true; }}
+          onRemoteJoined={() => {
+            remoteJoinedRef.current = true;
+            updateCallStatus("connected");
+            clearMissedTimer();
+          }}
         />
       </LiveKitRoom>
     </div>
@@ -114,11 +144,15 @@ export default function Chamada() {
 function CallStage({
   kind,
   isCaller,
+  callStatus,
+  connectionError,
   onLeave,
   onRemoteJoined,
 }: {
   kind: "video" | "audio";
   isCaller: boolean;
+  callStatus: "ringing" | "accepted" | "connected";
+  connectionError: string | null;
   onLeave: () => void;
   onRemoteJoined: () => void;
 }) {
@@ -200,8 +234,23 @@ function CallStage({
         <RemoteRenderer kind={kind} />
         {!connected && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-foreground/80">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm">{isCaller ? "Tocando..." : "Conectando..."}</p>
+            {connectionError ? (
+              <>
+                <p className="max-w-xs text-center text-sm font-semibold text-destructive">Falha na chamada</p>
+                <p className="max-w-xs text-center text-xs text-foreground/50">{connectionError}</p>
+              </>
+            ) : (
+              <>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm">
+                  {isCaller
+                    ? callStatus === "accepted"
+                      ? "Conectando chamada..."
+                      : "Tocando..."
+                    : "Conectando..."}
+                </p>
+              </>
+            )}
           </div>
         )}
         {connected && (

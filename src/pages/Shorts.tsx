@@ -143,22 +143,30 @@ const Shorts = () => {
 
   if (isLoading) {
     return (
-      <div className="h-[100dvh] w-full bg-scrim flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-on-media" />
+      <div className="flex h-[100dvh] w-full flex-col items-center justify-center gap-3 bg-scrim px-8">
+        <Loader2 className="h-7 w-7 animate-spin text-primary" />
+        <p className="text-sm font-medium text-on-media/68">Carregando vitrine...</p>
       </div>
     );
   }
 
   if (videos.length === 0) {
     return (
-      <div className="h-[100dvh] w-full bg-background flex flex-col items-center justify-center gap-4 px-8">
-        <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
-          <Clapperboard className="h-10 w-10 text-foreground/20" />
+      <div className="flex h-[100dvh] w-full flex-col items-center justify-center bg-scrim px-8 text-center">
+        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-on-media/10 bg-on-media/[0.06]">
+          <Clapperboard className="h-6 w-6 text-primary" />
         </div>
-        <h2 className="text-foreground text-xl font-bold text-center">Nenhum short encontrado</h2>
-        <p className="text-foreground/50 text-sm text-center max-w-xs">
-          Tente mudar o filtro ou a categoria.
+        <h2 className="text-xl font-bold text-on-media">Nada na vitrine agora</h2>
+        <p className="mt-2 max-w-xs text-sm leading-relaxed text-on-media/58">
+          Novos vídeos de itens vão aparecer aqui. Enquanto isso, continue explorando as ofertas.
         </p>
+        <button
+          type="button"
+          onClick={() => navigate("/explorar")}
+          className="mt-6 h-11 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground transition-transform active:scale-[0.98]"
+        >
+          Voltar para Explorar
+        </button>
       </div>
     );
   }

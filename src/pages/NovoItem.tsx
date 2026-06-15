@@ -139,7 +139,9 @@ const NovoItem = () => {
         canvas.toBlob((blob) => {
           if (blob) setVideoThumb(URL.createObjectURL(blob));
         }, "image/jpeg", 0.8);
-      } catch {}
+      } catch {
+        setVideoThumb(null);
+      }
     };
     toast({ title: "Vídeo adicionado!", description: "Pré-visualização gerada com sucesso." });
   };
@@ -415,7 +417,10 @@ const NovoItem = () => {
         <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Cadastrar Item</span>
       </header>
 
-      <main className="flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-8">
+      <main
+        className="h-0 min-h-0 flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-[calc(7.5rem+var(--safe-area-bottom))]"
+        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+      >
         {/* Photos */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
@@ -447,12 +452,12 @@ const NovoItem = () => {
           ) : (
             <div
               onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
-              className="relative w-full aspect-[16/10] rounded-3xl bg-card flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/80 dashed-border-glow"
+              className="relative w-full h-44 rounded-2xl border border-dashed border-primary/45 bg-card/70 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/85"
             >
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">
                 <Camera className="h-7 w-7 text-primary/60" />
               </div>
-              <span className="text-sm font-bold text-primary uppercase tracking-wider">Adicionar fotos</span>
+              <span className="text-sm font-bold text-foreground">Adicionar fotos</span>
               <span className="text-xs text-muted-foreground">Até 5 fotos do item</span>
             </div>
           )}
@@ -481,13 +486,13 @@ const NovoItem = () => {
             <button
               type="button"
               onClick={() => setVideoMenuOpen(true)}
-              className="w-full py-4 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-card/80 transition-all"
+              className="w-full h-[78px] rounded-2xl bg-card/70 border border-foreground/10 border-dashed flex items-center justify-center gap-3 cursor-pointer hover:bg-card/85 transition-all"
             >
               <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
                 <Video className="h-5 w-5 text-primary/60" />
               </div>
               <div className="text-left">
-                <span className="text-sm font-bold text-primary block">Adicionar vídeo</span>
+                <span className="text-sm font-bold text-foreground block">Adicionar vídeo</span>
                 <span className="text-[11px] text-muted-foreground">Apenas 1 vídeo por item  ·  Até 50MB</span>
               </div>
             </button>
@@ -515,10 +520,10 @@ const NovoItem = () => {
                 <button
                   key={cat.label}
                   onClick={() => setCategory(cat.label)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`h-10 rounded-full px-4 text-sm font-semibold transition-all ${
                     category === cat.label
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-foreground/10 text-foreground/60 hover:border-foreground/20"
+                      ? "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.22)]"
+                      : "bg-card/80 text-foreground/70 border border-foreground/10"
                   }`}
                 >
                   {cat.emoji} {cat.label}
@@ -534,10 +539,10 @@ const NovoItem = () => {
                 <button
                   key={c.value}
                   onClick={() => setCondition(c.value)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`h-10 rounded-full px-4 text-sm font-semibold transition-all ${
                     condition === c.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-foreground/10 text-foreground/60 hover:border-foreground/20"
+                      ? "bg-primary text-primary-foreground shadow-[0_0_18px_hsl(var(--primary)/0.22)]"
+                      : "bg-card/80 text-foreground/70 border border-foreground/10"
                   }`}
                 >
                   {c.label}
@@ -607,11 +612,11 @@ const NovoItem = () => {
       </main>
 
       {/* Submit */}
-      <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
+      <div className="fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(1rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="w-full h-14 rounded-full bg-primary text-primary-foreground font-bold text-lg uppercase tracking-wider hover:opacity-90 transition-all active:scale-[0.98] neon-glow flex items-center justify-center gap-2 disabled:opacity-50"
+          className="mx-auto w-full max-w-md h-14 rounded-2xl bg-primary text-primary-foreground font-extrabold text-base uppercase tracking-wide hover:opacity-90 transition-all active:scale-[0.99] shadow-[0_8px_24px_hsl(var(--primary)/0.18)] flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {validating ? (
             <><Loader2 className="h-5 w-5 animate-spin" /><span>Verificando valor...</span></>

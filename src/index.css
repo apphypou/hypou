@@ -20,7 +20,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
 
-    --primary: 178 98% 54%;
+    --primary: 178 88% 48%;
     --primary-foreground: 0 0% 0%;
 
     --secondary: 210 15% 92%;
@@ -29,7 +29,7 @@
     --muted: 210 15% 92%;
     --muted-foreground: 0 0% 30%;
 
-    --accent: 178 98% 54%;
+    --accent: 178 88% 48%;
     --accent-foreground: 0 0% 0%;
 
     --destructive: 0 72% 55%;
@@ -43,22 +43,22 @@
     --success-foreground: 0 0% 100%;
     --danger: 0 72% 55%;
     --danger-foreground: 0 0% 100%;
-    --pink: 330 85% 65%;
+    --pink: 331 92% 58%;
     --pink-foreground: 0 0% 100%;
 
     /* Brand semantic — Hypou (like) / Flopou (dislike) */
-    --hype: 178 98% 54%;
+    --hype: 178 88% 48%;
     --hype-foreground: 0 0% 10%;
-    --hype-glow: 178 98% 60%;
+    --hype-glow: 178 92% 56%;
     --flop: 331 100% 58%;
     --flop-foreground: 0 0% 100%;
-    --flop-glow: 331 100% 65%;
+    --flop-glow: 331 100% 63%;
 
     /* Glass surfaces (used over imagery/dark backgrounds) */
-    --glass-surface: 0 0% 100% / 0.06;
-    --glass-surface-strong: 0 0% 100% / 0.10;
+    --glass-surface: 0 0% 100% / 0.055;
+    --glass-surface-strong: 0 0% 100% / 0.09;
     --glass-border: 0 0% 100% / 0.15;
-    --overlay-scrim: 0 0% 0% / 0.35;
+    --overlay-scrim: 0 0% 0% / 0.28;
 
     /* Context-fixed (always the same regardless of theme) */
     --on-media: 0 0% 100%;
@@ -86,7 +86,7 @@
     --popover: 0 0% 15%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 178 98% 54%;
+    --primary: 178 88% 48%;
     --primary-foreground: 0 0% 8%;
 
     --secondary: 0 0% 18%;
@@ -95,7 +95,7 @@
     --muted: 0 0% 18%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 178 98% 54%;
+    --accent: 178 88% 48%;
     --accent-foreground: 0 0% 8%;
 
     --destructive: 0 84.2% 60.2%;
@@ -109,22 +109,22 @@
     --success-foreground: 0 0% 100%;
     --danger: 0 84% 60%;
     --danger-foreground: 0 0% 100%;
-    --pink: 330 90% 68%;
+    --pink: 331 92% 62%;
     --pink-foreground: 0 0% 100%;
 
     /* Brand semantic — Hypou (like) / Flopou (dislike) */
-    --hype: 178 98% 54%;
+    --hype: 178 88% 48%;
     --hype-foreground: 0 0% 10%;
-    --hype-glow: 178 98% 60%;
+    --hype-glow: 178 92% 56%;
     --flop: 331 100% 58%;
     --flop-foreground: 0 0% 100%;
-    --flop-glow: 331 100% 65%;
+    --flop-glow: 331 100% 63%;
 
     /* Glass surfaces (used over imagery/dark backgrounds) */
-    --glass-surface: 0 0% 100% / 0.06;
-    --glass-surface-strong: 0 0% 100% / 0.10;
+    --glass-surface: 0 0% 100% / 0.055;
+    --glass-surface-strong: 0 0% 100% / 0.09;
     --glass-border: 0 0% 100% / 0.15;
-    --overlay-scrim: 0 0% 0% / 0.35;
+    --overlay-scrim: 0 0% 0% / 0.30;
 
     /* Context-fixed */
     --on-media: 0 0% 100%;
@@ -181,11 +181,11 @@
   }
 
   .neon-glow {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    box-shadow: 0 0 14px hsl(var(--primary) / 0.22);
   }
 
   .neon-glow-hover:hover {
-    box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
+    box-shadow: 0 0 22px hsl(var(--primary) / 0.32);
   }
 
   /* Glass action button — used on top of media/dark backgrounds */

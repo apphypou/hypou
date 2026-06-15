@@ -6,6 +6,7 @@ import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
+import { getAuthRedirectUrl } from "@/lib/authRedirect";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -26,6 +27,12 @@ const Login = () => {
       let description = error.message;
       if (error.message?.includes("Email not confirmed")) {
         description = "E-mail ainda não confirmado. Verifique sua caixa de entrada.";
+        toast({
+          title: "Confirme seu e-mail",
+          description: "Digite o código enviado para o seu e-mail.",
+        });
+        navigate(`/confirmar-codigo?email=${encodeURIComponent(email.trim())}`);
+        return;
       } else if (error.message?.includes("Invalid login credentials")) {
         description = "E-mail ou senha incorretos.";
       }
@@ -35,7 +42,8 @@ const Login = () => {
         variant: "destructive",
       });
     } else {
-      navigate("/explorar");
+      const params = new URLSearchParams(window.location.search);
+      navigate(params.get("redirect") || "/explorar", { replace: true });
     }
   };
 
@@ -114,7 +122,7 @@ const Login = () => {
               localStorage.setItem("postLoginRedirect", redirect);
               await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: `${window.location.origin}/explorar` },
+                options: { redirectTo: getAuthRedirectUrl("/explorar") },
               });
             }}
             className="flex items-center justify-center w-14 h-14 rounded-full bg-secondary border border-border hover:bg-accent transition-all"
@@ -134,7 +142,7 @@ const Login = () => {
               localStorage.setItem("postLoginRedirect", redirect);
               await supabase.auth.signInWithOAuth({
                 provider: "apple",
-                options: { redirectTo: `${window.location.origin}/explorar` },
+                options: { redirectTo: getAuthRedirectUrl("/explorar") },
               });
             }}
             className="flex items-center justify-center w-14 h-14 rounded-full bg-secondary border border-border hover:bg-accent transition-all"

@@ -5,6 +5,7 @@ import logoHypou from "@/assets/logo-hypou.png";
 import { supabase } from "@/integrations/supabase/client";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
+import { getAuthRedirectUrl } from "@/lib/authRedirect";
 
 const RecuperarSenha = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ const RecuperarSenha = () => {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: getAuthRedirectUrl("/reset-password"),
     });
     setLoading(false);
 

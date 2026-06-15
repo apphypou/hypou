@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { getAuthRedirectUrl } from "@/lib/authRedirect";
 
 interface AuthContextType {
   user: User | null;
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
       options: {
         data: { display_name: displayName },
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getAuthRedirectUrl("/onboarding"),
       },
     });
     return { error: error as Error | null, user: data?.user ?? null };

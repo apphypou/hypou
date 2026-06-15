@@ -98,13 +98,13 @@ export default function ChamadasPerdidas() {
         {loading ? (
           <p className="text-foreground/40 text-sm text-center mt-10">Carregando…</p>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-            <div className="h-20 w-20 rounded-2xl bg-foreground/5 flex items-center justify-center mb-4">
-              <PhoneMissed className="h-10 w-10 text-foreground/30" />
+          <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+            <div className="h-16 w-16 rounded-2xl bg-foreground/5 border border-foreground/5 flex items-center justify-center mb-5">
+              <PhoneMissed className="h-7 w-7 text-foreground/35" />
             </div>
-            <h2 className="text-lg font-bold text-foreground mb-2">Nenhuma chamada perdida</h2>
-            <p className="text-foreground/50 text-sm max-w-xs leading-relaxed">
-              Quando alguém te ligar e você não atender, aparecerá aqui.
+            <h2 className="text-xl font-bold text-foreground">Nenhuma chamada perdida</h2>
+            <p className="mt-2 text-muted-foreground text-sm max-w-[280px] leading-relaxed">
+              Chamadas de áudio e vídeo perdidas aparecem aqui quando você não atender.
             </p>
           </div>
         ) : (

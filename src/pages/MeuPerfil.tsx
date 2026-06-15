@@ -263,19 +263,19 @@ const MeuPerfil = () => {
           </div>
 
           {/* Stats */}
-          <div className="w-full grid grid-cols-3 gap-3 mb-8">
+          <div className="w-full grid grid-cols-3 gap-2.5 mb-7">
             {statsList.map((stat) => (
               <GlassCard
                 key={stat.label}
-                className={`rounded-2xl p-3 flex flex-col items-center justify-center text-center ${
-                  stat.highlight ? "border-primary/20 bg-primary/5" : ""
+                className={`rounded-2xl px-4 py-3 flex flex-col items-center justify-center text-center bg-card/75 border-foreground/8 ${
+                  stat.highlight ? "border-primary/16 bg-primary/[0.04]" : ""
                 }`}
               >
                 <span className={`text-xl font-bold mb-0.5 ${stat.highlight ? "text-primary" : "text-foreground"}`}>
                   {stat.value}
                 </span>
                 <span
-                  className={`text-[10px] uppercase tracking-wider font-semibold ${
+                  className={`mt-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
                     stat.highlight ? "text-primary/60" : "text-foreground/40"
                   }`}
                 >
@@ -288,7 +288,7 @@ const MeuPerfil = () => {
           {/* ===== CADASTRAR NOVO ITEM (CTA central) ===== */}
           <button
             onClick={() => navigate("/novo-item")}
-            className="w-full mb-6 rounded-2xl bg-primary text-primary-foreground py-4 font-bold text-base tracking-wide uppercase flex items-center justify-center gap-2 neon-glow active:scale-[0.98] transition-all"
+            className="w-full h-[52px] mb-6 rounded-2xl bg-primary text-primary-foreground font-extrabold text-sm tracking-wide uppercase flex items-center justify-center gap-2 shadow-[0_8px_24px_hsl(var(--primary)/0.18)] active:scale-[0.99] transition-transform"
           >
             <PlusCircle className="h-5 w-5" />
             Cadastrar novo item
@@ -301,13 +301,13 @@ const MeuPerfil = () => {
               </div>
 
               {items.length === 0 ? (
-                <GlassCard className="p-8 flex flex-col items-center gap-3">
-                  <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-1">
-                    <PlusCircle className="h-8 w-8 text-primary/50" />
+                <GlassCard className="mb-24 p-5 flex flex-col items-center gap-2.5 text-center">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <PlusCircle className="h-7 w-7 text-primary/50" />
                   </div>
-                  <h3 className="text-base font-bold text-foreground">Nenhum item cadastrado</h3>
-                  <p className="text-foreground/40 text-sm text-center max-w-xs leading-relaxed">
-                    Cadastre seu primeiro item para começar a receber propostas de troca!
+                  <h3 className="text-base font-bold text-foreground">Seu primeiro item muda tudo</h3>
+                  <p className="text-muted-foreground text-sm max-w-[280px] leading-relaxed">
+                    Cadastre algo parado em casa para aparecer no Explorar e receber propostas.
                   </p>
                 </GlassCard>
               ) : (

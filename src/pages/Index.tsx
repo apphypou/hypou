@@ -150,7 +150,7 @@ const Index = () => {
   const currentPair = productPairs[pairIndex];
 
   return (
-    <div className="dark relative min-h-screen flex flex-col justify-between overflow-hidden bg-background">
+    <div className="dark relative min-h-[100dvh] flex flex-col overflow-hidden bg-background">
       {/* Mesh Gradient Background */}
       <div className="absolute inset-0 z-0">
         <div
@@ -167,7 +167,14 @@ const Index = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-20 flex flex-col items-center w-full px-6 pb-10 text-center pt-[12%]">
+      <div
+        className="relative z-20 flex min-h-[100dvh] w-full flex-col items-center justify-center px-6 text-center"
+        style={{
+          paddingTop: "calc(var(--safe-area-top) + 1.25rem)",
+          paddingBottom: "calc(var(--safe-area-bottom) + 1.25rem)",
+          transform: "translateY(clamp(1.25rem, 4vh, 2.75rem))",
+        }}
+      >
         <motion.div
           initial="hidden"
           animate="visible"

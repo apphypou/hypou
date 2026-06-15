@@ -1,6 +1,7 @@
 import { Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 type TabId = "explorar" | "shorts" | "trocas" | "chat" | "perfil";
@@ -25,6 +26,7 @@ const prefetch = (path: string) => {
 
 const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const unreadCount = useUnreadCount();
 
   const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; unreadCount?: number }[] = [
@@ -35,35 +37,52 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   ];
 
   const formatBadge = (n: number) => (n > 99 ? "99+" : String(n));
+  const handleLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    const isProtectedTab = path !== "/explorar";
+
+    if (authLoading && isProtectedTab) {
+      event.preventDefault();
+      return;
+    }
+
+    if (!user && isProtectedTab) {
+      event.preventDefault();
+      navigate(`/login?redirect=${encodeURIComponent(path)}`);
+    }
+  };
 
   return (
-    <div className="fixed left-5 right-5 z-50 flex justify-center" style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))" }}>
-      <nav className="bg-background/95 dark:bg-background/85 backdrop-blur-2xl border border-foreground/10 rounded-full px-3 py-2 flex items-center gap-2 w-full max-w-md relative shadow-[0_8px_32px_rgba(0,0,0,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+    <div
+      className="fixed left-4 right-4 flex justify-center"
+      style={{ bottom: "calc(0.45rem + var(--safe-area-bottom))", zIndex: 40 }}
+    >
+      <nav className="bg-background/92 dark:bg-background/82 backdrop-blur-2xl border border-foreground/10 rounded-full px-2 py-1.5 flex items-center gap-1.5 w-full max-w-[22rem] relative shadow-[0_8px_24px_rgba(0,0,0,0.18)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.42)]">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
-            <button
+            <Link
               key={item.id}
-              onClick={() => navigate(item.path)}
+              to={item.path}
+              onClick={(event) => handleLinkClick(event, item.path)}
               onPointerEnter={() => prefetch(item.path)}
               onTouchStart={() => prefetch(item.path)}
-              className="relative flex flex-col items-center justify-center gap-0.5 rounded-full h-14 flex-1 z-10"
+              className="relative flex flex-col items-center justify-center gap-0.5 rounded-full h-12 flex-1 z-10"
             >
               {isActive && (
                 <motion.div
                   layoutId="nav-pill"
-                  className="absolute inset-0 bg-foreground rounded-full"
+                  className="absolute inset-0 bg-foreground rounded-full shadow-sm"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               <item.icon
-                className={`h-5 w-5 relative z-10 transition-colors duration-200 ${
-                  isActive ? "text-background" : "text-foreground/80"
+                className={`h-[18px] w-[18px] relative z-10 transition-colors duration-200 ${
+                  isActive ? "text-background" : "text-foreground/70"
                 }`}
               />
               <span
-                className={`relative z-10 text-[10px] font-semibold leading-none transition-colors duration-200 ${
-                  isActive ? "text-background" : "text-foreground/80"
+                className={`relative z-10 text-[9.5px] font-semibold leading-none transition-colors duration-200 ${
+                  isActive ? "text-background" : "text-foreground/70"
                 }`}
               >
                 {item.label}
@@ -76,7 +95,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
                   {formatBadge(item.unreadCount)}
                 </span>
               ) : null}
-            </button>
+            </Link>
           );
         })}
       </nav>

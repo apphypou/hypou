@@ -7,10 +7,14 @@ vi.mock("@/hooks/useUnreadCount", () => ({
   useUnreadCount: () => 0,
 }));
 
+vi.mock("@/hooks/useAuth", () => ({
+  useAuth: () => ({ user: { id: "user-1" }, loading: false }),
+}));
+
 describe("BottomNav", () => {
   it("01 renderiza 4 tabs", () => {
     const { container } = renderWithProviders(<BottomNav activeTab="explorar" />);
-    expect(container.querySelectorAll("button").length).toBe(4);
+    expect(container.querySelectorAll("a").length).toBe(4);
   });
 
   it("02 nav é fixed e flutuante", () => {
@@ -29,15 +33,34 @@ describe("BottomNav", () => {
     expect(nav.className).toMatch(/backdrop-blur/);
   });
 
-  it("05 botões têm h-12 (≥44pt tap target)", () => {
+  it("05 links têm altura mínima de tap target", () => {
     const { container } = renderWithProviders(<BottomNav activeTab="explorar" />);
-    const btns = container.querySelectorAll("button");
-    btns.forEach((b) => expect(b.className).toMatch(/h-12/));
+    const links = container.querySelectorAll("a");
+    links.forEach((link) => {
+      const heightClass = Array.from(link.classList).find((className) => /^h-\d+$/.test(className));
+      const height = Number(heightClass?.replace("h-", ""));
+      expect(height).toBeGreaterThanOrEqual(12);
+    });
+  });
+
+  it("06 usa a altura compacta planejada", () => {
+    const { container } = renderWithProviders(<BottomNav activeTab="explorar" />);
+    const links = container.querySelectorAll("a");
+    links.forEach((link) => expect(link).toHaveClass("h-12"));
+  });
+
+  it("07 limita a largura e reduz o espaçamento do container", () => {
+    const { container } = renderWithProviders(<BottomNav activeTab="explorar" />);
+    const wrapper = container.firstChild as HTMLElement;
+    const nav = container.querySelector("nav")!;
+
+    expect(wrapper).toHaveClass("left-4", "right-4");
+    expect(nav).toHaveClass("max-w-[22rem]", "px-2", "py-1.5");
   });
 });
 
 describe("BottomNav unread", () => {
-  it("06 mostra badge numérico quando há mensagens não lidas", async () => {
+  it("08 mostra badge numérico quando há mensagens não lidas", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 5 }));
     const { default: BN } = await import("@/components/BottomNav");
@@ -45,7 +68,7 @@ describe("BottomNav unread", () => {
     expect(screen.getByLabelText(/5 novas mensagens/i)).toHaveTextContent("5");
   });
 
-  it("07 limita badge a 99+ quando >99", async () => {
+  it("09 limita badge a 99+ quando >99", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 150 }));
     const { default: BN } = await import("@/components/BottomNav");
@@ -53,7 +76,7 @@ describe("BottomNav unread", () => {
     expect(screen.getByLabelText(/150 novas mensagens/i)).toHaveTextContent("99+");
   });
 
-  it("08 oculta badge quando contagem é 0", async () => {
+  it("10 oculta badge quando contagem é 0", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 0 }));
     const { default: BN } = await import("@/components/BottomNav");
