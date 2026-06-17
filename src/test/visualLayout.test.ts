@@ -32,6 +32,34 @@ describe("mobile visual layout", () => {
     expect(source).not.toContain(">\n          Explorar\n        </h1>");
     expect(source).toContain('className="relative flex-1 flex flex-col items-center justify-start w-full pb-28 pt-0 z-10"');
     expect(source).not.toContain('justify-start w-full px-4 pb-28');
-    expect(source).toContain('className="absolute right-[4.75rem] top-3 z-50"');
+    expect(source).not.toContain("NotificationBell");
+  });
+
+  it("keeps the Explore swipe card square at the top edge", () => {
+    const source = readSource("src/components/SwipeCard.tsx");
+
+    expect(source).toContain('borderRadius: "0 0 1.5rem 1.5rem"');
+    expect(source).toContain("rounded-t-none rounded-b-[1.65rem]");
+    expect(source).toContain("rounded-t-none rounded-b-[1.5rem]");
+  });
+
+  it("uses a Tinder-like downward exit motion for Explore swipes", () => {
+    const source = readSource("src/components/SwipeCard.tsx");
+
+    expect(source).toContain("const EXIT_Y = 260;");
+    expect(source).toContain("animate(y, EXIT_Y");
+    expect(source).toContain("animate(y, 0");
+    expect(source).toContain("y: standby ? 0 : y");
+    expect(source).toContain("const standbyOpacity = useTransform(revealProgress, [0, 1], [0, 1]);");
+    expect(source).toContain("const standbyScale = useTransform(revealProgress, [0, 1], [0.97, 1]);");
+    expect(source).toContain("standby ? { opacity: standbyOpacity } : {}");
+  });
+
+  it("reveals the next Explore card only while the active card is moving", () => {
+    const source = readSource("src/pages/Explorar.tsx");
+
+    expect(source).toContain("const dragDirectionValue = useMotionValue(0);");
+    expect(source).toContain("dragDirectionValue.set(rawX);");
+    expect(source).toContain("revealMotionX={dragDirectionValue}");
   });
 });

@@ -13,6 +13,7 @@ import {
   useTransform,
   animate,
   AnimatePresence,
+  type MotionValue,
   type PanInfo,
 } from "framer-motion";
 import {
@@ -24,17 +25,60 @@ import {
   Star,
   Repeat,
   Share2,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
 import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
+import { preloadImage, preloadImages, preloadVideo, preloadVideos } from "@/lib/mediaPreload";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
 
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
+const EXIT_Y = 260;
+
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  acre: "AC",
+  alagoas: "AL",
+  amapá: "AP",
+  amazonas: "AM",
+  bahia: "BA",
+  ceará: "CE",
+  "distrito federal": "DF",
+  "espírito santo": "ES",
+  goiás: "GO",
+  maranhão: "MA",
+  "mato grosso": "MT",
+  "mato grosso do sul": "MS",
+  "minas gerais": "MG",
+  pará: "PA",
+  paraíba: "PB",
+  paraná: "PR",
+  pernambuco: "PE",
+  piauí: "PI",
+  "rio de janeiro": "RJ",
+  "rio grande do norte": "RN",
+  "rio grande do sul": "RS",
+  rondônia: "RO",
+  roraima: "RR",
+  "santa catarina": "SC",
+  "são paulo": "SP",
+  sergipe: "SE",
+  tocantins: "TO",
+};
+
+const formatCompactLocation = (location?: string | null) => {
+  if (!location) return "";
+  const parts = location.split(",").map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) return location;
+  const city = parts[0];
+  const state = parts[parts.length - 1];
+  const normalizedState = state.toLocaleLowerCase("pt-BR");
+  return `${city}, ${STATE_ABBREVIATIONS[normalizedState] || state}`;
+};
 
 export interface SwipeCardHandle {
   triggerSwipe: (direction: "like" | "dislike") => void;
@@ -53,18 +97,28 @@ interface SwipeCardProps {
   onDragDirectionChange?: (rawX: number) => void;
   disabled?: boolean;
   standby?: boolean;
+  revealMotionX?: MotionValue<number>;
   matchedOwnItem?: MatchedOwnItem | null;
+  onOpenFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 const SwipeCard = memo(
   forwardRef<SwipeCardHandle, SwipeCardProps>(
     (
-      { item, onSwipeComplete, onDragDirectionChange, disabled, standby, matchedOwnItem },
+      { item, onSwipeComplete, onDragDirectionChange, disabled, standby, revealMotionX, matchedOwnItem, onOpenFilters, hasActiveFilters },
       ref
     ) => {
       const navigate = useNavigate();
       const x = useMotionValue(0);
+      const y = useMotionValue(0);
       const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
+      const revealSource = revealMotionX ?? x;
+      const revealProgress = useTransform(revealSource, (value) =>
+        Math.min(Math.abs(value) / SWIPE_THRESHOLD, 1)
+      );
+      const standbyOpacity = useTransform(revealProgress, [0, 1], [0, 1]);
+      const standbyScale = useTransform(revealProgress, [0, 1], [0.97, 1]);
 
       // 3D lift effect — card pops out as it's dragged
       const absX = useTransform(x, (v) => Math.abs(v));
@@ -88,10 +142,39 @@ const SwipeCard = memo(
       const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
       const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
       const videoRef = useRef<HTMLVideoElement>(null);
+      const slideChangeTokenRef = useRef(0);
 
       // Expanded state
       const [expanded, setExpanded] = useState(false);
       const scrollRef = useRef<HTMLDivElement>(null);
+
+      const showSlide = useCallback(
+        (nextIndex: number) => {
+          if (totalSlides <= 1) return;
+          const normalizedIndex = (nextIndex + totalSlides) % totalSlides;
+          const token = slideChangeTokenRef.current + 1;
+          slideChangeTokenRef.current = token;
+          const nextImage = normalizedIndex < images.length
+            ? images[normalizedIndex]?.image_url
+            : null;
+          const nextVideo = normalizedIndex >= images.length
+            ? videos[0]?.video_url
+            : null;
+
+          const nextMediaReady = nextVideo
+            ? preloadVideo(nextVideo)
+            : preloadImage(nextImage ? cdnFull(nextImage) : null);
+
+          nextMediaReady
+            .catch(() => undefined)
+            .then(() => {
+              if (slideChangeTokenRef.current === token) {
+                setActiveImageIndex(normalizedIndex);
+              }
+            });
+        },
+        [images, totalSlides, videos]
+      );
 
       const handleImageTap = useCallback(
         (e: React.MouseEvent<HTMLDivElement>) => {
@@ -100,13 +183,9 @@ const SwipeCard = memo(
           const rect = e.currentTarget.getBoundingClientRect();
           const tapX = e.clientX - rect.left;
           const half = rect.width / 2;
-          if (tapX > half) {
-            setActiveImageIndex((i) => (i + 1) % totalSlides);
-          } else {
-            setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
-          }
+          showSlide(tapX > half ? activeImageIndex + 1 : activeImageIndex - 1);
         },
-        [totalSlides, expanded]
+        [activeImageIndex, expanded, showSlide, totalSlides]
       );
 
       const toggleExpand = useCallback((e?: React.MouseEvent) => {
@@ -122,11 +201,35 @@ const SwipeCard = memo(
         return unsubscribe;
       }, [x, disabled, standby, onDragDirectionChange]);
 
+      useEffect(() => {
+        setActiveImageIndex(0);
+        slideChangeTokenRef.current = 0;
+        x.set(0);
+        y.set(0);
+      }, [item?.id, x, y]);
+
+      useEffect(() => {
+        if (standby) return;
+
+        const fullImages = images.map((image: any) => cdnFull(image?.image_url));
+        const blurImages = images.map((image: any) => cdnBlur(image?.image_url));
+        const videoUrls = videos.map((video: any) => video?.video_url);
+
+        preloadImages([...fullImages, ...blurImages]).catch(() => undefined);
+        preloadVideos(videoUrls).catch(() => undefined);
+      }, [images, standby, videos]);
+
       const doExit = useCallback(
         (direction: "like" | "dislike", velocityX?: number) => {
           if (disabled || standby || expanded) return;
           const exitX = direction === "like" ? EXIT_X : -EXIT_X;
           const vel = velocityX != null ? velocityX : direction === "like" ? 800 : -800;
+          animate(y, EXIT_Y, {
+            type: "spring",
+            stiffness: 520,
+            damping: 38,
+            velocity: Math.abs(vel) * 0.18,
+          });
           animate(x, exitX, {
             type: "spring",
             stiffness: 600,
@@ -136,7 +239,7 @@ const SwipeCard = memo(
             onComplete: () => onSwipeComplete(direction),
           });
         },
-        [disabled, standby, expanded, x, onSwipeComplete]
+        [disabled, standby, expanded, x, y, onSwipeComplete]
       );
 
       useImperativeHandle(ref, () => ({
@@ -155,13 +258,15 @@ const SwipeCard = memo(
             doExit("dislike", velocity);
           } else {
             animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
+            animate(y, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
           }
         },
-        [doExit, x, expanded]
+        [doExit, x, y, expanded]
       );
 
       const ownerProfile = item?.profiles as any;
       const conditionLabel = translateCondition(item?.condition);
+      const compactLocation = formatCompactLocation(item?.location);
       const { data: rating } = useUserRating(ownerProfile?.user_id);
 
       return (
@@ -172,26 +277,27 @@ const SwipeCard = memo(
           style={{
             x: standby ? 0 : x,
             rotate: standby || expanded ? 0 : rotate,
-            scale: standby ? 0.97 : expanded ? 1 : liftScale,
+            scale: standby ? standbyScale : expanded ? 1 : liftScale,
             boxShadow: standby || expanded ? undefined : liftShadow,
             zIndex: standby ? 9 : 60,
             willChange: standby ? "auto" : "transform",
             transformOrigin: "50% 80%",
-            borderRadius: "1.5rem",
-            ...(standby ? { y: 0, opacity: 0 } : {}),
+            borderRadius: "0 0 1.5rem 1.5rem",
+            y: standby ? 0 : y,
+            ...(standby ? { opacity: standbyOpacity } : {}),
           }}
-          drag={standby || expanded ? false : true}
+          drag={standby || expanded ? false : "x"}
           dragDirectionLock
           dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
           dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
           onDragEnd={standby || expanded ? undefined : handleDragEnd}
           initial={standby ? false : { scale: 1, opacity: 1 }}
-          animate={standby ? { scale: 1, opacity: 1 } : undefined}
+          animate={undefined}
         >
           {/* Liquid glass border — blurred image reflection */}
           {currentImage && (
             <div
-              className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0"
+              className="absolute -inset-[3px] rounded-t-none rounded-b-[1.65rem] overflow-hidden z-0"
               aria-hidden
             >
               <img
@@ -205,13 +311,13 @@ const SwipeCard = memo(
           )}
           {!currentImage && (
             <div
-              className="absolute -inset-[3px] rounded-[1.65rem] overflow-hidden z-0 bg-border dark:bg-primary/30"
+              className="absolute -inset-[3px] rounded-t-none rounded-b-[1.65rem] overflow-hidden z-0 bg-border dark:bg-primary/30"
               aria-hidden
             />
           )}
 
           {/* Inner card */}
-          <div className="absolute inset-0 rounded-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
+          <div className="absolute inset-0 rounded-t-none rounded-b-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
             {!standby && !expanded && <SwipeOverlays x={x} />}
 
             {/* ===== FULL IMAGE / VIDEO ===== */}
@@ -229,6 +335,7 @@ const SwipeCard = memo(
                   loop
                   muted
                   playsInline
+                  preload="auto"
                   draggable={false}
                 />
               ) : currentImage ? (
@@ -300,9 +407,9 @@ const SwipeCard = memo(
               </div>
             )}
 
-            {/* Share */}
+            {/* Share + filters */}
             {!expanded && (
-              <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+              <div className="absolute top-4 right-4 z-30 flex flex-col items-center gap-2">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -322,6 +429,22 @@ const SwipeCard = memo(
                 >
                   <Share2 className="h-3.5 w-3.5 text-on-media" />
                 </button>
+                {onOpenFilters && !standby && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenFilters();
+                    }}
+                    className="relative h-8 w-8 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
+                    aria-label="Configurar interesses"
+                  >
+                    <SlidersHorizontal className="h-3.5 w-3.5 text-on-media" />
+                    {hasActiveFilters && (
+                      <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-primary ring-1 ring-scrim/70" />
+                    )}
+                  </button>
+                )}
               </div>
             )}
 
@@ -335,14 +458,14 @@ const SwipeCard = memo(
                   className="absolute top-0 bottom-0 left-0 w-1/2 z-[25]"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveImageIndex((i) => (i - 1 + totalSlides) % totalSlides);
+                    showSlide(activeImageIndex - 1);
                   }}
                 />
                 <div
                   className="absolute top-0 bottom-0 right-0 w-1/2 z-[25]"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveImageIndex((i) => (i + 1) % totalSlides);
+                    showSlide(activeImageIndex + 1);
                   }}
                 />
               </>
@@ -422,16 +545,16 @@ const SwipeCard = memo(
             {/* ===== COMPACT INFO ===== */}
             {activeImageIndex === 0 && !expanded && (
               <div
-                className="absolute bottom-0 inset-x-0 z-30 max-h-[300px] rounded-b-[1.5rem] overflow-hidden pointer-events-none"
+                className="absolute bottom-0 inset-x-0 z-30 max-h-[280px] rounded-b-[1.5rem] overflow-hidden pointer-events-none"
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
-                  height: "42%",
-                  minHeight: "240px",
+                  height: "38%",
+                  minHeight: "220px",
                   background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.05) 42%, rgba(0,0,0,0.28) 70%, rgba(0,0,0,0.76) 100%)",
+                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 34%, rgba(0,0,0,0.48) 66%, rgba(0,0,0,0.90) 100%)",
                 }}
               >
-                <div className="absolute inset-x-0 bottom-0 px-5 pb-6 pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pointer-events-none">
                   {matchedOwnItem && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -461,7 +584,7 @@ const SwipeCard = memo(
                     </div>
                   )}
 
-                  <div className="flex items-center gap-1.5 mb-2 overflow-hidden">
+                  <div className="flex items-center gap-1.5 mb-3 overflow-hidden">
                     <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-md">
                       {item.category}
                     </span>
@@ -470,19 +593,19 @@ const SwipeCard = memo(
                         <Package className="h-2.5 w-2.5" /> {conditionLabel}
                       </span>
                     )}
-                    {item.location && (
-                      <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media/80 text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-md">
+                    {compactLocation && (
+                      <span className="max-w-[48%] px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media/80 text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-md">
                         <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
-                        <span className="truncate">{item.location}</span>
+                        <span className="truncate">{compactLocation}</span>
                       </span>
                     )}
                   </div>
 
-                  <h2 className="text-on-media text-[22px] font-bold tracking-tight leading-tight truncate">
+                  <h2 className="text-on-media text-[23px] font-bold tracking-tight leading-[1.06] truncate">
                     {item.name}
                   </h2>
 
-                  <p className="text-on-media/70 text-[15px] font-medium tracking-tight mt-0.5">
+                  <p className="mt-1 text-on-media/74 text-[15px] font-medium tracking-tight">
                     {formatValue(item.market_value)}
                   </p>
 
@@ -493,9 +616,9 @@ const SwipeCard = memo(
                       toggleExpand(e);
                     }}
                     aria-label="Ver detalhes do item"
-                    className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-on-media/10 border border-on-media/15 backdrop-blur-md text-on-media/80 text-[10px] font-semibold uppercase tracking-widest active:scale-95 transition-transform pointer-events-auto"
+                    className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-on-media/10 border border-on-media/15 backdrop-blur-md text-on-media/82 text-[9.5px] font-semibold uppercase tracking-wider active:scale-95 transition-transform pointer-events-auto"
                   >
-                    <ChevronUp className="h-3 w-3" />
+                    <ChevronUp className="h-2.5 w-2.5" />
                     Ver detalhes
                   </button>
 

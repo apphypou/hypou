@@ -1,4 +1,4 @@
-import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send, CheckCircle2, History } from "lucide-react";
+import { MessageSquare, Loader2, MapPin, Tag, Star, ArrowRightLeft, Handshake, X as XIcon, Repeat2, ArrowLeft, Clock, Send, CheckCircle2, History, Banknote } from "lucide-react";
 import { useMemo, useEffect } from "react";
 import { SkeletonMatchCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -18,6 +18,7 @@ import { formatValue } from "@/lib/utils";
 import { cdnMedium, cdnThumb } from "@/lib/imageUrl";
 import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
+import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 
 const Matches = () => {
   const { data: matches = [], isLoading } = useMatches();
@@ -31,7 +32,7 @@ const Matches = () => {
   const [rejecting, setRejecting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
-  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
   const [activeTab, setActiveTab] = useState<"received" | "sent" | "cancelled" | "completed">("received");
   const [showRating, setShowRating] = useState(false);
 
@@ -170,6 +171,8 @@ const Matches = () => {
     : [];
   const myItemsTotal = myItems.reduce((s, it) => s + (it?.market_value || 0), 0);
   const otherItemsTotal = otherItems.reduce((s, it) => s + (it?.market_value || 0), 0);
+  const cashAmount = selectedMatch?.cash_amount_cents || 0;
+  const cashPayerIsMe = !!selectedMatch && selectedMatch.cash_payer_user_id === user?.id;
 
   const activeMatches = useMemo(() => matches.filter((m) => m.status !== "rejected" && m.status !== "completed" && m.status !== "cancelled"), [matches]);
   const receivedMatches = useMemo(
@@ -405,11 +408,17 @@ const Matches = () => {
               {/* Hero image */}
               <div className="relative w-full bg-background overflow-hidden" style={{ minHeight: '45vh' }}>
                 {otherImages[0]?.image_url ? (
-                  <img
-                    src={cdnMedium(otherImages[0].image_url)}
-                    alt={otherItem?.name || "Item"}
-                    className="w-full h-full absolute inset-0 object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" })}
+                    className="absolute inset-0 h-full w-full"
+                  >
+                    <img
+                      src={cdnMedium(otherImages[0].image_url)}
+                      alt={otherItem?.name || "Item"}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
                 ) : (
                   <div className="w-full h-full absolute inset-0 bg-background flex items-center justify-center">
                     <Repeat2 className="h-16 w-16 text-foreground/10" />
@@ -486,7 +495,9 @@ const Matches = () => {
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
+                                    <button type="button" onClick={() => setMediaViewer({ url: img, type: "image", alt: it.name })} className="h-full w-full">
+                                      <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
+                                    </button>
                                   ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
                                   )}
@@ -504,7 +515,9 @@ const Matches = () => {
                         <>
                           <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
                             {myImages[0]?.image_url ? (
-                              <img src={cdnMedium(myImages[0].image_url)} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => setMediaViewer({ url: myImages[0].image_url, type: "image", alt: myItem?.name || "Item" })} className="h-full w-full">
+                                <img src={cdnMedium(myImages[0].image_url)} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
+                              </button>
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                             )}
@@ -535,7 +548,9 @@ const Matches = () => {
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
+                                    <button type="button" onClick={() => setMediaViewer({ url: img, type: "image", alt: it.name })} className="h-full w-full">
+                                      <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
+                                    </button>
                                   ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
                                   )}
@@ -553,7 +568,9 @@ const Matches = () => {
                         <>
                           <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
                             {otherImages[0]?.image_url ? (
-                              <img src={cdnMedium(otherImages[0].image_url)} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" })} className="h-full w-full">
+                                <img src={cdnMedium(otherImages[0].image_url)} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
+                              </button>
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                             )}
@@ -565,6 +582,17 @@ const Matches = () => {
                       )}
                     </div>
                   </div>
+                  {cashAmount > 0 && (
+                    <div className="mt-4 rounded-xl border border-primary/20 bg-primary/[0.08] px-4 py-3">
+                      <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                        <Banknote className="h-4 w-4 text-primary" />
+                        {cashPayerIsMe ? "Você completa" : "A outra pessoa completa"} com {formatValue(cashAmount)}
+                      </div>
+                      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                        Valor apenas registrado como combinado. O Hypou não processa pagamentos.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Trade confirmation status */}
                   {selectedMatch.status === "accepted" && (
@@ -596,7 +624,7 @@ const Matches = () => {
                     <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-3">Mais fotos</p>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar">
                       {otherImages.slice(1).map((img, i) => (
-                        <button key={i} onClick={() => setZoomedImage(img.image_url)} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
+                        <button key={i} onClick={() => setMediaViewer({ url: img.image_url, type: "image", alt: otherItem?.name || "Foto do item" })} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
                           <img src={cdnMedium(img.image_url)} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}
@@ -727,32 +755,7 @@ const Matches = () => {
         )}
       </AnimatePresence>
 
-      {/* Zoomed image overlay */}
-      <AnimatePresence>
-        {zoomedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] bg-scrim/90 backdrop-blur-md flex items-center justify-center"
-            onClick={() => setZoomedImage(null)}
-          >
-            <button
-              onClick={() => setZoomedImage(null)}
-              className="absolute top-4 right-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-on-media/10 text-on-media hover:bg-on-media/20 transition-colors"
-              style={{ marginTop: "env(safe-area-inset-top)" }}
-            >
-              <XIcon className="h-5 w-5" />
-            </button>
-            <img
-              src={zoomedImage}
-              alt=""
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
 
       {/* Rating Dialog */}
       {user && selectedMatch && otherUserId && (

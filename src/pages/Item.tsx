@@ -8,6 +8,7 @@ import NeonButton from "@/components/NeonButton";
 import HypouLogo from "@/components/HypouLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { cdnFull, cdnBlur } from "@/lib/imageUrl";
+import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 
 const Item = () => {
   const { itemId } = useParams();
@@ -17,6 +18,7 @@ const Item = () => {
   const [owner, setOwner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
+  const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
 
   useEffect(() => {
     if (!itemId) return;
@@ -104,7 +106,13 @@ const Item = () => {
         {heroImage ? (
           <>
             <img src={cdnBlur(heroImage)} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50" />
-            <img src={cdnFull(heroImage)} alt={item.name} className="relative w-full h-full object-contain" />
+            <button
+              type="button"
+              onClick={() => setMediaViewer({ url: heroImage, type: "image", alt: item.name })}
+              className="relative h-full w-full"
+            >
+              <img src={cdnFull(heroImage)} alt={item.name} className="h-full w-full object-contain" />
+            </button>
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -182,6 +190,7 @@ const Item = () => {
           {user ? "Abrir no Hypou" : "Entrar pra trocar"}
         </NeonButton>
       </div>
+      <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
     </div>
   );
 };

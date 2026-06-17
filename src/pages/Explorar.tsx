@@ -1,7 +1,6 @@
-import { PlusCircle, Share2, X, Heart } from "lucide-react";
+import { PlusCircle, Share2 } from "lucide-react";
 import emptyChestImg from "@/assets/empty-chest.png";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
-import NotificationBell from "@/components/NotificationBell";
 import ScreenLayout from "@/components/ScreenLayout";
 import OnboardingTour from "@/components/OnboardingTour";
 import BottomNav from "@/components/BottomNav";
@@ -10,7 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRecommendedItems, getPublicExploreItems } from "@/services/itemService";
 import { createSwipe } from "@/services/swipeService";
 import { createProposal } from "@/services/matchService";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import GuestPromptDialog from "@/components/GuestPromptDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -25,8 +24,38 @@ import SwipeToggle from "@/components/SwipeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { haptic } from "@/lib/haptics";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Slider } from "@/components/ui/slider";
+import { categories } from "@/constants/categories";
+import { formatValue } from "@/lib/utils";
 
 const PENDING_LIKE_KEY = "hypou:pending-like-item";
+const EXPLORE_FILTERS_KEY = "hypou:explore-filters";
+const EXPLORE_FILTER_MAX_CENTS = 500_000_000;
+
+type ExploreFilters = {
+  categories: string[];
+  valueRange: [number, number];
+};
+
+const getInitialExploreFilters = (): ExploreFilters => {
+  if (typeof window === "undefined") return { categories: [], valueRange: [0, EXPLORE_FILTER_MAX_CENTS] };
+  try {
+    const raw = localStorage.getItem(EXPLORE_FILTERS_KEY);
+    if (!raw) return { categories: [], valueRange: [0, EXPLORE_FILTER_MAX_CENTS] };
+    const parsed = JSON.parse(raw);
+    const range = Array.isArray(parsed?.valueRange) ? parsed.valueRange : [0, EXPLORE_FILTER_MAX_CENTS];
+    return {
+      categories: Array.isArray(parsed?.categories) ? parsed.categories : [],
+      valueRange: [
+        Math.max(0, Number(range[0]) || 0),
+        Math.min(EXPLORE_FILTER_MAX_CENTS, Number(range[1]) || EXPLORE_FILTER_MAX_CENTS),
+      ],
+    };
+  } catch {
+    return { categories: [], valueRange: [0, EXPLORE_FILTER_MAX_CENTS] };
+  }
+};
 
 const Explorar = () => {
   const { user } = useAuth();
@@ -91,6 +120,8 @@ const Explorar = () => {
   const [showSelectItem, setShowSelectItem] = useState(false);
   const [pendingLikeItem, setPendingLikeItem] = useState<any>(null);
   const [proposalLoading, setProposalLoading] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [exploreFilters, setExploreFilters] = useState<ExploreFilters>(getInitialExploreFilters);
 
   const dragDirectionValue = useMotionValue(0);
 
@@ -115,8 +146,29 @@ const Explorar = () => {
     staleTime: 60 * 1000,
   });
 
-  const currentItem = items.length > 0 ? items[currentIndex % items.length] : null;
-  const nextItem = items.length > 0 ? items[(currentIndex + 1) % items.length] : null;
+  useEffect(() => {
+    localStorage.setItem(EXPLORE_FILTERS_KEY, JSON.stringify(exploreFilters));
+    setCurrentIndex(0);
+    setEpoch((e) => e + 1);
+  }, [exploreFilters]);
+
+  const filteredItems = useMemo(() => {
+    const [minValue, maxValue] = exploreFilters.valueRange;
+    return items.filter((item: any) => {
+      const matchesCategory =
+        exploreFilters.categories.length === 0 || exploreFilters.categories.includes(item.category);
+      const value = item.market_value || 0;
+      const matchesValue = value >= minValue && value <= maxValue;
+      return matchesCategory && matchesValue;
+    });
+  }, [items, exploreFilters]);
+
+  const currentItem = filteredItems.length > 0 ? filteredItems[currentIndex % filteredItems.length] : null;
+  const nextItem = filteredItems.length > 0 ? filteredItems[(currentIndex + 1) % filteredItems.length] : null;
+  const hasActiveFilters =
+    exploreFilters.categories.length > 0 ||
+    exploreFilters.valueRange[0] > 0 ||
+    exploreFilters.valueRange[1] < EXPLORE_FILTER_MAX_CENTS;
 
   const advanceCard = useCallback(() => {
     setEpoch((e) => e + 1);
@@ -200,11 +252,11 @@ const Explorar = () => {
   );
 
   const handleProposalConfirm = useCallback(
-    async (myItemIds: string[]) => {
+    async (myItemIds: string[], cashAmountCents = 0) => {
       if (!user || !pendingLikeItem) return;
       setProposalLoading(true);
       try {
-        await createProposal(user.id, myItemIds, pendingLikeItem.id, pendingLikeItem.user_id);
+        await createProposal(user.id, myItemIds, pendingLikeItem.id, pendingLikeItem.user_id, cashAmountCents);
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["matches", user.id] }),
           queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] }),
@@ -236,7 +288,7 @@ const Explorar = () => {
   );
 
   // Preload image after next
-  const afterNextItem = items.length > 0 ? items[(currentIndex + 2) % items.length] : null;
+  const afterNextItem = filteredItems.length > 0 ? filteredItems[(currentIndex + 2) % filteredItems.length] : null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
 
   useEffect(() => {
@@ -252,19 +304,13 @@ const Explorar = () => {
 
   return (
     <ScreenLayout>
-      {!isGuest && (
-        <div className="absolute right-[4.75rem] top-3 z-50">
-          <NotificationBell />
-        </div>
-      )}
-
       {/* Main Card Area */}
       <main className="relative flex-1 flex flex-col items-center justify-start w-full pb-28 pt-0 z-10" style={{ perspective: "1200px" }}>
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
           </div>
-        ) : feedEnded || items.length === 0 ? (
+        ) : feedEnded || filteredItems.length === 0 ? (
           /* ===== EMPTY STATE ===== */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
             <motion.div
@@ -273,27 +319,36 @@ const Explorar = () => {
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              {items.length === 0 ? (
+              {filteredItems.length === 0 ? (
                 <img src={emptyChestImg} alt="Baú vazio" className="w-56 h-56 object-contain" />
               ) : (
                 <span className="text-7xl">✅</span>
               )}
             </motion.div>
             <h2 className="text-xl font-bold text-foreground mb-2">
-              {items.length === 0
+              {filteredItems.length === 0
                 ? "Ainda não há itens por aqui"
                 : "Você já viu tudo!"}
             </h2>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              {items.length === 0
-                ? isGuest
+              {filteredItems.length === 0
+                ? hasActiveFilters
+                  ? "Não encontramos itens com esses filtros. Ajuste interesses ou faixa de valor."
+                  : isGuest
                   ? "Crie sua conta e seja o primeiro a cadastrar um item!"
                   : "Seja o primeiro a cadastrar um item ou convide amigos!"
                 : "Cadastre mais itens para ampliar suas possibilidades de troca."}
             </p>
 
             <div className="flex flex-col gap-3 w-full max-w-xs">
-              {isGuest ? (
+              {hasActiveFilters ? (
+                <button
+                  onClick={() => setExploreFilters({ categories: [], valueRange: [0, EXPLORE_FILTER_MAX_CENTS] })}
+                  className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold uppercase tracking-wider neon-glow transition-all flex items-center justify-center gap-2"
+                >
+                  Limpar filtros
+                </button>
+              ) : isGuest ? (
                 <>
                   <button
                     onClick={() => navigate("/cadastro")}
@@ -365,6 +420,7 @@ const Explorar = () => {
                   item={nextItem}
                   onSwipeComplete={() => {}}
                   standby
+                  revealMotionX={dragDirectionValue}
                 />
               )}
 
@@ -377,6 +433,8 @@ const Explorar = () => {
                 onDragDirectionChange={handleDragDirectionChange}
                 disabled={swipingRef.current}
                 matchedOwnItem={currentItem.matched_own_item ? { ...currentItem.matched_own_item, count: currentItem.matched_items_count } : null}
+                onOpenFilters={() => setFiltersOpen(true)}
+                hasActiveFilters={hasActiveFilters}
               />
             </div>
           </>
@@ -384,6 +442,91 @@ const Explorar = () => {
       </main>
 
       <BottomNav activeTab="explorar" />
+
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl border-foreground/10 bg-background pb-[calc(var(--safe-area-bottom)+1.5rem)]">
+          <SheetHeader>
+            <SheetTitle>Configurar Explorar</SheetTitle>
+          </SheetHeader>
+
+          <div className="mt-5 space-y-6">
+            <section>
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-foreground">Interesses</h3>
+                <span className="text-xs text-muted-foreground">{exploreFilters.categories.length || "Todos"}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => {
+                  const selected = exploreFilters.categories.includes(cat.label);
+                  return (
+                    <button
+                      key={cat.label}
+                      type="button"
+                      onClick={() =>
+                        setExploreFilters((current) => ({
+                          ...current,
+                          categories: selected
+                            ? current.categories.filter((value) => value !== cat.label)
+                            : [...current.categories, cat.label],
+                        }))
+                      }
+                      className={`rounded-full border px-3 py-2 text-xs font-bold transition ${
+                        selected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-foreground/10 bg-card text-foreground/65"
+                      }`}
+                    >
+                      {cat.emoji} {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-foreground">Média de valores</h3>
+                <span className="text-xs font-semibold text-primary">
+                  {formatValue(exploreFilters.valueRange[0])} - {formatValue(exploreFilters.valueRange[1])}
+                </span>
+              </div>
+              <Slider
+                value={exploreFilters.valueRange}
+                min={0}
+                max={EXPLORE_FILTER_MAX_CENTS}
+                step={5_000}
+                onValueChange={(value) =>
+                  setExploreFilters((current) => ({
+                    ...current,
+                    valueRange: [value[0] || 0, value[1] || EXPLORE_FILTER_MAX_CENTS],
+                  }))
+                }
+              />
+              <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+                <span>R$ 0</span>
+                <span>R$ 5 mi</span>
+              </div>
+            </section>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setExploreFilters({ categories: [], valueRange: [0, EXPLORE_FILTER_MAX_CENTS] })}
+                className="h-12 rounded-2xl border border-foreground/10 bg-card text-sm font-bold text-foreground"
+              >
+                Limpar
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="h-12 rounded-2xl bg-primary text-sm font-bold text-primary-foreground"
+              >
+                Aplicar
+              </button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Onboarding Tour for first-time users */}
       {!isGuest && <OnboardingTour />}

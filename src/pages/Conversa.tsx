@@ -47,7 +47,7 @@ const useConversationDetails = (conversationId: string | null) => {
       const { data: match } = await supabase
         .from("matches")
         .select(`
-          id, status, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
+          id, status, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id,
           item_a:item_a_id (id, name, item_images (image_url, position)),
           item_b:item_b_id (id, name, item_images (image_url, position))
         `)
@@ -77,6 +77,8 @@ const useConversationDetails = (conversationId: string | null) => {
         is_user_b: !isUserA,
         my_confirmed: isUserA ? !!(match as any).confirmed_by_a : !!(match as any).confirmed_by_b,
         other_confirmed: isUserA ? !!(match as any).confirmed_by_b : !!(match as any).confirmed_by_a,
+        cash_amount_cents: (match as any).cash_amount_cents || 0,
+        cash_payer_user_id: (match as any).cash_payer_user_id || null,
       };
     },
     enabled: !!conversationId && !!user,
@@ -394,6 +396,8 @@ const Conversa = () => {
           myItem={details.my_item}
           otherItem={details.other_item}
           matchStatus={details.match_status}
+          cashAmountCents={details.cash_amount_cents}
+          cashPayerLabel={details.cash_payer_user_id === user?.id ? "Você completa" : "A outra pessoa completa"}
         />
       )}
 

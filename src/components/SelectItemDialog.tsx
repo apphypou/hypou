@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2, Package, Plus, Sparkles, Check } from "lucide-react";
+import { Loader2, Package, Plus, Sparkles, Check, Banknote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer,
@@ -20,7 +20,7 @@ const MAX_ITEMS = 3;
 interface SelectItemDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (myItemIds: string[]) => void;
+  onConfirm: (myItemIds: string[], cashAmountCents?: number) => void;
   targetItemName?: string;
   targetItemValue?: number;
   targetMarginUp?: number;
@@ -41,9 +41,15 @@ const SelectItemDialog = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [cashEnabled, setCashEnabled] = useState(false);
+  const [cashInput, setCashInput] = useState("");
 
   useEffect(() => {
-    if (!open) setSelectedIds([]);
+    if (!open) {
+      setSelectedIds([]);
+      setCashEnabled(false);
+      setCashInput("");
+    }
   }, [open]);
 
   const { data: myItems = [], isLoading } = useQuery({
@@ -88,19 +94,26 @@ const SelectItemDialog = ({
     const it = myItems.find((m: any) => m.id === id);
     return acc + (it?.market_value || 0);
   }, 0);
+  const cashAmountCents = parseInt(cashInput.replace(/\D/g, "") || "0", 10);
+  const offerTotal = sum + (cashEnabled ? cashAmountCents : 0);
 
   const targetMin = targetItemValue ? Math.round(targetItemValue * (1 - targetMarginDown / 100)) : 0;
   const targetMax = targetItemValue ? Math.round(targetItemValue * (1 + targetMarginUp / 100)) : 0;
   const rangeStatus: "ok" | "low" | "high" | null = !targetItemValue || selectedIds.length === 0
     ? null
-    : sum < targetMin
+    : offerTotal < targetMin
       ? "low"
-      : sum > targetMax
+      : offerTotal > targetMax
         ? "high"
         : "ok";
 
   const handleConfirm = () => {
-    if (selectedIds.length > 0) onConfirm(selectedIds);
+    if (selectedIds.length > 0) onConfirm(selectedIds, cashEnabled ? cashAmountCents : 0);
+  };
+
+  const handleCashChange = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 9);
+    setCashInput(digits ? formatValue(parseInt(digits, 10)) : "");
   };
 
   return (
@@ -217,8 +230,13 @@ const SelectItemDialog = ({
                     Sua oferta ({selectedIds.length}/{MAX_ITEMS})
                   </p>
                   <p className={`font-bold text-base ${rangeStatus === "low" ? "text-pink" : "text-foreground"}`}>
-                    {formatValue(sum)}
+                    {formatValue(offerTotal)}
                   </p>
+                  {cashEnabled && cashAmountCents > 0 && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Itens {formatValue(sum)} + dinheiro {formatValue(cashAmountCents)}
+                    </p>
+                  )}
                 </div>
                 {rangeStatus && (
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
@@ -236,11 +254,42 @@ const SelectItemDialog = ({
             {rangeStatus === "low" && (
               <div className="rounded-xl bg-pink/10 border border-pink/30 px-4 py-3">
                 <p className="text-pink text-xs font-bold leading-relaxed">
-                  Faltam {formatValue(Math.max(0, targetMin - sum))} para atingir o valor mínimo aceito ({formatValue(targetMin)}).
+                  Faltam {formatValue(Math.max(0, targetMin - offerTotal))} para atingir o valor mínimo aceito ({formatValue(targetMin)}).
                 </p>
                 <p className="text-pink/90 text-xs mt-1 leading-relaxed">
-                  Adicione outro item ou complete com um valor em dinheiro na conversa.
+                  Adicione outro item ou informe um valor em dinheiro combinado.
                 </p>
+              </div>
+            )}
+            {selectedIds.length > 0 && (
+              <div className="rounded-xl border border-foreground/10 bg-card px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => setCashEnabled((value) => !value)}
+                  className="flex w-full items-center justify-between gap-3 text-left"
+                >
+                  <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                    <Banknote className="h-4 w-4 text-primary" />
+                    Completar com dinheiro
+                  </span>
+                  <span className={`h-5 w-9 rounded-full p-0.5 transition-colors ${cashEnabled ? "bg-primary" : "bg-foreground/15"}`}>
+                    <span className={`block h-4 w-4 rounded-full bg-background transition-transform ${cashEnabled ? "translate-x-4" : ""}`} />
+                  </span>
+                </button>
+                {cashEnabled && (
+                  <div className="mt-3 space-y-2">
+                    <input
+                      inputMode="numeric"
+                      value={cashInput}
+                      onChange={(event) => handleCashChange(event.target.value)}
+                      placeholder="R$ 0,00"
+                      className="h-11 w-full rounded-xl border border-foreground/10 bg-background px-4 text-sm font-bold text-foreground outline-none focus:border-primary"
+                    />
+                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                      O Hypou não processa pagamentos. Esse valor fica registrado como combinado entre vocês.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             <Button

@@ -32,6 +32,7 @@ import SelectItemDialog from "@/components/SelectItemDialog";
 import { createProposal } from "@/services/matchService";
 import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
+import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ const MeuPerfil = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingVideoItemId, setUploadingVideoItemId] = useState<string | null>(null);
+  const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
 
   // Favorites
   const [showFavorites, setShowFavorites] = useState(false);
@@ -69,11 +71,11 @@ const MeuPerfil = () => {
   const [proposalTarget, setProposalTarget] = useState<any>(null);
   const [proposalLoading, setProposalLoading] = useState(false);
 
-  const handleProposalConfirm = async (myItemIds: string[]) => {
+  const handleProposalConfirm = async (myItemIds: string[], cashAmountCents = 0) => {
     if (!user || !proposalTarget) return;
     setProposalLoading(true);
     try {
-      await createProposal(user.id, myItemIds, proposalTarget.id, proposalTarget.user_id);
+      await createProposal(user.id, myItemIds, proposalTarget.id, proposalTarget.user_id, cashAmountCents);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["matches", user.id] }),
         queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] }),
@@ -336,19 +338,29 @@ const MeuPerfil = () => {
                           </button>
                         </div>
 
-                        <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (mainImage?.image_url) {
+                              setMediaViewer({ url: mainImage.image_url, type: "image", alt: item.name });
+                            }
+                          }}
+                          className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10"
+                        >
                           {mainImage ? (
                             <img
                               alt={item.name}
                               className="w-full h-full object-cover opacity-80"
                               src={mainImage.image_url}
+                              draggable={false}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-foreground/20 text-xs">
                               Sem foto
                             </div>
                           )}
-                        </div>
+                        </button>
                         <div className="flex-1 flex flex-col justify-center gap-1">
                           <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
                           <h3 className="text-base font-bold text-foreground leading-tight">{item.name}</h3>
@@ -367,6 +379,7 @@ const MeuPerfil = () => {
       </main>
 
       <BottomNav activeTab="perfil" />
+      <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
 
       {/* Select Item Dialog for proposals from favorites */}

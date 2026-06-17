@@ -23,6 +23,7 @@ import IconButton from "@/components/IconButton";
 import TradeRangeCard from "@/components/TradeRangeCard";
 import LocationSearch from "@/components/LocationSearch";
 import { categories, conditions } from "@/constants/categories";
+import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 
 const formatCurrency = (value: string): string => {
   const digits = value.replace(/\D/g, "");
@@ -80,6 +81,7 @@ const EditarItem = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [existingVideo, setExistingVideo] = useState<any>(null);
+  const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
     reason: string;
@@ -434,7 +436,13 @@ const EditarItem = () => {
           <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 pt-1">
             {existingImages.map((img) => (
               <div key={img.id} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
-                <img src={img.image_url} alt="Foto" className="w-full h-full object-cover rounded-2xl" />
+                <button
+                  type="button"
+                  onClick={() => setMediaViewer({ url: img.image_url, type: "image", alt: "Foto do item" })}
+                  className="h-full w-full rounded-2xl"
+                >
+                  <img src={img.image_url} alt="Foto" className="w-full h-full object-cover rounded-2xl" />
+                </button>
                 <button
                   type="button"
                   onClick={() => handleRemoveExistingImage(img.id)}
@@ -446,7 +454,13 @@ const EditarItem = () => {
             ))}
             {newPreviews.map((url, i) => (
               <div key={`new-${i}`} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
-                <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
+                <button
+                  type="button"
+                  onClick={() => setMediaViewer({ url, type: "image", alt: `Nova foto ${i + 1}` })}
+                  className="h-full w-full rounded-2xl"
+                >
+                  <img src={url} alt={`Nova foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -484,6 +498,13 @@ const EditarItem = () => {
                 controls
                 preload="metadata"
               />
+              <button
+                type="button"
+                onClick={() => setMediaViewer({ url: videoPreview || existingVideo?.video_url, type: "video", alt: "Vídeo do item" })}
+                className="absolute bottom-2 left-2 rounded-full bg-black/45 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md"
+              >
+                Ver vídeo
+              </button>
               <button
                 type="button"
                 onClick={removeVideo}
@@ -620,6 +641,7 @@ const EditarItem = () => {
 
 
       </main>
+      <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
 
       {/* Submit */}
       <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">

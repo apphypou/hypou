@@ -19,7 +19,7 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
   return (
     <>
       <motion.div
-        className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
+        className="absolute inset-0 z-40 rounded-t-none rounded-b-[1.5rem] pointer-events-none"
         style={{
           opacity: likeGlowOpacity,
           boxShadow:
@@ -28,7 +28,7 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
         }}
       />
       <motion.div
-        className="absolute inset-0 z-40 rounded-[1.5rem] pointer-events-none"
+        className="absolute inset-0 z-40 rounded-t-none rounded-b-[1.5rem] pointer-events-none"
         style={{
           opacity: dislikeGlowOpacity,
           boxShadow:
@@ -38,7 +38,7 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
       />
 
       <motion.div
-        className="absolute inset-0 z-50 rounded-[1.5rem] pointer-events-none flex items-center justify-center"
+        className="absolute inset-0 z-50 rounded-t-none rounded-b-[1.5rem] pointer-events-none flex items-center justify-center"
         style={{ opacity: likeOpacity }}
       >
         <motion.span
@@ -54,7 +54,7 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
         </motion.span>
       </motion.div>
       <motion.div
-        className="absolute inset-0 z-50 rounded-[1.5rem] pointer-events-none flex items-center justify-center"
+        className="absolute inset-0 z-50 rounded-t-none rounded-b-[1.5rem] pointer-events-none flex items-center justify-center"
         style={{ opacity: dislikeOpacity }}
       >
         <motion.span

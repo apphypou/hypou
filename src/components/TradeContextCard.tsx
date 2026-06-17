@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, Banknote } from "lucide-react";
 import ItemPreviewDialog from "@/components/ItemPreviewDialog";
 import { cdnThumb } from "@/lib/imageUrl";
+import { formatValue } from "@/lib/utils";
 
 interface TradeItem {
   id?: string;
@@ -13,6 +14,8 @@ interface TradeContextCardProps {
   myItem: TradeItem | null;
   otherItem: TradeItem | null;
   matchStatus: string;
+  cashAmountCents?: number;
+  cashPayerLabel?: string;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -28,7 +31,7 @@ const getItemImage = (item: TradeItem | null) => {
   return sorted[0]?.image_url;
 };
 
-const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardProps) => {
+const TradeContextCard = ({ myItem, otherItem, matchStatus, cashAmountCents = 0, cashPayerLabel = "Complemento" }: TradeContextCardProps) => {
   const [previewId, setPreviewId] = useState<string | null>(null);
   const status = statusConfig[matchStatus] || statusConfig.proposal;
   const myImg = getItemImage(myItem);
@@ -40,44 +43,53 @@ const TradeContextCard = ({ myItem, otherItem, matchStatus }: TradeContextCardPr
 
   return (
     <>
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-foreground/5 bg-card/50 shrink-0">
-      {/* My item */}
-      <button
-        type="button"
-        onClick={() => openItem(myItem)}
-        disabled={!myItem?.id}
-        className="flex-1 flex items-center gap-2 min-w-0 rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-left"
-      >
-        {myImg ? (
-          <img src={cdnThumb(myImg)} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
-        ) : (
-          <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
-        )}
-        <span className="text-xs font-semibold text-foreground truncate">{myItem?.name || "Meu item"}</span>
-      </button>
+    <div className="border-b border-foreground/5 bg-card/50 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3">
+        {/* My item */}
+        <button
+          type="button"
+          onClick={() => openItem(myItem)}
+          disabled={!myItem?.id}
+          className="flex-1 flex items-center gap-2 min-w-0 rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-left"
+        >
+          {myImg ? (
+            <img src={cdnThumb(myImg)} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
+          ) : (
+            <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
+          )}
+          <span className="text-xs font-semibold text-foreground truncate">{myItem?.name || "Meu item"}</span>
+        </button>
 
-      {/* Swap icon + status badge */}
-      <div className="flex flex-col items-center gap-1 shrink-0">
-        <ArrowLeftRight className="h-4 w-4 text-primary" />
-        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${status.className}`}>
-          {status.label}
-        </span>
+        {/* Swap icon + status badge */}
+        <div className="flex flex-col items-center gap-1 shrink-0">
+          <ArrowLeftRight className="h-4 w-4 text-primary" />
+          <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${status.className}`}>
+            {status.label}
+          </span>
+        </div>
+
+        {/* Other item */}
+        <button
+          type="button"
+          onClick={() => openItem(otherItem)}
+          disabled={!otherItem?.id}
+          className="flex-1 flex items-center gap-2 min-w-0 justify-end rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-right"
+        >
+          <span className="text-xs font-semibold text-foreground truncate text-right">{otherItem?.name || "Item"}</span>
+          {otherImg ? (
+            <img src={cdnThumb(otherImg)} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
+          ) : (
+            <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
+          )}
+        </button>
       </div>
 
-      {/* Other item */}
-      <button
-        type="button"
-        onClick={() => openItem(otherItem)}
-        disabled={!otherItem?.id}
-        className="flex-1 flex items-center gap-2 min-w-0 justify-end rounded-lg -mx-1 px-1 py-0.5 transition-colors hover:bg-foreground/5 active:bg-foreground/10 disabled:opacity-100 disabled:cursor-default text-right"
-      >
-        <span className="text-xs font-semibold text-foreground truncate text-right">{otherItem?.name || "Item"}</span>
-        {otherImg ? (
-          <img src={cdnThumb(otherImg)} alt="" className="h-10 w-10 rounded-lg object-cover border border-foreground/10 shrink-0" />
-        ) : (
-          <div className="h-10 w-10 rounded-lg bg-muted border border-foreground/10 shrink-0" />
-        )}
-      </button>
+      {cashAmountCents > 0 && (
+        <div className="mx-4 mb-3 flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-2 text-[11px] font-semibold text-foreground/80">
+          <Banknote className="h-3.5 w-3.5 text-primary" />
+          <span>{cashPayerLabel}: {formatValue(cashAmountCents)}</span>
+        </div>
+      )}
     </div>
     <ItemPreviewDialog itemId={previewId} open={!!previewId} onOpenChange={(o) => !o && setPreviewId(null)} />
     </>

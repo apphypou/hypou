@@ -5,6 +5,8 @@ export interface MatchWithDetails {
   id: string;
   status: string;
   created_at: string;
+  cash_amount_cents?: number;
+  cash_payer_user_id?: string | null;
   confirmed_by_a?: boolean;
   confirmed_by_b?: boolean;
   item_a: {
@@ -58,6 +60,8 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
         id: m.id,
         status: m.status,
         created_at: m.created_at,
+        cash_amount_cents: m.cash_amount_cents || 0,
+        cash_payer_user_id: m.cash_payer_user_id || null,
         confirmed_by_a: m.confirmed_by_a,
         confirmed_by_b: m.confirmed_by_b,
         item_a: m.item_a,
@@ -77,7 +81,7 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
   const { data, error } = await supabase
     .from("matches")
     .select(`
-      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
+      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id,
       item_a:item_a_id (id, name, market_value, category, location, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, category, location, item_images (image_url, position))
     `)
@@ -139,6 +143,8 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
       id: m.id,
       status: m.status,
       created_at: m.created_at,
+      cash_amount_cents: m.cash_amount_cents || 0,
+      cash_payer_user_id: m.cash_payer_user_id || null,
       confirmed_by_a: m.confirmed_by_a,
       confirmed_by_b: m.confirmed_by_b,
       item_a: m.item_a,
@@ -155,7 +161,8 @@ export const createProposal = async (
   _userId: string,
   myItemIds: string | string[],
   theirItemId: string,
-  _theirUserId: string
+  _theirUserId: string,
+  cashAmountCents = 0
 ) => {
   const ids = Array.isArray(myItemIds) ? myItemIds : [myItemIds];
   if (ids.length === 0) throw new Error("Selecione ao menos 1 item");
@@ -164,6 +171,7 @@ export const createProposal = async (
   const { data, error } = await supabase.rpc("create_proposal" as any, {
     p_my_item_ids: ids,
     p_their_item_id: theirItemId,
+    p_cash_amount_cents: Math.max(0, cashAmountCents || 0),
   });
   if (error) throw error;
   return { id: data as unknown as string };

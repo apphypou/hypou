@@ -10,6 +10,7 @@ import ScreenLayout from "@/components/ScreenLayout";
 import IconButton from "@/components/IconButton";
 import TradeRangeCard from "@/components/TradeRangeCard";
 import LocationSearch from "@/components/LocationSearch";
+import PhotoSuccessHint from "@/components/PhotoSuccessHint";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -426,6 +427,9 @@ const NovoItem = () => {
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
             Fotos do Item
           </label>
+          <div className="mb-3">
+            <PhotoSuccessHint compact />
+          </div>
           {itemPreviews.length > 0 ? (
             <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 pt-1">
               {itemPreviews.map((url, i) => (
@@ -458,7 +462,7 @@ const NovoItem = () => {
                 <Camera className="h-7 w-7 text-primary/60" />
               </div>
               <span className="text-sm font-bold text-foreground">Adicionar fotos</span>
-              <span className="text-xs text-muted-foreground">Até 5 fotos do item</span>
+              <span className="text-xs text-muted-foreground">Recomendado mínimo 3 fotos · Até 5 fotos</span>
             </div>
           )}
         </div>
