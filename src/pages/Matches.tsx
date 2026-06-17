@@ -206,10 +206,6 @@ const Matches = () => {
         <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
           Propostas
         </h1>
-        <div className="flex items-center gap-1.5">
-          <span className="text-primary text-xs font-semibold">{activeMatches.length}</span>
-          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-        </div>
       </header>
 
       {/* Tabs */}

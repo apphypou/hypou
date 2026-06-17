@@ -80,7 +80,9 @@ export const ChatHeader = ({
               <>
                 <p className="font-bold text-sm text-foreground truncate">{userName}</p>
                 <p className="text-[10px] text-foreground/40 truncate">
-                  {details?.my_item?.name || "Seu item"} ↔ {details?.other_item?.name || "Item"}
+                  {details?.my_item?.name || details?.other_item?.name
+                    ? `${details?.my_item?.name || "Seu item"} ↔ ${details?.other_item?.name || "Item"}`
+                    : "Conversa ativa"}
                 </p>
               </>
             )}

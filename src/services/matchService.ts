@@ -267,7 +267,7 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
   const { data, error } = await supabase
     .from("matches")
     .select(`
-      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b,
+      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id,
       item_a:item_a_id (id, name, market_value, category, location, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, category, location, item_images (image_url, position))
     `)
@@ -293,6 +293,8 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
     id: data.id,
     status: data.status,
     created_at: data.created_at,
+    cash_amount_cents: (data as any).cash_amount_cents || 0,
+    cash_payer_user_id: (data as any).cash_payer_user_id || null,
     confirmed_by_a: (data as any).confirmed_by_a,
     confirmed_by_b: (data as any).confirmed_by_b,
     item_a: data.item_a as any,
