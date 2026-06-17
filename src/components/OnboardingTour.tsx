@@ -1,45 +1,40 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronUp, Search, Repeat } from "lucide-react";
+import { X, ChevronUp, Search, Repeat, Heart, Package } from "lucide-react";
 import tutorialSwipeImg from "@/assets/tutorial-swipe.png";
 
 interface TourStep {
   title: string;
   description: string;
-  icon: React.ReactNode;
+  visual: "intro" | "swipe" | "details" | "trade";
+  cta?: string;
+  needsSwipe?: boolean;
 }
-
-const SwipeVisual = () => (
-  <img
-    src={tutorialSwipeImg}
-    alt="Arraste para os lados"
-    className="h-full w-full object-contain"
-    draggable={false}
-    loading="lazy"
-    decoding="async"
-  />
-);
 
 const STEPS: TourStep[] = [
   {
-    title: "Bem-vindo ao Explorar!",
-    description: "Aqui você descobre itens de outros usuários e pode propor trocas.",
-    icon: <Search className="h-7 w-7 text-primary" />,
+    title: "Troque o que está parado",
+    description: "Veja itens reais de outras pessoas e descubra oportunidades de troca perto de você.",
+    visual: "intro",
+    cta: "Entendi",
   },
   {
-    title: "Arraste para os lados",
-    description: "Arraste o card para a direita para curtir ou para a esquerda para passar.",
-    icon: <SwipeVisual />,
+    title: "Curta ou passe",
+    description: "Arraste o mini card para aprender: direita é Hypou, esquerda é Flopou.",
+    visual: "swipe",
+    needsSwipe: true,
   },
   {
-    title: "Veja os detalhes",
-    description: "Arraste o card para cima ou toque em 'Detalhes' para ver mais informações do item.",
-    icon: <ChevronUp className="h-7 w-7 text-primary" />,
+    title: "Veja antes de propor",
+    description: "Toque no preço ou na área do item para abrir detalhes, descrição e anunciante.",
+    visual: "details",
+    cta: "Ver exemplo",
   },
   {
-    title: "Proponha uma troca",
-    description: "Ao curtir, escolha um dos seus itens para enviar uma proposta de troca!",
-    icon: <Repeat className="h-7 w-7 text-primary" />,
+    title: "Proponha com um item seu",
+    description: "Quando combinar, escolha seu item, envie a proposta e combine tudo pelo chat.",
+    visual: "trade",
+    cta: "Começar!",
   },
 ];
 
@@ -52,11 +47,16 @@ interface OnboardingTourProps {
 const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [swipeResult, setSwipeResult] = useState<"hypou" | "flopou" | null>(null);
 
   useEffect(() => {
     const done = localStorage.getItem(TOUR_KEY);
     if (!done) setVisible(true);
   }, []);
+
+  useEffect(() => {
+    setSwipeResult(null);
+  }, [step]);
 
   const handleClose = () => {
     localStorage.setItem(TOUR_KEY, "true");
@@ -79,6 +79,7 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
   if (!visible) return null;
 
   const current = STEPS[step];
+  const canContinue = !current.needsSwipe || !!swipeResult;
 
   return (
     <AnimatePresence>
@@ -122,16 +123,9 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
             ))}
           </div>
 
-          {/* Icon area */}
+          {/* Visual area */}
           <div className="flex justify-center mb-5">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 20 }}
-              className="h-[96px] w-[160px] rounded-2xl bg-gradient-to-br from-primary/[0.12] to-primary/[0.04] border border-primary/[0.08] flex items-center justify-center overflow-hidden p-2"
-            >
-              {current.icon}
-            </motion.div>
+            <StepVisual visual={current.visual} result={swipeResult} onSwipe={setSwipeResult} />
           </div>
 
           {/* Content */}
@@ -163,9 +157,10 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
             </button>
             <button
               onClick={handleNext}
-              className="flex-1 h-12 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.4)] transition-all hover:shadow-[0_4px_24px_-2px_hsl(var(--primary)/0.5)] active:scale-95"
+              disabled={!canContinue}
+              className="flex-1 h-12 rounded-full bg-primary text-primary-foreground text-sm font-bold shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.4)] transition-all hover:shadow-[0_4px_24px_-2px_hsl(var(--primary)/0.5)] active:scale-95 disabled:opacity-45 disabled:shadow-none disabled:active:scale-100"
             >
-              {step === STEPS.length - 1 ? "Começar!" : "Próximo"}
+              {current.needsSwipe && !swipeResult ? "Arraste o card" : current.cta || "Próximo"}
             </button>
           </div>
 
@@ -179,6 +174,76 @@ const OnboardingTour = ({ onComplete }: OnboardingTourProps) => {
         </motion.div>
       </motion.div>
     </AnimatePresence>
+  );
+};
+
+const StepVisual = ({
+  visual,
+  result,
+  onSwipe,
+}: {
+  visual: TourStep["visual"];
+  result: "hypou" | "flopou" | null;
+  onSwipe: (value: "hypou" | "flopou") => void;
+}) => {
+  if (visual === "swipe") {
+    return (
+      <div className="relative h-[118px] w-[190px]">
+        <div className="absolute inset-x-2 top-8 flex justify-between text-[10px] font-bold uppercase tracking-wider">
+          <span className="text-destructive/80">Flopou</span>
+          <span className="text-primary">Hypou</span>
+        </div>
+        <motion.div
+          drag="x"
+          dragConstraints={{ left: -62, right: 62 }}
+          dragElastic={0.12}
+          onDragEnd={(_, info) => {
+            if (info.offset.x > 35) onSwipe("hypou");
+            if (info.offset.x < -35) onSwipe("flopou");
+          }}
+          animate={{ x: result === "hypou" ? 42 : result === "flopou" ? -42 : 0, rotate: result === "hypou" ? 7 : result === "flopou" ? -7 : 0 }}
+          style={{ left: "calc(50% - 43px)" }}
+          className="absolute top-2 h-[104px] w-[86px] rounded-2xl bg-gradient-to-br from-zinc-700 to-zinc-950 border border-white/12 shadow-2xl flex flex-col justify-end p-2 touch-pan-y"
+        >
+          <img
+            src={tutorialSwipeImg}
+            alt=""
+            className="absolute inset-0 h-full w-full rounded-2xl object-cover opacity-60"
+            draggable={false}
+          />
+          <div className="relative h-2 w-10 rounded-full bg-white/80" />
+          <div className="relative mt-1 h-1.5 w-8 rounded-full bg-white/40" />
+        </motion.div>
+        {result && (
+          <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-bold ${result === "hypou" ? "bg-primary text-primary-foreground" : "bg-destructive text-destructive-foreground"}`}>
+            {result === "hypou" ? "Hypou" : "Flopou"}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const icon =
+    visual === "intro" ? <Search className="h-7 w-7 text-primary" /> :
+    visual === "details" ? <ChevronUp className="h-7 w-7 text-primary" /> :
+    <Repeat className="h-7 w-7 text-primary" />;
+
+  return (
+    <div className="h-[104px] w-[176px] rounded-2xl bg-gradient-to-br from-primary/[0.14] to-primary/[0.04] border border-primary/[0.12] flex items-center justify-center overflow-hidden p-3">
+      {visual === "trade" ? (
+        <div className="flex items-center gap-2">
+          <Package className="h-8 w-8 text-primary" />
+          <Repeat className="h-6 w-6 text-primary/70" />
+          <Heart className="h-8 w-8 text-primary" />
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2">
+          {icon}
+          {visual === "details" && <div className="h-2 w-16 rounded-full bg-primary/35" />}
+          {visual === "intro" && <div className="h-2 w-20 rounded-full bg-primary/30" />}
+        </div>
+      )}
+    </div>
   );
 };
 

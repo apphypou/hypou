@@ -65,7 +65,7 @@ const useConversationDetails = (conversationId: string | null) => {
         .from("public_profiles" as any)
         .select("display_name, avatar_url")
         .eq("user_id", otherUserId)
-        .single();
+        .maybeSingle();
 
       return {
         match_id: match.id,
@@ -102,7 +102,7 @@ const isLikelyPlayableAudio = async (blob: Blob, type: string) => {
 const Conversa = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
   const { data: messages = [], isLoading } = useMessages(conversationId || null);
-  const { data: details } = useConversationDetails(conversationId || null);
+  const { data: details, isLoading: detailsLoading } = useConversationDetails(conversationId || null);
   const { mutate: send, isPending: sending } = useSendMessage(conversationId || null);
   const { mutateAsync: uploadMedia } = useUploadChatMedia();
   const { user } = useAuth();
@@ -372,6 +372,7 @@ const Conversa = () => {
 
       <ChatHeader
         details={details}
+        loading={detailsLoading}
         callingKind={callingKind}
         onStartCall={handleStartCall}
         onOpenReport={() => setReportOpen(true)}

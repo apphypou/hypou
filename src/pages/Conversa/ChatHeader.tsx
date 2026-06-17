@@ -14,6 +14,7 @@ interface ChatHeaderProps {
     my_item?: { name?: string };
     other_item?: { name?: string };
   } | null | undefined;
+  loading?: boolean;
   callingKind: "video" | "audio" | null;
   onStartCall: (kind: "video" | "audio") => void;
   onOpenReport: () => void;
@@ -25,6 +26,7 @@ interface ChatHeaderProps {
 
 export const ChatHeader = ({
   details,
+  loading = false,
   callingKind,
   onStartCall,
   onOpenReport,
@@ -33,6 +35,7 @@ export const ChatHeader = ({
   locked = false,
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
+  const userName = details?.other_user.display_name || "Usuário";
 
   return (
     <header
@@ -46,12 +49,15 @@ export const ChatHeader = ({
         <ArrowLeft className="h-5 w-5" />
       </button>
 
-      {details && (
+      {(loading || details) && (
         <button
-          onClick={() => navigate(`/usuario/${details.other_user_id}`)}
+          onClick={() => details && navigate(`/usuario/${details.other_user_id}`)}
+          disabled={loading || !details}
           className="flex items-center gap-3 flex-1 min-w-0 text-left"
         >
-          {details.other_user.avatar_url ? (
+          {loading ? (
+            <div className="h-10 w-10 rounded-full bg-foreground/10 animate-pulse" />
+          ) : details?.other_user.avatar_url ? (
             <img
               src={details.other_user.avatar_url}
               alt=""
@@ -60,19 +66,33 @@ export const ChatHeader = ({
           ) : (
             <div className="h-10 w-10 rounded-full bg-card border border-foreground/10 flex items-center justify-center">
               <span className="text-sm font-bold text-foreground/30">
-                {(details.other_user.display_name || "?")[0].toUpperCase()}
+                {userName[0].toUpperCase()}
               </span>
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm text-foreground truncate">
-              {details.other_user.display_name || "Usuário"}
-            </p>
-            <p className="text-[10px] text-foreground/40 truncate">
-              {details.my_item?.name} ↔ {details.other_item?.name}
-            </p>
+            {loading ? (
+              <>
+                <div className="h-4 w-24 rounded-full bg-foreground/10 animate-pulse" />
+                <div className="mt-1.5 h-3 w-36 rounded-full bg-foreground/10 animate-pulse" />
+              </>
+            ) : (
+              <>
+                <p className="font-bold text-sm text-foreground truncate">{userName}</p>
+                <p className="text-[10px] text-foreground/40 truncate">
+                  {details?.my_item?.name || "Seu item"} ↔ {details?.other_item?.name || "Item"}
+                </p>
+              </>
+            )}
           </div>
         </button>
+      )}
+
+      {!loading && !details && (
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm text-foreground truncate">Conversa</p>
+          <p className="text-[10px] text-foreground/40 truncate">Não foi possível carregar os dados</p>
+        </div>
       )}
 
       {details && (
