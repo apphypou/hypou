@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    watch: {
+      ignored: ["**/build/**", "**/.codex-screenshots/**", "**/.superpowers/**"],
+    },
   },
   plugins: [
     react(),

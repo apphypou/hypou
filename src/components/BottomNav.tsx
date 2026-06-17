@@ -54,7 +54,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   return (
     <div
       className="fixed left-4 right-4 flex justify-center"
-      style={{ bottom: "calc(1rem + var(--safe-area-bottom))", zIndex: 40 }}
+      style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))", zIndex: 40 }}
     >
       <nav className="bg-background/92 dark:bg-background/82 backdrop-blur-2xl border border-foreground/10 rounded-full px-2 py-1.5 flex items-center gap-1.5 w-full max-w-[22rem] relative shadow-[0_8px_24px_rgba(0,0,0,0.18)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.42)]">
         {navItems.map((item) => {

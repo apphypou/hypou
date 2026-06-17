@@ -20,7 +20,6 @@ import {
   MapPin,
   Image,
   Package,
-  ChevronUp,
   ChevronDown,
   Star,
   Repeat,
@@ -472,7 +471,7 @@ const SwipeCard = memo(
             )}
 
             {expanded && (
-              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-scrim/76 via-scrim/44 to-scrim/12" />
+              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/88 via-black/58 to-black/18" />
             )}
 
             {/* ===== EXPANDED OVERLAY ===== */}
@@ -483,11 +482,11 @@ const SwipeCard = memo(
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 30 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute inset-x-3 bottom-3 top-[18%] z-30 flex flex-col rounded-2xl bg-scrim/34 backdrop-blur-2xl border border-on-media/14 shadow-[0_8px_32px_rgba(0,0,0,0.16)] overflow-hidden"
+                  className="absolute inset-x-3 bottom-3 top-[18%] z-30 flex flex-col rounded-2xl bg-black/64 backdrop-blur-2xl border border-white/16 shadow-[0_18px_60px_rgba(0,0,0,0.42)] overflow-hidden"
                 >
                   <button
                     onClick={toggleExpand}
-                    className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-on-media/60 shrink-0"
+                    className="w-full flex justify-center items-center gap-1 pt-4 pb-2 text-white/72 shrink-0"
                   >
                     <ChevronDown className="h-4 w-4" />
                     <span className="text-[10px] font-bold uppercase tracking-widest">
@@ -551,7 +550,7 @@ const SwipeCard = memo(
                   height: "38%",
                   minHeight: "220px",
                   background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.12) 34%, rgba(0,0,0,0.48) 66%, rgba(0,0,0,0.90) 100%)",
+                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.10) 24%, rgba(0,0,0,0.44) 58%, rgba(0,0,0,0.88) 100%)",
                 }}
               >
                 <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pointer-events-none">
@@ -584,42 +583,41 @@ const SwipeCard = memo(
                     </div>
                   )}
 
-                  <div className="flex items-center gap-1.5 mb-3 overflow-hidden">
-                    <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-md">
-                      {item.category}
-                    </span>
-                    {conditionLabel && (
-                      <span className="px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media/80 text-[9.5px] font-semibold uppercase flex items-center gap-1 shrink-0 backdrop-blur-md">
-                        <Package className="h-2.5 w-2.5" /> {conditionLabel}
-                      </span>
-                    )}
-                    {compactLocation && (
-                      <span className="max-w-[48%] px-2 py-0.5 rounded-full bg-scrim/28 border border-on-media/10 text-on-media/80 text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-md">
-                        <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
-                        <span className="truncate">{compactLocation}</span>
-                      </span>
-                    )}
-                  </div>
-
-                  <h2 className="text-on-media text-[23px] font-bold tracking-tight leading-[1.06] truncate">
-                    {item.name}
-                  </h2>
-
-                  <p className="mt-1 text-on-media/74 text-[15px] font-medium tracking-tight">
-                    {formatValue(item.market_value)}
-                  </p>
-
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleExpand(e);
-                    }}
+                    onClick={toggleExpand}
                     aria-label="Ver detalhes do item"
-                    className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-on-media/10 border border-on-media/15 backdrop-blur-md text-on-media/82 text-[9.5px] font-semibold uppercase tracking-wider active:scale-95 transition-transform pointer-events-auto"
+                    className="block w-full text-left pointer-events-auto active:scale-[0.99] transition-transform"
                   >
-                    <ChevronUp className="h-2.5 w-2.5" />
-                    Ver detalhes
+                    <div className="flex items-center gap-1.5 mb-2.5 overflow-hidden">
+                      <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/94 text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-xl">
+                        {item.category}
+                      </span>
+                      {conditionLabel && (
+                        <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/90 text-[9.5px] font-semibold uppercase flex items-center gap-1 shrink-0 backdrop-blur-xl">
+                          <Package className="h-2.5 w-2.5" /> {conditionLabel}
+                        </span>
+                      )}
+                      {compactLocation && (
+                        <span className="max-w-[48%] px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/90 text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-xl">
+                          <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
+                          <span className="truncate">{compactLocation}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <h2 className="pb-0.5 text-white text-[24px] font-bold tracking-tight leading-[1.12] truncate [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
+                      {item.name}
+                    </h2>
+
+                    <span className="mt-1 inline-flex items-center gap-2">
+                      <span className="text-white/92 text-[15.5px] font-medium tracking-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.42)]">
+                        {formatValue(item.market_value)}
+                      </span>
+                      <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-white/8 text-white/56 backdrop-blur-xl">
+                        <ChevronDown className="h-2.5 w-2.5" />
+                      </span>
+                    </span>
                   </button>
 
                   <SwipeActionButtons
