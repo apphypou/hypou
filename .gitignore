@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local/generated workspace junk
+.codex-screenshots/
+.superpowers/
+build/
+docs/superpowers/
+vite.config.ts.timestamp-*.mjs
+ios/App/App/config 2.xml

@@ -53,16 +53,16 @@ const Baixar = lazy(() => import("./pages/Baixar"));
 const Item = lazy(() => import("./pages/Item"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
-const AdminItens = lazy(() => import("./pages/admin/AdminItens"));
-const AdminMatches = lazy(() => import("./pages/admin/AdminMatches"));
-const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
-const AdminWaitlist = lazy(() => import("./pages/admin/AdminWaitlist"));
-const AdminStatus = lazy(() => import("./pages/admin/AdminStatus"));
-const AdminAssistente = lazy(() => import("./pages/admin/AdminAssistente"));
-const AdminLancamento = lazy(() => import("./pages/admin/AdminLancamento"));
+const AdminLayout = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsuarios = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminUsuarios"));
+const AdminItens = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminItens"));
+const AdminMatches = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminMatches"));
+const AdminReports = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminReports"));
+const AdminWaitlist = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminWaitlist"));
+const AdminStatus = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminStatus"));
+const AdminAssistente = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminAssistente"));
+const AdminLancamento = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLancamento"));
 const Chamada = lazy(() => import("./pages/Chamada"));
 const ChamadasPerdidas = lazy(() => import("./pages/ChamadasPerdidas"));
 
@@ -157,21 +157,23 @@ const AnimatedRoutes = () => {
           } />
 
           {/* Admin routes */}
-          <Route path="/admin" element={
-            <AdminProtectedRoute>
-              <AdminLayout />
-            </AdminProtectedRoute>
-          }>
-            <Route index element={<AdminDashboard />} />
-            <Route path="usuarios" element={<AdminUsuarios />} />
-            <Route path="itens" element={<AdminItens />} />
-            <Route path="matches" element={<AdminMatches />} />
-            <Route path="reports" element={<AdminReports />} />
-            <Route path="waitlist" element={<AdminWaitlist />} />
-            <Route path="status" element={<AdminStatus />} />
-            <Route path="assistente" element={<AdminAssistente />} />
-            <Route path="lancamento" element={<AdminLancamento />} />
-          </Route>
+          {!__HYPOU_MOBILE_BUILD__ && AdminLayout && (
+            <Route path="/admin" element={
+              <AdminProtectedRoute>
+                <AdminLayout />
+              </AdminProtectedRoute>
+            }>
+              <Route index element={AdminDashboard && <AdminDashboard />} />
+              <Route path="usuarios" element={AdminUsuarios && <AdminUsuarios />} />
+              <Route path="itens" element={AdminItens && <AdminItens />} />
+              <Route path="matches" element={AdminMatches && <AdminMatches />} />
+              <Route path="reports" element={AdminReports && <AdminReports />} />
+              <Route path="waitlist" element={AdminWaitlist && <AdminWaitlist />} />
+              <Route path="status" element={AdminStatus && <AdminStatus />} />
+              <Route path="assistente" element={AdminAssistente && <AdminAssistente />} />
+              <Route path="lancamento" element={AdminLancamento && <AdminLancamento />} />
+            </Route>
+          )}
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

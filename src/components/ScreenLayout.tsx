@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 interface ScreenLayoutProps {
   children: ReactNode;
   className?: string;
+  edgeToEdgeTop?: boolean;
 }
 
-const ScreenLayout = ({ children, className }: ScreenLayoutProps) => {
+const ScreenLayout = ({ children, className, edgeToEdgeTop = false }: ScreenLayoutProps) => {
   return (
     <div
       className={cn(
@@ -14,7 +15,7 @@ const ScreenLayout = ({ children, className }: ScreenLayoutProps) => {
         className
       )}
       style={{
-        paddingTop: "var(--safe-area-top)",
+        paddingTop: edgeToEdgeTop ? 0 : "var(--safe-area-top)",
         paddingLeft: "var(--safe-area-left)",
         paddingRight: "var(--safe-area-right)",
       }}

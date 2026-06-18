@@ -2,7 +2,6 @@ import { PlusCircle, Share2 } from "lucide-react";
 import emptyChestImg from "@/assets/empty-chest.png";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
-import OnboardingTour from "@/components/OnboardingTour";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -303,7 +302,7 @@ const Explorar = () => {
   const feedEnded = false;
 
   return (
-    <ScreenLayout>
+    <ScreenLayout edgeToEdgeTop>
       {/* Main Card Area */}
       <main className="relative flex-1 flex flex-col items-center justify-start w-full pb-28 pt-0 z-10" style={{ perspective: "1200px" }}>
         {isLoading ? (
@@ -527,9 +526,6 @@ const Explorar = () => {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Onboarding Tour for first-time users */}
-      {!isGuest && <OnboardingTour />}
 
       {/* Guest prompt dialog */}
       <GuestPromptDialog

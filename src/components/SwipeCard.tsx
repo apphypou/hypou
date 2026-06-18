@@ -361,7 +361,8 @@ const SwipeCard = memo(
                   e.stopPropagation();
                   navigate(`/usuario/${ownerProfile.user_id}`);
                 }}
-                className="absolute top-4 left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-scrim/35 backdrop-blur-xl border border-on-media/10 hover:border-on-media/30 active:scale-95 transition-all cursor-pointer"
+                className="absolute left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-scrim/35 backdrop-blur-xl border border-on-media/10 hover:border-on-media/30 active:scale-95 transition-all cursor-pointer"
+                style={{ top: "calc(var(--safe-area-top) + 0.75rem)" }}
               >
                 {ownerProfile.avatar_url ? (
                   <img
@@ -408,7 +409,10 @@ const SwipeCard = memo(
 
             {/* Share + filters */}
             {!expanded && (
-              <div className="absolute top-4 right-4 z-30 flex flex-col items-center gap-2">
+              <div
+                className="absolute right-4 z-30 flex flex-col items-center gap-2"
+                style={{ top: "calc(var(--safe-area-top) + 0.75rem)" }}
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -547,10 +551,10 @@ const SwipeCard = memo(
                 className="absolute bottom-0 inset-x-0 z-30 max-h-[280px] rounded-b-[1.5rem] overflow-hidden pointer-events-none"
                 onPointerDown={(e) => e.stopPropagation()}
                 style={{
-                  height: "38%",
-                  minHeight: "220px",
+                  height: "46%",
+                  minHeight: "260px",
                   background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.10) 24%, rgba(0,0,0,0.44) 58%, rgba(0,0,0,0.88) 100%)",
+                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.16) 18%, rgba(0,0,0,0.50) 50%, rgba(0,0,0,0.90) 100%)",
                 }}
               >
                 <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pointer-events-none">
@@ -589,7 +593,11 @@ const SwipeCard = memo(
                     aria-label="Ver detalhes do item"
                     className="block w-full text-left pointer-events-auto active:scale-[0.99] transition-transform"
                   >
-                    <div className="flex items-center gap-1.5 mb-2.5 overflow-hidden">
+                    <h2 className="pb-0.5 text-white text-[24px] font-bold tracking-tight leading-[1.12] truncate [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
+                      {item.name}
+                    </h2>
+
+                    <div className="flex items-center gap-1.5 mt-1.5 mb-1.5 overflow-hidden">
                       <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/94 text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-xl">
                         {item.category}
                       </span>
@@ -605,10 +613,6 @@ const SwipeCard = memo(
                         </span>
                       )}
                     </div>
-
-                    <h2 className="pb-0.5 text-white text-[24px] font-bold tracking-tight leading-[1.12] truncate [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
-                      {item.name}
-                    </h2>
 
                     <span className="mt-1 inline-flex items-center gap-2">
                       <span className="text-white/92 text-[15.5px] font-medium tracking-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.42)]">

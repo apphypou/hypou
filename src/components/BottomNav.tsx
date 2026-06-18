@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
 
 type TabId = "explorar" | "shorts" | "trocas" | "chat" | "perfil";
 
@@ -28,6 +29,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const unreadCount = useUnreadCount();
+  const bottomOffset = Capacitor.isNativePlatform() ? "0.25rem" : "0.75rem";
 
   const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; unreadCount?: number }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
@@ -54,7 +56,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   return (
     <div
       className="fixed left-4 right-4 flex justify-center"
-      style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))", zIndex: 40 }}
+      style={{ bottom: `calc(${bottomOffset} + var(--safe-area-bottom))`, zIndex: 40 }}
     >
       <nav className="bg-background/92 dark:bg-background/82 backdrop-blur-2xl border border-foreground/10 rounded-full px-2 py-1.5 flex items-center gap-1.5 w-full max-w-[22rem] relative shadow-[0_8px_24px_rgba(0,0,0,0.18)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.42)]">
         {navItems.map((item) => {

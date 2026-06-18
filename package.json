@@ -3,11 +3,20 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:mobile": "HYPOU_MOBILE_BUILD=1 vite build",
+    "build:mobile:trace": "HYPOU_MOBILE_BUILD=1 node scripts/trace-vite-build.mjs",
+    "build:mobile:ci": "npm run mobile:doctor && npm run build:mobile",
     "build:dev": "vite build --mode development",
     "lint": "eslint src scripts supabase eslint.config.js tailwind.config.ts vite.config.ts vitest.config.ts capacitor.config.ts postcss.config.js",
+    "mobile:doctor": "node scripts/mobile-doctor.mjs",
+    "mobile:ios": "node scripts/release-ios.mjs",
+    "mobile:android": "node scripts/release-android.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
