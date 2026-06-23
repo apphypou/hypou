@@ -42,7 +42,7 @@ export const updateItem = async (itemId: string, data: {
 export const getItemById = async (itemId: string) => {
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position)`)
+    .select(`*, item_images (id, image_url, position, focal_x, focal_y)`)
     .eq("id", itemId)
     .single();
   if (error) throw error;
@@ -57,7 +57,13 @@ export const deleteItemImage = async (imageId: string) => {
   if (error) throw error;
 };
 
-export const uploadItemImage = async (userId: string, itemId: string, file: File, position: number): Promise<string> => {
+export const uploadItemImage = async (
+  userId: string,
+  itemId: string,
+  file: File,
+  position: number,
+  focalPoint?: { focal_x?: number; focal_y?: number }
+): Promise<string> => {
   const validationError = validateImageFile(file);
   if (validationError) throw new Error(validationError);
   // Convert HEIC/HEIF (iOS default) to JPEG when running on the web.
@@ -75,7 +81,13 @@ export const uploadItemImage = async (userId: string, itemId: string, file: File
 
   const { error: dbError } = await supabase
     .from("item_images")
-    .insert({ item_id: itemId, image_url: imageUrl, position });
+    .insert({
+      item_id: itemId,
+      image_url: imageUrl,
+      position,
+      focal_x: focalPoint?.focal_x ?? 50,
+      focal_y: focalPoint?.focal_y ?? 50,
+    });
   if (dbError) throw dbError;
 
   return imageUrl;
@@ -145,7 +157,7 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
 
     if (itemIds.length > 0) {
       const [{ data: images }, { data: videos }] = await Promise.all([
-        supabase.from("item_images").select("id, item_id, image_url, position").in("item_id", itemIds),
+        supabase.from("item_images").select("id, item_id, image_url, position, focal_x, focal_y").in("item_id", itemIds),
         supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
       ]);
       (images || []).forEach((img) => {
@@ -221,7 +233,7 @@ export const getPublicExploreItems = async (page = 0, pageSize = 50) => {
 
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position), item_videos (id, video_url, thumbnail_url)`)
+    .select(`*, item_images (id, image_url, position, focal_x, focal_y), item_videos (id, video_url, thumbnail_url)`)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .range(from, to);

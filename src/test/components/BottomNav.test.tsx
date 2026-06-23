@@ -57,10 +57,15 @@ describe("BottomNav", () => {
     expect(wrapper).toHaveClass("left-4", "right-4");
     expect(nav).toHaveClass("max-w-[22rem]", "px-2", "py-1.5");
   });
+
+  it("08 usa wrapper que pode ser ocultado por overlays bloqueantes", () => {
+    const { container } = renderWithProviders(<BottomNav activeTab="explorar" />);
+    expect(container.firstChild).toHaveClass("hypou-bottom-nav-wrapper");
+  });
 });
 
 describe("BottomNav unread", () => {
-  it("08 mostra badge numérico quando há mensagens não lidas", async () => {
+  it("09 mostra badge numérico quando há mensagens não lidas", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 5 }));
     const { default: BN } = await import("@/components/BottomNav");
@@ -68,7 +73,7 @@ describe("BottomNav unread", () => {
     expect(screen.getByLabelText(/5 novas mensagens/i)).toHaveTextContent("5");
   });
 
-  it("09 limita badge a 99+ quando >99", async () => {
+  it("10 limita badge a 99+ quando >99", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 150 }));
     const { default: BN } = await import("@/components/BottomNav");
@@ -76,7 +81,7 @@ describe("BottomNav unread", () => {
     expect(screen.getByLabelText(/150 novas mensagens/i)).toHaveTextContent("99+");
   });
 
-  it("10 oculta badge quando contagem é 0", async () => {
+  it("11 oculta badge quando contagem é 0", async () => {
     vi.resetModules();
     vi.doMock("@/hooks/useUnreadCount", () => ({ useUnreadCount: () => 0 }));
     const { default: BN } = await import("@/components/BottomNav");

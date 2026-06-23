@@ -221,6 +221,8 @@ export type Database = {
       item_images: {
         Row: {
           created_at: string
+          focal_x: number
+          focal_y: number
           id: string
           image_url: string
           item_id: string
@@ -228,6 +230,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          focal_x?: number
+          focal_y?: number
           id?: string
           image_url: string
           item_id: string
@@ -235,6 +239,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          focal_x?: number
+          focal_y?: number
           id?: string
           image_url?: string
           item_id?: string
@@ -386,6 +392,8 @@ export type Database = {
       }
       matches: {
         Row: {
+          cash_amount_cents: number
+          cash_payer_user_id: string | null
           confirmed_by_a: boolean | null
           confirmed_by_b: boolean | null
           created_at: string
@@ -398,6 +406,8 @@ export type Database = {
           user_b_id: string
         }
         Insert: {
+          cash_amount_cents?: number
+          cash_payer_user_id?: string | null
           confirmed_by_a?: boolean | null
           confirmed_by_b?: boolean | null
           created_at?: string
@@ -410,6 +420,8 @@ export type Database = {
           user_b_id: string
         }
         Update: {
+          cash_amount_cents?: number
+          cash_payer_user_id?: string | null
           confirmed_by_a?: boolean | null
           confirmed_by_b?: boolean | null
           created_at?: string
@@ -885,13 +897,24 @@ export type Database = {
       }
     }
     Functions: {
-      create_proposal: {
-        Args: { p_my_item_ids: string[]; p_their_item_id: string }
-        Returns: string
-      }
+      create_proposal:
+        | {
+            Args: { p_my_item_ids: string[]; p_their_item_id: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_cash_amount_cents?: number
+              p_my_item_ids: string[]
+              p_their_item_id: string
+            }
+            Returns: string
+          }
       get_my_matches: {
         Args: never
         Returns: {
+          cash_amount_cents: number
+          cash_payer_user_id: string
           confirmed_by_a: boolean
           confirmed_by_b: boolean
           created_at: string

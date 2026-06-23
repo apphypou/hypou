@@ -3,18 +3,15 @@ import { Capacitor } from "@capacitor/core";
 import App from "./App.tsx";
 import "./index.css";
 
-// Kill-switch: remove any leftover service worker / caches from previous versions
-// so users always see the latest published bundle without clearing cookies.
-if (!Capacitor.isNativePlatform()) {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-      .getRegistrations()
-      .then((regs) => Promise.all(regs.map((r) => r.unregister())))
-      .catch(() => {});
-  }
-  if ("caches" in window) {
-    caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).catch(() => {});
-  }
+// Kill-switch: remove leftover PWA caches so app updates don't keep stale UI.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+    .catch(() => {});
+}
+if ("caches" in window) {
+  caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k)))).catch(() => {});
 }
 
 // Initialize native plugins when running on a native platform

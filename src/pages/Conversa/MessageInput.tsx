@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Video, Mic, Loader2, Send, Trash2 } from "lucide-react";
+import { Image as ImageIcon, Video, Mic, Loader2, Send, Trash2, Plus, X } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 import type { MessageType } from "@/services/messageService";
 
@@ -30,6 +30,7 @@ export const MessageInput = ({
   uploading,
   isRecording,
   showAttachMenu,
+  setShowAttachMenu,
   onStartRecording,
   onStopRecording,
   onFileSelect,
@@ -131,18 +132,24 @@ export const MessageInput = ({
         {showAttachMenu && !isRecording && (
           <div className="flex items-center gap-2 mb-3 animate-in slide-in-from-bottom-2 duration-200">
             <button
-              onClick={handleImagePick}
-              className="flex flex-col items-center gap-1 px-4 py-3 rounded-2xl bg-card border border-foreground/10 hover:border-primary/50 transition-all"
+              onClick={() => {
+                setShowAttachMenu(false);
+                handleImagePick();
+              }}
+              className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-card border border-foreground/10 hover:border-primary/50 transition-all"
             >
               <ImageIcon className="h-5 w-5 text-primary" />
-              <span className="text-[10px] text-foreground/60 font-medium">Imagem</span>
+              <span className="text-xs text-foreground/70 font-semibold">Foto</span>
             </button>
             <button
-              onClick={handleVideoPick}
-              className="flex flex-col items-center gap-1 px-4 py-3 rounded-2xl bg-card border border-foreground/10 hover:border-primary/50 transition-all"
+              onClick={() => {
+                setShowAttachMenu(false);
+                handleVideoPick();
+              }}
+              className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-card border border-foreground/10 hover:border-primary/50 transition-all"
             >
               <Video className="h-5 w-5 text-primary" />
-              <span className="text-[10px] text-foreground/60 font-medium">Vídeo</span>
+              <span className="text-xs text-foreground/70 font-semibold">Vídeo</span>
             </button>
           </div>
         )}
@@ -193,12 +200,13 @@ export const MessageInput = ({
               />
               <div className="flex items-center gap-1 shrink-0">
                 <button
-                  onClick={handleImagePick}
+                  type="button"
+                  onClick={() => setShowAttachMenu(!showAttachMenu)}
                   disabled={uploading}
                   className="h-9 w-9 rounded-full bg-background/60 border border-foreground/10 text-foreground/70 hover:text-primary flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
-                  aria-label="Enviar imagem"
+                  aria-label={showAttachMenu ? "Fechar anexos" : "Anexar mídia"}
                 >
-                  <ImageIcon className="h-4 w-4" />
+                  {showAttachMenu ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 </button>
               </div>
             </div>

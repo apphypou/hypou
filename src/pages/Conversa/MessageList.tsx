@@ -1,7 +1,8 @@
-import { Loader2, Check, CheckCheck, Play } from "lucide-react";
+import { AlertCircle, Check, CheckCheck, Clock3, Loader2, Play } from "lucide-react";
 import { forwardRef, useState } from "react";
 import { AudioPlayer } from "./AudioPlayer";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
+import { getMessageDeliveryLabel, getMessageDeliveryStatus } from "@/lib/messageDeliveryStatus";
 
 interface MessageListProps {
   messages: any[];
@@ -73,6 +74,8 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
             messages.map((msg) => {
               const isMine = msg.sender_id === currentUserId;
               const isSystem = msg.message_type === "system";
+              const deliveryStatus = getMessageDeliveryStatus(msg, currentUserId);
+              const deliveryLabel = getMessageDeliveryLabel(deliveryStatus);
 
               if (isSystem) {
                 return (
@@ -98,12 +101,21 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
                       <span className={`text-[10px] ${isMine ? "text-primary-foreground/60" : "text-foreground/30"}`}>
                         {formatTime(msg.created_at)}
                       </span>
-                      {isMine &&
-                        (msg.read_at ? (
-                          <CheckCheck className="h-3 w-3 text-primary-foreground/60" />
-                        ) : (
-                          <Check className="h-3 w-3 text-primary-foreground/40" />
-                        ))}
+                      {deliveryStatus === "read" && (
+                        <CheckCheck className="h-3.5 w-3.5 text-cyan-200" aria-label={deliveryLabel} />
+                      )}
+                      {deliveryStatus === "delivered" && (
+                        <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/55" aria-label={deliveryLabel} />
+                      )}
+                      {deliveryStatus === "sent" && (
+                        <Check className="h-3.5 w-3.5 text-primary-foreground/55" aria-label={deliveryLabel} />
+                      )}
+                      {deliveryStatus === "sending" && (
+                        <Clock3 className="h-3.5 w-3.5 text-primary-foreground/45" aria-label={deliveryLabel} />
+                      )}
+                      {deliveryStatus === "failed" && (
+                        <AlertCircle className="h-3.5 w-3.5 text-destructive-foreground" aria-label={deliveryLabel} />
+                      )}
                     </div>
                   </div>
                 </div>

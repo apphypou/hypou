@@ -8,6 +8,7 @@ import { useMatches } from "@/hooks/useMatches";
 import { useAuth } from "@/hooks/useAuth";
 import type { MatchWithDetails } from "@/services/matchService";
 import { acceptProposal, rejectProposal, confirmTrade, cancelProposal, getMatch } from "@/services/matchService";
+import { getConversationIdForMatch } from "@/services/messageService";
 import { useNavigate } from "react-router-dom";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ const Matches = () => {
   const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
   const [activeTab, setActiveTab] = useState<"received" | "sent" | "cancelled" | "completed">("received");
   const [showRating, setShowRating] = useState(false);
+  const [openingChatMatchId, setOpeningChatMatchId] = useState<string | null>(null);
 
   // Rating check for completed matches
   const selectedMatchId = selectedMatch?.id;
@@ -109,6 +111,24 @@ const Matches = () => {
       setConfirmingTrade(false);
     }
   }, [selectedMatch, confirmingTrade, queryClient, toast, user]);
+
+  const handleOpenChat = useCallback(async (matchId: string) => {
+    if (openingChatMatchId) return;
+    setOpeningChatMatchId(matchId);
+    try {
+      const conversationId = await getConversationIdForMatch(matchId);
+      setSelectedMatch(null);
+      navigate(conversationId ? `/chat/${conversationId}` : "/chat");
+    } catch (err: any) {
+      toast({
+        title: "Erro ao abrir chat",
+        description: err?.message || "Não foi possível encontrar a conversa dessa proposta.",
+        variant: "destructive",
+      });
+    } finally {
+      setOpeningChatMatchId(null);
+    }
+  }, [navigate, openingChatMatchId, toast]);
 
   const isReceivedProposal = (match: MatchWithDetails) =>
     match.status === "proposal" && match.my_item_side === "b";
@@ -364,11 +384,16 @@ const Matches = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/match/${match.id}`);
+                            handleOpenChat(match.id);
                           }}
+                          disabled={openingChatMatchId === match.id}
                           className="h-8 px-3 flex items-center justify-center gap-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-all"
                         >
-                          <MessageSquare className="h-3.5 w-3.5" />
+                          {openingChatMatchId === match.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <MessageSquare className="h-3.5 w-3.5" />
+                          )}
                           Conversar
                         </button>
                       )}
@@ -654,13 +679,15 @@ const Matches = () => {
               ) : selectedMatch.status === "accepted" ? (
                 <div className="flex gap-3">
                   <button
-                    onClick={() => {
-                      setSelectedMatch(null);
-                      navigate(`/match/${selectedMatch.id}`);
-                    }}
+                    onClick={() => handleOpenChat(selectedMatch.id)}
+                    disabled={openingChatMatchId === selectedMatch.id}
                     className="flex-1 h-14 rounded-2xl bg-card border border-foreground/10 text-foreground font-bold text-base flex items-center justify-center gap-2"
                   >
-                    <MessageSquare className="h-5 w-5" />
+                    {openingChatMatchId === selectedMatch.id ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <MessageSquare className="h-5 w-5" />
+                    )}
                     Chat
                   </button>
                   {!myConfirmed ? (
@@ -765,7 +792,7 @@ const Matches = () => {
         />
       )}
 
-      <BottomNav activeTab="trocas" />
+      {!selectedMatch && <BottomNav activeTab="trocas" />}
     </ScreenLayout>
   );
 };

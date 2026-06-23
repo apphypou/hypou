@@ -173,8 +173,20 @@ export const createProposal = async (
     p_their_item_id: theirItemId,
     p_cash_amount_cents: Math.max(0, cashAmountCents || 0),
   });
-  if (error) throw error;
+  if (error) throw new Error(getProposalErrorMessage(error));
   return { id: data as unknown as string };
+};
+
+export const getProposalErrorMessage = (error: { code?: string; message?: string }) => {
+  const message = error.message || "Não foi possível enviar a proposta.";
+  if (
+    error.code === "PGRST202" &&
+    message.includes("create_proposal") &&
+    message.includes("p_cash_amount_cents")
+  ) {
+    return "O banco do Hypou precisa ser atualizado para aceitar proposta com dinheiro. A migration de completar com dinheiro ainda não foi aplicada no Supabase.";
+  }
+  return message;
 };
 
 export const acceptProposal = async (matchId: string, currentUserId: string) => {

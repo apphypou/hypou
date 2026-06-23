@@ -1,5 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { ensureMobileNode } from "./mobile-node.mjs";
+
+ensureMobileNode();
 
 const run = (cmd, args) => execFileSync(cmd, args, { stdio: "inherit" });
 

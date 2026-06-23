@@ -26,7 +26,10 @@ dist-ssr
 # Local/generated workspace junk
 .codex-screenshots/
 .superpowers/
+.tmp-vite-*/
 build/
 docs/superpowers/
 vite.config.ts.timestamp-*.mjs
+.vite.trace.config.mjs
 ios/App/App/config 2.xml
+supabase/.temp/

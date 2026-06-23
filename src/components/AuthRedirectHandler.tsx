@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { App as CapacitorApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { getNativeAuthPathFromUrl } from "@/lib/authRedirect";
@@ -19,6 +20,8 @@ const POST_LOGIN_KEY = "postLoginRedirect";
 const AuthRedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const handledLaunchUrlRef = useRef(false);
+  const handledAuthUrlsRef = useRef(new Set<string>());
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -28,7 +31,13 @@ const AuthRedirectHandler = () => {
 
     const parseAuthCallback = async (url: string) => {
       const route = getNativeAuthPathFromUrl(url);
-      if (!route || cancelled) return;
+      if (!route || cancelled) {
+        return;
+      }
+      if (handledAuthUrlsRef.current.has(url)) {
+        return;
+      }
+      handledAuthUrlsRef.current.add(url);
 
       const parsed = new URL(url);
       const query = new URLSearchParams(parsed.search);
@@ -38,21 +47,29 @@ const AuthRedirectHandler = () => {
       const refreshToken = hash.get("refresh_token");
 
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code);
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) throw error;
       } else if (accessToken && refreshToken) {
-        await supabase.auth.setSession({
+        const { error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
+        if (error) throw error;
+      } else {
+        return;
       }
 
+      await Browser.close().catch(() => undefined);
       navigate(route, { replace: true });
     };
 
     const setupListener = async () => {
-      const launchUrl = await CapacitorApp.getLaunchUrl();
-      if (launchUrl?.url) {
-        void parseAuthCallback(launchUrl.url);
+      if (!handledLaunchUrlRef.current) {
+        handledLaunchUrlRef.current = true;
+        const launchUrl = await CapacitorApp.getLaunchUrl();
+        if (launchUrl?.url) {
+          void parseAuthCallback(launchUrl.url);
+        }
       }
 
       listener = await CapacitorApp.addListener("appUrlOpen", ({ url }) => {
@@ -79,10 +96,11 @@ const AuthRedirectHandler = () => {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      const postLoginRedirect = localStorage.getItem(POST_LOGIN_KEY);
       const decision = getPostLoginRedirectDecision({
         event,
         pathname: location.pathname,
-        postLoginRedirect: localStorage.getItem(POST_LOGIN_KEY),
+        postLoginRedirect,
       });
 
       if (decision.type === "clear") {
@@ -95,7 +113,9 @@ const AuthRedirectHandler = () => {
           localStorage.removeItem(POST_LOGIN_KEY);
         }
         // Defer to next tick so AuthProvider state is updated
-        setTimeout(() => navigate(decision.to, { replace: true }), 0);
+        setTimeout(() => {
+          navigate(decision.to, { replace: true });
+        }, 0);
       }
     });
 

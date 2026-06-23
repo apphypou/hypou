@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -43,6 +43,7 @@ const SelectItemDialog = ({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [cashEnabled, setCashEnabled] = useState(false);
   const [cashInput, setCashInput] = useState("");
+  const cashInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -117,8 +118,8 @@ const SelectItemDialog = ({
   };
 
   return (
-    <Drawer open={open} onOpenChange={(v) => !v && onClose()}>
-      <DrawerContent className="max-h-[88vh]">
+    <Drawer open={open} onOpenChange={(v) => !v && onClose()} shouldScaleBackground={false}>
+      <DrawerContent className="proposal-drawer max-h-[88dvh] overflow-y-auto overscroll-contain">
         <DrawerHeader className="text-center pb-2">
           <DrawerTitle className="text-lg font-extrabold text-foreground">
             Você curtiu! Monte sua oferta
@@ -140,7 +141,7 @@ const SelectItemDialog = ({
           )}
         </DrawerHeader>
 
-        <div className="px-4 pb-2 overflow-y-auto max-h-[48vh] no-scrollbar">
+        <div className="proposal-item-list px-4 pb-2 overflow-y-auto max-h-[48vh] no-scrollbar">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -252,7 +253,7 @@ const SelectItemDialog = ({
               </div>
             )}
             {rangeStatus === "low" && (
-              <div className="rounded-xl bg-pink/10 border border-pink/30 px-4 py-3">
+              <div className="proposal-range-warning rounded-xl bg-pink/10 border border-pink/30 px-4 py-3">
                 <p className="text-pink text-xs font-bold leading-relaxed">
                   Faltam {formatValue(Math.max(0, targetMin - offerTotal))} para atingir o valor mínimo aceito ({formatValue(targetMin)}).
                 </p>
@@ -279,13 +280,14 @@ const SelectItemDialog = ({
                 {cashEnabled && (
                   <div className="mt-3 space-y-2">
                     <input
+                      ref={cashInputRef}
                       inputMode="numeric"
                       value={cashInput}
                       onChange={(event) => handleCashChange(event.target.value)}
                       placeholder="R$ 0,00"
-                      className="h-11 w-full rounded-xl border border-foreground/10 bg-background px-4 text-sm font-bold text-foreground outline-none focus:border-primary"
+                      className="h-11 w-full rounded-xl border border-foreground/10 bg-background px-4 text-[16px] font-bold text-foreground outline-none focus:border-primary"
                     />
-                    <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    <p className="proposal-cash-note text-[11px] leading-relaxed text-muted-foreground">
                       O Hypou não processa pagamentos. Esse valor fica registrado como combinado entre vocês.
                     </p>
                   </div>

@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SkeletonConversation } from "@/components/SkeletonCard";
-import PullToRefresh from "@/components/PullToRefresh";
 import { useQueryClient } from "@tanstack/react-query";
 
 const Chat = () => {
@@ -17,11 +16,11 @@ const Chat = () => {
   const queryClient = useQueryClient();
 
   const handleRefresh = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    await queryClient.refetchQueries({ queryKey: ["conversations"], type: "active" });
   };
 
   return (
-    <ScreenLayout>
+    <ScreenLayout onRefresh={handleRefresh}>
       {/* Header */}
       <header className="relative z-40 flex w-full justify-between items-center px-6 pt-3 pb-4 shrink-0">
         <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
@@ -46,7 +45,7 @@ const Chat = () => {
         </div>
       </header>
 
-      <PullToRefresh onRefresh={handleRefresh} className="relative flex-1 w-full z-10 pb-28">
+      <div className="relative flex-1 w-full z-10 pb-28 overflow-y-auto no-scrollbar">
         <div className="px-5">
           {isLoading ? (
             <div className="flex flex-col gap-2 py-2">
@@ -230,7 +229,7 @@ const Chat = () => {
           </div>
         )}
         </div>
-      </PullToRefresh>
+      </div>
 
       <BottomNav activeTab="chat" />
     </ScreenLayout>

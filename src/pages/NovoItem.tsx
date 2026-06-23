@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { createItem, uploadItemImage, validateItemPrice } from "@/services/itemService";
-import { isNativePlatform, pickPhotos } from "@/lib/nativeCamera";
+import { choosePhotosFromGallery, isNativePlatform, takePhoto } from "@/lib/nativeCamera";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -22,6 +22,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { FocalPointEditor, type FocalPoint } from "@/components/media/FocalPointEditor";
 
 import { categories, conditions } from "@/constants/categories";
 
@@ -62,6 +63,8 @@ const NovoItem = () => {
   const [devalorization, setDevalorization] = useState(10);
   const [itemPhotos, setItemPhotos] = useState<File[]>([]);
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
+  const [photoFocalPoints, setPhotoFocalPoints] = useState<FocalPoint[]>([]);
+  const [editingPhotoIndex, setEditingPhotoIndex] = useState<number | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoThumb, setVideoThumb] = useState<string | null>(null);
@@ -79,30 +82,56 @@ const NovoItem = () => {
 
   const valueCents = parseCurrencyToCents(itemValue);
 
-  const handleItemPhotos = async (e?: React.ChangeEvent<HTMLInputElement>) => {
-    // Try native camera first
-    if (isNativePlatform()) {
-      const maxNew = 5 - itemPhotos.length;
-      const results = await pickPhotos({ multiple: true, maxFiles: maxNew });
-      if (results.length > 0) {
-        setItemPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
-        setItemPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
-      }
-      return;
-    }
-    // Web fallback
-    if (!e) return;
+  const addPhotoResults = (results: { file: File; previewUrl: string }[]) => {
+    if (results.length === 0) return;
+    const startIndex = itemPhotos.length;
+    setItemPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
+    setItemPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+    setPhotoFocalPoints((prev) => [
+      ...prev,
+      ...results.map(() => ({ focal_x: 50, focal_y: 50 })),
+    ]);
+    setEditingPhotoIndex(startIndex);
+  };
+
+  const handleItemPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const maxNew = 5 - itemPhotos.length;
     const toAdd = files.slice(0, maxNew);
-    setItemPhotos((prev) => [...prev, ...toAdd]);
-    setItemPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+    addPhotoResults(toAdd.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })));
+    e.target.value = "";
+  };
+
+  const handleTakePhoto = async () => {
+    setPhotoMenuOpen(false);
+    if (isNativePlatform()) {
+      const result = await takePhoto();
+      if (result) addPhotoResults([result]);
+      return;
+    }
+    cameraInputRef.current?.click();
+  };
+
+  const handleChoosePhotos = async () => {
+    setPhotoMenuOpen(false);
+    if (isNativePlatform()) {
+      const results = await choosePhotosFromGallery({ multiple: true, maxFiles: 5 - itemPhotos.length });
+      addPhotoResults(results);
+      return;
+    }
+    itemInputRef.current?.click();
   };
 
   const removePhoto = (index: number) => {
     URL.revokeObjectURL(itemPreviews[index]);
     setItemPhotos((prev) => prev.filter((_, i) => i !== index));
     setItemPreviews((prev) => prev.filter((_, i) => i !== index));
+    setPhotoFocalPoints((prev) => prev.filter((_, i) => i !== index));
+    setEditingPhotoIndex((current) => {
+      if (current === null) return null;
+      if (current === index) return null;
+      return current > index ? current - 1 : current;
+    });
   };
 
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +236,7 @@ const NovoItem = () => {
       }
 
       for (let i = 0; i < itemPhotos.length; i++) {
-        await uploadItemImage(user.id, itemId, itemPhotos[i], i);
+        await uploadItemImage(user.id, itemId, itemPhotos[i], i, photoFocalPoints[i]);
       }
 
       // Upload optional video for Shorts
@@ -328,7 +357,7 @@ const NovoItem = () => {
   const isSubmitting = saving || validating;
 
   return (
-    <ScreenLayout>
+    <ScreenLayout refreshable={false}>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleItemPhotos} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleItemPhotos} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
@@ -343,14 +372,14 @@ const NovoItem = () => {
           <div className="flex flex-col gap-3 mt-4">
             <button
               type="button"
-              onClick={() => { setPhotoMenuOpen(false); cameraInputRef.current?.click(); }}
+              onClick={handleTakePhoto}
               className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2"
             >
               <Camera className="h-5 w-5" /> Tirar foto
             </button>
             <button
               type="button"
-              onClick={() => { setPhotoMenuOpen(false); itemInputRef.current?.click(); }}
+              onClick={handleChoosePhotos}
               className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
             >
               <Plus className="h-5 w-5" /> Escolher da galeria
@@ -419,7 +448,7 @@ const NovoItem = () => {
       </header>
 
       <main
-        className="h-0 min-h-0 flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-[calc(7.5rem+var(--safe-area-bottom))]"
+        className="item-form-scroll h-0 min-h-0 flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-[calc(7.5rem+var(--safe-area-bottom))]"
         style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
       >
         {/* Photos */}
@@ -435,18 +464,25 @@ const NovoItem = () => {
               {itemPreviews.map((url, i) => (
                 <div key={i} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
                   <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
-                  <button
+                <button
                     type="button"
                     onClick={() => removePhoto(i)}
                     className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
                   >
                     <X className="h-3 w-3 text-destructive-foreground" />
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingPhotoIndex(i)}
+                    className="absolute bottom-1 left-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-md"
+                  >
+                    Ajustar
+                  </button>
                 </div>
               ))}
               {itemPreviews.length < 5 && (
                 <div
-                  onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
+                  onClick={() => setPhotoMenuOpen(true)}
                   className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
                 >
                   <Plus className="h-6 w-6 text-primary/50" />
@@ -455,7 +491,7 @@ const NovoItem = () => {
             </div>
           ) : (
             <div
-              onClick={() => isNativePlatform() ? handleItemPhotos() : setPhotoMenuOpen(true)}
+              onClick={() => setPhotoMenuOpen(true)}
               className="relative w-full h-44 rounded-2xl border border-dashed border-primary/45 bg-card/70 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all hover:bg-card/85"
             >
               <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center">
@@ -615,8 +651,21 @@ const NovoItem = () => {
         )}
       </main>
 
+      <FocalPointEditor
+        open={editingPhotoIndex !== null}
+        imageUrl={editingPhotoIndex !== null ? itemPreviews[editingPhotoIndex] : null}
+        value={editingPhotoIndex !== null ? photoFocalPoints[editingPhotoIndex] : null}
+        onClose={() => setEditingPhotoIndex(null)}
+        onSave={(point) => {
+          if (editingPhotoIndex !== null) {
+            setPhotoFocalPoints((prev) => prev.map((p, i) => (i === editingPhotoIndex ? point : p)));
+          }
+          setEditingPhotoIndex(null);
+        }}
+      />
+
       {/* Submit */}
-      <div className="fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(1rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
+      <div className="item-form-submit fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(1rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}

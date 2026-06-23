@@ -1,9 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { validateChatMedia, prepareImageForUpload } from "@/lib/fileValidation";
 import { getLatestNonSystemMessagesByConversation } from "@/lib/conversationPreview";
+import { sortConversationsByActivity } from "@/lib/conversationOrdering";
 import { getBlockedUserIds } from "@/services/reportService";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'system';
+export type ChatMediaKind = "image" | "video" | "audio";
 
 export interface Message {
   id: string;
@@ -20,6 +22,7 @@ export interface ConversationWithDetails {
   id: string;
   match_id: string;
   created_at: string;
+  updated_at?: string | null;
   other_user: {
     user_id: string;
     display_name: string | null;
@@ -34,9 +37,21 @@ export interface ConversationWithDetails {
     name: string;
   };
   last_message: Message | null;
+  last_message_at?: string | null;
   unread_count: number;
   match_status: string;
 }
+
+export const getConversationIdForMatch = async (matchId: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from("conversations")
+    .select("id")
+    .eq("match_id", matchId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.id ?? null;
+};
 
 export const getConversations = async (userId: string): Promise<ConversationWithDetails[]> => {
   // Fetch blocked user IDs to filter them out
@@ -46,7 +61,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
   const { data: matches, error: matchErr } = await supabase
     .from("matches")
     .select(`
-      id, status, user_a_id, user_b_id,
+      id, status, updated_at, user_a_id, user_b_id,
       item_a:item_a_id (id, name, market_value, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, item_images (image_url, position)),
       conversations (id, created_at)
@@ -108,7 +123,7 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     }
   }
 
-  return filteredMatches
+  const conversations = filteredMatches
     // H2: chat só lista conversas de propostas aceitas ou trocas concluídas
     .filter((m: any) => m.status === "accepted" || m.status === "completed")
     .map((m: any) => {
@@ -127,6 +142,8 @@ export const getConversations = async (userId: string): Promise<ConversationWith
         id: convId,
         match_id: m.id,
         created_at: conv?.created_at || m.created_at,
+        updated_at: m.updated_at || null,
+        last_message_at: previewMsg?.created_at || m.updated_at || conv?.created_at || null,
         other_user: profileMap[otherId] || { user_id: otherId, display_name: null, avatar_url: null },
         other_item: {
           name: otherItem?.name || "Item",
@@ -139,6 +156,8 @@ export const getConversations = async (userId: string): Promise<ConversationWith
         match_status: m.status,
       };
     }).filter(Boolean) as ConversationWithDetails[];
+
+  return sortConversationsByActivity(conversations);
 };
 
 export const getMessages = async (conversationId: string): Promise<Message[]> => {
@@ -180,7 +199,7 @@ export const uploadChatMedia = async (
   file: File,
   type: MessageType
 ): Promise<string> => {
-  const mediaType = type === 'text' ? 'image' : type as 'image' | 'video' | 'audio';
+  const mediaType: ChatMediaKind = type === 'video' || type === 'audio' ? type : 'image';
   const validationError = validateChatMedia(file, mediaType);
   if (validationError) throw new Error(validationError);
   const finalFile = mediaType === 'image' ? await prepareImageForUpload(file) : file;

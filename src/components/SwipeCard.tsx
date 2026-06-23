@@ -6,6 +6,7 @@ import {
   useEffect,
   useRef,
   memo,
+  useMemo,
 } from "react";
 import {
   motion,
@@ -31,6 +32,8 @@ import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
 import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
 import { preloadImage, preloadImages, preloadVideo, preloadVideos } from "@/lib/mediaPreload";
+import { buildPublicItemUrl, shareContent } from "@/lib/share";
+import { getMediaObjectPosition } from "@/lib/mediaFrame";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
@@ -77,6 +80,13 @@ const formatCompactLocation = (location?: string | null) => {
   const state = parts[parts.length - 1];
   const normalizedState = state.toLocaleLowerCase("pt-BR");
   return `${city}, ${STATE_ABBREVIATIONS[normalizedState] || state}`;
+};
+
+const getMediaAspectClass = (ratio?: number) => {
+  if (!ratio) return "swipe-media-stage--balanced";
+  if (ratio >= 1.22) return "swipe-media-stage--wide";
+  if (ratio <= 0.78) return "swipe-media-stage--tall";
+  return "swipe-media-stage--balanced";
 };
 
 export interface SwipeCardHandle {
@@ -132,14 +142,20 @@ const SwipeCard = memo(
       );
 
       // Image + video gallery state
-      const images = item?.item_images || [];
-      const videos = item?.item_videos || [];
+      const images = useMemo(() => item?.item_images || [], [item?.item_images]);
+      const videos = useMemo(() => item?.item_videos || [], [item?.item_videos]);
       const hasVideo = videos.length > 0;
       const totalSlides = images.length + (hasVideo ? 1 : 0);
       const [activeImageIndex, setActiveImageIndex] = useState(0);
       const isVideoSlide = hasVideo && activeImageIndex === images.length;
       const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
+      const currentImageRecord = !isVideoSlide ? images[activeImageIndex] : null;
       const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
+      const currentVideoPoster = isVideoSlide
+        ? videos[0]?.thumbnail_url || images[Math.max(images.length - 1, 0)]?.image_url
+        : null;
+      const [videoReady, setVideoReady] = useState(false);
+      const [imageRatios, setImageRatios] = useState<Record<string, number>>({});
       const videoRef = useRef<HTMLVideoElement>(null);
       const slideChangeTokenRef = useRef(0);
 
@@ -192,6 +208,16 @@ const SwipeCard = memo(
         setExpanded((v) => !v);
       }, []);
 
+      const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+        const image = event.currentTarget;
+        const source = image.currentSrc || image.src;
+        if (!source || !image.naturalWidth || !image.naturalHeight) return;
+        const ratio = image.naturalWidth / image.naturalHeight;
+        setImageRatios((previous) => (
+          previous[source] === ratio ? previous : { ...previous, [source]: ratio }
+        ));
+      }, []);
+
       useEffect(() => {
         if (disabled || standby) return;
         const unsubscribe = x.on("change", (latest) => {
@@ -202,10 +228,15 @@ const SwipeCard = memo(
 
       useEffect(() => {
         setActiveImageIndex(0);
+        setVideoReady(false);
         slideChangeTokenRef.current = 0;
         x.set(0);
         y.set(0);
       }, [item?.id, x, y]);
+
+      useEffect(() => {
+        setVideoReady(false);
+      }, [currentVideo]);
 
       useEffect(() => {
         if (standby) return;
@@ -217,6 +248,15 @@ const SwipeCard = memo(
         preloadImages([...fullImages, ...blurImages]).catch(() => undefined);
         preloadVideos(videoUrls).catch(() => undefined);
       }, [images, standby, videos]);
+
+      const revealVideoWhenFrameIsReady = useCallback((video: HTMLVideoElement) => {
+        if ("requestVideoFrameCallback" in video) {
+          video.requestVideoFrameCallback(() => setVideoReady(true));
+          return;
+        }
+
+        requestAnimationFrame(() => setVideoReady(true));
+      }, []);
 
       const doExit = useCallback(
         (direction: "like" | "dislike", velocityX?: number) => {
@@ -267,6 +307,8 @@ const SwipeCard = memo(
       const conditionLabel = translateCondition(item?.condition);
       const compactLocation = formatCompactLocation(item?.location);
       const { data: rating } = useUserRating(ownerProfile?.user_id);
+      const currentImageSrc = currentImage ? cdnFull(currentImage) : null;
+      const mediaAspectClass = getMediaAspectClass(currentImageSrc ? imageRatios[currentImageSrc] : undefined);
 
       return (
         <motion.div
@@ -281,7 +323,7 @@ const SwipeCard = memo(
             zIndex: standby ? 9 : 60,
             willChange: standby ? "auto" : "transform",
             transformOrigin: "50% 80%",
-            borderRadius: "0 0 1.5rem 1.5rem",
+            borderRadius: 0,
             y: standby ? 0 : y,
             ...(standby ? { opacity: standbyOpacity } : {}),
           }}
@@ -293,30 +335,8 @@ const SwipeCard = memo(
           initial={standby ? false : { scale: 1, opacity: 1 }}
           animate={undefined}
         >
-          {/* Liquid glass border — blurred image reflection */}
-          {currentImage && (
-            <div
-              className="absolute -inset-[3px] rounded-t-none rounded-b-[1.65rem] overflow-hidden z-0"
-              aria-hidden
-            >
-              <img
-                src={cdnBlur(currentImage)}
-                alt=""
-                className="w-full h-full object-cover scale-105 blur-xl opacity-90 saturate-150"
-                draggable={false}
-              />
-              <div className="absolute inset-0 bg-background/30 dark:bg-scrim/40" />
-            </div>
-          )}
-          {!currentImage && (
-            <div
-              className="absolute -inset-[3px] rounded-t-none rounded-b-[1.65rem] overflow-hidden z-0 bg-border dark:bg-primary/30"
-              aria-hidden
-            />
-          )}
-
           {/* Inner card */}
-          <div className="absolute inset-0 rounded-t-none rounded-b-[1.5rem] overflow-hidden z-[1] shadow-[0_4px_30px_rgba(0,0,0,0.08)] dark:shadow-none">
+          <div className="absolute inset-0 overflow-hidden z-[1]">
             {!standby && !expanded && <SwipeOverlays x={x} />}
 
             {/* ===== FULL IMAGE / VIDEO ===== */}
@@ -325,26 +345,56 @@ const SwipeCard = memo(
               onClick={standby ? undefined : handleImageTap}
             >
               {isVideoSlide && currentVideo ? (
-                <video
-                  ref={videoRef}
-                  key={`video-${activeImageIndex}`}
-                  className="w-full h-full object-cover object-center"
-                  src={currentVideo}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  draggable={false}
-                />
+                <>
+                  {currentVideoPoster ? (
+                    <img
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      src={cdnFull(currentVideoPoster)}
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-muted" />
+                  )}
+                  <video
+                    ref={videoRef}
+                    key={`video-${currentVideo}`}
+                    className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-150 ${
+                      videoReady ? "opacity-100" : "opacity-0"
+                    }`}
+                    src={currentVideo}
+                    poster={currentVideoPoster ? cdnFull(currentVideoPoster) : undefined}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    draggable={false}
+                    onLoadedData={(event) => revealVideoWhenFrameIsReady(event.currentTarget)}
+                    onCanPlay={(event) => revealVideoWhenFrameIsReady(event.currentTarget)}
+                    onPlaying={(event) => revealVideoWhenFrameIsReady(event.currentTarget)}
+                  />
+                </>
               ) : currentImage ? (
-                <img
-                  key={activeImageIndex}
-                  alt={item.name}
-                  className="w-full h-full object-cover object-center"
-                  src={cdnFull(currentImage)}
-                  draggable={false}
-                />
+                <div className={`swipe-media-stage ${mediaAspectClass}`}>
+                  <img
+                    src={cdnBlur(currentImage)}
+                    alt=""
+                    aria-hidden
+                    className="swipe-media-ambient"
+                    draggable={false}
+                  />
+                  <div className="swipe-media-ambient-scrim" aria-hidden />
+                  <img
+                    key={activeImageIndex}
+                    alt={item.name}
+                    className="swipe-media-foreground"
+                    src={currentImageSrc || undefined}
+                    style={{ objectPosition: getMediaObjectPosition(currentImageRecord) }}
+                    onLoad={handleImageLoad}
+                    draggable={false}
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
                   <Image className="h-16 w-16 text-foreground/10" />
@@ -395,7 +445,10 @@ const SwipeCard = memo(
 
             {/* Slide dots */}
             {!expanded && totalSlides > 1 && (
-              <div className="absolute top-0.5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10">
+              <div
+                className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10"
+                style={{ top: "calc(var(--safe-area-top) + 2.85rem)" }}
+              >
                 {Array.from({ length: totalSlides }).map((_, i) => (
                   <div
                     key={i}
@@ -416,18 +469,15 @@ const SwipeCard = memo(
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    const shareUrl = `${window.location.origin}/item/${item.id}`;
-                    const shareData = {
+                    void shareContent({
                       title: `${item.name} — Hypou`,
                       text: `Olha esse item no Hypou: ${item.name} por ${formatValue(item.market_value)}! Quer trocar?`,
-                      url: shareUrl,
-                    };
-                    if (navigator.share) {
-                      navigator.share(shareData).catch(() => {});
-                    } else {
-                      navigator.clipboard.writeText(`${shareData.text} ${shareUrl}`);
-                    }
+                      url: buildPublicItemUrl(item.id),
+                    }).catch((error) => {
+                      if (error?.name !== "AbortError") console.error("Falha ao compartilhar item", error);
+                    });
                   }}
+                  aria-label="Compartilhar item"
                   className="h-8 w-8 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
                 >
                   <Share2 className="h-3.5 w-3.5 text-on-media" />
@@ -451,8 +501,11 @@ const SwipeCard = memo(
               </div>
             )}
 
-            {/* Top gradient */}
-            <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-scrim/40 via-scrim/15 to-transparent pointer-events-none z-20" />
+            {/* Dark glass edge fade */}
+            <div
+              className="swipe-edge-glass swipe-edge-glass-top z-20"
+              aria-hidden
+            />
 
             {/* Tap zones */}
             {!expanded && !standby && totalSlides > 1 && (
@@ -475,7 +528,10 @@ const SwipeCard = memo(
             )}
 
             {expanded && (
-              <div className="absolute inset-x-0 bottom-0 pointer-events-none z-20 h-full bg-gradient-to-t from-black/88 via-black/58 to-black/18" />
+              <div
+                className="swipe-edge-glass swipe-edge-glass-bottom swipe-edge-glass-bottom-expanded z-20"
+                aria-hidden
+              />
             )}
 
             {/* ===== EXPANDED OVERLAY ===== */}
@@ -548,16 +604,14 @@ const SwipeCard = memo(
             {/* ===== COMPACT INFO ===== */}
             {activeImageIndex === 0 && !expanded && (
               <div
-                className="absolute bottom-0 inset-x-0 z-30 max-h-[280px] rounded-b-[1.5rem] overflow-hidden pointer-events-none"
+                className="absolute bottom-0 inset-x-0 z-30 h-[46%] min-h-[270px] max-h-[360px] overflow-hidden pointer-events-none"
                 onPointerDown={(e) => e.stopPropagation()}
-                style={{
-                  height: "46%",
-                  minHeight: "260px",
-                  background:
-                    "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.16) 18%, rgba(0,0,0,0.50) 50%, rgba(0,0,0,0.90) 100%)",
-                }}
               >
-                <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pointer-events-none">
+                <div
+                  className="swipe-edge-glass swipe-edge-glass-bottom swipe-edge-glass-bottom-compact swipe-edge-glass-fill z-0"
+                  aria-hidden
+                />
+                <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[calc(var(--safe-area-bottom)+5.75rem)] pointer-events-none">
                   {matchedOwnItem && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -593,9 +647,14 @@ const SwipeCard = memo(
                     aria-label="Ver detalhes do item"
                     className="block w-full text-left pointer-events-auto active:scale-[0.99] transition-transform"
                   >
-                    <h2 className="pb-0.5 text-white text-[24px] font-bold tracking-tight leading-[1.12] truncate [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
-                      {item.name}
-                    </h2>
+                    <div className="flex min-w-0 items-end gap-3 border-b border-white/75 pb-2">
+                      <h2 className="min-w-0 flex-1 truncate text-white text-[24px] font-bold tracking-tight leading-[1.12] [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
+                        {item.name}
+                      </h2>
+                      <span className="shrink-0 text-white text-[19px] font-semibold leading-none tracking-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
+                        {formatValue(item.market_value)}
+                      </span>
+                    </div>
 
                     <div className="flex items-center gap-1.5 mt-1.5 mb-1.5 overflow-hidden">
                       <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/94 text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-xl">
@@ -613,15 +672,6 @@ const SwipeCard = memo(
                         </span>
                       )}
                     </div>
-
-                    <span className="mt-1 inline-flex items-center gap-2">
-                      <span className="text-white/92 text-[15.5px] font-medium tracking-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.42)]">
-                        {formatValue(item.market_value)}
-                      </span>
-                      <span className="grid h-4.5 w-4.5 place-items-center rounded-full bg-white/8 text-white/56 backdrop-blur-xl">
-                        <ChevronDown className="h-2.5 w-2.5" />
-                      </span>
-                    </span>
                   </button>
 
                   <SwipeActionButtons

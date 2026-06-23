@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import WebKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,8 +8,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        clearStaleWebViewCaches()
         return true
+    }
+
+    private func clearStaleWebViewCaches() {
+        var dataTypes: Set<String> = [
+            WKWebsiteDataTypeDiskCache,
+            WKWebsiteDataTypeMemoryCache,
+            WKWebsiteDataTypeFetchCache,
+            WKWebsiteDataTypeServiceWorkerRegistrations
+        ]
+
+        if #available(iOS 26.2, *) {
+            // WKWebsiteDataTypeOfflineWebApplicationCache is deprecated on iOS 26.2+.
+        } else {
+            dataTypes.insert(WKWebsiteDataTypeOfflineWebApplicationCache)
+        }
+
+        WKWebsiteDataStore.default().removeData(
+            ofTypes: dataTypes,
+            modifiedSince: Date(timeIntervalSince1970: 0)
+        ) {}
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

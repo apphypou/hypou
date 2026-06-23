@@ -19,5 +19,5 @@ export const getNativeAuthPathFromUrl = (url: string) => {
     return null;
   }
 
-  return `${parsed.pathname || "/explorar"}${parsed.search}${parsed.hash}`;
+  return `${parsed.pathname || "/explorar"}${parsed.search}`;
 };

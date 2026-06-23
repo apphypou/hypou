@@ -1,7 +1,17 @@
 import { describe, it, expect } from "vitest";
+import { getProposalErrorMessage } from "@/services/matchService";
 
 // Test proposal validation logic
 describe("Proposal validation", () => {
+  it("should explain when the remote proposal schema is missing cash support", () => {
+    const message = getProposalErrorMessage({
+      code: "PGRST202",
+      message: "Could not find the function public.create_proposal(p_cash_amount_cents, p_my_item_ids, p_their_item_id) in the schema cache",
+    });
+
+    expect(message).toContain("banco do Hypou precisa ser atualizado");
+  });
+
   it("should reject if current user is not user_b", () => {
     const match = { user_b_id: "user-b", status: "proposal" };
     const currentUserId = "user-a";

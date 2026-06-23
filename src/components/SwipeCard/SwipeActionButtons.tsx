@@ -47,16 +47,16 @@ export const SwipeActionButtons = ({
     x,
     [-60, 0],
     [
-      "0 0 40px hsl(var(--flop-glow) / 0.8), 0 0 80px hsl(var(--flop-glow) / 0.45)",
-      "0 4px 12px hsl(0 0% 0% / 0.25)",
+      "0 0 28px hsl(var(--flop-glow) / 0.62), 0 0 56px hsl(var(--flop-glow) / 0.32)",
+      "0 5px 16px hsl(0 0% 0% / 0.18)",
     ]
   );
   const likeBtnShadow = useTransform(
     x,
     [0, 60],
     [
-      "0 4px 12px hsl(0 0% 0% / 0.25)",
-      "0 0 40px hsl(var(--hype-glow) / 0.8), 0 0 80px hsl(var(--hype-glow) / 0.45)",
+      "0 5px 16px hsl(0 0% 0% / 0.18)",
+      "0 0 28px hsl(var(--hype-glow) / 0.62), 0 0 56px hsl(var(--hype-glow) / 0.32)",
     ]
   );
 
@@ -72,7 +72,7 @@ export const SwipeActionButtons = ({
   );
 
   return (
-    <div className="mt-6 flex items-center justify-center gap-8 pointer-events-auto">
+    <div className="mt-5 flex items-center justify-center gap-7 pointer-events-auto">
       <motion.button
         type="button"
         onClick={(e) => {
@@ -88,10 +88,10 @@ export const SwipeActionButtons = ({
           boxShadow: dislikeBtnShadow,
           color: dislikeIconColor,
         }}
-        className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
+        className="h-14 w-14 rounded-full border border-white/14 backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
       >
         <ThumbsDown
-          className="h-7 w-7"
+          className="h-6 w-6"
           strokeWidth={2.4}
           fill="currentColor"
           fillOpacity={0.15}
@@ -112,10 +112,10 @@ export const SwipeActionButtons = ({
           boxShadow: likeBtnShadow,
           color: likeIconColor,
         }}
-        className="h-16 w-16 rounded-full border border-white/15 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
+        className="h-14 w-14 rounded-full border border-white/14 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
       >
         <ThumbsUp
-          className="h-7 w-7"
+          className="h-6 w-6"
           strokeWidth={2.4}
           fill="currentColor"
           fillOpacity={0.15}

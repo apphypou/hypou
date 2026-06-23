@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { updateItem, uploadItemImage, getItemById, deleteItemImage, validateItemPrice } from "@/services/itemService";
-import { isNativePlatform, pickPhotos } from "@/lib/nativeCamera";
+import { choosePhotosFromGallery, isNativePlatform, takePhoto } from "@/lib/nativeCamera";
 import { supabase } from "@/integrations/supabase/client";
 import {
   AlertDialog,
@@ -24,6 +24,7 @@ import TradeRangeCard from "@/components/TradeRangeCard";
 import LocationSearch from "@/components/LocationSearch";
 import { categories, conditions } from "@/constants/categories";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
+import { FocalPointEditor, type FocalPoint } from "@/components/media/FocalPointEditor";
 
 const formatCurrency = (value: string): string => {
   const digits = value.replace(/\D/g, "");
@@ -75,6 +76,8 @@ const EditarItem = () => {
   const [existingImages, setExistingImages] = useState<any[]>([]);
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
+  const [newPhotoFocalPoints, setNewPhotoFocalPoints] = useState<FocalPoint[]>([]);
+  const [editingNewPhotoIndex, setEditingNewPhotoIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
@@ -137,22 +140,44 @@ const EditarItem = () => {
   const totalImages = existingImages.length + newPhotos.length;
   const valueCents = parseCurrencyToCents(itemValue);
 
-  const handleNewPhotos = async (e?: React.ChangeEvent<HTMLInputElement>) => {
-    if (isNativePlatform()) {
-      const maxNew = 5 - totalImages;
-      const results = await pickPhotos({ multiple: true, maxFiles: maxNew });
-      if (results.length > 0) {
-        setNewPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
-        setNewPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
-      }
-      return;
-    }
-    if (!e) return;
+  const addNewPhotoResults = (results: { file: File; previewUrl: string }[]) => {
+    if (results.length === 0) return;
+    const startIndex = newPhotos.length;
+    setNewPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
+    setNewPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+    setNewPhotoFocalPoints((prev) => [
+      ...prev,
+      ...results.map(() => ({ focal_x: 50, focal_y: 50 })),
+    ]);
+    setEditingNewPhotoIndex(startIndex);
+  };
+
+  const handleNewPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const maxNew = 5 - totalImages;
     const toAdd = files.slice(0, maxNew);
-    setNewPhotos((prev) => [...prev, ...toAdd]);
-    setNewPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
+    addNewPhotoResults(toAdd.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })));
+    e.target.value = "";
+  };
+
+  const handleTakePhoto = async () => {
+    setPhotoMenuOpen(false);
+    if (isNativePlatform()) {
+      const result = await takePhoto();
+      if (result) addNewPhotoResults([result]);
+      return;
+    }
+    cameraInputRef.current?.click();
+  };
+
+  const handleChoosePhotos = async () => {
+    setPhotoMenuOpen(false);
+    if (isNativePlatform()) {
+      const results = await choosePhotosFromGallery({ multiple: true, maxFiles: 5 - totalImages });
+      addNewPhotoResults(results);
+      return;
+    }
+    itemInputRef.current?.click();
   };
 
   const handleRemoveExistingImage = async (imageId: string) => {
@@ -209,7 +234,7 @@ const EditarItem = () => {
 
       for (let i = 0; i < newPhotos.length; i++) {
         const position = existingImages.length + i;
-        await uploadItemImage(user.id, itemId, newPhotos[i], position);
+        await uploadItemImage(user.id, itemId, newPhotos[i], position, newPhotoFocalPoints[i]);
       }
 
       // Upload new video if selected
@@ -329,7 +354,7 @@ const EditarItem = () => {
 
   if (isLoading) {
     return (
-      <ScreenLayout>
+      <ScreenLayout refreshable={false}>
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-10 w-10 text-primary animate-spin" />
         </div>
@@ -338,7 +363,7 @@ const EditarItem = () => {
   }
 
   return (
-    <ScreenLayout>
+    <ScreenLayout refreshable={false}>
       <input ref={itemInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleNewPhotos} />
       <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleNewPhotos} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} />
@@ -352,14 +377,14 @@ const EditarItem = () => {
           <div className="flex flex-col gap-3 mt-4">
             <button
               type="button"
-              onClick={() => { setPhotoMenuOpen(false); cameraInputRef.current?.click(); }}
+              onClick={handleTakePhoto}
               className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2"
             >
               <Camera className="h-5 w-5" /> Tirar foto
             </button>
             <button
               type="button"
-              onClick={() => { setPhotoMenuOpen(false); itemInputRef.current?.click(); }}
+              onClick={handleChoosePhotos}
               className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
             >
               <Plus className="h-5 w-5" /> Escolher da galeria
@@ -427,7 +452,10 @@ const EditarItem = () => {
         <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Editar Item</span>
       </header>
 
-      <main className="flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-8">
+      <main
+        className="item-form-scroll flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-8"
+        style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+      >
         {/* Photos */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 pl-1">
@@ -467,16 +495,29 @@ const EditarItem = () => {
                     URL.revokeObjectURL(newPreviews[i]);
                     setNewPhotos((prev) => prev.filter((_, idx) => idx !== i));
                     setNewPreviews((prev) => prev.filter((_, idx) => idx !== i));
+                    setNewPhotoFocalPoints((prev) => prev.filter((_, idx) => idx !== i));
+                    setEditingNewPhotoIndex((current) => {
+                      if (current === null) return null;
+                      if (current === i) return null;
+                      return current > i ? current - 1 : current;
+                    });
                   }}
                   className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
                 >
                   <X className="h-3 w-3 text-destructive-foreground" />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingNewPhotoIndex(i)}
+                  className="absolute bottom-1 left-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-md"
+                >
+                  Ajustar
+                </button>
               </div>
             ))}
             {totalImages < 5 && (
               <div
-                onClick={() => isNativePlatform() ? handleNewPhotos() : setPhotoMenuOpen(true)}
+                onClick={() => setPhotoMenuOpen(true)}
                 className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
               >
                 <Plus className="h-6 w-6 text-primary/50" />
@@ -641,10 +682,23 @@ const EditarItem = () => {
 
 
       </main>
+
+      <FocalPointEditor
+        open={editingNewPhotoIndex !== null}
+        imageUrl={editingNewPhotoIndex !== null ? newPreviews[editingNewPhotoIndex] : null}
+        value={editingNewPhotoIndex !== null ? newPhotoFocalPoints[editingNewPhotoIndex] : null}
+        onClose={() => setEditingNewPhotoIndex(null)}
+        onSave={(point) => {
+          if (editingNewPhotoIndex !== null) {
+            setNewPhotoFocalPoints((prev) => prev.map((p, i) => (i === editingNewPhotoIndex ? point : p)));
+          }
+          setEditingNewPhotoIndex(null);
+        }}
+      />
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
 
       {/* Submit */}
-      <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
+      <div className="item-form-submit relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
