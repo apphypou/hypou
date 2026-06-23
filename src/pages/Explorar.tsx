@@ -2,7 +2,6 @@ import { PlusCircle, Share2 } from "lucide-react";
 import emptyChestImg from "@/assets/empty-chest.png";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
-import OnboardingTour from "@/components/OnboardingTour";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +27,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Slider } from "@/components/ui/slider";
 import { categories } from "@/constants/categories";
 import { formatValue } from "@/lib/utils";
+import { shareContent } from "@/lib/share";
+import { findRefreshIndex } from "@/lib/pullToRefresh";
 
 const PENDING_LIKE_KEY = "hypou:pending-like-item";
 const EXPLORE_FILTERS_KEY = "hypou:explore-filters";
@@ -55,6 +56,15 @@ const getInitialExploreFilters = (): ExploreFilters => {
   } catch {
     return { categories: [], valueRange: [0, EXPLORE_FILTER_MAX_CENTS] };
   }
+};
+
+const filterExploreItems = (items: any[], filters: ExploreFilters) => {
+  const [minValue, maxValue] = filters.valueRange;
+  return items.filter((item: any) => {
+    const matchesCategory = filters.categories.length === 0 || filters.categories.includes(item.category);
+    const value = item.market_value || 0;
+    return matchesCategory && value >= minValue && value <= maxValue;
+  });
 };
 
 const Explorar = () => {
@@ -109,6 +119,8 @@ const Explorar = () => {
   const [epoch, setEpoch] = useState(0);
   const swipingRef = useRef(false);
   const cardRef = useRef<SwipeCardHandle>(null);
+  const refreshItemIdRef = useRef<string | null>(null);
+  const refreshIndexRef = useRef(0);
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
@@ -153,14 +165,7 @@ const Explorar = () => {
   }, [exploreFilters]);
 
   const filteredItems = useMemo(() => {
-    const [minValue, maxValue] = exploreFilters.valueRange;
-    return items.filter((item: any) => {
-      const matchesCategory =
-        exploreFilters.categories.length === 0 || exploreFilters.categories.includes(item.category);
-      const value = item.market_value || 0;
-      const matchesValue = value >= minValue && value <= maxValue;
-      return matchesCategory && matchesValue;
-    });
+    return filterExploreItems(items, exploreFilters);
   }, [items, exploreFilters]);
 
   const currentItem = filteredItems.length > 0 ? filteredItems[currentIndex % filteredItems.length] : null;
@@ -169,6 +174,20 @@ const Explorar = () => {
     exploreFilters.categories.length > 0 ||
     exploreFilters.valueRange[0] > 0 ||
     exploreFilters.valueRange[1] < EXPLORE_FILTER_MAX_CENTS;
+
+  const handleRefresh = useCallback(async () => {
+    refreshItemIdRef.current = currentItem?.id ?? null;
+    refreshIndexRef.current = currentIndex;
+    await queryClient.refetchQueries({ queryKey: ["explore-items", user?.id], exact: true });
+
+    const refreshedItems = queryClient.getQueryData<any[]>(["explore-items", user?.id]) ?? [];
+    const refreshedFilteredItems = filterExploreItems(refreshedItems, exploreFilters);
+    setCurrentIndex(
+      findRefreshIndex(refreshedFilteredItems, refreshItemIdRef.current, refreshIndexRef.current),
+    );
+    refreshItemIdRef.current = null;
+    setEpoch((value) => value + 1);
+  }, [currentIndex, currentItem?.id, exploreFilters, queryClient, user?.id]);
 
   const advanceCard = useCallback(() => {
     setEpoch((e) => e + 1);
@@ -303,9 +322,9 @@ const Explorar = () => {
   const feedEnded = false;
 
   return (
-    <ScreenLayout>
+    <ScreenLayout edgeToEdgeTop onRefresh={handleRefresh}>
       {/* Main Card Area */}
-      <main className="relative flex-1 flex flex-col items-center justify-start w-full pb-28 pt-0 z-10" style={{ perspective: "1200px" }}>
+      <main className="relative flex-1 flex flex-col items-center justify-start w-full pt-0 z-10 min-h-0" style={{ perspective: "1200px" }}>
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
@@ -375,21 +394,21 @@ const Explorar = () => {
                   </button>
 
 
-                  {typeof navigator.share === "function" && (
-                    <button
-                      onClick={() => {
-                        navigator.share({
-                          title: "Hypou — Troque seus itens",
-                          text: "Conheça o Hypou, o app de trocas inteligentes!",
-                          url: "https://hypou.lovable.app",
-                        }).catch(() => {});
-                      }}
-                      className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      Convidar amigos
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      void shareContent({
+                        title: "Hypou — Troque seus itens",
+                        text: "Conheça o Hypou, o app de trocas inteligentes!",
+                        url: "https://hypou.lovable.app",
+                      }).catch((error) => {
+                        if (error?.name !== "AbortError") console.error("Falha ao compartilhar Hypou", error);
+                      });
+                    }}
+                    className="w-full py-3 rounded-full bg-card border border-foreground/10 text-foreground text-sm font-bold uppercase tracking-wider hover:bg-card/80 transition-all flex items-center justify-center gap-2"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    Convidar amigos
+                  </button>
                 </>
               )}
             </div>
@@ -441,12 +460,12 @@ const Explorar = () => {
         ) : null}
       </main>
 
-      <BottomNav activeTab="explorar" />
+      {!filtersOpen && !showSelectItem && <BottomNav activeTab="explorar" />}
 
       <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl border-foreground/10 bg-background pb-[calc(var(--safe-area-bottom)+1.5rem)]">
           <SheetHeader>
-            <SheetTitle>Configurar Explorar</SheetTitle>
+            <SheetTitle>Configurar busca</SheetTitle>
           </SheetHeader>
 
           <div className="mt-5 space-y-6">
@@ -527,9 +546,6 @@ const Explorar = () => {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Onboarding Tour for first-time users */}
-      {!isGuest && <OnboardingTour />}
 
       {/* Guest prompt dialog */}
       <GuestPromptDialog

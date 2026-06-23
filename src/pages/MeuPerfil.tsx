@@ -378,7 +378,7 @@ const MeuPerfil = () => {
         </div>
       </main>
 
-      <BottomNav activeTab="perfil" />
+      {!proposalTarget && <BottomNav activeTab="perfil" />}
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
 

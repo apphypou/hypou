@@ -10,7 +10,7 @@ import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { createReport, blockUser } from "@/services/reportService";
 import { startCall } from "@/services/callService";
-import { confirmTrade } from "@/services/matchService";
+import { confirmTrade, getMatch, getMatches } from "@/services/matchService";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -32,51 +32,41 @@ import RatingDialog from "@/components/RatingDialog";
 const useConversationDetails = (conversationId: string | null) => {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["conversation-detail", conversationId],
+    queryKey: ["conversation-detail", conversationId, user?.id],
     queryFn: async () => {
       if (!conversationId || !user) return null;
 
-      const { data: conv } = await supabase
+      const { data: conv, error: conversationError } = await supabase
         .from("conversations")
         .select("id, match_id")
         .eq("id", conversationId)
-        .single();
-
-      if (!conv) return null;
-
-      const { data: match } = await supabase
-        .from("matches")
-        .select(`
-          id, status, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id,
-          item_a:item_a_id (id, name, item_images (image_url, position)),
-          item_b:item_b_id (id, name, item_images (image_url, position))
-        `)
-        .eq("id", conv.match_id)
-        .single();
-
-      if (!match) return null;
-
-      const isUserA = match.user_a_id === user.id;
-      const otherUserId = isUserA ? match.user_b_id : match.user_a_id;
-      const otherItem = isUserA ? match.item_b : match.item_a;
-      const myItem = isUserA ? match.item_a : match.item_b;
-
-      const { data: profile } = await supabase
-        .from("public_profiles" as any)
-        .select("display_name, avatar_url")
-        .eq("user_id", otherUserId)
         .maybeSingle();
+
+      if (conversationError) throw conversationError;
+      if (!conv?.match_id) throw new Error("Conversa sem troca vinculada");
+
+      const matches = await getMatches(user.id);
+      const match = matches.find((item) => item.id === conv.match_id) || await getMatch(conv.match_id, user.id);
+
+      if (!match) throw new Error("Troca da conversa não encontrada");
+
+      const isUserA = match.my_item_side === "a";
+      const myItem = isUserA ? match.item_a : match.item_b;
+      const otherItem = isUserA ? match.item_b : match.item_a;
 
       return {
         match_id: match.id,
         match_status: match.status,
-        other_user_id: otherUserId,
-        other_user: (profile as any) || { display_name: "Usuário", avatar_url: null },
+        other_user_id: match.other_user.user_id,
+        other_user: {
+          display_name: match.other_user.display_name || "Usuário",
+          avatar_url: match.other_user.avatar_url || null,
+        },
         other_item: otherItem as any,
         my_item: myItem as any,
-        is_user_b: !isUserA,
-        my_confirmed: isUserA ? !!(match as any).confirmed_by_a : !!(match as any).confirmed_by_b,
-        other_confirmed: isUserA ? !!(match as any).confirmed_by_b : !!(match as any).confirmed_by_a,
+        is_user_b: match.my_item_side === "b",
+        my_confirmed: isUserA ? !!match.confirmed_by_a : !!match.confirmed_by_b,
+        other_confirmed: isUserA ? !!match.confirmed_by_b : !!match.confirmed_by_a,
         cash_amount_cents: (match as any).cash_amount_cents || 0,
         cash_payer_user_id: (match as any).cash_payer_user_id || null,
       };

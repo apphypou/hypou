@@ -22,6 +22,7 @@ export const useConversations = () => {
       ? [
           { table: "conversations", invalidateKeys: [["conversations", user.id]] },
           { table: "matches", invalidateKeys: [["conversations", user.id]] },
+          { table: "messages", invalidateKeys: [["conversations", user.id]] },
         ]
       : [],
     !!user

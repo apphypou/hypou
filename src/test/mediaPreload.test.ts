@@ -32,14 +32,17 @@ describe("mediaPreload", () => {
   });
 
   it("falls back to load events when decode is unavailable", async () => {
-    let instance: { onload: (() => void) | null } | null = null;
+    let loadHandler: (() => void) | null = null;
 
     class MockImage {
-      onload: (() => void) | null = null;
       onerror: (() => void) | null = null;
 
-      constructor() {
-        instance = this;
+      get onload() {
+        return loadHandler;
+      }
+
+      set onload(handler: (() => void) | null) {
+        loadHandler = handler;
       }
 
       set src(_value: string) {}
@@ -48,7 +51,7 @@ describe("mediaPreload", () => {
     globalThis.Image = MockImage as unknown as typeof Image;
 
     const promise = preloadImage("https://cdn.example.com/fallback.jpg");
-    instance?.onload?.();
+    loadHandler?.();
 
     await expect(promise).resolves.toBeUndefined();
   });

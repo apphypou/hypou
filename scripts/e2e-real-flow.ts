@@ -1,6 +1,6 @@
 /**
  * E2E real-world flow: 2 contas + fluxo completo de troca via Supabase REST.
- * Roda contra o projeto real (gfvqympaaglkplzbocbl).
+ * Deve rodar contra staging. Produção fica bloqueada por padrão.
  */
 import { createClient } from "@supabase/supabase-js";
 
@@ -8,6 +8,13 @@ const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://gfvqympaaglkplzbo
 const ANON_KEY =
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdmdnF5bXBhYWdsa3BsemJvY2JsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTM2NTYsImV4cCI6MjA4NzI4OTY1Nn0.URR_2cpEO5xMsFwDGfELuYIn4g6Q8bIYKd4V-flBXhU";
+
+const PROD_PROJECT_REF = "gfvqympaaglkplzbocbl";
+if (SUPABASE_URL.includes(PROD_PROJECT_REF) && process.env.HYPOU_ALLOW_PROD_E2E !== "1") {
+  throw new Error(
+    "Bloqueado: scripts/e2e-real-flow.ts escreve dados reais. Configure VITE_SUPABASE_URL/VITE_SUPABASE_PUBLISHABLE_KEY para staging ou use HYPOU_ALLOW_PROD_E2E=1 conscientemente.",
+  );
+}
 
 const ts = Date.now();
 const A_EMAIL = `qa-alice-${ts}@outlook.com`;

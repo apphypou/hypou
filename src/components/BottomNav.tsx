@@ -1,8 +1,9 @@
 import { Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
-import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { Capacitor } from "@capacitor/core";
+import { shouldHideBottomNav } from "@/lib/bottomNavVisibility";
 
 type TabId = "explorar" | "shorts" | "trocas" | "chat" | "perfil";
 
@@ -26,8 +27,11 @@ const prefetch = (path: string) => {
 
 const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
   const unreadCount = useUnreadCount();
+  const bottomOffset = Capacitor.isNativePlatform() ? "-0.5rem" : "0.75rem";
+  const pathname = typeof window === "undefined" ? "" : window.location.pathname;
+
+  if (shouldHideBottomNav(pathname, false)) return null;
 
   const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; unreadCount?: number }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
@@ -37,36 +41,40 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   ];
 
   const formatBadge = (n: number) => (n > 99 ? "99+" : String(n));
-  const handleLinkClick = (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    const isProtectedTab = path !== "/explorar";
-
-    if (authLoading && isProtectedTab) {
-      event.preventDefault();
-      return;
-    }
-
-    if (!user && isProtectedTab) {
-      event.preventDefault();
-      navigate(`/login?redirect=${encodeURIComponent(path)}`);
-    }
-  };
-
   return (
     <div
-      className="fixed left-4 right-4 flex justify-center"
-      style={{ bottom: "calc(1.5rem + var(--safe-area-bottom))", zIndex: 40 }}
+      className="hypou-bottom-nav-wrapper fixed left-4 right-4 flex justify-center pointer-events-none"
+      style={{
+        bottom: `calc(${bottomOffset} + var(--safe-area-bottom))`,
+        zIndex: 40,
+        transform: "translateZ(0)",
+        WebkitTransform: "translateZ(0)",
+      }}
     >
-      <nav className="bg-background/92 dark:bg-background/82 backdrop-blur-2xl border border-foreground/10 rounded-full px-2 py-1.5 flex items-center gap-1.5 w-full max-w-[22rem] relative shadow-[0_8px_24px_rgba(0,0,0,0.18)] dark:shadow-[0_8px_28px_rgba(0,0,0,0.42)]">
+      <nav className="hypou-bottom-nav pointer-events-auto rounded-full px-2 py-1.5 flex items-center gap-1.5 w-full max-w-[22rem] relative backdrop-blur-2xl">
         {navItems.map((item) => {
           const isActive = item.id === activeTab;
           return (
             <Link
               key={item.id}
               to={item.path}
-              onClick={(event) => handleLinkClick(event, item.path)}
               onPointerEnter={() => prefetch(item.path)}
-              onTouchStart={() => prefetch(item.path)}
-              className="relative flex flex-col items-center justify-center gap-0.5 rounded-full h-12 flex-1 z-10"
+              onPointerDown={(event) => {
+                event.stopPropagation();
+                prefetch(item.path);
+              }}
+              onTouchStart={(event) => {
+                event.stopPropagation();
+                prefetch(item.path);
+              }}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!isActive) {
+                  navigate(item.path);
+                }
+              }}
+              className="relative flex flex-col items-center justify-center gap-0.5 rounded-full h-12 flex-1 z-10 touch-manipulation select-none"
             >
               {isActive && (
                 <motion.div

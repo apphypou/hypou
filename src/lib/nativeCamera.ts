@@ -5,12 +5,84 @@ import { Capacitor } from "@capacitor/core";
  * falls back to standard file input on web.
  */
 
-interface PhotoResult {
+export type MediaSource = "camera" | "gallery";
+
+export type PickMediaOptions = {
+  source: MediaSource;
+  mediaType: "photo" | "video";
+};
+
+export interface PhotoResult {
   file: File;
   previewUrl: string;
 }
 
 export const isNativePlatform = () => Capacitor.isNativePlatform();
+
+const toPhotoResult = async (webPath: string, name: string): Promise<PhotoResult> => {
+  const response = await fetch(webPath);
+  const blob = await response.blob();
+  const file = new File([blob], name, {
+    type: blob.type || "image/jpeg",
+  });
+  return { file, previewUrl: webPath };
+};
+
+export const takePhoto = async (): Promise<PhotoResult | null> => {
+  if (!isNativePlatform()) return null;
+
+  try {
+    const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+    const photo = await Camera.getPhoto({
+      quality: 85,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Camera,
+    });
+    return photo.webPath ? toPhotoResult(photo.webPath, `photo_${Date.now()}.jpg`) : null;
+  } catch (err: any) {
+    if (err?.message?.includes("cancelled") || err?.message?.includes("User cancelled")) return null;
+    console.error("Native camera error:", err);
+    return null;
+  }
+};
+
+export const choosePhotosFromGallery = async (options?: {
+  multiple?: boolean;
+  maxFiles?: number;
+}): Promise<PhotoResult[]> => {
+  if (!isNativePlatform()) return [];
+
+  try {
+    const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+
+    if (options?.multiple) {
+      const { photos } = await Camera.pickImages({
+        quality: 85,
+        limit: options.maxFiles ?? 5,
+      });
+      const results: PhotoResult[] = [];
+      for (const photo of photos) {
+        if (photo.webPath) {
+          results.push(await toPhotoResult(photo.webPath, `photo_${Date.now()}_${results.length}.jpg`));
+        }
+      }
+      return results;
+    }
+
+    const photo = await Camera.getPhoto({
+      quality: 85,
+      allowEditing: false,
+      resultType: CameraResultType.Uri,
+      source: CameraSource.Photos,
+    });
+    return photo.webPath ? [await toPhotoResult(photo.webPath, `photo_${Date.now()}.jpg`)] : [];
+  } catch (err: any) {
+    if (err?.message?.includes("cancelled") || err?.message?.includes("User cancelled")) return [];
+    console.error("Native gallery error:", err);
+    return [];
+  }
+};
 
 /**
  * Pick photo(s) using native camera/gallery on native, or trigger file input on web.
@@ -38,12 +110,7 @@ export const pickPhotos = async (options?: {
       const results: PhotoResult[] = [];
       for (const photo of photos) {
         if (photo.webPath) {
-          const response = await fetch(photo.webPath);
-          const blob = await response.blob();
-          const file = new File([blob], `photo_${Date.now()}_${results.length}.jpg`, {
-            type: blob.type || "image/jpeg",
-          });
-          results.push({ file, previewUrl: photo.webPath });
+          results.push(await toPhotoResult(photo.webPath, `photo_${Date.now()}_${results.length}.jpg`));
         }
       }
       return results;
@@ -61,12 +128,7 @@ export const pickPhotos = async (options?: {
     });
 
     if (photo.webPath) {
-      const response = await fetch(photo.webPath);
-      const blob = await response.blob();
-      const file = new File([blob], `photo_${Date.now()}.jpg`, {
-        type: blob.type || "image/jpeg",
-      });
-      return [{ file, previewUrl: photo.webPath }];
+      return [await toPhotoResult(photo.webPath, `photo_${Date.now()}.jpg`)];
     }
 
     return [];

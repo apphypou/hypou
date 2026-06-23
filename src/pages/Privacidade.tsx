@@ -18,7 +18,7 @@ const Privacidade = () => {
       </header>
 
       <main className="flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-12">
-        <div className="prose prose-sm dark:prose-invert max-w-none">
+        <div className="max-w-none space-y-1">
           <p className="text-muted-foreground text-xs mb-4">Última atualização: 31 de março de 2026</p>
 
           <h2 className="text-foreground text-base font-bold mt-6 mb-2">1. Dados Coletados</h2>

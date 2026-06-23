@@ -36,6 +36,7 @@ export const mockSupabaseClient = {
     signUp: vi.fn(() => Promise.resolve({ data: {}, error: null })),
     signOut: vi.fn(() => Promise.resolve({ error: null })),
     signInWithOAuth: vi.fn(() => Promise.resolve({ data: {}, error: null })),
+    signInWithIdToken: vi.fn(() => Promise.resolve({ data: {}, error: null })),
     resetPasswordForEmail: vi.fn(() => Promise.resolve({ error: null })),
     updateUser: vi.fn(() => Promise.resolve({ data: {}, error: null })),
   },
