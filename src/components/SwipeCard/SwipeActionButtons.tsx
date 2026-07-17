@@ -21,8 +21,8 @@ export const SwipeActionButtons = ({
   onDislike,
   onLike,
 }: SwipeActionButtonsProps) => {
-  const dislikeBtnScale = useTransform(x, [-150, 0, 150], [1.18, 1, 0.92]);
-  const likeBtnScale = useTransform(x, [-150, 0, 150], [0.92, 1, 1.18]);
+  const dislikeBtnScale = useTransform(x, [-150, 0, 150], [1.08, 1, 0.96]);
+  const likeBtnScale = useTransform(x, [-150, 0, 150], [0.96, 1, 1.08]);
 
   const dislikeBtnBg = useTransform(
     x,
@@ -40,23 +40,6 @@ export const SwipeActionButtons = ({
       "hsl(var(--glass-surface))",
       "hsl(var(--hype))",
       "hsl(var(--hype))",
-    ]
-  );
-
-  const dislikeBtnShadow = useTransform(
-    x,
-    [-60, 0],
-    [
-      "0 0 28px hsl(var(--flop-glow) / 0.62), 0 0 56px hsl(var(--flop-glow) / 0.32)",
-      "0 5px 16px hsl(0 0% 0% / 0.18)",
-    ]
-  );
-  const likeBtnShadow = useTransform(
-    x,
-    [0, 60],
-    [
-      "0 5px 16px hsl(0 0% 0% / 0.18)",
-      "0 0 28px hsl(var(--hype-glow) / 0.62), 0 0 56px hsl(var(--hype-glow) / 0.32)",
     ]
   );
 
@@ -85,10 +68,9 @@ export const SwipeActionButtons = ({
         style={{
           scale: dislikeBtnScale,
           background: dislikeBtnBg,
-          boxShadow: dislikeBtnShadow,
           color: dislikeIconColor,
         }}
-        className="h-14 w-14 rounded-full border border-white/14 backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
+        className="h-14 w-14 rounded-full border border-white/14 shadow-[0_5px_16px_hsl(0_0%_0%/0.18)] backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
       >
         <ThumbsDown
           className="h-6 w-6"
@@ -109,10 +91,9 @@ export const SwipeActionButtons = ({
         style={{
           scale: likeBtnScale,
           background: likeBtnBg,
-          boxShadow: likeBtnShadow,
           color: likeIconColor,
         }}
-        className="h-14 w-14 rounded-full border border-white/14 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
+        className="h-14 w-14 rounded-full border border-white/14 shadow-[0_5px_16px_hsl(0_0%_0%/0.18)] backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
       >
         <ThumbsUp
           className="h-6 w-6"

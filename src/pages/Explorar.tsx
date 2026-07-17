@@ -30,7 +30,7 @@ import { formatValue } from "@/lib/utils";
 import { shareContent } from "@/lib/share";
 import { shouldRecycleExploreFeed } from "@/lib/exploreFeed";
 import { getOnboardingRouteState } from "@/lib/onboarding";
-import { cdnFull } from "@/lib/imageUrl";
+import { cdnBlur } from "@/lib/imageUrl";
 import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
 
 const PENDING_LIKE_KEY = "hypou:pending-like-item";
@@ -369,7 +369,7 @@ const Explorar = () => {
       preloadVideo(afterNextVideo).catch(() => undefined);
       return;
     }
-    preloadImage(afterNextImage ? cdnFull(afterNextImage) : null).catch(() => undefined);
+    preloadImage(afterNextImage ? cdnBlur(afterNextImage) : null).catch(() => undefined);
   }, [afterNextImage, afterNextVideo]);
 
   const feedEnded = false;
