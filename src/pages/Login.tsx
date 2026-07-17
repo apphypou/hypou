@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
-import logoHypou from "@/assets/logo-hypou.png";
 import { useAuth } from "@/hooks/useAuth";
 import NeonButton from "@/components/NeonButton";
+import AuthShell from "@/components/auth/AuthShell";
+import AuthSocialButtons from "@/components/auth/AuthSocialButtons";
 import { useToast } from "@/hooks/use-toast";
 import { startOAuthSignIn } from "@/lib/oauth";
 
@@ -69,54 +69,49 @@ const Login = () => {
   };
 
   return (
-    <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
-      {/* Header */}
-      <div className="flex flex-col items-center pb-8 w-full max-w-sm">
-        <img src={logoHypou} alt="Hypou" className="h-20 w-auto object-contain mb-6" />
-        <p className="text-muted-foreground text-sm mt-2">
-          Acesse sua conta e continue trocando
-        </p>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm mt-4">
+    <AuthShell description="Transforme objetos parados em novas oportunidades.">
+      <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3.5">
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <label htmlFor="login-email" className="sr-only">Seu e-mail</label>
+          <Mail className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[#ff2d95]" />
           <input
+            id="login-email"
             type="email"
             placeholder="Seu e-mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full h-14 pl-12 pr-5 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            autoComplete="email"
+            className="h-14 w-full rounded-2xl border border-white/15 bg-[rgba(11,17,29,0.78)] pl-12 pr-5 text-white shadow-[0_12px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl transition-all placeholder:text-white/45 focus:border-primary/70 focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </div>
 
         <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <label htmlFor="login-password" className="sr-only">Sua senha</label>
+          <Lock className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[#ff2d95]" />
           <input
+            id="login-password"
             type={showPassword ? "text" : "password"}
             placeholder="Sua senha"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full h-14 pl-12 pr-12 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            autoComplete="current-password"
+            className="h-14 w-full rounded-2xl border border-white/15 bg-[rgba(11,17,29,0.78)] pl-12 pr-12 text-white shadow-[0_12px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl transition-all placeholder:text-white/45 focus:border-primary/70 focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#ff2d95] transition-colors hover:text-white"
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
           >
             {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
           </button>
         </div>
 
         <div className="flex justify-end">
-          <Link
-            to="/recuperar-senha"
-            className="text-xs text-primary hover:underline"
-          >
+          <Link to="/recuperar-senha" className="text-xs font-medium text-primary hover:underline">
             Esqueci minha senha
           </Link>
         </div>
@@ -126,53 +121,23 @@ const Login = () => {
           icon={LogIn}
           type="submit"
           disabled={loading}
+          className="border border-white/25 bg-[linear-gradient(90deg,#ff1493_0%,#7c3aed_52%,#11d7e5_100%)] text-white shadow-[0_0_26px_rgba(21,198,231,0.28)]"
         >
           {loading ? "Entrando..." : "Entrar"}
         </NeonButton>
       </form>
 
-      {/* Social Login */}
-      <div className="flex flex-col items-center gap-4 w-full max-w-sm mt-8">
-        <p className="text-muted-foreground text-sm">Ou continue com</p>
-        <div className="flex gap-6">
-          <button
-            type="button"
-            onClick={() => void handleSocialLogin("google")}
-            disabled={socialLoading !== null}
-            className="flex items-center justify-center w-14 h-14 rounded-full bg-secondary border border-border hover:bg-accent transition-all disabled:opacity-60 disabled:pointer-events-none"
-            aria-label={socialLoading === "google" ? "Entrando com Google" : "Entrar com Google"}
-          >
-            <svg className="h-6 w-6" viewBox="0 0 24 24">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSocialLogin("apple")}
-            disabled={socialLoading !== null}
-            className="flex items-center justify-center w-14 h-14 rounded-full bg-secondary border border-border hover:bg-accent transition-all disabled:opacity-60 disabled:pointer-events-none"
-            aria-label={socialLoading === "apple" ? "Entrando com Apple" : "Entrar com Apple"}
-          >
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+      <AuthSocialButtons loadingProvider={socialLoading} mode="login" onProvider={(provider) => void handleSocialLogin(provider)} />
 
-      {/* Footer */}
-      <div className="pt-6 text-center">
-        <p className="text-muted-foreground text-sm">
+      <div className="text-center">
+        <p className="text-sm text-white/58">
           Ainda não tem conta?{" "}
-          <Link to="/cadastro" className="text-primary font-semibold hover:underline">
+          <Link to="/cadastro" className="font-semibold text-[#ff3a9d] hover:underline">
             Criar conta
           </Link>
         </p>
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

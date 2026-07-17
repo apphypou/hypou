@@ -28,7 +28,10 @@ import { Slider } from "@/components/ui/slider";
 import { categories } from "@/constants/categories";
 import { formatValue } from "@/lib/utils";
 import { shareContent } from "@/lib/share";
-import { findRefreshIndex } from "@/lib/pullToRefresh";
+import { shouldRecycleExploreFeed } from "@/lib/exploreFeed";
+import { getOnboardingRouteState } from "@/lib/onboarding";
+import { cdnFull } from "@/lib/imageUrl";
+import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
 
 const PENDING_LIKE_KEY = "hypou:pending-like-item";
 const EXPLORE_FILTERS_KEY = "hypou:explore-filters";
@@ -75,26 +78,41 @@ const Explorar = () => {
   const isGuest = !user;
 
   // Onboarding guard
-  const { data: onboardingProfile } = useQuery({
+  const {
+    data: onboardingProfile,
+    isLoading: onboardingLoading,
+    isFetching: onboardingFetching,
+    isError: onboardingError,
+  } = useQuery({
     queryKey: ["onboarding-check", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("user_id", user!.id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  const onboardingState = getOnboardingRouteState({
+    profile: onboardingProfile,
+    isLoading: onboardingLoading,
+    isFetching: onboardingFetching,
+    isError: onboardingError,
   });
 
   useEffect(() => {
-    if (user && onboardingProfile && !onboardingProfile.onboarding_completed) {
+    if (user && onboardingState === "onboarding") {
       navigate("/onboarding", { replace: true });
     }
-  }, [user, onboardingProfile, navigate]);
+  }, [user, onboardingState, navigate]);
 
   // Restore pending proposal context if user came back from /novo-item
   // Pode ser desativado em Configurações (hypou:disable-pending-resume)
@@ -115,12 +133,12 @@ const Explorar = () => {
     } catch { /* ignore */ }
   }, [user]);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [dismissedItemIds, setDismissedItemIds] = useState<Set<string>>(() => new Set());
   const [epoch, setEpoch] = useState(0);
   const swipingRef = useRef(false);
+  const swipingItemIdRef = useRef<string | null>(null);
+  const recycledFeedKeyRef = useRef<string | null>(null);
   const cardRef = useRef<SwipeCardHandle>(null);
-  const refreshItemIdRef = useRef<string | null>(null);
-  const refreshIndexRef = useRef(0);
 
   const [likeStreak, setLikeStreak] = useState(0);
   const [showStreak, setShowStreak] = useState(false);
@@ -142,6 +160,12 @@ const Explorar = () => {
     [
       { table: "items", event: "INSERT", invalidateKeys: [["explore-items"], ["recommended-items"]] },
       { table: "items", event: "UPDATE", invalidateKeys: [["explore-items"], ["recommended-items"]] },
+      ...(user
+        ? [
+            { table: "swipes", filter: `swiper_id=eq.${user.id}`, invalidateKeys: [["explore-items", user.id]] },
+            { table: "matches", invalidateKeys: [["explore-items", user.id], ["matches", user.id]] },
+          ]
+        : []),
     ],
     true
   );
@@ -156,11 +180,12 @@ const Explorar = () => {
       return getPublicExploreItems();
     },
     staleTime: 60 * 1000,
+    refetchOnMount: "always",
+    refetchOnReconnect: true,
   });
 
   useEffect(() => {
     localStorage.setItem(EXPLORE_FILTERS_KEY, JSON.stringify(exploreFilters));
-    setCurrentIndex(0);
     setEpoch((e) => e + 1);
   }, [exploreFilters]);
 
@@ -168,31 +193,49 @@ const Explorar = () => {
     return filterExploreItems(items, exploreFilters);
   }, [items, exploreFilters]);
 
-  const currentItem = filteredItems.length > 0 ? filteredItems[currentIndex % filteredItems.length] : null;
-  const nextItem = filteredItems.length > 0 ? filteredItems[(currentIndex + 1) % filteredItems.length] : null;
+  const visibleItems = useMemo(
+    () => filteredItems.filter((item: any) => !dismissedItemIds.has(item.id)),
+    [dismissedItemIds, filteredItems],
+  );
+  const currentItem = visibleItems[0] ?? null;
+  const nextItem = visibleItems[1] ?? null;
   const hasActiveFilters =
     exploreFilters.categories.length > 0 ||
     exploreFilters.valueRange[0] > 0 ||
     exploreFilters.valueRange[1] < EXPLORE_FILTER_MAX_CENTS;
 
   const handleRefresh = useCallback(async () => {
-    refreshItemIdRef.current = currentItem?.id ?? null;
-    refreshIndexRef.current = currentIndex;
     await queryClient.refetchQueries({ queryKey: ["explore-items", user?.id], exact: true });
-
-    const refreshedItems = queryClient.getQueryData<any[]>(["explore-items", user?.id]) ?? [];
-    const refreshedFilteredItems = filterExploreItems(refreshedItems, exploreFilters);
-    setCurrentIndex(
-      findRefreshIndex(refreshedFilteredItems, refreshItemIdRef.current, refreshIndexRef.current),
-    );
-    refreshItemIdRef.current = null;
+    setDismissedItemIds((current) => current.size === filteredItems.length ? new Set() : current);
     setEpoch((value) => value + 1);
-  }, [currentIndex, currentItem?.id, exploreFilters, queryClient, user?.id]);
+  }, [filteredItems.length, queryClient, user?.id]);
 
-  const advanceCard = useCallback(() => {
+  useEffect(() => {
+    const feedKey = filteredItems.map((item: any) => item.id).join(":");
+    if (!shouldRecycleExploreFeed(filteredItems.length, visibleItems.length, isLoading)) {
+      if (visibleItems.length > 0) recycledFeedKeyRef.current = null;
+      return;
+    }
+    if (recycledFeedKeyRef.current === feedKey) return;
+
+    // The server may return a fallback list that contains cards this session
+    // already dismissed. Recycle only after the whole loaded batch is gone so
+    // one stale cached result cannot leave Explore stuck on an empty feed.
+    recycledFeedKeyRef.current = feedKey;
+    setDismissedItemIds(new Set());
+    void queryClient.refetchQueries({ queryKey: ["explore-items", user?.id], exact: true });
+    setEpoch((value) => value + 1);
+  }, [filteredItems, isLoading, queryClient, user?.id, visibleItems.length]);
+
+  const advanceCard = useCallback((itemId: string) => {
+    setDismissedItemIds((current) => {
+      if (current.has(itemId)) return current;
+      const next = new Set(current);
+      next.add(itemId);
+      return next;
+    });
     setEpoch((e) => e + 1);
     dragDirectionValue.set(0);
-    setCurrentIndex((i) => i + 1);
   }, [dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
@@ -217,6 +260,10 @@ const Explorar = () => {
       (async () => {
         try {
           await createSwipe(user.id, itemId, direction);
+          // Refetch only after the RPC can exclude this item. Refetching before
+          // the write settles can return the just-dismissed card and leave a
+          // one-item feed without a next card.
+          await queryClient.refetchQueries({ queryKey: ["explore-items", user.id], exact: true });
         } catch (err: any) {
           if (!err.message?.includes("duplicate")) {
             toast({ title: "Erro ao registrar swipe", description: err.message, variant: "destructive" });
@@ -224,48 +271,53 @@ const Explorar = () => {
         }
       })();
     },
-    [user, toast]
+    [user, toast, queryClient]
   );
 
   const handleSwipeComplete = useCallback(
     (direction: "like" | "dislike") => {
-      if (swipingRef.current || !currentItem) return;
+      const item = currentItem;
+      if (swipingRef.current || !item || swipingItemIdRef.current === item.id) return;
       swipingRef.current = true;
+      swipingItemIdRef.current = item.id;
 
       // Guest mode: show prompt on like
       if (isGuest && direction === "like") {
         setShowGuestPrompt(true);
         swipingRef.current = false;
+        swipingItemIdRef.current = null;
         return;
       }
 
       if (isGuest) {
-        advanceCard();
+        advanceCard(item.id);
         swipingRef.current = false;
+        swipingItemIdRef.current = null;
         return;
       }
 
       triggerStreak(direction);
 
       if (direction === "like") {
-        recordSwipeInBackground("like", currentItem.id);
+        recordSwipeInBackground("like", item.id);
         haptic("light");
         // Persist so the user can finish the proposal even after navigating to /novo-item
         try {
           sessionStorage.setItem(PENDING_LIKE_KEY, JSON.stringify({
-            id: currentItem.id,
-            user_id: currentItem.user_id,
-            name: currentItem.name,
+            id: item.id,
+            user_id: item.user_id,
+            name: item.name,
           }));
         } catch { /* storage may be blocked */ }
-        setPendingLikeItem(currentItem);
+        setPendingLikeItem(item);
         setShowSelectItem(true);
       } else {
-        recordSwipeInBackground("dislike", currentItem.id);
+        recordSwipeInBackground("dislike", item.id);
       }
 
-      advanceCard();
+      advanceCard(item.id);
       swipingRef.current = false;
+      swipingItemIdRef.current = null;
     },
     [user, isGuest, currentItem, advanceCard, triggerStreak, recordSwipeInBackground, toast]
   );
@@ -306,18 +358,19 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  // Preload image after next
-  const afterNextItem = filteredItems.length > 0 ? filteredItems[(currentIndex + 2) % filteredItems.length] : null;
+  // The next card is rendered behind the active one. Preload only the first media
+  // of the card after it, keeping swipe transitions responsive on slower networks.
+  const afterNextItem = visibleItems[2] ?? null;
   const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
+  const afterNextVideo = afterNextItem?.item_videos?.[0]?.video_url;
 
   useEffect(() => {
-    if (afterNextImage) {
-      import("@/lib/imageUrl").then(({ cdnFull }) => {
-        const img = new window.Image();
-        img.src = cdnFull(afterNextImage);
-      });
+    if (afterNextVideo) {
+      preloadVideo(afterNextVideo).catch(() => undefined);
+      return;
     }
-  }, [afterNextImage]);
+    preloadImage(afterNextImage ? cdnFull(afterNextImage) : null).catch(() => undefined);
+  }, [afterNextImage, afterNextVideo]);
 
   const feedEnded = false;
 
@@ -329,7 +382,7 @@ const Explorar = () => {
           <div className="flex-1 flex items-center justify-center w-full">
             <SkeletonSwipeCard />
           </div>
-        ) : feedEnded || filteredItems.length === 0 ? (
+        ) : feedEnded || visibleItems.length === 0 ? (
           /* ===== EMPTY STATE ===== */
           <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
             <motion.div

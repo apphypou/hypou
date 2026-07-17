@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { trackChannel } from "@/lib/realtimeManager";
 
 type Subscription = {
   table: string;
@@ -57,9 +58,7 @@ export function useRealtimeInvalidate(subs: Subscription[], enabled = true) {
     });
 
     channel.subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return trackChannel(channel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig, enabled, queryClient]);
 }

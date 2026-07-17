@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Registers the native device for FCM push and stores the token in `device_tokens`.
+ * Registers the native device for push and stores the token in `device_tokens`.
  * No-op on web — we keep in-app realtime notifications there.
  *
  * Also handles taps on incoming notifications (foreground & background) and
@@ -12,9 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export function usePushRegistration() {
   const { user } = useAuth();
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     if (!Capacitor.isNativePlatform()) return;
 
     let cleanup: (() => void) | null = null;
@@ -30,24 +31,40 @@ export function usePushRegistration() {
         }
         if (perm.receive !== "granted") return;
 
-        await PushNotifications.register();
-
         const reg = await PushNotifications.addListener("registration", async (token) => {
           const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
-          await supabase
+          const { error } = await supabase
             .from("device_tokens")
             .upsert(
-              { user_id: user.id, token: token.value, platform },
+              { user_id: userId, token: token.value, platform },
               { onConflict: "token" },
             );
+
+          if (error) {
+            console.error("Push token storage failed", {
+              code: error.code,
+              message: error.message,
+              platform,
+            });
+            return;
+          }
+
+          console.info("Push registration completed", { platform });
         });
 
         const err = await PushNotifications.addListener("registrationError", (e) => {
           console.error("Push registration error", e);
         });
 
-        // Foreground notification arrived — let in-app realtime handle UI; nothing to do here
-        const recv = await PushNotifications.addListener("pushNotificationReceived", () => {});
+        // Realtime remains the primary path, but iOS can deliver the native push
+        // before its websocket event. Ask the call listener to re-query the
+        // server immediately rather than waiting for its polling interval.
+        const recv = await PushNotifications.addListener("pushNotificationReceived", (notification) => {
+          const data: any = notification.data || {};
+          if (data.type === "call" && data.call_session_id) {
+            window.dispatchEvent(new CustomEvent("hypou:incoming-call-push"));
+          }
+        });
 
         // User tapped a notification → navigate
         const tap = await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
@@ -56,7 +73,7 @@ export function usePushRegistration() {
           if (type === "call" && data.conversation_id) {
             // Send to /chat — the IncomingCallSheet will handle the active session via realtime
             window.location.assign(`/chat/${data.conversation_id}`);
-          } else if (type === "message" && data.conversation_id) {
+          } else if ((type === "message" || type === "missed_call") && data.conversation_id) {
             window.location.assign(`/chat/${data.conversation_id}`);
           } else if ((type === "match" || type === "proposal") && data.match_id) {
             window.location.assign(`/match/${data.match_id}`);
@@ -64,6 +81,10 @@ export function usePushRegistration() {
             window.location.assign("/chat");
           }
         });
+
+        // The native registration callback can fire immediately. Subscribe before
+        // registering so the token is never lost on a fast iOS/Android response.
+        await PushNotifications.register();
 
         cleanup = () => {
           reg.remove();
@@ -79,5 +100,5 @@ export function usePushRegistration() {
     return () => {
       cleanup?.();
     };
-  }, [user?.id]);
+  }, [userId]);
 }

@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { validateChatMedia, prepareImageForUpload } from "@/lib/fileValidation";
 import { getLatestNonSystemMessagesByConversation } from "@/lib/conversationPreview";
 import { sortConversationsByActivity } from "@/lib/conversationOrdering";
-import { getBlockedUserIds } from "@/services/reportService";
+import { shouldShowInMainConversationList } from "@/lib/conversationArchive";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'system';
 export type ChatMediaKind = "image" | "video" | "audio";
@@ -16,7 +16,11 @@ export interface Message {
   media_url: string | null;
   read_at: string | null;
   created_at: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
 }
+
+export const isDeletedMessage = (message: Pick<Message, "deleted_at">) => !!message.deleted_at;
 
 export interface ConversationWithDetails {
   id: string;
@@ -40,6 +44,7 @@ export interface ConversationWithDetails {
   last_message_at?: string | null;
   unread_count: number;
   match_status: string;
+  hype_opened_at?: string | null;
 }
 
 export const getConversationIdForMatch = async (matchId: string): Promise<string | null> => {
@@ -53,10 +58,61 @@ export const getConversationIdForMatch = async (matchId: string): Promise<string
   return data?.id ?? null;
 };
 
-export const getConversations = async (userId: string): Promise<ConversationWithDetails[]> => {
-  // Fetch blocked user IDs to filter them out
-  const blockedIds = await getBlockedUserIds(userId);
+export type ConversationArchiveMode = "main" | "archived" | "all";
 
+export const getArchivedConversationIds = async (userId: string): Promise<Set<string>> => {
+  const { data, error } = await (supabase as any)
+    .from("conversation_archives")
+    .select("conversation_id")
+    .eq("user_id", userId);
+
+  if (error) throw error;
+  return new Set(((data || []) as Array<{ conversation_id: string }>).map((row) => row.conversation_id));
+};
+
+export const archiveConversation = async (conversationId: string, userId: string): Promise<void> => {
+  await archiveConversations([conversationId], userId);
+};
+
+export const archiveConversations = async (conversationIds: string[], userId: string): Promise<void> => {
+  const uniqueConversationIds = [...new Set(conversationIds)].filter(Boolean);
+  if (uniqueConversationIds.length === 0) return;
+
+  const { error } = await (supabase as any)
+    .from("conversation_archives")
+    .upsert(
+      uniqueConversationIds.map((conversationId) => ({ conversation_id: conversationId, user_id: userId })),
+      { onConflict: "user_id,conversation_id" },
+    );
+
+  if (error) throw error;
+};
+
+export const unarchiveConversation = async (conversationId: string, userId: string): Promise<void> => {
+  const { error } = await (supabase as any)
+    .from("conversation_archives")
+    .delete()
+    .eq("conversation_id", conversationId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+};
+
+export const markConversationHypeOpened = async (conversationId: string, userId: string): Promise<void> => {
+  const { error } = await (supabase as any)
+    .from("conversation_hype_states")
+    .upsert(
+      { conversation_id: conversationId, user_id: userId, opened_at: new Date().toISOString() },
+      { onConflict: "conversation_id,user_id" },
+    );
+
+  if (error) throw error;
+};
+
+export const getConversations = async (
+  userId: string,
+  archiveMode: ConversationArchiveMode = "main",
+): Promise<ConversationWithDetails[]> => {
   // Get all conversations via matches
   const { data: matches, error: matchErr } = await supabase
     .from("matches")
@@ -72,19 +128,11 @@ export const getConversations = async (userId: string): Promise<ConversationWith
   if (matchErr) throw matchErr;
   if (!matches || matches.length === 0) return [];
 
-  // Filter out matches with blocked users
-  const filteredMatches = blockedIds.length > 0
-    ? matches.filter((m: any) => {
-        const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
-        return !blockedIds.includes(otherId);
-      })
-    : matches;
-
   // Collect other user IDs and conversation IDs
   const otherUserIds = new Set<string>();
   const conversationIds: string[] = [];
 
-  filteredMatches.forEach((m: any) => {
+  matches.forEach((m: any) => {
     const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
     otherUserIds.add(otherId);
     const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
@@ -113,9 +161,10 @@ export const getConversations = async (userId: string): Promise<ConversationWith
       .order("created_at", { ascending: false });
 
     if (allMessages) {
-      Object.assign(lastMessages, getLatestNonSystemMessagesByConversation(allMessages as Message[]));
+      const visibleMessages = (allMessages as Message[]).filter((message) => !message.deleted_at);
+      Object.assign(lastMessages, getLatestNonSystemMessagesByConversation(visibleMessages));
 
-      for (const msg of allMessages as Message[]) {
+      for (const msg of visibleMessages) {
         if (msg.sender_id !== userId && !msg.read_at) {
           unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
         }
@@ -123,9 +172,10 @@ export const getConversations = async (userId: string): Promise<ConversationWith
     }
   }
 
-  const conversations = filteredMatches
-    // H2: chat só lista conversas de propostas aceitas ou trocas concluídas
-    .filter((m: any) => m.status === "accepted" || m.status === "completed")
+  const conversations = matches
+    // Preserve the audit trail after a refusal, cancellation, block, or completed
+    // trade. Sending remains controlled by the match status in Conversa.
+    .filter((m: any) => ["accepted", "completed", "cancelled", "rejected"].includes(m.status))
     .map((m: any) => {
       const isUserA = m.user_a_id === userId;
       const otherId = isUserA ? m.user_b_id : m.user_a_id;
@@ -157,7 +207,32 @@ export const getConversations = async (userId: string): Promise<ConversationWith
       };
     }).filter(Boolean) as ConversationWithDetails[];
 
-  return sortConversationsByActivity(conversations);
+  const sorted = sortConversationsByActivity(conversations);
+  if (archiveMode === "all") return sorted;
+
+  const archivedIds = await getArchivedConversationIds(userId);
+  const { data: hypeStates, error: hypeStatesError } = await (supabase as any)
+    .from("conversation_hype_states")
+    .select("conversation_id, opened_at")
+    .eq("user_id", userId);
+
+  if (hypeStatesError) throw hypeStatesError;
+  const hypeOpenedAtByConversation = new Map(
+    ((hypeStates || []) as Array<{ conversation_id: string; opened_at: string }>)
+      .map((state) => [state.conversation_id, state.opened_at]),
+  );
+  const conversationsWithHypeState = sorted.map((conversation) => ({
+    ...conversation,
+    hype_opened_at: hypeOpenedAtByConversation.get(conversation.id) || null,
+  }));
+
+  if (archiveMode === "archived") {
+    return conversationsWithHypeState.filter((conversation) => archivedIds.has(conversation.id));
+  }
+
+  return conversationsWithHypeState.filter((conversation) =>
+    shouldShowInMainConversationList(conversation, archivedIds, userId),
+  );
 };
 
 export const getMessages = async (conversationId: string): Promise<Message[]> => {
@@ -192,6 +267,11 @@ export const sendMessage = async (
 
   if (error) throw error;
   return data;
+};
+
+export const deleteMessage = async (messageId: string, _userId: string) => {
+  const { error } = await supabase.rpc("soft_delete_message" as any, { p_message_id: messageId });
+  if (error) throw error;
 };
 
 export const uploadChatMedia = async (
@@ -234,7 +314,7 @@ export const subscribeToMessages = (
     .on(
       "postgres_changes",
       {
-        event: "INSERT",
+        event: "*",
         schema: "public",
         table: "messages",
         filter: `conversation_id=eq.${conversationId}`,

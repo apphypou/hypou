@@ -5,15 +5,29 @@ import { ensureMobileNode } from "./mobile-node.mjs";
 ensureMobileNode();
 
 const dumpPath = "/tmp/hypou-remote-schema.sql";
+// Keep remote checks pinned to Hypou's isolated CLI login; CI can override this.
+const supabaseCli = process.env.HYPOU_SUPABASE_CLI || "./scripts/supabase-hypou";
 const requiredRecentMigrations = [
   "20260616183000",
   "20260621190000",
+  "20260625090000",
+  "20260629120000",
+  "20260701184500",
+  "20260713150000",
+  "20260713152000",
+  "20260713160000",
+  "20260713200000",
+  "20260713210000",
+  "20260714090000",
 ];
 const requiredColumns = [
   /"focal_x" numeric DEFAULT 50 NOT NULL/,
   /"focal_y" numeric DEFAULT 50 NOT NULL/,
   /"cash_amount_cents" integer DEFAULT 0 NOT NULL/,
   /"cash_payer_user_id" "uuid"/,
+  /"cancelled_at" timestamp with time zone/,
+  /"cancelled_by" "uuid"/,
+  /"cancellation_reason" "text"/,
 ];
 const requiredFunctions = [
   /CREATE OR REPLACE FUNCTION "public"\."create_proposal"\("p_my_item_ids" "uuid"\[\], "p_their_item_id" "uuid", "p_cash_amount_cents" integer DEFAULT 0\)/,
@@ -23,6 +37,12 @@ const requiredFunctions = [
   /CREATE OR REPLACE FUNCTION "public"\."increment_video_view"\(/,
   /CREATE OR REPLACE FUNCTION "public"\."get_user_ratings_with_items"\(/,
   /CREATE OR REPLACE FUNCTION "public"\."get_waitlist_position"\(\)/,
+  /CREATE OR REPLACE FUNCTION "public"\."cancel_match"\("p_match_id" "uuid"\)/,
+  /CREATE OR REPLACE FUNCTION "public"\."accept_match"\("p_match_id" "uuid"\)/,
+  /CREATE OR REPLACE FUNCTION "public"\."reject_match"\("p_match_id" "uuid"\)/,
+  /CREATE OR REPLACE FUNCTION "public"\."confirm_trade_delivery"\("p_match_id" "uuid"\)/,
+  /CREATE OR REPLACE FUNCTION "public"\."notify_call_ended"\(\) RETURNS "trigger"/,
+  /CREATE OR REPLACE FUNCTION "public"\."expire_ringing_calls"\(\) RETURNS integer/,
 ];
 const requiredStoragePolicies = [
   "Avatar images are publicly accessible",
@@ -34,10 +54,20 @@ const requiredStoragePolicies = [
   "Users can upload own chat media",
   "Users can upload own avatar",
 ];
+const requiredPublicPolicies = [
+  "Conversation archive rows are visible to participants",
+  "Participants can archive their conversations",
+  "Participants can unarchive their conversations",
+  "Caller can insert calls",
+];
 
 const run = (label, cmd, args) => {
   process.stdout.write(`\n==> ${label}\n`);
-  const output = execFileSync(cmd, args, { encoding: "utf8", stdio: "pipe" });
+  const output = execFileSync(cmd, args, {
+    encoding: "utf8",
+    env: { ...process.env, SUPABASE_DISABLE_TELEMETRY: "1" },
+    stdio: "pipe",
+  });
   if (output.trim()) console.log(output.trim());
   return output;
 };
@@ -47,13 +77,13 @@ const fail = (message) => {
   process.exit(1);
 };
 
-const migrationList = run("Supabase migration list", "supabase", ["migration", "list"]);
+const migrationList = run("Supabase migration list", supabaseCli, ["migration", "list"]);
 for (const version of requiredRecentMigrations) {
   const aligned = new RegExp(`${version}\\s+\\|\\s+${version}`).test(migrationList);
   if (!aligned) fail(`remote migration ${version} is not aligned with local history`);
 }
 
-run("Supabase db lint", "supabase", [
+run("Supabase db lint", supabaseCli, [
   "db",
   "lint",
   "--linked",
@@ -63,7 +93,7 @@ run("Supabase db lint", "supabase", [
   "error",
 ]);
 
-run("Supabase schema dump", "supabase", [
+run("Supabase schema dump", supabaseCli, [
   "db",
   "dump",
   "--schema",
@@ -88,6 +118,12 @@ for (const pattern of requiredFunctions) {
 for (const policy of requiredStoragePolicies) {
   if (!schema.includes(`CREATE POLICY "${policy}"`)) {
     fail(`missing required storage policy: ${policy}`);
+  }
+}
+
+for (const policy of requiredPublicPolicies) {
+  if (!schema.includes(`CREATE POLICY "${policy}"`)) {
+    fail(`missing required public policy: ${policy}`);
   }
 }
 

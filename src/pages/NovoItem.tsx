@@ -3,7 +3,22 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { createItem, uploadItemImage, validateItemPrice } from "@/services/itemService";
-import { choosePhotosFromGallery, isNativePlatform, takePhoto } from "@/lib/nativeCamera";
+import { uploadVideo } from "@/services/videoService";
+import {
+  choosePhotosFromGallery,
+  chooseVideoFromGallery,
+  isNativePlatform,
+  recordVideo,
+  takePhoto,
+  type NativeMediaResult,
+} from "@/lib/nativeCamera";
+import { ensureWebCompatibleImage, isHeicFile, validateImageFile, validateVideoFile } from "@/lib/fileValidation";
+import {
+  createMediaTraceId,
+  describeMediaFile,
+  logMediaDiagnostic,
+  logMediaError,
+} from "@/lib/mediaDiagnostics";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -69,9 +84,12 @@ const NovoItem = () => {
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoThumb, setVideoThumb] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [validating, setValidating] = useState(false);
   const [suggestingPrice, setSuggestingPrice] = useState(false);
   const createdItemIdRef = useRef<string | null>(null);
+  const mediaTraceIdRef = useRef(createMediaTraceId());
+  const mediaTraceId = mediaTraceIdRef.current;
 
   const [priceAlert, setPriceAlert] = useState<{
     open: boolean;
@@ -82,31 +100,95 @@ const NovoItem = () => {
 
   const valueCents = parseCurrencyToCents(itemValue);
 
-  const addPhotoResults = (results: { file: File; previewUrl: string }[]) => {
+  const addPhotoResults = async (results: { file: File; previewUrl: string }[]) => {
+    logMediaDiagnostic("item.photo.results_received", { resultCount: results.length }, mediaTraceId);
     if (results.length === 0) return;
+    const availableSlots = 5 - itemPhotos.length;
+    const accepted = results.slice(0, availableSlots).filter((result) => {
+      const validationError = validateImageFile(result.file);
+      if (!validationError) {
+        logMediaDiagnostic("item.photo.validation_passed", describeMediaFile(result.file), mediaTraceId);
+        return true;
+      }
+      logMediaDiagnostic("item.photo.validation_rejected", {
+        ...describeMediaFile(result.file),
+        validationError,
+      }, mediaTraceId);
+      URL.revokeObjectURL(result.previewUrl);
+      toast({ title: "Foto não adicionada", description: validationError, variant: "destructive" });
+      return false;
+    });
+    if (accepted.length === 0) return;
+    const prepared = await Promise.all(accepted.map(async (result) => {
+      if (!isHeicFile(result.file)) return result;
+
+      logMediaDiagnostic("item.photo.heic_conversion_started", describeMediaFile(result.file), mediaTraceId);
+      try {
+        const file = await ensureWebCompatibleImage(result.file);
+        if (isHeicFile(file)) {
+          throw new Error("O iPhone não conseguiu converter a foto HEIC para JPEG.");
+        }
+        URL.revokeObjectURL(result.previewUrl);
+        const previewUrl = URL.createObjectURL(file);
+        logMediaDiagnostic("item.photo.heic_conversion_completed", describeMediaFile(file), mediaTraceId);
+        return { file, previewUrl };
+      } catch (error) {
+        URL.revokeObjectURL(result.previewUrl);
+        logMediaError("item.photo.heic_conversion_failed", error, describeMediaFile(result.file), mediaTraceId);
+        toast({
+          title: "Foto não adicionada",
+          description: "Não foi possível preparar esta foto do iPhone. Tente selecionar outra imagem.",
+          variant: "destructive",
+        });
+        return null;
+      }
+    }));
+    const usable = prepared.filter((result): result is { file: File; previewUrl: string } => result !== null);
+    if (usable.length === 0) return;
+
     const startIndex = itemPhotos.length;
-    setItemPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
-    setItemPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+    setItemPhotos((prev) => [...prev, ...usable.map((r) => r.file)]);
+    setItemPreviews((prev) => [...prev, ...usable.map((r) => r.previewUrl)]);
     setPhotoFocalPoints((prev) => [
       ...prev,
-      ...results.map(() => ({ focal_x: 50, focal_y: 50 })),
+      ...usable.map(() => ({ focal_x: 50, focal_y: 50 })),
     ]);
     setEditingPhotoIndex(startIndex);
+    logMediaDiagnostic("item.photo.queued_for_editor", {
+      acceptedCount: usable.length,
+      startIndex,
+      totalPhotos: itemPhotos.length + usable.length,
+    }, mediaTraceId);
   };
 
   const handleItemPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const maxNew = 5 - itemPhotos.length;
     const toAdd = files.slice(0, maxNew);
-    addPhotoResults(toAdd.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })));
+    logMediaDiagnostic("item.photo.browser_selected", {
+      selectedCount: files.length,
+      queuedCount: toAdd.length,
+      availableSlots: maxNew,
+    }, mediaTraceId);
+    await addPhotoResults(toAdd.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })));
     e.target.value = "";
   };
 
   const handleTakePhoto = async () => {
     setPhotoMenuOpen(false);
     if (isNativePlatform()) {
-      const result = await takePhoto();
-      if (result) addPhotoResults([result]);
+      try {
+        logMediaDiagnostic("item.photo.camera_requested", undefined, mediaTraceId);
+        const result = await takePhoto({ traceId: mediaTraceId });
+        if (result) await addPhotoResults([result]);
+      } catch (error) {
+        logMediaError("item.photo.camera_failed", error, undefined, mediaTraceId);
+        toast({
+          title: "Não foi possível tirar a foto",
+          description: error instanceof Error ? error.message : "Verifique a permissão da câmera.",
+          variant: "destructive",
+        });
+      }
       return;
     }
     cameraInputRef.current?.click();
@@ -115,14 +197,29 @@ const NovoItem = () => {
   const handleChoosePhotos = async () => {
     setPhotoMenuOpen(false);
     if (isNativePlatform()) {
-      const results = await choosePhotosFromGallery({ multiple: true, maxFiles: 5 - itemPhotos.length });
-      addPhotoResults(results);
+      try {
+        logMediaDiagnostic("item.photo.gallery_requested", undefined, mediaTraceId);
+        const results = await choosePhotosFromGallery({
+          multiple: true,
+          maxFiles: 5 - itemPhotos.length,
+          traceId: mediaTraceId,
+        });
+        await addPhotoResults(results);
+      } catch (error) {
+        logMediaError("item.photo.gallery_failed", error, undefined, mediaTraceId);
+        toast({
+          title: "Não foi possível abrir a galeria",
+          description: error instanceof Error ? error.message : "Verifique a permissão das fotos.",
+          variant: "destructive",
+        });
+      }
       return;
     }
     itemInputRef.current?.click();
   };
 
   const removePhoto = (index: number) => {
+    logMediaDiagnostic("item.photo.removed", { index }, mediaTraceId);
     URL.revokeObjectURL(itemPreviews[index]);
     setItemPhotos((prev) => prev.filter((_, i) => i !== index));
     setItemPreviews((prev) => prev.filter((_, i) => i !== index));
@@ -134,18 +231,22 @@ const NovoItem = () => {
     });
   };
 
-  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 50 * 1024 * 1024) {
-      toast({ title: "Vídeo muito grande (máx. 50MB)", variant: "destructive" });
+  const addVideoResult = ({ file, previewUrl }: NativeMediaResult) => {
+    const validationError = validateVideoFile(file);
+    if (validationError) {
+      logMediaDiagnostic("item.video.validation_rejected", {
+        ...describeMediaFile(file),
+        validationError,
+      }, mediaTraceId);
+      URL.revokeObjectURL(previewUrl);
+      toast({ title: "Vídeo não adicionado", description: validationError, variant: "destructive" });
       return;
     }
+    logMediaDiagnostic("item.video.validation_passed", describeMediaFile(file), mediaTraceId);
     if (videoPreview) URL.revokeObjectURL(videoPreview);
     if (videoThumb) URL.revokeObjectURL(videoThumb);
     setVideoFile(file);
-    const url = URL.createObjectURL(file);
-    setVideoPreview(url);
+    setVideoPreview(previewUrl);
     setVideoThumb(null);
 
     // Generate poster thumbnail from first frame
@@ -153,8 +254,13 @@ const NovoItem = () => {
     v.preload = "metadata";
     v.muted = true;
     v.playsInline = true;
-    v.src = url;
+    v.src = previewUrl;
     v.onloadeddata = () => {
+      logMediaDiagnostic("item.video.thumbnail_metadata_ready", {
+        durationSeconds: Math.round((v.duration || 0) * 100) / 100,
+        width: v.videoWidth,
+        height: v.videoHeight,
+      }, mediaTraceId);
       const seekTo = Math.min(0.1, (v.duration || 1) / 2);
       v.currentTime = seekTo;
     };
@@ -164,19 +270,81 @@ const NovoItem = () => {
         canvas.width = v.videoWidth;
         canvas.height = v.videoHeight;
         const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        if (!ctx) {
+          logMediaDiagnostic("item.video.thumbnail_context_unavailable", undefined, mediaTraceId);
+          return;
+        }
         ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
         canvas.toBlob((blob) => {
-          if (blob) setVideoThumb(URL.createObjectURL(blob));
+          if (blob) {
+            logMediaDiagnostic("item.video.thumbnail_ready", { sizeBytes: blob.size }, mediaTraceId);
+            setVideoThumb(URL.createObjectURL(blob));
+            return;
+          }
+          logMediaDiagnostic("item.video.thumbnail_empty", undefined, mediaTraceId);
         }, "image/jpeg", 0.8);
-      } catch {
+      } catch (error) {
+        logMediaError("item.video.thumbnail_failed", error, undefined, mediaTraceId);
         setVideoThumb(null);
       }
     };
+    v.onerror = () => logMediaDiagnostic("item.video.thumbnail_video_failed", undefined, mediaTraceId);
     toast({ title: "Vídeo adicionado!", description: "Pré-visualização gerada com sucesso." });
   };
 
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) {
+      logMediaDiagnostic("item.video.browser_selection_empty", undefined, mediaTraceId);
+      return;
+    }
+    logMediaDiagnostic("item.video.browser_selected", describeMediaFile(file), mediaTraceId);
+    addVideoResult({ file, previewUrl: URL.createObjectURL(file) });
+  };
+
+  const handleRecordVideo = async () => {
+    setVideoMenuOpen(false);
+    if (!isNativePlatform()) {
+      videoCameraInputRef.current?.click();
+      return;
+    }
+    try {
+      logMediaDiagnostic("item.video.camera_requested", undefined, mediaTraceId);
+      const result = await recordVideo({ traceId: mediaTraceId });
+      if (result) addVideoResult(result);
+    } catch (error) {
+      logMediaError("item.video.camera_failed", error, undefined, mediaTraceId);
+      toast({
+        title: "Não foi possível gravar o vídeo",
+        description: error instanceof Error ? error.message : "Verifique a permissão da câmera.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleChooseVideo = async () => {
+    setVideoMenuOpen(false);
+    if (!isNativePlatform()) {
+      videoInputRef.current?.click();
+      return;
+    }
+    try {
+      logMediaDiagnostic("item.video.gallery_requested", undefined, mediaTraceId);
+      const result = await chooseVideoFromGallery({ traceId: mediaTraceId });
+      if (result) addVideoResult(result);
+    } catch (error) {
+      logMediaError("item.video.gallery_failed", error, undefined, mediaTraceId);
+      toast({
+        title: "Não foi possível escolher o vídeo",
+        description: error instanceof Error ? error.message : "Verifique a permissão da galeria.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const removeVideo = () => {
+    logMediaDiagnostic("item.video.removed", undefined, mediaTraceId);
     if (videoPreview) URL.revokeObjectURL(videoPreview);
     if (videoThumb) URL.revokeObjectURL(videoThumb);
     setVideoFile(null);
@@ -216,9 +384,15 @@ const NovoItem = () => {
     if (!user) return;
     if (saving) return; // hard guard against double submit
     setSaving(true);
+    logMediaDiagnostic("item.save_started", {
+      photoCount: itemPhotos.length,
+      hasVideo: !!videoFile,
+      hasExistingItem: !!createdItemIdRef.current,
+    }, mediaTraceId);
     try {
       let itemId = createdItemIdRef.current;
       if (!itemId) {
+        logMediaDiagnostic("item.create_started", undefined, mediaTraceId);
         // H6: condition no payload original (sem UPDATE separado)
         const item = await createItem({
           user_id: user.id,
@@ -233,39 +407,43 @@ const NovoItem = () => {
         });
         itemId = item.id;
         createdItemIdRef.current = itemId;
+        logMediaDiagnostic("item.create_completed", undefined, mediaTraceId);
       }
 
+      const uploadedImageUrls: string[] = [];
       for (let i = 0; i < itemPhotos.length; i++) {
-        await uploadItemImage(user.id, itemId, itemPhotos[i], i, photoFocalPoints[i]);
+        setUploadStatus(`Enviando foto ${i + 1} de ${itemPhotos.length}...`);
+        logMediaDiagnostic("item.image_upload_started", {
+          position: i,
+          ...describeMediaFile(itemPhotos[i]),
+        }, mediaTraceId);
+        uploadedImageUrls.push(
+          await uploadItemImage(user.id, itemId, itemPhotos[i], i, photoFocalPoints[i], mediaTraceId)
+        );
+        logMediaDiagnostic("item.image_upload_completed", { position: i }, mediaTraceId);
       }
 
-      // Upload optional video for Shorts
       if (videoFile) {
-        const { supabase: sb } = await import("@/integrations/supabase/client");
-        const ext = videoFile.name.split(".").pop();
-        const videoPath = `${user.id}/${itemId}/video.${ext}`;
-        const { error: vUpErr } = await sb.storage.from("item-videos").upload(videoPath, videoFile, { upsert: true });
-        if (!vUpErr) {
-          const { data: vUrl } = sb.storage.from("item-videos").getPublicUrl(videoPath);
-          const { data: imgs } = await sb.from("item_images").select("image_url").eq("item_id", itemId).order("position").limit(1);
-          const thumbnail = imgs?.[0]?.image_url || null;
-
-          await sb.from("item_videos").insert({
-            item_id: itemId,
-            user_id: user.id,
-            video_url: vUrl.publicUrl,
-            thumbnail_url: thumbnail,
-          });
-        }
+        setUploadStatus("Enviando vídeo...");
+        logMediaDiagnostic("item.video_upload_started", describeMediaFile(videoFile), mediaTraceId);
+        await uploadVideo(user.id, itemId, videoFile, uploadedImageUrls[0] ?? null, mediaTraceId);
+        logMediaDiagnostic("item.video_upload_completed", undefined, mediaTraceId);
       }
 
       await queryClient.refetchQueries({ queryKey: ["my-items", user.id], exact: true });
       queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] });
+      logMediaDiagnostic("item.save_completed", undefined, mediaTraceId);
       toast({ title: "Item cadastrado com sucesso!" });
       navigate("/meu-perfil");
     } catch (err: any) {
-      toast({ title: "Erro ao cadastrar item", description: err.message, variant: "destructive" });
+      logMediaError("item.save_failed", err, { uploadStatus: uploadStatus || "not_started" }, mediaTraceId);
+      toast({
+        title: "Não foi possível enviar as mídias",
+        description: err?.message || "Tente novamente. O item não será concluído sem as mídias.",
+        variant: "destructive",
+      });
     } finally {
+      setUploadStatus("");
       setSaving(false);
     }
   };
@@ -396,14 +574,14 @@ const NovoItem = () => {
           <div className="flex flex-col gap-3 mt-4">
             <button
               type="button"
-              onClick={() => { setVideoMenuOpen(false); videoCameraInputRef.current?.click(); }}
+              onClick={handleRecordVideo}
               className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold flex items-center justify-center gap-2"
             >
               <Video className="h-5 w-5" /> Gravar vídeo
             </button>
             <button
               type="button"
-              onClick={() => { setVideoMenuOpen(false); videoInputRef.current?.click(); }}
+              onClick={handleChooseVideo}
               className="w-full py-4 rounded-2xl bg-secondary text-foreground font-bold flex items-center justify-center gap-2 border border-foreground/10"
             >
               <Plus className="h-5 w-5" /> Escolher da galeria
@@ -463,8 +641,14 @@ const NovoItem = () => {
             <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 pt-1">
               {itemPreviews.map((url, i) => (
                 <div key={i} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
-                  <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover rounded-2xl" />
-                <button
+                  <img
+                    src={url}
+                    alt={`Foto ${i + 1}`}
+                    className="w-full h-full object-cover rounded-2xl"
+                    onLoad={() => logMediaDiagnostic("item.photo.preview_loaded", { index: i }, mediaTraceId)}
+                    onError={() => logMediaDiagnostic("item.photo.preview_failed", { index: i }, mediaTraceId)}
+                  />
+                  <button
                     type="button"
                     onClick={() => removePhoto(i)}
                     className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive flex items-center justify-center shadow-md z-10"
@@ -604,7 +788,7 @@ const NovoItem = () => {
             <span className="text-xs text-muted-foreground mt-1 block text-right">{itemDesc.length}/500</span>
           </div>
 
-          <div>
+          <div className="relative z-30">
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
             <LocationSearch value={location} onChange={setLocation} />
           </div>
@@ -657,6 +841,11 @@ const NovoItem = () => {
         value={editingPhotoIndex !== null ? photoFocalPoints[editingPhotoIndex] : null}
         onClose={() => setEditingPhotoIndex(null)}
         onSave={(point) => {
+          logMediaDiagnostic("item.photo.focal_point_saved", {
+            index: editingPhotoIndex ?? -1,
+            focalX: Math.round(point.focal_x),
+            focalY: Math.round(point.focal_y),
+          }, mediaTraceId);
           if (editingPhotoIndex !== null) {
             setPhotoFocalPoints((prev) => prev.map((p, i) => (i === editingPhotoIndex ? point : p)));
           }
@@ -674,7 +863,7 @@ const NovoItem = () => {
           {validating ? (
             <><Loader2 className="h-5 w-5 animate-spin" /><span>Verificando valor...</span></>
           ) : saving ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
+            <><Loader2 className="h-5 w-5 animate-spin" /><span>{uploadStatus || "Preparando item..."}</span></>
           ) : (
             <><Check className="h-5 w-5" /><span>Cadastrar Item</span></>
           )}

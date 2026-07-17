@@ -6,14 +6,20 @@ import {
   getConversations,
   getMessages,
   sendMessage,
+  deleteMessage,
   markMessagesAsRead,
   subscribeToMessages,
   uploadChatMedia,
+  archiveConversation,
+  archiveConversations,
+  markConversationHypeOpened,
+  unarchiveConversation,
+  type ConversationArchiveMode,
   type Message,
   type MessageType,
 } from "@/services/messageService";
 
-export const useConversations = () => {
+export const useConversations = (archiveMode: ConversationArchiveMode = "main") => {
   const { user } = useAuth();
 
   // Realtime: refresh list when new conversations are created or matches change status
@@ -29,8 +35,8 @@ export const useConversations = () => {
   );
 
   return useQuery({
-    queryKey: ["conversations", user?.id],
-    queryFn: () => getConversations(user!.id),
+    queryKey: ["conversations", user?.id, archiveMode],
+    queryFn: () => getConversations(user!.id, archiveMode),
     enabled: !!user,
   });
 };
@@ -57,11 +63,13 @@ export const useMessages = (conversationId: string | null) => {
     if (!conversationId) return;
 
     const unsubscribe = subscribeToMessages(conversationId, (raw: any) => {
+      if (!raw?.id) return;
       const newMsg: Message = { ...raw, message_type: raw.message_type as MessageType };
       queryClient.setQueryData<Message[]>(["messages", conversationId], (old) => {
         if (!old) return [newMsg];
-        // Avoid duplicates
-        if (old.some((m) => m.id === newMsg.id)) return old;
+        if (old.some((m) => m.id === newMsg.id)) {
+          return old.map((m) => (m.id === newMsg.id ? newMsg : m));
+        }
         return [...old, newMsg];
       });
 
@@ -84,6 +92,37 @@ export const useMessages = (conversationId: string | null) => {
   }, [conversationId, queryClient, user]);
 
   return query;
+};
+
+export const useMarkConversationHypeOpened = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      return markConversationHypeOpened(conversationId, user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+};
+
+export const useDeleteMessage = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ messageId }: { messageId: string; conversationId: string }) => {
+      if (!user) throw new Error("Not authenticated");
+      return deleteMessage(messageId, user.id);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["messages", variables.conversationId] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
 };
 
 export const useSendMessage = (conversationId: string | null) => {
@@ -114,6 +153,51 @@ export const useUploadChatMedia = () => {
     mutationFn: ({ file, type }: { file: File; type: MessageType }) => {
       if (!user) throw new Error("Not authenticated");
       return uploadChatMedia(user.id, file, type);
+    },
+  });
+};
+
+export const useArchiveConversation = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      return archiveConversation(conversationId, user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+};
+
+export const useArchiveConversations = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationIds: string[]) => {
+      if (!user) throw new Error("Not authenticated");
+      return archiveConversations(conversationIds, user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+};
+
+export const useUnarchiveConversation = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      return unarchiveConversation(conversationId, user.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });
 };

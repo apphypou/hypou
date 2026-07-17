@@ -10,8 +10,11 @@ export const createReport = async (reporterId: string, reportedUserId: string, r
 export const blockUser = async (blockerId: string, blockedId: string) => {
   const { error } = await supabase
     .from("blocked_users")
-    .insert({ blocker_id: blockerId, blocked_id: blockedId });
-  if (error && !error.message?.includes("duplicate")) throw error;
+    .upsert(
+      { blocker_id: blockerId, blocked_id: blockedId },
+      { onConflict: "blocker_id,blocked_id", ignoreDuplicates: true },
+    );
+  if (error) throw error;
 };
 
 export const unblockUser = async (blockerId: string, blockedId: string) => {
@@ -46,12 +49,30 @@ export const getBlockedUsers = async (blockerId: string) => {
 
   const blockedIds = data.map((b) => b.blocked_id);
   const { data: profiles } = await supabase
-    .from("profiles")
+    .from("public_profiles" as any)
     .select("user_id, display_name, avatar_url")
     .in("user_id", blockedIds);
 
-  return (profiles || []).map((p) => ({
-    ...p,
-    blocked_at: data.find((b) => b.blocked_id === p.user_id)?.created_at,
-  }));
+  const profilesById = new Map(((profiles || []) as any[]).map((profile) => [profile.user_id, profile]));
+
+  // A block is still valid if the profile was deleted or is hidden by RLS.
+  // Keep it visible so the user can remove the block instead of making it disappear.
+  return data.map((block) => {
+    const profile = profilesById.get(block.blocked_id);
+    return {
+      user_id: block.blocked_id,
+      display_name: profile?.display_name || "Usuário bloqueado",
+      avatar_url: profile?.avatar_url || null,
+      blocked_at: block.created_at,
+    };
+  });
+};
+
+export const isConversationBlocked = async (conversationId: string) => {
+  const { data, error } = await supabase.rpc("is_conversation_blocked" as never, {
+    p_conversation_id: conversationId,
+  } as never);
+
+  if (error) throw error;
+  return Boolean(data);
 };

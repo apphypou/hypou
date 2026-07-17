@@ -34,8 +34,11 @@ describe("fileValidation", () => {
   it("07 rejeita vídeo >50MB", () => {
     expect(validateVideoFile(makeFile("v.mp4", "video/mp4", 51 * 1024 * 1024))).toMatch(/50MB/);
   });
-  it("08 rejeita MOV (não suportado)", () => {
-    expect(validateVideoFile(makeFile("v.mov", "video/quicktime", 1024))).toMatch(/não permitido/);
+  it("08 aceita MOV nativo do iPhone", () => {
+    expect(validateVideoFile(makeFile("v.mov", "video/quicktime", 1024))).toBeNull();
+  });
+  it("08.1 aceita MOV quando o iOS omite o MIME", () => {
+    expect(validateVideoFile(makeFile("v.mov", "", 1024))).toBeNull();
   });
   it("09 aceita áudio webm", () => {
     expect(validateAudioFile(makeFile("a.webm", "audio/webm", 1024))).toBeNull();

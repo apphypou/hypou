@@ -33,6 +33,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } },
     );
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
@@ -61,12 +65,15 @@ Deno.serve(async (req) => {
       const calleeId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
 
       // Block check
-      const { data: blocked } = await supabase
+      // The caller can only read blocks they created. Use the server client so a
+      // block created by the callee also prevents a call from being started.
+      const { data: blocked, error: blockError } = await admin
         .from("blocked_users")
         .select("id")
         .or(`and(blocker_id.eq.${userId},blocked_id.eq.${calleeId}),and(blocker_id.eq.${calleeId},blocked_id.eq.${userId})`)
         .maybeSingle();
-      if (blocked) return json({ error: "Usuário bloqueado" }, 403);
+      if (blockError) return json({ error: "Não foi possível validar a disponibilidade da conversa" }, 500);
+      if (blocked) return json({ error: "Esta conversa está indisponível" }, 403);
 
       const { data: created, error: insErr } = await supabase
         .from("call_sessions")
@@ -91,6 +98,13 @@ Deno.serve(async (req) => {
       if (csErr || !cs) return json({ error: "Chamada não encontrada" }, 404);
       if (cs.caller_id !== userId && cs.callee_id !== userId) return json({ error: "Forbidden" }, 403);
       if (["declined", "missed", "ended"].includes(cs.status)) return json({ error: "Chamada encerrada" }, 410);
+      const { data: blocked, error: blockError } = await admin
+        .from("blocked_users")
+        .select("id")
+        .or(`and(blocker_id.eq.${cs.caller_id},blocked_id.eq.${cs.callee_id}),and(blocker_id.eq.${cs.callee_id},blocked_id.eq.${cs.caller_id})`)
+        .maybeSingle();
+      if (blockError) return json({ error: "Não foi possível validar a disponibilidade da conversa" }, 500);
+      if (blocked) return json({ error: "Esta conversa está indisponível" }, 403);
       session = cs;
     }
 

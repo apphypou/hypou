@@ -101,6 +101,58 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_archives: {
+        Row: {
+          archived_at: string
+          conversation_id: string
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string
+          conversation_id: string
+          user_id: string
+        }
+        Update: {
+          archived_at?: string
+          conversation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_archives_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_hype_states: {
+        Row: {
+          conversation_id: string
+          opened_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          opened_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          opened_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_hype_states_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -305,6 +357,7 @@ export type Database = {
           category: string
           condition: string | null
           created_at: string
+          deleted_at: string | null
           description: string | null
           id: string
           location: string | null
@@ -320,6 +373,7 @@ export type Database = {
           category: string
           condition?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           location?: string | null
@@ -335,6 +389,7 @@ export type Database = {
           category?: string
           condition?: string | null
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           id?: string
           location?: string | null
@@ -392,6 +447,9 @@ export type Database = {
       }
       matches: {
         Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           cash_amount_cents: number
           cash_payer_user_id: string | null
           confirmed_by_a: boolean | null
@@ -406,6 +464,9 @@ export type Database = {
           user_b_id: string
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           cash_amount_cents?: number
           cash_payer_user_id?: string | null
           confirmed_by_a?: boolean | null
@@ -420,6 +481,9 @@ export type Database = {
           user_b_id: string
         }
         Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           cash_amount_cents?: number
           cash_payer_user_id?: string | null
           confirmed_by_a?: boolean | null
@@ -455,6 +519,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           media_url: string | null
           message_type: string
@@ -465,6 +531,8 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           media_url?: string | null
           message_type?: string
@@ -475,6 +543,8 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           media_url?: string | null
           message_type?: string
@@ -897,6 +967,9 @@ export type Database = {
       }
     }
     Functions: {
+      accept_match: { Args: { p_match_id: string }; Returns: boolean }
+      cancel_match: { Args: { p_match_id: string }; Returns: boolean }
+      confirm_trade_delivery: { Args: { p_match_id: string }; Returns: boolean }
       create_proposal:
         | {
             Args: { p_my_item_ids: string[]; p_their_item_id: string }
@@ -910,6 +983,7 @@ export type Database = {
             }
             Returns: string
           }
+      expire_ringing_calls: { Args: never; Returns: number }
       get_my_matches: {
         Args: never
         Returns: {
@@ -960,6 +1034,10 @@ export type Database = {
         Returns: boolean
       }
       increment_video_view: { Args: { p_video_id: string }; Returns: undefined }
+      is_conversation_blocked: {
+        Args: { p_conversation_id: string }
+        Returns: boolean
+      }
       is_conversation_participant: {
         Args: { _conversation_id: string }
         Returns: boolean
@@ -1017,6 +1095,12 @@ export type Database = {
           updated_at: string
           user_id: string
         }[]
+      }
+      reject_match: { Args: { p_match_id: string }; Returns: boolean }
+      soft_delete_item: { Args: { p_item_id: string }; Returns: undefined }
+      soft_delete_message: {
+        Args: { p_message_id: string }
+        Returns: undefined
       }
       toggle_video_like: { Args: { p_video_id: string }; Returns: boolean }
     }

@@ -23,6 +23,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   accepted: { label: "Em negociação 🤝", className: "bg-primary/10 text-primary border-primary/20" },
   completed: { label: "Troca concluída ✅", className: "bg-success/10 text-success border-success/20" },
   rejected: { label: "Troca não realizada ❌", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  cancelled: { label: "Negociação cancelada", className: "bg-muted text-muted-foreground border-border" },
 };
 
 const getItemImage = (item: TradeItem | null) => {

@@ -1,5 +1,6 @@
 import { MapPin, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { formatLocationFeature, isLocationResult, type PhotonFeature } from "@/lib/locationSearch";
 
 interface LocationSearchProps {
   value: string;
@@ -8,31 +9,15 @@ interface LocationSearchProps {
   placeholder?: string;
 }
 
-interface PhotonFeature {
-  geometry: { coordinates: [number, number] };
-  properties: {
-    osm_id: number;
-    countrycode?: string;
-    name?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-  };
-}
-
-const formatFeature = (f: PhotonFeature): string => {
-  const { name, city, state } = f.properties;
-  const parts = [name, city, state].filter(Boolean);
-  return parts.filter((p, i) => i === 0 || p !== parts[i - 1]).join(", ");
-};
-
 const LocationSearch = ({ value, onChange, onSelect, placeholder = "Cidade, Estado" }: LocationSearchProps) => {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<PhotonFeature[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setQuery(value);
@@ -52,21 +37,35 @@ const LocationSearch = ({ value, onChange, onSelect, placeholder = "Cidade, Esta
     if (q.length < 3) {
       setResults([]);
       setIsOpen(false);
+      setHasSearched(false);
       return;
     }
     setLoading(true);
     try {
       const res = await fetch(
-        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=15&lang=default&lat=-15.78&lon=-47.93`
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=15&lang=default`
       );
       const data = await res.json();
+      const seen = new Set<string>();
       const features: PhotonFeature[] = (data.features || [])
         .filter((f: PhotonFeature) => f.properties.countrycode === "BR")
-        .slice(0, 5);
+        .filter(isLocationResult)
+        .filter((f: PhotonFeature) => {
+          const label = formatLocationFeature(f).toLocaleLowerCase("pt-BR");
+          const [lng, lat] = f.geometry.coordinates;
+          const key = `${label}:${lat.toFixed(4)}:${lng.toFixed(4)}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 10);
       setResults(features);
-      setIsOpen(features.length > 0);
+      setHasSearched(true);
+      setIsOpen(true);
     } catch {
       setResults([]);
+      setHasSearched(true);
+      setIsOpen(true);
     } finally {
       setLoading(false);
     }
@@ -82,7 +81,7 @@ const LocationSearch = ({ value, onChange, onSelect, placeholder = "Cidade, Esta
   };
 
   const handleSelect = (feature: PhotonFeature) => {
-    const label = formatFeature(feature);
+    const label = formatLocationFeature(feature);
     const [lng, lat] = feature.geometry.coordinates;
     setQuery(label);
     onChange(label);
@@ -92,29 +91,42 @@ const LocationSearch = ({ value, onChange, onSelect, placeholder = "Cidade, Esta
     setIsOpen(false);
   };
 
+  const handleFocus = () => {
+    if (results.length > 0) setIsOpen(true);
+    setTimeout(() => {
+      inputRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 250);
+  };
+
   return (
     <div ref={containerRef} className="relative">
       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
       {loading && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin z-10" />}
       <input
+        ref={inputRef}
         type="text"
         value={query}
         onChange={handleChange}
-        onFocus={() => results.length > 0 && setIsOpen(true)}
+        onFocus={handleFocus}
         placeholder={placeholder}
         maxLength={100}
         className="w-full bg-card/50 border border-foreground/10 text-foreground rounded-xl pl-12 pr-5 py-4 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20"
       />
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-card border border-foreground/10 rounded-xl overflow-hidden shadow-lg">
+        <div
+          role="listbox"
+          className="absolute z-[80] w-full mt-2 max-h-[min(320px,45dvh)] overflow-y-auto overscroll-contain bg-card/95 backdrop-blur-xl border border-foreground/10 rounded-xl shadow-2xl"
+        >
           {results.map((f, i) => {
-            const label = formatFeature(f);
+            const label = formatLocationFeature(f);
             const { state } = f.properties;
             return (
               <button
                 key={f.properties.osm_id || i}
                 type="button"
+                role="option"
+                onMouseDown={(event) => event.preventDefault()}
                 onClick={() => handleSelect(f)}
                 className="w-full px-4 py-3 text-left text-sm text-foreground hover:bg-primary/10 transition-colors flex items-center gap-3 border-b border-foreground/5 last:border-b-0"
               >
@@ -128,6 +140,11 @@ const LocationSearch = ({ value, onChange, onSelect, placeholder = "Cidade, Esta
               </button>
             );
           })}
+          {hasSearched && results.length === 0 && !loading && (
+            <p className="px-4 py-3 text-sm text-muted-foreground">
+              Nenhum endereco encontrado. Tente informar cidade, bairro, rua ou CEP.
+            </p>
+          )}
         </div>
       )}
     </div>

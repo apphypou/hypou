@@ -21,7 +21,7 @@ const MediaViewerDialog = ({ media, onOpenChange }: MediaViewerDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 left-0 top-0 z-50 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 bg-black p-0 shadow-none [&>button:last-child]:hidden">
+      <DialogContent className="fixed inset-0 left-0 top-0 z-[220] h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 bg-black p-0 shadow-none [&>button:last-child]:hidden">
         <DialogTitle className="sr-only">Visualização de mídia</DialogTitle>
         <button
           type="button"

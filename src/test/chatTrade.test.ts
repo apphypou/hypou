@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
 
-type Status = "accepted" | "completed" | "rejected" | "proposal";
+type Status = "accepted" | "completed" | "cancelled" | "rejected" | "proposal";
 
 const tradeStatusLabel = (s: Status): string | null => {
   if (s === "accepted") return "Em negociação";
   if (s === "completed") return "Troca concluída";
+  if (s === "cancelled") return "Negociação cancelada";
   if (s === "rejected") return "Troca não realizada";
   return null;
 };
@@ -26,6 +27,7 @@ describe("Chat: trade status labels", () => {
   it("accepted -> Em negociação", () => expect(tradeStatusLabel("accepted")).toBe("Em negociação"));
   it("completed -> Troca concluída", () => expect(tradeStatusLabel("completed")).toBe("Troca concluída"));
   it("rejected -> Troca não realizada", () => expect(tradeStatusLabel("rejected")).toBe("Troca não realizada"));
+  it("cancelled -> Negociação cancelada", () => expect(tradeStatusLabel("cancelled")).toBe("Negociação cancelada"));
 });
 
 describe("Trade: double confirmation", () => {

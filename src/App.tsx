@@ -17,6 +17,7 @@ import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
 import { useAppLifecycleSync } from "@/hooks/useAppLifecycleSync";
 import IncomingCallSheet from "@/components/IncomingCallSheet";
+import PendingTradeConfirmationDialog from "@/components/PendingTradeConfirmationDialog";
 
 const GlobalAlerts = () => {
   useGlobalRealtimeAlerts();
@@ -26,7 +27,6 @@ const GlobalAlerts = () => {
 };
 
 // Eager-load critical entry routes for instant first paint
-import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Explorar from "./pages/Explorar";
 
@@ -95,7 +95,7 @@ const AnimatedRoutes = () => {
       <Suspense fallback={<RouteFallback />}>
         <Routes location={location} key={location.pathname}>
           {/* Public routes */}
-          <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/" element={<PageTransition><Login /></PageTransition>} />
           <Route path="/lista-espera" element={<PageTransition><ListaEspera /></PageTransition>} />
           <Route path="/baixar" element={<PageTransition><Baixar /></PageTransition>} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
@@ -215,6 +215,7 @@ const App = () => {
               <AuthRedirectHandler />
               <GlobalAlerts />
               <IncomingCallSheet />
+              <PendingTradeConfirmationDialog />
               <AnimatedRoutes />
             </AuthProvider>
           </BrowserRouter>

@@ -1,6 +1,7 @@
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_HEIC_TYPES = ['image/heic', 'image/heif'];
-const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'];
+const ALLOWED_VIDEO_EXTENSIONS = ['mp4', 'webm', 'mov', 'm4v'];
 const ALLOWED_AUDIO_TYPES = ['audio/webm', 'audio/ogg', 'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/aac', 'audio/x-m4a', 'audio/m4a'];
 const ALLOWED_AUDIO_EXTENSIONS = ['webm', 'ogg', 'mp3', 'mpeg', 'mp4', 'm4a', 'aac'];
 
@@ -31,8 +32,10 @@ export const validateImageFile = (file: File): string | null => {
 };
 
 export const validateVideoFile = (file: File): string | null => {
-  if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
-    return 'Tipo de vídeo não permitido. Use MP4 ou WebM.';
+  const mimeType = file.type.toLowerCase().split(';')[0].trim();
+  const ext = file.name.toLowerCase().split('.').pop() || '';
+  if (!ALLOWED_VIDEO_TYPES.includes(mimeType) && !ALLOWED_VIDEO_EXTENSIONS.includes(ext)) {
+    return 'Tipo de vídeo não permitido. Use MP4, MOV, M4V ou WebM.';
   }
   if (file.size > MAX_VIDEO_SIZE) {
     return 'Vídeo muito grande. Máximo 50MB.';

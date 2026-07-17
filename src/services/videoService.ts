@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getBlockedUserIds } from "@/services/reportService";
+import { validateVideoFile } from "@/lib/fileValidation";
+import { describeMediaFile, logMediaDiagnostic, logMediaError } from "@/lib/mediaDiagnostics";
 
 export interface ShortVideo {
   id: string;
@@ -126,26 +128,57 @@ export const incrementView = async (videoId: string): Promise<void> => {
 export const uploadVideo = async (
   userId: string,
   itemId: string,
-  file: File
+  file: File,
+  fallbackThumbnailUrl?: string | null,
+  traceId?: string,
 ): Promise<{ videoUrl: string; videoId: string }> => {
-  const ext = file.name.split(".").pop() || "mp4";
-  const path = `${userId}/${itemId}/${Date.now()}.${ext}`;
+  logMediaDiagnostic("storage.video.validation_started", describeMediaFile(file), traceId);
+  const validationError = validateVideoFile(file);
+  if (validationError) {
+    logMediaDiagnostic("storage.video.validation_rejected", { validationError }, traceId);
+    throw new Error(validationError);
+  }
 
+  const ext = file.name.toLowerCase().split(".").pop() || "mp4";
+  const path = `${userId}/${itemId}/video.${ext}`;
+
+  logMediaDiagnostic("storage.video.upload_started", { extension: ext }, traceId);
   const { error: uploadError } = await supabase.storage
     .from("item-videos")
-    .upload(path, file, { upsert: true });
-  if (uploadError) throw uploadError;
+    .upload(path, file, {
+      upsert: true,
+      contentType: file.type || (ext === "mov" ? "video/quicktime" : "video/mp4"),
+    });
+  if (uploadError) {
+    logMediaError("storage.video.upload_failed", uploadError, undefined, traceId);
+    throw uploadError;
+  }
+  logMediaDiagnostic("storage.video.upload_completed", undefined, traceId);
 
   const { data } = supabase.storage.from("item-videos").getPublicUrl(path);
   const videoUrl = data.publicUrl;
 
   // Generate thumbnail from video
-  let thumbnailUrl: string | null = null;
+  let thumbnailUrl: string | null = fallbackThumbnailUrl ?? null;
   try {
-    thumbnailUrl = await generateThumbnail(file, userId, itemId);
+    logMediaDiagnostic("storage.video.thumbnail_started", undefined, traceId);
+    thumbnailUrl = (await generateThumbnail(file, userId, itemId)) ?? thumbnailUrl;
   } catch (e) {
-    console.warn("Failed to generate thumbnail:", e);
+    logMediaError("storage.video.thumbnail_failed", e, undefined, traceId);
   }
+
+  // A tabela permite somente um vídeo por item e não possui policy de UPDATE.
+  // Remover antes de inserir mantém tentativas de upload idempotentes sob RLS.
+  const { error: deleteError } = await supabase
+    .from("item_videos")
+    .delete()
+    .eq("item_id", itemId)
+    .eq("user_id", userId);
+  if (deleteError) {
+    logMediaError("storage.video.record_delete_failed", deleteError, undefined, traceId);
+    throw deleteError;
+  }
+  logMediaDiagnostic("storage.video.record_delete_completed", undefined, traceId);
 
   const { data: record, error: dbError } = await supabase
     .from("item_videos")
@@ -157,7 +190,13 @@ export const uploadVideo = async (
     })
     .select()
     .single();
-  if (dbError) throw dbError;
+  if (dbError) {
+    logMediaError("storage.video.record_write_failed", dbError, undefined, traceId);
+    const { error: cleanupError } = await supabase.storage.from("item-videos").remove([path]);
+    if (cleanupError) logMediaError("storage.video.cleanup_failed", cleanupError, undefined, traceId);
+    throw dbError;
+  }
+  logMediaDiagnostic("storage.video.record_write_completed", undefined, traceId);
 
   return { videoUrl, videoId: record.id };
 };
@@ -179,6 +218,17 @@ async function generateThumbnail(
   return new Promise((resolve) => {
     const video = document.createElement("video");
     const canvas = document.createElement("canvas");
+    const objectUrl = URL.createObjectURL(file);
+    let settled = false;
+    const finish = (value: string | null) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      URL.revokeObjectURL(objectUrl);
+      resolve(value);
+    };
+    const timeoutId = window.setTimeout(() => finish(null), 5_000);
+
     video.preload = "metadata";
     video.muted = true;
     video.playsInline = true;
@@ -191,23 +241,22 @@ async function generateThumbnail(
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
-      if (!ctx) { resolve(null); return; }
+      if (!ctx) { finish(null); return; }
       ctx.drawImage(video, 0, 0);
 
       canvas.toBlob(async (blob) => {
-        if (!blob) { resolve(null); return; }
+        if (!blob) { finish(null); return; }
         const path = `${userId}/${itemId}/thumb_${Date.now()}.jpg`;
         const { error } = await supabase.storage
           .from("item-videos")
           .upload(path, blob, { upsert: true, contentType: "image/jpeg" });
-        if (error) { resolve(null); return; }
+        if (error) { finish(null); return; }
         const { data } = supabase.storage.from("item-videos").getPublicUrl(path);
-        resolve(data.publicUrl);
-        URL.revokeObjectURL(video.src);
+        finish(data.publicUrl);
       }, "image/jpeg", 0.8);
     };
 
-    video.onerror = () => resolve(null);
-    video.src = URL.createObjectURL(file);
+    video.onerror = () => finish(null);
+    video.src = objectUrl;
   });
 }

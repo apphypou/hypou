@@ -40,7 +40,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>8</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>GIDClientID</key>
 	<string>186272894413-mri9jgicegl36bgh3g2lhigl2081d94v.apps.googleusercontent.com</string>
 	<key>LSRequiresIPhoneOS</key>
@@ -55,6 +55,10 @@
 	<string>O Hypou pode salvar imagens relacionadas aos seus itens quando voce solicitar.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>O Hypou acessa sua galeria para selecionar fotos de itens e perfil.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

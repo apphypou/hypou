@@ -11,7 +11,8 @@ const canSend = (content: string, mediaUrl: string | null, type: MType) =>
 const isRead = (msg: any) => !!msg.read_at;
 const unreadCount = (msgs: any[], myId: string) =>
   msgs.filter((m) => m.sender_id !== myId && !m.read_at).length;
-const canOpenChat = (matchStatus: string) => matchStatus === "accepted" || matchStatus === "completed";
+const canOpenChat = (matchStatus: string) =>
+  ["accepted", "completed", "cancelled", "rejected"].includes(matchStatus);
 const requiresChatTerms = (acceptedAt: string | null) => !acceptedAt;
 const validMediaSize = (bytes: number, type: MType) => {
   const limits: Record<MType, number> = { text: 0, image: 10 * 1024 * 1024, video: 50 * 1024 * 1024, audio: 10 * 1024 * 1024 };
@@ -32,9 +33,11 @@ describe("E2E Chat helpers", () => {
     expect(unreadCount([{ sender_id: "o", read_at: null }, { sender_id: "me", read_at: null }], "me")).toBe(1));
   it("10 chat aberto se accepted", () => expect(canOpenChat("accepted")).toBe(true));
   it("11 chat fechado se proposal", () => expect(canOpenChat("proposal")).toBe(false));
-  it("12 exige termos no primeiro acesso", () => expect(requiresChatTerms(null)).toBe(true));
-  it("13 não exige termos se já aceito", () => expect(requiresChatTerms("2024-01-01")).toBe(false));
-  it("14 limite vídeo 50MB", () => expect(validMediaSize(60 * 1024 * 1024, "video")).toBe(false));
-  it("15 formata última visita pt-BR", () =>
+  it("12 histórico abre se negociação foi cancelada", () => expect(canOpenChat("cancelled")).toBe(true));
+  it("13 histórico abre se proposta foi recusada", () => expect(canOpenChat("rejected")).toBe(true));
+  it("14 exige termos no primeiro acesso", () => expect(requiresChatTerms(null)).toBe(true));
+  it("15 não exige termos se já aceito", () => expect(requiresChatTerms("2024-01-01")).toBe(false));
+  it("16 limite vídeo 50MB", () => expect(validMediaSize(60 * 1024 * 1024, "video")).toBe(false));
+  it("17 formata última visita pt-BR", () =>
     expect(formatLastSeen(new Date("2026-01-01T10:00:00Z"))).toMatch(/2026|2025/));
 });

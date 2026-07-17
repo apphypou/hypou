@@ -1,6 +1,6 @@
 // Edge function: send-push
 // Receives { user_id, title, body, data } from triggers, fans out via FCM HTTP v1.
-// Auth: protected by SUPABASE_SERVICE_ROLE_KEY (used as Bearer) — triggers send it via pg_net.
+// Auth: protected by PUSH_HOOK_SECRET (used as Bearer) — triggers send it via pg_net.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -86,18 +86,32 @@ async function sendFcm(opts: {
   const dataStr: Record<string, string> = {};
   for (const [k, v] of Object.entries(opts.data || {})) dataStr[k] = String(v ?? "");
 
+  const isIncomingCall = opts.data.type === "call";
+  const conversationId = opts.data.conversation_id || "";
   const message: any = {
     token: opts.token,
     notification: { title: opts.title, body: opts.body },
     data: dataStr,
     android: {
       priority: "HIGH",
-      notification: { channel_id: "default", sound: "default" },
+      notification: {
+        channel_id: "default",
+        sound: "default",
+        priority: isIncomingCall ? "PRIORITY_MAX" : "PRIORITY_HIGH",
+      },
     },
     apns: {
-      headers: { "apns-priority": "10" },
+      headers: {
+        "apns-priority": "10",
+        "apns-push-type": "alert",
+      },
       payload: {
-        aps: { sound: "default", "content-available": 1 },
+        aps: {
+          sound: "default",
+          "content-available": 1,
+          ...(isIncomingCall ? { "interruption-level": "time-sensitive", category: "HYPOU_CALL" } : {}),
+          ...(conversationId ? { "thread-id": conversationId } : {}),
+        },
       },
     },
   };
@@ -125,9 +139,10 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Validate caller: must include service role key (triggers send it via pg_net)
+    // Validate caller: must include the push hook secret (triggers send it via pg_net)
     const auth = req.headers.get("Authorization") || "";
-    if (auth !== `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`) {
+    const pushHookSecret = Deno.env.get("PUSH_HOOK_SECRET");
+    if (!pushHookSecret || auth !== `Bearer ${pushHookSecret}`) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -136,9 +151,9 @@ Deno.serve(async (req) => {
 
     const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
     if (!fcmJson) {
-      // Not configured yet — accept silently so triggers don't error
-      return new Response(JSON.stringify({ ok: true, skipped: "FCM not configured" }), {
-        status: 200,
+      console.error("send-push configuration error: FCM service account is missing");
+      return new Response(JSON.stringify({ error: "Push notifications are not configured" }), {
+        status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

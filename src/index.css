@@ -10,6 +10,7 @@
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
+    --toast-safe-top: max(calc(var(--safe-area-top) + 0.75rem), 4.75rem);
 
     --background: 210 20% 96%;
     --foreground: 0 0% 0%;
@@ -231,9 +232,9 @@
     width: 100%;
     object-fit: cover;
     object-position: center center;
-    transform: scale(1.18);
-    filter: blur(30px) saturate(116%);
-    opacity: 0.82;
+    transform: scale(1.08);
+    filter: blur(20px) saturate(108%);
+    opacity: 0.58;
   }
 
   .swipe-media-ambient-scrim {
@@ -258,13 +259,13 @@
   }
 
 .swipe-media-stage--wide .swipe-media-foreground {
-  object-position: center 34%;
-  transform: scale(1.035);
+  object-position: center center;
+  transform: scale(1);
 }
 
 .swipe-media-stage--wide .swipe-media-ambient {
-  transform: scale(1.24);
-  opacity: 0.9;
+  transform: scale(1.1);
+  opacity: 0.62;
 }
 
   .swipe-media-stage--tall .swipe-media-foreground {
@@ -273,7 +274,93 @@
   }
 
   .swipe-media-stage--balanced .swipe-media-foreground {
-    object-position: center 44%;
+    object-position: center center;
+  }
+
+  .swipe-card-shell {
+    --swipe-readable-text: rgba(255, 255, 255, 0.98);
+    --swipe-readable-muted: rgba(255, 255, 255, 0.82);
+    --swipe-readable-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
+    --swipe-chip-bg: rgba(0, 0, 0, 0.34);
+    --swipe-chip-border: rgba(255, 255, 255, 0.16);
+    --swipe-detail-surface: rgba(0, 0, 0, 0.64);
+    --swipe-detail-border: rgba(255, 255, 255, 0.16);
+  }
+
+  .swipe-card-shell[data-media-tone="bright"] {
+    --swipe-readable-text: rgba(255, 255, 255, 1);
+    --swipe-readable-muted: rgba(255, 255, 255, 0.9);
+    --swipe-readable-shadow: 0 3px 18px rgba(0, 0, 0, 0.9);
+    --swipe-chip-bg: rgba(0, 0, 0, 0.54);
+    --swipe-chip-border: rgba(255, 255, 255, 0.22);
+    --swipe-detail-surface: rgba(3, 6, 10, 0.82);
+    --swipe-detail-border: rgba(255, 255, 255, 0.22);
+  }
+
+  .swipe-card-shell[data-media-tone="dark"] {
+    --swipe-readable-shadow: 0 2px 10px rgba(0, 0, 0, 0.56);
+    --swipe-chip-bg: rgba(0, 0, 0, 0.26);
+    --swipe-detail-surface: rgba(0, 0, 0, 0.58);
+  }
+
+  .swipe-compact-title,
+  .swipe-compact-price {
+    color: var(--swipe-readable-text);
+    text-shadow: var(--swipe-readable-shadow);
+  }
+
+  .swipe-compact-heading-row {
+    border-color: rgba(255, 255, 255, 0.76);
+    filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.46));
+  }
+
+  .swipe-card-shell[data-media-tone="bright"] .swipe-compact-heading-row {
+    border-color: rgba(255, 255, 255, 0.88);
+    filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.72));
+  }
+
+  .swipe-compact-chip {
+    background: var(--swipe-chip-bg);
+    border: 1px solid var(--swipe-chip-border);
+    color: var(--swipe-readable-muted);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  }
+
+  .swipe-detail-glass-panel {
+    background: var(--swipe-detail-surface);
+    border-color: var(--swipe-detail-border);
+  }
+
+  .swipe-detail-price {
+    color: var(--swipe-readable-text, rgba(255, 255, 255, 0.98));
+    text-shadow: var(--swipe-readable-shadow, 0 2px 12px rgba(0, 0, 0, 0.72));
+  }
+
+  .swipe-detail-label {
+    color: rgba(255, 255, 255, 0.68);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.52);
+  }
+
+  .swipe-detail-body {
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.58);
+  }
+
+  .swipe-detail-icon {
+    color: rgba(255, 255, 255, 0.68);
+    filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.5));
+  }
+
+  .swipe-detail-pill {
+    background: var(--swipe-chip-bg, rgba(0, 0, 0, 0.34));
+    border: 1px solid var(--swipe-chip-border, rgba(255, 255, 255, 0.16));
+    color: var(--swipe-readable-muted, rgba(255, 255, 255, 0.84));
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+  }
+
+  .swipe-detail-surface-card {
+    background: var(--swipe-detail-surface, rgba(0, 0, 0, 0.64));
+    border-color: var(--swipe-detail-border, rgba(255, 255, 255, 0.16));
   }
 
   .swipe-edge-glass {
@@ -424,7 +511,7 @@
   }
 
   body.keyboard-visible .item-form-submit {
-    transform: translateY(calc(-1 * var(--keyboard-height, 0px)));
+    transform: translateY(calc(-1 * var(--keyboard-height, 0px) + 0.5rem));
   }
 
   .shadow-glow-hype {

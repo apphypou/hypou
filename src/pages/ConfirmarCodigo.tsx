@@ -7,6 +7,21 @@ import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
+const getConfirmationErrorMessage = (message?: string) => {
+  const normalized = (message || "").toLowerCase();
+
+  if (normalized.includes("expired")) return "Código expirado. Peça um novo.";
+  if (normalized.includes("invalid")) return "Código inválido. Confere os dígitos.";
+  if (normalized.includes("rate limit") || normalized.includes("too many")) {
+    return "Aguarde alguns instantes antes de pedir outro código.";
+  }
+  if (normalized.includes("email") && normalized.includes("not found")) {
+    return "Não encontramos este cadastro. Confira o e-mail informado.";
+  }
+
+  return "Não foi possível concluir a confirmação agora. Tente novamente.";
+};
+
 const ConfirmarCodigo = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -48,12 +63,11 @@ const ConfirmarCodigo = () => {
         return;
       }
       setLoading(false);
-      const msg = (error.message || "").toLowerCase();
-      const friendly =
-        msg.includes("expired") ? "Código expirado. Peça um novo."
-        : msg.includes("invalid") ? "Código inválido. Confere os dígitos."
-        : error.message;
-      toast({ title: "Não rolou", description: friendly, variant: "destructive" });
+      toast({
+        title: "Não rolou",
+        description: getConfirmationErrorMessage(error.message),
+        variant: "destructive",
+      });
       setCode("");
       return;
     }
@@ -69,7 +83,11 @@ const ConfirmarCodigo = () => {
     const { error } = await supabase.auth.resend({ type: "signup", email });
     setResending(false);
     if (error) {
-      toast({ title: "Erro ao reenviar", description: error.message, variant: "destructive" });
+      toast({
+        title: "Erro ao reenviar",
+        description: getConfirmationErrorMessage(error.message),
+        variant: "destructive",
+      });
       return;
     }
     setCooldown(60);
@@ -77,14 +95,16 @@ const ConfirmarCodigo = () => {
   };
 
   return (
-    <div className="dark relative flex flex-col items-center min-h-screen bg-background text-foreground font-display antialiased px-6 py-10">
-      <div className="w-full max-w-sm flex items-center justify-start mb-4">
-        <Link to="/cadastro" className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-      </div>
+    <div className="dark relative flex min-h-[100dvh] flex-col items-center justify-center bg-background px-6 py-10 font-display text-foreground antialiased">
+      <Link
+        to="/cadastro"
+        className="absolute left-6 top-[calc(env(safe-area-inset-top)+1.5rem)] text-muted-foreground transition-colors hover:text-foreground"
+        aria-label="Voltar para cadastro"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Link>
 
-      <div className="flex flex-col items-center pb-6 w-full max-w-sm">
+      <div className="flex w-full max-w-sm flex-col items-center pb-6">
         
         <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
           <MailCheck className="w-6 h-6 text-primary" />
@@ -97,7 +117,7 @@ const ConfirmarCodigo = () => {
         </p>
       </div>
 
-      <div className="w-full max-w-sm flex flex-col items-center gap-6">
+      <div className="flex w-full max-w-sm flex-col items-center gap-6">
         <InputOTP
           maxLength={6}
           value={code}

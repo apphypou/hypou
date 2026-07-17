@@ -1,13 +1,10 @@
 ALTER TABLE public.matches
   ADD COLUMN IF NOT EXISTS cash_amount_cents integer NOT NULL DEFAULT 0,
   ADD COLUMN IF NOT EXISTS cash_payer_user_id uuid NULL;
-
 ALTER TABLE public.matches
   DROP CONSTRAINT IF EXISTS matches_cash_amount_non_negative;
-
 ALTER TABLE public.matches
   ADD CONSTRAINT matches_cash_amount_non_negative CHECK (cash_amount_cents >= 0);
-
 CREATE OR REPLACE FUNCTION public.create_proposal(
   p_my_item_ids uuid[],
   p_their_item_id uuid,
@@ -111,9 +108,7 @@ BEGIN
   RETURN _match_id;
 END;
 $function$;
-
 DROP FUNCTION IF EXISTS public.get_my_matches();
-
 CREATE FUNCTION public.get_my_matches()
 RETURNS TABLE (
   id uuid,
@@ -246,6 +241,5 @@ AS $$
   ) ib_img ON true
   ORDER BY m.created_at DESC;
 $$;
-
 REVOKE ALL ON FUNCTION public.get_my_matches() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_my_matches() TO authenticated;

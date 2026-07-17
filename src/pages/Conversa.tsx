@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
+import { useArchiveConversation, useDeleteMessage, useMarkConversationHypeOpened, useMessages, useSendMessage, useUploadChatMedia } from "@/hooks/useMessages";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,9 +8,10 @@ import ChatSafetyDialog from "@/components/ChatSafetyDialog";
 import TradeContextCard from "@/components/TradeContextCard";
 import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
-import { createReport, blockUser } from "@/services/reportService";
+import { createReport, blockUser, isConversationBlocked } from "@/services/reportService";
 import { startCall } from "@/services/callService";
-import { confirmTrade, getMatch, getMatches } from "@/services/matchService";
+import { cancelProposal, confirmTrade, getMatch, getMatches } from "@/services/matchService";
+import { describeCallError, getCallRuntimeDiagnostics, preflightCallMedia } from "@/lib/callDiagnostics";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -95,14 +96,24 @@ const Conversa = () => {
   const { data: details, isLoading: detailsLoading } = useConversationDetails(conversationId || null);
   const { mutate: send, isPending: sending } = useSendMessage(conversationId || null);
   const { mutateAsync: uploadMedia } = useUploadChatMedia();
+  const archiveMutation = useArchiveConversation();
+  const { mutate: markHypeOpened } = useMarkConversationHypeOpened();
+  const deleteMessageMutation = useDeleteMessage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { data: conversationBlocked = false } = useQuery({
+    queryKey: ["conversation-blocked", conversationId],
+    queryFn: () => isConversationBlocked(conversationId!),
+    enabled: !!conversationId && !!user,
+    refetchInterval: 15_000,
+  });
 
   const [text, setText] = useState("");
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [isRecordingLocked, setIsRecordingLocked] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const cancelRecordingRef = useRef(false);
   const recordingStartedAtRef = useRef(0);
@@ -121,12 +132,19 @@ const Conversa = () => {
   const [rateOpen, setRateOpen] = useState(false);
   const [confirmTradeOpen, setConfirmTradeOpen] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
+  const [cancelTradeOpen, setCancelTradeOpen] = useState(false);
+  const [cancellingTrade, setCancellingTrade] = useState(false);
+
+  useEffect(() => {
+    if (!conversationId || !user || details?.match_status !== "accepted") return;
+    markHypeOpened(conversationId);
+  }, [conversationId, details?.match_status, markHypeOpened, user]);
 
   const handleConfirmTrade = useCallback(async () => {
     if (!user || !details?.match_id) return;
     setConfirmingTrade(true);
     try {
-      await confirmTrade(details.match_id, user.id);
+      await confirmTrade(details.match_id);
       await queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
       await queryClient.invalidateQueries({ queryKey: ["matches", user.id] });
       const bothDone = details.other_confirmed;
@@ -145,11 +163,42 @@ const Conversa = () => {
     }
   }, [user, details, conversationId, queryClient]);
 
+  const handleCancelTrade = useCallback(async () => {
+    if (!user || !details?.match_id) return;
+    setCancellingTrade(true);
+    try {
+      await cancelProposal(details.match_id);
+      await queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
+      await queryClient.invalidateQueries({ queryKey: ["matches", user.id] });
+      toast({ title: "Negociação cancelada", description: "Nenhuma entrega foi confirmada." });
+      setCancelTradeOpen(false);
+    } catch (err: any) {
+      toast({ title: "Erro ao desistir da negociação", description: err?.message, variant: "destructive" });
+    } finally {
+      setCancellingTrade(false);
+    }
+  }, [user, details, conversationId, queryClient]);
+
   const handleStartCall = useCallback(async (kind: "video" | "audio") => {
     if (!conversationId || callingKind) return;
     setCallingKind(kind);
     try {
+      console.info("[call] start-request", {
+        conversationId,
+        kind,
+        runtime: getCallRuntimeDiagnostics(kind),
+      });
+      const media = await preflightCallMedia(kind);
+      console.info("[call] media-preflight-ok", { conversationId, kind, media });
       const tk = await startCall(conversationId, kind);
+      console.info("[call] token-created", {
+        conversationId: tk.conversation_id,
+        callSessionId: tk.call_session_id,
+        kind: tk.kind,
+        urlHost: (() => {
+          try { return new URL(tk.url).host; } catch { return "invalid-url"; }
+        })(),
+      });
       navigate(`/chamada/${tk.room_name}`, {
         state: {
           token: tk.token,
@@ -161,6 +210,12 @@ const Conversa = () => {
         },
       });
     } catch (e: any) {
+      console.error("[call] start-failed", {
+        conversationId,
+        kind,
+        error: describeCallError(e),
+        runtime: getCallRuntimeDiagnostics(kind),
+      });
       toast({ title: "Não foi possível iniciar a chamada", description: e?.message ?? "Tente novamente", variant: "destructive" });
     } finally {
       setCallingKind(null);
@@ -300,6 +355,7 @@ const Conversa = () => {
   }, [handleFileSelect]);
 
   const stopRecording = useCallback((cancel = false) => {
+    setIsRecordingLocked(false);
     cancelRecordingRef.current = cancel;
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== "inactive") {
@@ -334,6 +390,11 @@ const Conversa = () => {
     setBlocking(true);
     try {
       await blockUser(user.id, details.other_user_id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["blocked-users", user.id] }),
+        queryClient.invalidateQueries({ queryKey: ["explore-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["recommended-items"] }),
+      ]);
       toast({ title: "Usuário bloqueado 🚫", description: "Você não verá mais itens deste usuário." });
       setBlockConfirmOpen(false);
       navigate("/chat");
@@ -344,11 +405,40 @@ const Conversa = () => {
     }
   };
 
-  // H1: inclui 'rejected' e 'cancelled' no lock (chat só ativo em accepted)
-  const chatLocked =
-    details?.match_status === "completed" ||
+  const handleArchiveConversation = useCallback(async () => {
+    if (!conversationId) return;
+    try {
+      await archiveMutation.mutateAsync(conversationId);
+      toast({ title: "Conversa arquivada" });
+      navigate("/chat");
+    } catch (err: any) {
+      toast({
+        title: "Erro ao arquivar",
+        description: err?.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  }, [archiveMutation, conversationId, navigate]);
+
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    if (!conversationId) return;
+    try {
+      await deleteMessageMutation.mutateAsync({ messageId, conversationId });
+      toast({ title: "Mensagem apagada" });
+    } catch (err: any) {
+      toast({
+        title: "Erro ao apagar mensagem",
+        description: err?.message || "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  }, [conversationId, deleteMessageMutation]);
+
+  // Keep the completed negotiation conversation available as a record and for follow-up.
+  const chatUnavailable =
     details?.match_status === "cancelled" ||
     details?.match_status === "rejected";
+  const chatLocked = chatUnavailable || conversationBlocked;
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
@@ -367,7 +457,9 @@ const Conversa = () => {
         onStartCall={handleStartCall}
         onOpenReport={() => setReportOpen(true)}
         onOpenBlock={() => setBlockConfirmOpen(true)}
-        onOpenRate={() => setRateOpen(true)}
+        onOpenRate={details?.match_status === "completed" ? () => setRateOpen(true) : undefined}
+        onArchiveConversation={handleArchiveConversation}
+        archiving={archiveMutation.isPending}
         locked={chatLocked}
       />
 
@@ -408,6 +500,13 @@ const Conversa = () => {
               {details.other_confirmed ? "Concluir troca" : "Já troquei, confirmar entrega"}
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => setCancelTradeOpen(true)}
+            className="mx-auto mt-2 block px-3 py-1 text-xs font-semibold text-destructive/90 underline underline-offset-2"
+          >
+            Desistir da negociação
+          </button>
         </div>
       )}
 
@@ -416,7 +515,7 @@ const Conversa = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar entrega da troca?</AlertDialogTitle>
             <AlertDialogDescription>
-              Confirme apenas se vocês já trocaram os itens pessoalmente. Quando os dois confirmarem, a troca é concluída e a conversa é encerrada.
+              Confirme apenas se vocês já trocaram os itens pessoalmente. Quando os dois confirmarem, a troca será concluída, mas a conversa continuará disponível.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -428,21 +527,39 @@ const Conversa = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={cancelTradeOpen} onOpenChange={setCancelTradeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desistir desta negociação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Use esta opção apenas antes da entrega física. A conversa será preservada como histórico, mas a troca não poderá ser retomada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancellingTrade}>Voltar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelTrade} disabled={cancellingTrade} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {cancellingTrade ? <Loader2 className="h-4 w-4 animate-spin" /> : "Desistir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <MessageList
         ref={scrollRef}
         messages={messages}
         isLoading={isLoading}
         currentUserId={user?.id}
+        onDeleteMessage={handleDeleteMessage}
       />
 
       {chatLocked && (
         <div className="shrink-0 px-4 py-5 border-t border-foreground/5 bg-card/50 backdrop-blur-xl text-center">
           <p className="text-sm font-semibold text-foreground/80">
-            {details?.match_status === "completed" ? "Troca concluída ✅" : "Conversa encerrada 🔒"}
+            {conversationBlocked ? "Conversa indisponível 🔒" : "Conversa encerrada 🔒"}
           </p>
           <p className="text-xs text-foreground/50 mt-1">
-            {details?.match_status === "completed"
-              ? "Esta conversa foi finalizada. Avalie seu trocador na tela de Trocas."
+            {conversationBlocked
+              ? "A comunicação foi desativada nesta conversa. O histórico permanece disponível."
               : "Este item não está mais disponível."}
           </p>
         </div>
@@ -456,10 +573,12 @@ const Conversa = () => {
           sending={sending}
           uploading={uploading}
           isRecording={isRecording}
+          isRecordingLocked={isRecordingLocked}
           showAttachMenu={showAttachMenu}
           setShowAttachMenu={setShowAttachMenu}
           onStartRecording={startRecording}
           onStopRecording={stopRecording}
+          onLockRecording={() => setIsRecordingLocked(true)}
           onFileSelect={handleFileSelect}
         />
       )}

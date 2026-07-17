@@ -31,9 +31,9 @@ import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
 import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
-import { preloadImage, preloadImages, preloadVideo, preloadVideos } from "@/lib/mediaPreload";
+import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
 import { buildPublicItemUrl, shareContent } from "@/lib/share";
-import { getMediaObjectPosition } from "@/lib/mediaFrame";
+import { measureImageTone, type MediaTone } from "@/lib/mediaContrast";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
@@ -149,13 +149,13 @@ const SwipeCard = memo(
       const [activeImageIndex, setActiveImageIndex] = useState(0);
       const isVideoSlide = hasVideo && activeImageIndex === images.length;
       const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
-      const currentImageRecord = !isVideoSlide ? images[activeImageIndex] : null;
       const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
       const currentVideoPoster = isVideoSlide
         ? videos[0]?.thumbnail_url || images[Math.max(images.length - 1, 0)]?.image_url
         : null;
       const [videoReady, setVideoReady] = useState(false);
       const [imageRatios, setImageRatios] = useState<Record<string, number>>({});
+      const [mediaTone, setMediaTone] = useState<MediaTone>("neutral");
       const videoRef = useRef<HTMLVideoElement>(null);
       const slideChangeTokenRef = useRef(0);
 
@@ -184,6 +184,7 @@ const SwipeCard = memo(
             .catch(() => undefined)
             .then(() => {
               if (slideChangeTokenRef.current === token) {
+                setMediaTone("neutral");
                 setActiveImageIndex(normalizedIndex);
               }
             });
@@ -216,6 +217,7 @@ const SwipeCard = memo(
         setImageRatios((previous) => (
           previous[source] === ratio ? previous : { ...previous, [source]: ratio }
         ));
+        setMediaTone(measureImageTone(event.currentTarget));
       }, []);
 
       useEffect(() => {
@@ -229,6 +231,7 @@ const SwipeCard = memo(
       useEffect(() => {
         setActiveImageIndex(0);
         setVideoReady(false);
+        setMediaTone("neutral");
         slideChangeTokenRef.current = 0;
         x.set(0);
         y.set(0);
@@ -236,18 +239,21 @@ const SwipeCard = memo(
 
       useEffect(() => {
         setVideoReady(false);
+        setMediaTone("neutral");
       }, [currentVideo]);
 
       useEffect(() => {
         if (standby) return;
 
-        const fullImages = images.map((image: any) => cdnFull(image?.image_url));
-        const blurImages = images.map((image: any) => cdnBlur(image?.image_url));
-        const videoUrls = videos.map((video: any) => video?.video_url);
+        const nextIndex = activeImageIndex + 1;
+        const nextImage = nextIndex < images.length ? images[nextIndex]?.image_url : null;
+        const nextVideo = nextIndex === images.length ? videos[0]?.video_url : null;
 
-        preloadImages([...fullImages, ...blurImages]).catch(() => undefined);
-        preloadVideos(videoUrls).catch(() => undefined);
-      }, [images, standby, videos]);
+        // Keep the next slide instant without requesting every gallery asset at once.
+        preloadImage(currentImage ? cdnBlur(currentImage) : null).catch(() => undefined);
+        if (nextVideo) preloadVideo(nextVideo).catch(() => undefined);
+        else preloadImage(nextImage ? cdnFull(nextImage) : null).catch(() => undefined);
+      }, [activeImageIndex, currentImage, images, standby, videos]);
 
       const revealVideoWhenFrameIsReady = useCallback((video: HTMLVideoElement) => {
         if ("requestVideoFrameCallback" in video) {
@@ -312,7 +318,8 @@ const SwipeCard = memo(
 
       return (
         <motion.div
-          className={`absolute inset-0 w-full h-full ${
+          data-media-tone={mediaTone}
+          className={`swipe-card-shell absolute inset-0 w-full h-full ${
             standby ? "pointer-events-none" : expanded ? "" : "touch-none"
           }`}
           style={{
@@ -382,6 +389,8 @@ const SwipeCard = memo(
                     alt=""
                     aria-hidden
                     className="swipe-media-ambient"
+                    loading="eager"
+                    decoding="async"
                     draggable={false}
                   />
                   <div className="swipe-media-ambient-scrim" aria-hidden />
@@ -390,7 +399,11 @@ const SwipeCard = memo(
                     alt={item.name}
                     className="swipe-media-foreground"
                     src={currentImageSrc || undefined}
-                    style={{ objectPosition: getMediaObjectPosition(currentImageRecord) }}
+                    crossOrigin="anonymous"
+                    fetchPriority="high"
+                    loading="eager"
+                    decoding="async"
+                    style={{ objectPosition: "50% 50%" }}
                     onLoad={handleImageLoad}
                     draggable={false}
                   />
@@ -542,7 +555,7 @@ const SwipeCard = memo(
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 30 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute inset-x-3 bottom-3 top-[18%] z-30 flex flex-col rounded-2xl bg-black/64 backdrop-blur-2xl border border-white/16 shadow-[0_18px_60px_rgba(0,0,0,0.42)] overflow-hidden"
+                  className="swipe-detail-glass-panel absolute inset-x-3 bottom-3 top-[18%] z-30 flex flex-col rounded-2xl backdrop-blur-2xl border shadow-[0_18px_60px_rgba(0,0,0,0.42)] overflow-hidden"
                 >
                   <button
                     onClick={toggleExpand}
@@ -647,26 +660,26 @@ const SwipeCard = memo(
                     aria-label="Ver detalhes do item"
                     className="block w-full text-left pointer-events-auto active:scale-[0.99] transition-transform"
                   >
-                    <div className="flex min-w-0 items-end gap-3 border-b border-white/75 pb-2">
-                      <h2 className="min-w-0 flex-1 truncate text-white text-[24px] font-bold tracking-tight leading-[1.12] [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
+                    <div className="swipe-compact-heading-row flex min-w-0 items-end gap-3 border-b pb-2">
+                      <h2 className="swipe-compact-title min-w-0 flex-1 truncate text-[24px] font-bold tracking-tight leading-[1.12]">
                         {item.name}
                       </h2>
-                      <span className="shrink-0 text-white text-[19px] font-semibold leading-none tracking-tight [text-shadow:0_1px_2px_rgba(0,0,0,0.46)]">
+                      <span className="swipe-compact-price shrink-0 text-[19px] font-semibold leading-none tracking-tight">
                         {formatValue(item.market_value)}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-1.5 mt-1.5 mb-1.5 overflow-hidden">
-                      <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/94 text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-xl">
+                      <span className="swipe-compact-chip px-2 py-0.5 rounded-full text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-xl">
                         {item.category}
                       </span>
                       {conditionLabel && (
-                        <span className="px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/90 text-[9.5px] font-semibold uppercase flex items-center gap-1 shrink-0 backdrop-blur-xl">
+                        <span className="swipe-compact-chip px-2 py-0.5 rounded-full text-[9.5px] font-semibold uppercase flex items-center gap-1 shrink-0 backdrop-blur-xl">
                           <Package className="h-2.5 w-2.5" /> {conditionLabel}
                         </span>
                       )}
                       {compactLocation && (
-                        <span className="max-w-[48%] px-2 py-0.5 rounded-full bg-black/30 border border-white/12 text-white/90 text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-xl">
+                        <span className="swipe-compact-chip max-w-[48%] px-2 py-0.5 rounded-full text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-xl">
                           <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
                           <span className="truncate">{compactLocation}</span>
                         </span>

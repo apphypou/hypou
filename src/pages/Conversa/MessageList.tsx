@@ -1,5 +1,5 @@
 import { AlertCircle, Check, CheckCheck, Clock3, Loader2, Play } from "lucide-react";
-import { forwardRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { AudioPlayer } from "./AudioPlayer";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 import { getMessageDeliveryLabel, getMessageDeliveryStatus } from "@/lib/messageDeliveryStatus";
@@ -8,6 +8,7 @@ interface MessageListProps {
   messages: any[];
   isLoading: boolean;
   currentUserId: string | undefined;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
 const formatTime = (dateStr: string) => {
@@ -16,6 +17,10 @@ const formatTime = (dateStr: string) => {
 };
 
 const renderMessageContent = (msg: any, isMine: boolean, openMedia: (media: MediaViewerItem) => void) => {
+  if (msg.deleted_at) {
+    return <span className="text-sm italic text-current/60">Mensagem apagada</span>;
+  }
+
   const type = msg.message_type || "text";
   const mediaUrl = msg.media_url;
 
@@ -49,12 +54,22 @@ const renderMessageContent = (msg: any, isMine: boolean, openMedia: (media: Medi
   if (type === "audio" && mediaUrl) {
     return <AudioPlayer src={mediaUrl} mine={isMine} />;
   }
-  return <p className="text-sm leading-relaxed break-words">{msg.content}</p>;
+  return <p className="min-w-0 whitespace-pre-wrap break-words text-sm leading-relaxed">{msg.content}</p>;
 };
 
 export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
-  ({ messages, isLoading, currentUserId }, ref) => {
+  ({ messages, isLoading, currentUserId, onDeleteMessage }, ref) => {
     const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
+    const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearDeleteTimer = () => {
+      if (deleteTimerRef.current) {
+        clearTimeout(deleteTimerRef.current);
+        deleteTimerRef.current = null;
+      }
+    };
+
+    useEffect(() => clearDeleteTimer, []);
 
     return (
       <>
@@ -74,6 +89,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
             messages.map((msg) => {
               const isMine = msg.sender_id === currentUserId;
               const isSystem = msg.message_type === "system";
+              const canDelete = isMine && !isSystem && !msg.deleted_at && !!onDeleteMessage;
               const deliveryStatus = getMessageDeliveryStatus(msg, currentUserId);
               const deliveryLabel = getMessageDeliveryLabel(deliveryStatus);
 
@@ -90,11 +106,27 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
               return (
                 <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                    className={`relative w-fit max-w-[82%] rounded-2xl px-4 py-3 ${
                       isMine
                         ? "bg-primary/70 text-primary-foreground rounded-br-md"
                         : "bg-card border border-foreground/5 text-foreground rounded-bl-md"
                     }`}
+                    onContextMenu={(event) => {
+                      if (!canDelete) return;
+                      event.preventDefault();
+                      if (window.confirm("Apagar esta mensagem?")) onDeleteMessage?.(msg.id);
+                    }}
+                    onPointerDown={(event) => {
+                      if (!canDelete || event.pointerType !== "touch") return;
+                      clearDeleteTimer();
+                      deleteTimerRef.current = setTimeout(() => {
+                        deleteTimerRef.current = null;
+                        if (window.confirm("Apagar esta mensagem?")) onDeleteMessage?.(msg.id);
+                      }, 550);
+                    }}
+                    onPointerUp={clearDeleteTimer}
+                    onPointerCancel={clearDeleteTimer}
+                    onPointerMove={clearDeleteTimer}
                   >
                     {renderMessageContent(msg, isMine, setMediaViewer)}
                     <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>

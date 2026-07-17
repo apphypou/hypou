@@ -12,9 +12,23 @@ import RatingDialog from "@/components/RatingDialog";
 // Mock supabase used by RatingDialog
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: () => ({
-      insert: () => Promise.resolve({ error: null }),
-    }),
+    from: (table: string) => {
+      if (table === "matches") {
+        const query = {
+          eq: () => query,
+          maybeSingle: () =>
+            Promise.resolve({
+              data: { status: "completed", user_a_id: "u1", user_b_id: "u2" },
+              error: null,
+            }),
+        };
+        return { select: () => query };
+      }
+
+      return {
+        insert: () => Promise.resolve({ error: null }),
+      };
+    },
   },
 }));
 
@@ -58,12 +72,17 @@ describe("TradeContextCard — real component", () => {
     expect(screen.getByText(/Pendente/i)).toBeInTheDocument();
   });
 
-  it("06 cai para 'Meu item' se myItem ausente", () => {
+  it("06 mostra o estado de negociação cancelada", () => {
+    renderWithProviders(<TradeContextCard myItem={myItem} otherItem={otherItem} matchStatus="cancelled" />);
+    expect(screen.getByText(/Negociação cancelada/i)).toBeInTheDocument();
+  });
+
+  it("07 cai para 'Meu item' se myItem ausente", () => {
     renderWithProviders(<TradeContextCard myItem={null} otherItem={otherItem} matchStatus="accepted" />);
     expect(screen.getByText("Meu item")).toBeInTheDocument();
   });
 
-  it("07 renderiza imagem do meu item", () => {
+  it("08 renderiza imagem do meu item", () => {
     const { container } = renderWithProviders(
       <TradeContextCard myItem={myItem} otherItem={otherItem} matchStatus="accepted" />
     );
@@ -72,7 +91,7 @@ describe("TradeContextCard — real component", () => {
     expect(imgs[0].getAttribute("src")).toBe("https://x/a.jpg");
   });
 
-  it("08 ordena imagens por position e usa a primeira", () => {
+  it("09 ordena imagens por position e usa a primeira", () => {
     const item = {
       name: "X",
       item_images: [
@@ -152,6 +171,7 @@ describe("Trade flow integration — status labels match service contract", () =
     proposal: /Pendente/i,
     accepted: /Em negociação/i,
     completed: /Troca concluída/i,
+    cancelled: /Negociação cancelada/i,
     rejected: /Troca não realizada/i,
   };
 

@@ -6,7 +6,7 @@ const SURFACE = "#262626";
 const PRIMARY = "#18FDF6";
 const TEXT = "#FAFAFA";
 const MUTED = "#A1A1AA";
-const BORDER = "rgba(255,255,255,0.06)";
+const BORDER = "#363636";
 const LOGO_URL = "https://hypou.lovable.app/logo-hypou.png";
 
 function shell(title: string, preheader: string, bodyHtml: string): string {
@@ -15,16 +15,19 @@ function shell(title: string, preheader: string, bodyHtml: string): string {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark light">
-<meta name="supported-color-schemes" content="dark light">
+<meta name="color-scheme" content="dark">
+<meta name="supported-color-schemes" content="dark">
+<style>
+:root { color-scheme: dark; supported-color-schemes: dark; }
+</style>
 <title>${title}</title>
 </head>
-<body style="margin:0;padding:0;background:${BG};font-family:'Plus Jakarta Sans','Segoe UI',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:${TEXT};">
+<body bgcolor="${BG}" style="margin:0;padding:0;background-color:${BG};background-image:linear-gradient(${BG},${BG});font-family:'Plus Jakarta Sans','Segoe UI',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;color:${TEXT};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheader}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BG};padding:40px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${BG}" style="background-color:${BG};background-image:linear-gradient(${BG},${BG});padding:40px 16px;">
   <tr>
     <td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:${SURFACE};border:1px solid ${BORDER};border-radius:24px;overflow:hidden;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${SURFACE}" style="max-width:520px;background-color:${SURFACE};background-image:linear-gradient(${SURFACE},${SURFACE});border:1px solid ${BORDER};border-radius:24px;overflow:hidden;">
         <tr>
           <td style="padding:36px 32px 8px 32px;text-align:center;">
             <img src="${LOGO_URL}" alt="Hypou" width="120" style="display:inline-block;height:auto;max-width:120px;border:0;outline:none;text-decoration:none;" />
@@ -50,7 +53,7 @@ function shell(title: string, preheader: string, bodyHtml: string): string {
 
 function codeBlock(token: string): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px auto 0 auto;">
-    <tr><td style="border-radius:16px;background:${BG};border:1px solid ${BORDER};padding:24px 32px;">
+    <tr><td bgcolor="${BG}" style="border-radius:16px;background-color:${BG};background-image:linear-gradient(${BG},${BG});border:1px solid ${BORDER};padding:24px 32px;">
       <div style="font-family:'SF Mono','Menlo','Consolas',monospace;font-size:36px;font-weight:800;color:${PRIMARY};letter-spacing:0.4em;text-align:center;padding-left:0.4em;">${token}</div>
     </td></tr>
   </table>

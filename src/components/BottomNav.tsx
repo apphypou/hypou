@@ -1,6 +1,7 @@
 import { Compass, Handshake, MessageSquare, UserCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { useTradeBadgeCount } from "@/hooks/useTradeBadgeCount";
 import { motion } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { shouldHideBottomNav } from "@/lib/bottomNavVisibility";
@@ -28,6 +29,7 @@ const prefetch = (path: string) => {
 const BottomNav = ({ activeTab }: BottomNavProps) => {
   const navigate = useNavigate();
   const unreadCount = useUnreadCount();
+  const tradeCount = useTradeBadgeCount();
   const bottomOffset = Capacitor.isNativePlatform() ? "-0.5rem" : "0.75rem";
   const pathname = typeof window === "undefined" ? "" : window.location.pathname;
 
@@ -35,7 +37,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
 
   const navItems: { icon: typeof Compass; label: string; id: TabId; path: string; unreadCount?: number }[] = [
     { icon: Compass, label: "Explorar", id: "explorar", path: "/explorar" },
-    { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas" },
+    { icon: Handshake, label: "Trocas", id: "trocas", path: "/partidas", unreadCount: tradeCount },
     { icon: MessageSquare, label: "Chat", id: "chat", path: "/chat", unreadCount },
     { icon: UserCircle, label: "Perfil", id: "perfil", path: "/meu-perfil" },
   ];

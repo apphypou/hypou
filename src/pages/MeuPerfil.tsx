@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star, Video, Heart } from "lucide-react";
+import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star, Video, Heart, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -28,11 +28,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatValue } from "@/lib/utils";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { uploadVideo } from "@/services/videoService";
+import { softDeleteItem } from "@/services/itemService";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import { createProposal } from "@/services/matchService";
 import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
+import { useUserRatingsList } from "@/hooks/useRatings";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
@@ -52,6 +54,8 @@ const MeuPerfil = () => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingVideoItemId, setUploadingVideoItemId] = useState<string | null>(null);
   const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
+  const [showRatings, setShowRatings] = useState(false);
+  const { data: receivedRatings = [], isLoading: loadingRatings } = useUserRatingsList(showRatings ? user?.id : undefined);
 
   // Favorites
   const [showFavorites, setShowFavorites] = useState(false);
@@ -148,8 +152,7 @@ const MeuPerfil = () => {
 
   const handleDeleteItem = async (itemId: string) => {
     try {
-      await supabase.from("item_images").delete().eq("item_id", itemId);
-      await supabase.from("items").delete().eq("id", itemId);
+      await softDeleteItem(itemId);
       await refetchItems();
       queryClient.invalidateQueries({ queryKey: ["my-items"] });
       toast({ title: "Item removido!" });
@@ -267,8 +270,11 @@ const MeuPerfil = () => {
           {/* Stats */}
           <div className="w-full grid grid-cols-3 gap-2.5 mb-7">
             {statsList.map((stat) => (
-              <GlassCard
+              <button
                 key={stat.label}
+                type="button"
+                onClick={() => stat.label === "avaliações" && setShowRatings(true)}
+                disabled={stat.label !== "avaliações"}
                 className={`rounded-2xl px-4 py-3 flex flex-col items-center justify-center text-center bg-card/75 border-foreground/8 ${
                   stat.highlight ? "border-primary/16 bg-primary/[0.04]" : ""
                 }`}
@@ -283,7 +289,7 @@ const MeuPerfil = () => {
                 >
                   {stat.label}
                 </span>
-              </GlassCard>
+              </button>
             ))}
           </div>
 
@@ -323,6 +329,12 @@ const MeuPerfil = () => {
                         onClick={() => navigate(`/editar-item/${item.id}`)}
                         className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer relative"
                       >
+                        {item.is_traded && (
+                          <div className="absolute left-3 top-3 z-20 flex items-center gap-1 rounded-full bg-emerald-400 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Trocado
+                          </div>
+                        )}
                         <div className="absolute top-2 right-2 flex gap-2 z-10">
                           <button
                             onClick={(e) => { e.stopPropagation(); navigate(`/editar-item/${item.id}`); }}
@@ -381,6 +393,36 @@ const MeuPerfil = () => {
       {!proposalTarget && <BottomNav activeTab="perfil" />}
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+
+      <Sheet open={showRatings} onOpenChange={setShowRatings}>
+        <SheetContent side="bottom" className="max-h-[78dvh] rounded-t-[2rem] border-foreground/10 bg-background px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]">
+          <SheetHeader className="mb-4 text-left">
+            <SheetTitle>Avaliações recebidas</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-3 overflow-y-auto pb-4">
+            {loadingRatings ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">Carregando avaliações...</p>
+            ) : receivedRatings.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">Você ainda não recebeu avaliações.</p>
+            ) : (
+              receivedRatings.map((rating) => (
+                <div key={rating.id} className="rounded-2xl border border-foreground/10 bg-card p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold text-foreground">{rating.rater?.display_name || "Usuário"}</span>
+                    <span className="flex items-center gap-1 text-sm font-bold text-primary">
+                      {rating.score.toFixed(1)} <Star className="h-4 w-4 fill-current" />
+                    </span>
+                  </div>
+                  {rating.comment && <p className="mt-2 text-sm text-muted-foreground">{rating.comment}</p>}
+                  {rating.rater_item?.name && (
+                    <p className="mt-3 text-xs text-muted-foreground">Troca envolvendo {rating.rater_item.name}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Select Item Dialog for proposals from favorites */}
       <SelectItemDialog

@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { trackChannel } from "@/lib/realtimeManager";
 
 export const useUnreadCount = () => {
   const { user } = useAuth();
@@ -34,7 +35,8 @@ export const useUnreadCount = () => {
         .select("id", { count: "exact", head: true })
         .in("conversation_id", convIds)
         .neq("sender_id", user.id)
-        .is("read_at", null);
+        .is("read_at", null)
+        .is("deleted_at", null);
 
       return count || 0;
     },
@@ -66,9 +68,7 @@ export const useUnreadCount = () => {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return trackChannel(channel);
   }, [user, queryClient]);
 
   return query.data || 0;

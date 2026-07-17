@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useRealtimeInvalidate } from "./useRealtimeInvalidate";
+import { isTradedProfileItem } from "@/lib/profileItems";
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -53,9 +54,43 @@ export const useProfile = () => {
         .from("items")
         .select("*, item_images(*)")
         .eq("user_id", user!.id)
+        .neq("status", "deleted")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      const items = data || [];
+      if (items.length === 0) return items;
+
+      const itemIds = new Set(items.map((item) => item.id));
+      const completedMatchItemIds = new Set<string>();
+
+      const { data: completedMatches } = await supabase
+        .from("matches")
+        .select("id,item_a_id,item_b_id,status")
+        .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
+        .eq("status", "completed");
+
+      const completedMatchIds = (completedMatches || []).map((match: any) => match.id);
+      for (const match of completedMatches || []) {
+        if (match.item_a_id && itemIds.has(match.item_a_id)) completedMatchItemIds.add(match.item_a_id);
+        if (match.item_b_id && itemIds.has(match.item_b_id)) completedMatchItemIds.add(match.item_b_id);
+      }
+
+      if (completedMatchIds.length > 0) {
+        const { data: matchItems } = await (supabase as any)
+          .from("match_items")
+          .select("item_id,match_id")
+          .in("match_id", completedMatchIds);
+
+        for (const row of (matchItems || []) as Array<{ item_id: string }>) {
+          if (itemIds.has(row.item_id)) completedMatchItemIds.add(row.item_id);
+        }
+      }
+
+      return items.map((item) => ({
+        ...item,
+        is_traded: isTradedProfileItem(item, completedMatchItemIds),
+      }));
     },
     enabled: !!user,
   });
@@ -74,7 +109,7 @@ export const useProfile = () => {
         .from("matches")
         .select("*", { count: "exact", head: true })
         .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
-        .eq("status", "accepted");
+        .eq("status", "completed");
 
       // Average rating
       const { data: ratings } = await supabase

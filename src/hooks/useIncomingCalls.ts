@@ -21,10 +21,11 @@ export interface IncomingCall {
  */
 export function useIncomingCalls() {
   const { user } = useAuth();
+  const userId = user?.id;
   const [incoming, setIncoming] = useState<IncomingCall | null>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
     let cancelled = false;
 
     const fetchProfile = async (userId: string) => {
@@ -42,24 +43,44 @@ export function useIncomingCalls() {
       setIncoming({ ...row, caller });
     };
 
-    // Initial fetch (in case there's already a ringing call)
-    (async () => {
-      const { data } = await supabase
+    const loadLatestRinging = async () => {
+      const { data, error } = await supabase
         .from("call_sessions")
         .select("*")
-        .eq("callee_id", user.id)
+        .eq("callee_id", userId)
         .eq("status", "ringing")
         .order("started_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (data && !cancelled) setWithProfile(data);
-    })();
+      if (cancelled) return;
+      if (error) {
+        console.warn("[call] incoming-call-refresh-failed", {
+          code: error.code,
+          message: error.message,
+        });
+        return;
+      }
+      if (data) {
+        await setWithProfile(data);
+      } else {
+        setIncoming((cur) => (cur?.status === "ringing" ? null : cur));
+      }
+    };
+
+    // Realtime is the fast path; polling covers iOS foreground sessions where
+    // the websocket event can be missed while both users stay on chat screens.
+    void loadLatestRinging();
+    const pollTimer = window.setInterval(loadLatestRinging, 3000);
+    const onIncomingCallPush = () => {
+      void loadLatestRinging();
+    };
+    window.addEventListener("hypou:incoming-call-push", onIncomingCallPush);
 
     const channel = supabase
-      .channel(`incoming-calls-${user.id}`)
+      .channel(`incoming-calls-${userId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "call_sessions", filter: `callee_id=eq.${user.id}` },
+        { event: "INSERT", schema: "public", table: "call_sessions", filter: `callee_id=eq.${userId}` },
         (payload) => {
           const row: any = payload.new;
           if (row.status === "ringing") setWithProfile(row);
@@ -67,7 +88,7 @@ export function useIncomingCalls() {
       )
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "call_sessions", filter: `callee_id=eq.${user.id}` },
+        { event: "UPDATE", schema: "public", table: "call_sessions", filter: `callee_id=eq.${userId}` },
         (payload) => {
           const row: any = payload.new;
           // If the active incoming call moved to non-ringing, clear it
@@ -77,13 +98,22 @@ export function useIncomingCalls() {
           });
         },
       )
-      .subscribe();
+      .subscribe((status, error) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("[call] incoming-call-realtime-unavailable", {
+            status,
+            message: error?.message,
+          });
+        }
+      });
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollTimer);
+      window.removeEventListener("hypou:incoming-call-push", onIncomingCallPush);
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [userId]);
 
   return { incoming, clear: () => setIncoming(null) };
 }

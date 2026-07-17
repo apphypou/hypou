@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   LiveKitRoom,
@@ -13,6 +13,11 @@ import { Track, Room, RoomEvent } from "livekit-client";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, SwitchCamera, Loader2 } from "lucide-react";
 import { endCall, markMissed } from "@/services/callService";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  describeCallError,
+  getCallRuntimeDiagnostics,
+  redactCallRouteState,
+} from "@/lib/callDiagnostics";
 import "@livekit/components-styles";
 
 interface CallNavState {
@@ -35,6 +40,14 @@ export default function Chamada() {
   const callStatusRef = useRef<"ringing" | "accepted" | "connected">("ringing");
   const [callStatus, setCallStatus] = useState<"ringing" | "accepted" | "connected">("ringing");
   const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!state?.kind) return;
+    console.info("[call] route-enter", {
+      state: redactCallRouteState(state),
+      runtime: getCallRuntimeDiagnostics(state.kind),
+    });
+  }, [state?.callSessionId, state?.kind]);
 
   const updateCallStatus = (next: "ringing" | "accepted" | "connected") => {
     callStatusRef.current = next;
@@ -68,16 +81,21 @@ export default function Chamada() {
     return clearMissedTimer;
   }, [state?.isCaller, state?.callSessionId, navigate]);
 
-  const handleLeave = async () => {
+  const handleLeave = useCallback(async () => {
     if (sessionEndedRef.current) {
       navigate(-1);
       return;
     }
     sessionEndedRef.current = true;
     clearMissedTimer();
-    try { await endCall(state!.callSessionId); } catch {/* noop */}
+    try {
+      await endCall(state!.callSessionId);
+      console.info("[call] session-ended", redactCallRouteState(state));
+    } catch (error) {
+      console.warn("[call] end-call-failed", describeCallError(error));
+    }
     navigate(-1);
-  };
+  }, [navigate, state]);
 
   // Realtime fallback: if the call_session is set to ended/declined/missed by the
   // other side, force-leave the room (handles abrupt drops).
@@ -115,11 +133,36 @@ export default function Chamada() {
         connect
         video={state.kind === "video"}
         audio
+        onConnected={() => {
+          console.info("[call] livekit-connected", {
+            state: redactCallRouteState(state),
+            runtime: getCallRuntimeDiagnostics(state.kind),
+          });
+        }}
         onError={(error) => {
-          console.error("[call] LiveKit error", error);
+          console.error("[call] livekit-error", {
+            error: describeCallError(error),
+            state: redactCallRouteState(state),
+            runtime: getCallRuntimeDiagnostics(state.kind),
+          });
           setConnectionError(error?.message ?? "Falha ao conectar a chamada.");
         }}
-        onDisconnected={handleLeave}
+        onDisconnected={(reason) => {
+          console.warn("[call] livekit-disconnected", {
+            reason,
+            state: redactCallRouteState(state),
+          });
+          handleLeave();
+        }}
+        onMediaDeviceFailure={(failure, kind) => {
+          console.error("[call] media-device-failure", {
+            failure,
+            kind,
+            state: redactCallRouteState(state),
+            runtime: getCallRuntimeDiagnostics(state.kind),
+          });
+          setConnectionError("Não foi possível acessar câmera ou microfone.");
+        }}
         data-lk-theme="default"
         className="!h-full !w-full !bg-background"
       >
@@ -181,12 +224,43 @@ function CallStage({
     const onTrackSubscribed = (_t: any, _pub: any, participant: any) => {
       if (!participant?.isLocal) markConnected();
     };
+    const onConnectionStateChanged = (state: any) => {
+      console.info("[call] room-state", {
+        state,
+        participants: room.numParticipants,
+        remoteParticipants: room.remoteParticipants.size,
+      });
+    };
+    const onLocalTrackPublished = (publication: any) => {
+      console.info("[call] local-track-published", {
+        source: publication?.source,
+        kind: publication?.kind,
+        muted: publication?.isMuted,
+      });
+    };
+    const onMediaDevicesError = (error: Error, mediaKind?: MediaDeviceKind) => {
+      console.error("[call] room-media-devices-error", {
+        kind: mediaKind,
+        error: describeCallError(error),
+      });
+    };
+    const onTrackSubscriptionFailed = (trackSid: string, participant: any, reason?: any) => {
+      console.error("[call] track-subscription-failed", {
+        trackSid,
+        participant: participant?.identity,
+        reason,
+      });
+    };
 
     room.on(RoomEvent.ParticipantConnected, onConnected);
     room.on(RoomEvent.Disconnected, onDisconnected);
     room.on(RoomEvent.ParticipantDisconnected, onParticipantLeft);
     room.on(RoomEvent.Connected, onRoomConnected);
     room.on(RoomEvent.TrackSubscribed, onTrackSubscribed);
+    room.on(RoomEvent.ConnectionStateChanged, onConnectionStateChanged);
+    room.on(RoomEvent.LocalTrackPublished, onLocalTrackPublished);
+    room.on(RoomEvent.MediaDevicesError, onMediaDevicesError);
+    room.on(RoomEvent.TrackSubscriptionFailed, onTrackSubscriptionFailed);
 
     // If a remote was already there when we mounted/joined
     checkExisting();
@@ -197,6 +271,10 @@ function CallStage({
       room.off(RoomEvent.ParticipantDisconnected, onParticipantLeft);
       room.off(RoomEvent.Connected, onRoomConnected);
       room.off(RoomEvent.TrackSubscribed, onTrackSubscribed);
+      room.off(RoomEvent.ConnectionStateChanged, onConnectionStateChanged);
+      room.off(RoomEvent.LocalTrackPublished, onLocalTrackPublished);
+      room.off(RoomEvent.MediaDevicesError, onMediaDevicesError);
+      room.off(RoomEvent.TrackSubscriptionFailed, onTrackSubscriptionFailed);
     };
   }, [room, onRemoteJoined, onLeave]);
 
@@ -209,13 +287,23 @@ function CallStage({
 
   const toggleMic = async () => {
     const next = !micOn;
-    await localParticipant.setMicrophoneEnabled(next);
-    setMicOn(next);
+    try {
+      await localParticipant.setMicrophoneEnabled(next);
+      setMicOn(next);
+      console.info("[call] mic-toggle", { enabled: next });
+    } catch (error) {
+      console.error("[call] mic-toggle-failed", describeCallError(error));
+    }
   };
   const toggleCam = async () => {
     const next = !camOn;
-    await localParticipant.setCameraEnabled(next);
-    setCamOn(next);
+    try {
+      await localParticipant.setCameraEnabled(next);
+      setCamOn(next);
+      console.info("[call] camera-toggle", { enabled: next });
+    } catch (error) {
+      console.error("[call] camera-toggle-failed", describeCallError(error));
+    }
   };
   const switchCam = async () => {
     try {
@@ -224,7 +312,10 @@ function CallStage({
       const current = localParticipant.getTrackPublication(Track.Source.Camera)?.track?.mediaStreamTrack?.getSettings().deviceId;
       const next = devices.find((d) => d.deviceId !== current) ?? devices[0];
       await room.switchActiveDevice("videoinput", next.deviceId);
-    } catch {/* noop */}
+      console.info("[call] camera-switched", { devices: devices.length });
+    } catch (error) {
+      console.error("[call] camera-switch-failed", describeCallError(error));
+    }
   };
 
   return (

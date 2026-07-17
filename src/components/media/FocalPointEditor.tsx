@@ -103,11 +103,10 @@ export const FocalPointEditor = ({ open, imageUrl, value, onClose, onSave }: Foc
             <Move className="h-5 w-5 text-primary" />
           </div>
         </div>
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="rounded-xl border border-foreground/10 bg-card/90 px-4 py-3 text-center text-xs font-medium text-foreground shadow-lg backdrop-blur-md">
           Esse ponto será usado para centralizar a imagem no card Explorar.
         </p>
       </div>
     </div>
   );
 };
-

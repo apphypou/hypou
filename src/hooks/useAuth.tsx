@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null; user: User | null }>;
+  signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null; user: User | null; emailAlreadyRegistered: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -44,7 +44,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: getAuthRedirectUrl("/onboarding"),
       },
     });
-    return { error: error as Error | null, user: data?.user ?? null };
+    // With email confirmation enabled Supabase intentionally returns an
+    // obfuscated user for an existing email. `identities` is empty in that
+    // response, which lets this registration form avoid sending a new OTP.
+    const emailAlreadyRegistered = !error && !!data.user && data.user.identities?.length === 0;
+    return { error: error as Error | null, user: data?.user ?? null, emailAlreadyRegistered };
   };
 
   const signIn = async (email: string, password: string) => {

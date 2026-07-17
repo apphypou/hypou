@@ -37,14 +37,14 @@ describe("mobile visual layout", () => {
     expect(source).toContain('className="swipe-media-ambient"');
     expect(source).toContain('className="swipe-media-foreground"');
     expect(source).toContain("getMediaAspectClass");
-    expect(source).toContain("getMediaObjectPosition");
-    expect(source).toContain("objectPosition: getMediaObjectPosition(currentImageRecord)");
+    expect(source).not.toContain("getMediaObjectPosition(currentImageRecord)");
+    expect(source).toContain('objectPosition: "50% 50%"');
     expect(source).toContain("onLoad={handleImageLoad}");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-foreground");
-    expect(css).toContain("object-position: center 34%;");
-    expect(css).toContain("transform: scale(1.035);");
+    expect(css).toContain("object-position: center center;");
+    expect(css).toContain("transform: scale(1);");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-ambient");
-    expect(css).toContain("opacity: 0.9;");
+    expect(css).toContain("opacity: 0.62;");
     expect(css).toContain("object-fit: contain;");
     expect(source).not.toContain('className="w-full h-full object-cover object-center"');
   });
@@ -60,9 +60,46 @@ describe("mobile visual layout", () => {
   it("places Explore price beside its truncating item title", () => {
     const source = readSource("src/components/SwipeCard.tsx");
 
-    expect(source).toContain("flex min-w-0 items-end gap-3 border-b");
-    expect(source).toContain("min-w-0 flex-1 truncate");
-    expect(source).toContain("shrink-0 text-white");
+    expect(source).toContain("swipe-compact-heading-row flex min-w-0 items-end gap-3 border-b");
+    expect(source).toContain("swipe-compact-title min-w-0 flex-1 truncate");
+    expect(source).toContain("swipe-compact-price shrink-0");
+  });
+
+  it("adapts Swipe Card readability when media is bright", () => {
+    const source = readSource("src/components/SwipeCard.tsx");
+    const css = readSource("src/index.css");
+
+    expect(source).toContain('import { measureImageTone, type MediaTone } from "@/lib/mediaContrast";');
+    expect(source).toContain('const [mediaTone, setMediaTone] = useState<MediaTone>("neutral");');
+    expect(source).toContain("data-media-tone={mediaTone}");
+    expect(source).toContain("setMediaTone(measureImageTone(event.currentTarget));");
+    expect(source).toContain("swipe-card-shell");
+    expect(source).toContain("swipe-compact-title");
+    expect(source).toContain("swipe-compact-price");
+    expect(source).toContain("swipe-compact-chip");
+    expect(source).toContain("swipe-detail-glass-panel");
+    expect(css).toContain('.swipe-card-shell[data-media-tone="bright"]');
+    expect(css).toContain("--swipe-readable-text: rgba(255, 255, 255, 0.98);");
+    expect(css).toContain("--swipe-readable-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);");
+    expect(css).toContain("--swipe-chip-bg: rgba(0, 0, 0, 0.34);");
+    expect(css).toContain("--swipe-detail-surface: rgba(0, 0, 0, 0.64);");
+    expect(css).toContain("--swipe-readable-shadow: 0 3px 18px rgba(0, 0, 0, 0.9);");
+    expect(css).toContain("--swipe-detail-surface: rgba(3, 6, 10, 0.82);");
+  });
+
+  it("uses adaptive detail text classes instead of raw white opacity in item details", () => {
+    const cardDetail = readSource("src/components/SwipeCard/CardDetailContent.tsx");
+    const panel = readSource("src/components/ItemDetailPanel.tsx");
+    const css = readSource("src/index.css");
+
+    expect(cardDetail).toContain("swipe-detail-price");
+    expect(cardDetail).toContain("swipe-detail-label");
+    expect(cardDetail).toContain("swipe-detail-body");
+    expect(cardDetail).toContain("swipe-detail-pill");
+    expect(panel).toContain("swipe-detail-surface-card");
+    expect(css).toContain(".swipe-detail-price");
+    expect(css).toContain(".swipe-detail-body");
+    expect(css).toContain(".swipe-detail-surface-card");
   });
 
   it("uses a Tinder-like downward exit motion for Explore swipes", () => {
@@ -219,12 +256,41 @@ describe("mobile visual layout", () => {
     expect(source).toContain('className="relative flex-1 w-full z-10 pb-28 overflow-y-auto no-scrollbar"');
   });
 
-  it("preserves the current Explore card during pull refresh", () => {
+  it("exposes archive actions clearly in chat list and open conversation menu", () => {
+    const chat = readSource("src/pages/Chat.tsx");
+    const conversa = readSource("src/pages/Conversa.tsx");
+    const header = readSource("src/pages/Conversa/ChatHeader.tsx");
+
+    expect(chat).toContain("Arquivar conversa");
+    expect(chat).toContain("Arquivar");
+    expect(conversa).toContain("useArchiveConversation");
+    expect(conversa).toContain("handleArchiveConversation");
+    expect(header).toContain("onArchiveConversation");
+    expect(header).toContain("Arquivar conversa");
+  });
+
+  it("keeps Explore progression stable across pull refreshes", () => {
     const source = readSource("src/pages/Explorar.tsx");
 
-    expect(source).toContain("const refreshItemIdRef = useRef<string | null>(null)");
-    expect(source).toContain("findRefreshIndex");
+    expect(source).toContain("const [dismissedItemIds, setDismissedItemIds] = useState<Set<string>>");
+    expect(source).toContain("const visibleItems = useMemo(");
+    expect(source).toContain("const advanceCard = useCallback((itemId: string) => {");
+    expect(source).not.toContain("findRefreshIndex");
     expect(source).toContain("<ScreenLayout edgeToEdgeTop onRefresh={handleRefresh}>");
     expect(source).toContain('queryClient.refetchQueries({ queryKey: ["explore-items", user?.id], exact: true })');
+  });
+
+  it("keeps in-app toasts below the iPhone Dynamic Island", () => {
+    const css = readSource("src/index.css");
+    const radixToast = readSource("src/components/ui/toast.tsx");
+    const sonnerToast = readSource("src/components/ui/sonner.tsx");
+
+    expect(css).toContain("--toast-safe-top:");
+    expect(css).toContain("max(calc(var(--safe-area-top) + 0.75rem), 4.75rem)");
+    expect(radixToast).toContain("top-[var(--toast-safe-top)]");
+    expect(radixToast).not.toContain("fixed top-0 z-[100]");
+    expect(sonnerToast).toContain('position="top-center"');
+    expect(sonnerToast).toContain('mobileOffset={{ top: "var(--toast-safe-top)" }}');
+    expect(sonnerToast).toContain('offset={{ top: "var(--toast-safe-top)" }}');
   });
 });

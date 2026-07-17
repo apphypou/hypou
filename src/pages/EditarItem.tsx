@@ -453,7 +453,7 @@ const EditarItem = () => {
       </header>
 
       <main
-        className="item-form-scroll flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-8"
+        className="item-form-scroll flex-1 w-full px-6 overflow-y-auto no-scrollbar pb-[calc(7.5rem+var(--safe-area-bottom))]"
         style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
       >
         {/* Photos */}
@@ -636,7 +636,7 @@ const EditarItem = () => {
             <span className="text-xs text-muted-foreground mt-1 block text-right">{itemDesc.length}/500</span>
           </div>
 
-          <div>
+          <div className="relative z-30">
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2 pl-1">Localização</label>
             <LocationSearch value={location} onChange={setLocation} />
           </div>

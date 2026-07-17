@@ -81,4 +81,24 @@ describe("mediaPreload", () => {
 
     await expect(promise).resolves.toBeUndefined();
   });
+
+  it("reuses an already requested image instead of starting another download", async () => {
+    const decode = vi.fn().mockResolvedValue(undefined);
+    const assignedSources: string[] = [];
+
+    class MockImage {
+      decode = decode;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(value: string) { assignedSources.push(value); }
+    }
+
+    globalThis.Image = MockImage as unknown as typeof Image;
+    await Promise.all([
+      preloadImage("https://cdn.example.com/cached.jpg"),
+      preloadImage("https://cdn.example.com/cached.jpg"),
+    ]);
+
+    expect(assignedSources).toEqual(["https://cdn.example.com/cached.jpg"]);
+  });
 });

@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getBlockedUserIds } from "@/services/reportService";
 import { validateImageFile, prepareImageForUpload } from "@/lib/fileValidation";
+import { describeMediaFile, logMediaDiagnostic, logMediaError } from "@/lib/mediaDiagnostics";
 
 export const createItem = async (data: {
   user_id: string;
@@ -57,38 +58,78 @@ export const deleteItemImage = async (imageId: string) => {
   if (error) throw error;
 };
 
+export const softDeleteItem = async (itemId: string) => {
+  const { error } = await supabase.rpc("soft_delete_item" as any, { p_item_id: itemId });
+  if (error) throw error;
+};
+
 export const uploadItemImage = async (
   userId: string,
   itemId: string,
   file: File,
   position: number,
-  focalPoint?: { focal_x?: number; focal_y?: number }
+  focalPoint?: { focal_x?: number; focal_y?: number },
+  traceId?: string,
 ): Promise<string> => {
+  logMediaDiagnostic("storage.image.validation_started", { position, ...describeMediaFile(file) }, traceId);
   const validationError = validateImageFile(file);
-  if (validationError) throw new Error(validationError);
+  if (validationError) {
+    logMediaDiagnostic("storage.image.validation_rejected", { position, validationError }, traceId);
+    throw new Error(validationError);
+  }
   // Convert HEIC/HEIF (iOS default) to JPEG when running on the web.
-  const finalFile = await prepareImageForUpload(file);
+  let finalFile: File;
+  try {
+    logMediaDiagnostic("storage.image.prepare_started", { position }, traceId);
+    finalFile = await prepareImageForUpload(file);
+    logMediaDiagnostic("storage.image.prepare_completed", { position, ...describeMediaFile(finalFile) }, traceId);
+  } catch (error) {
+    logMediaError("storage.image.prepare_failed", error, { position }, traceId);
+    throw error;
+  }
   const ext = finalFile.name.split(".").pop();
   const path = `${userId}/${itemId}/${position}.${ext}`;
 
+  logMediaDiagnostic("storage.image.upload_started", { position, extension: ext || "unknown" }, traceId);
   const { error: uploadError } = await supabase.storage
     .from("item-images")
     .upload(path, finalFile, { upsert: true, contentType: finalFile.type });
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    logMediaError("storage.image.upload_failed", uploadError, { position }, traceId);
+    throw uploadError;
+  }
+  logMediaDiagnostic("storage.image.upload_completed", { position }, traceId);
 
   const { data } = supabase.storage.from("item-images").getPublicUrl(path);
   const imageUrl = data.publicUrl;
 
-  const { error: dbError } = await supabase
+  const imageData = {
+    item_id: itemId,
+    image_url: imageUrl,
+    position,
+    focal_x: focalPoint?.focal_x ?? 50,
+    focal_y: focalPoint?.focal_y ?? 50,
+  };
+  const { data: existing, error: lookupError } = await supabase
     .from("item_images")
-    .insert({
-      item_id: itemId,
-      image_url: imageUrl,
-      position,
-      focal_x: focalPoint?.focal_x ?? 50,
-      focal_y: focalPoint?.focal_y ?? 50,
-    });
-  if (dbError) throw dbError;
+    .select("id")
+    .eq("item_id", itemId)
+    .eq("position", position)
+    .maybeSingle();
+  if (lookupError) {
+    logMediaError("storage.image.record_lookup_failed", lookupError, { position }, traceId);
+    throw lookupError;
+  }
+
+  logMediaDiagnostic("storage.image.record_write_started", { position, mode: existing ? "update" : "insert" }, traceId);
+  const { error: dbError } = existing
+    ? await supabase.from("item_images").update(imageData).eq("id", existing.id)
+    : await supabase.from("item_images").insert(imageData);
+  if (dbError) {
+    logMediaError("storage.image.record_write_failed", dbError, { position }, traceId);
+    throw dbError;
+  }
+  logMediaDiagnostic("storage.image.record_write_completed", { position }, traceId);
 
   return imageUrl;
 };
@@ -192,6 +233,12 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
 
   let rows = ((data || []) as any[]).filter((i) => !blockedIds.includes(i.user_id));
   let items = await hydrateRows(rows);
+
+  if (items.length < 3) {
+    const fallbackItems = await hydrateRows(await loadFallbackRows());
+    const seen = new Set(items.map((item) => item.id));
+    items = [...items, ...fallbackItems.filter((item) => !seen.has(item.id))];
+  }
 
   // Fallback after hydration: the RPC can return only items without photos,
   // which are hidden from Explorar. In that case, load active photographed items.

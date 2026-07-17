@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+token="$(security find-generic-password -s hypou-supabase-cli-token -w)"
+SUPABASE_ACCESS_TOKEN="$token" command supabase "$@"

@@ -38,7 +38,10 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
       });
       queryClient.invalidateQueries({ queryKey: ["match-rating"] });
       queryClient.invalidateQueries({ queryKey: ["user-rating"] });
+      queryClient.invalidateQueries({ queryKey: ["user-ratings-list"] });
       queryClient.invalidateQueries({ queryKey: ["profile-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
+      queryClient.invalidateQueries({ queryKey: ["match", matchId] });
       toast({ title: "Avaliação enviada!" });
       onClose();
     } catch (err: any) {

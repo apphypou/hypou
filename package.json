@@ -29,6 +29,7 @@
     "db:types": "supabase gen types typescript --project-id gfvqympaaglkplzbocbl --schema public > src/integrations/supabase/types.ts",
     "db:dump": "supabase db dump --schema public --schema storage --file /tmp/hypou-remote-schema.sql",
     "db:contracts": "node scripts/db-contract-smoke.mjs",
+    "calls:bot": "node scripts/livekit-callee-bot.mjs",
     "db:diff": "supabase db diff --schema public",
     "db:migrations": "supabase migration list",
     "preview": "vite preview",

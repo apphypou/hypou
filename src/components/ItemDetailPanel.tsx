@@ -53,18 +53,18 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
         <span className="text-[10px] font-bold uppercase tracking-widest">Recolher</span>
       </button>
 
-      <div className="rounded-2xl bg-card/40 backdrop-blur-2xl border border-primary/20 p-4 space-y-5">
+      <div className="swipe-detail-surface-card rounded-2xl backdrop-blur-2xl border p-4 space-y-5">
 
         {/* Price + tags */}
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-2xl font-extrabold text-primary tracking-tight">
+          <span className="swipe-detail-price text-2xl font-extrabold tracking-tight">
             {formatValue(item.market_value)}
           </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.1em] uppercase">
+          <span className="swipe-detail-pill px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">
             {item.category}
           </span>
           {conditionLabel && (
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-foreground/70 text-[10px] font-bold uppercase">
+            <span className="swipe-detail-pill flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
               <Package className="h-3 w-3" />
               {conditionLabel}
             </span>
@@ -73,8 +73,8 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
 
         {/* Location */}
         <div className="flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="text-muted-foreground text-sm">
+          <MapPin className="h-3.5 w-3.5 swipe-detail-icon" />
+          <span className="swipe-detail-body text-sm">
             {item.location || ownerProfile?.location || "Local não informado"}
           </span>
         </div>
@@ -82,10 +82,10 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
         {/* Description */}
         {item.description && (
           <div>
-            <h3 className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-2">
+            <h3 className="swipe-detail-label text-xs font-bold uppercase tracking-widest mb-2">
               Descrição
             </h3>
-            <p className="text-foreground/80 text-sm leading-relaxed">
+            <p className="swipe-detail-body text-sm leading-relaxed">
               {item.description}
             </p>
           </div>
@@ -94,10 +94,10 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
         {/* Margin info */}
         {(item.margin_down > 0 || item.margin_up > 0) && (
           <div>
-            <h3 className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-2">
+            <h3 className="swipe-detail-label text-xs font-bold uppercase tracking-widest mb-2">
               Faixa de Troca
             </h3>
-            <p className="text-foreground/70 text-sm">
+            <p className="swipe-detail-body text-sm">
               {formatValue(item.market_value - (item.margin_down || 0))} — {formatValue(item.market_value + (item.margin_up || 0))}
             </p>
           </div>
@@ -106,12 +106,12 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
         {/* Owner profile section */}
         {ownerProfile && (
           <div>
-            <h3 className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-3">
+            <h3 className="swipe-detail-label text-xs font-bold uppercase tracking-widest mb-3">
               Anunciante
             </h3>
             <button
               onClick={() => navigate(`/usuario/${ownerProfile.user_id}`)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl bg-background border border-border hover:border-primary/30 transition-all group"
+              className="swipe-detail-surface-card w-full flex items-center gap-3 p-3 rounded-xl border transition-all group"
             >
               {ownerProfile.avatar_url ? (
                 <img
@@ -120,18 +120,18 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
                   className="h-12 w-12 rounded-full object-cover border-2 border-primary/20"
                 />
               ) : (
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center border-2 border-primary/20">
-                  <span className="text-lg font-bold text-foreground/30">
+                <div className="h-12 w-12 rounded-full bg-white/15 flex items-center justify-center border-2 border-white/24">
+                  <span className="swipe-detail-body text-lg font-bold">
                     {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
                   </span>
                 </div>
               )}
               <div className="flex-1 text-left">
-                <p className="text-foreground font-bold text-sm">
+                <p className="swipe-detail-body font-bold text-sm">
                   {ownerProfile.display_name || "Usuário"}
                 </p>
                 {ownerProfile.location && (
-                  <p className="text-muted-foreground text-xs flex items-center gap-1">
+                  <p className="swipe-detail-label text-xs flex items-center gap-1">
                     <MapPin className="h-3 w-3" /> {ownerProfile.location}
                   </p>
                 )}
@@ -139,11 +139,11 @@ const ItemDetailPanel = ({ item, onCollapse }: ItemDetailPanelProps) => {
                   <div className="flex items-center gap-1 mt-0.5">
                     <Star className="h-3 w-3 text-primary fill-primary" />
                     <span className="text-xs font-semibold text-primary">{rating.average}</span>
-                    <span className="text-[10px] text-muted-foreground">({rating.count})</span>
+                    <span className="swipe-detail-label text-[10px]">({rating.count})</span>
                   </div>
                 )}
               </div>
-              <ChevronRight className="h-4 w-4 text-foreground/20 group-hover:text-primary transition-colors" />
+              <ChevronRight className="h-4 w-4 swipe-detail-icon transition-colors" />
             </button>
           </div>
         )}

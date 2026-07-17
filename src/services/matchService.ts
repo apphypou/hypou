@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getBlockedUserIds } from "@/services/reportService";
 
 export interface MatchWithDetails {
   id: string;
@@ -7,6 +6,9 @@ export interface MatchWithDetails {
   created_at: string;
   cash_amount_cents?: number;
   cash_payer_user_id?: string | null;
+  cancelled_at?: string | null;
+  cancelled_by?: string | null;
+  cancellation_reason?: string | null;
   confirmed_by_a?: boolean;
   confirmed_by_b?: boolean;
   item_a: {
@@ -51,37 +53,10 @@ export interface MatchWithDetails {
 }
 
 export const getMatches = async (userId: string): Promise<MatchWithDetails[]> => {
-  const { data: rpcMatches, error: rpcError } = await supabase.rpc("get_my_matches" as any);
-
-  if (!rpcError) {
-    return ((rpcMatches || []) as any[]).map((m) => {
-      const otherUserId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
-      return {
-        id: m.id,
-        status: m.status,
-        created_at: m.created_at,
-        cash_amount_cents: m.cash_amount_cents || 0,
-        cash_payer_user_id: m.cash_payer_user_id || null,
-        confirmed_by_a: m.confirmed_by_a,
-        confirmed_by_b: m.confirmed_by_b,
-        item_a: m.item_a,
-        item_b: m.item_b,
-        items_a: m.items_a || (m.item_a ? [m.item_a] : []),
-        items_b: m.items_b || (m.item_b ? [m.item_b] : []),
-        other_user: m.other_user?.user_id
-          ? m.other_user
-          : { user_id: otherUserId, display_name: null, avatar_url: null, location: null },
-        my_item_side: m.my_item_side === "a" ? "a" : "b",
-      };
-    });
-  }
-
-  const blockedIds = await getBlockedUserIds(userId);
-
   const { data, error } = await supabase
     .from("matches")
     .select(`
-      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id,
+      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id, cancelled_at, cancelled_by, cancellation_reason,
       item_a:item_a_id (id, name, market_value, category, location, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, category, location, item_images (image_url, position))
     `)
@@ -90,13 +65,8 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 
   if (error) throw error;
 
-  // Filter out matches with blocked users
-  const filteredData = blockedIds.length > 0
-    ? (data || []).filter((m: any) => {
-        const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
-        return !blockedIds.includes(otherId);
-      })
-    : (data || []);
+  // Conversations remain available after a block for safety, moderation and evidence.
+  const filteredData = data || [];
 
   const otherUserIds = filteredData.map((m: any) =>
     m.user_a_id === userId ? m.user_b_id : m.user_a_id
@@ -145,6 +115,9 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
       created_at: m.created_at,
       cash_amount_cents: m.cash_amount_cents || 0,
       cash_payer_user_id: m.cash_payer_user_id || null,
+      cancelled_at: m.cancelled_at || null,
+      cancelled_by: m.cancelled_by || null,
+      cancellation_reason: m.cancellation_reason || null,
       confirmed_by_a: m.confirmed_by_a,
       confirmed_by_b: m.confirmed_by_b,
       item_a: m.item_a,
@@ -189,97 +162,38 @@ export const getProposalErrorMessage = (error: { code?: string; message?: string
   return message;
 };
 
-export const acceptProposal = async (matchId: string, currentUserId: string) => {
-  const { data: match, error: fetchErr } = await supabase
-    .from("matches")
-    .select("user_b_id, status")
-    .eq("id", matchId)
-    .single();
-
-  if (fetchErr || !match) throw new Error("Proposta não encontrada");
-  if (match.user_b_id !== currentUserId) throw new Error("Apenas o dono do item pode aceitar a proposta");
-  if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
-
-  const { error: updateError } = await supabase
-    .from("matches")
-    .update({ status: "accepted" })
-    .eq("id", matchId)
-    .eq("status", "proposal");
-  if (updateError) throw updateError;
-
-  // H5: conversa é criada server-side via trigger create_conversation_on_accept (idempotente)
+export const acceptProposal = async (matchId: string) => {
+  const { data, error } = await supabase.rpc("accept_match", { p_match_id: matchId });
+  if (error) throw error;
+  if (!data) throw new Error("Não foi possível aceitar esta proposta");
 };
 
-export const rejectProposal = async (matchId: string, currentUserId: string) => {
-  const { data: match, error: fetchErr } = await supabase
-    .from("matches")
-    .select("user_b_id, status")
-    .eq("id", matchId)
-    .single();
-
-  if (fetchErr || !match) throw new Error("Proposta não encontrada");
-  if (match.user_b_id !== currentUserId) throw new Error("Apenas o dono do item pode recusar a proposta");
-  if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
-
-  const { error } = await supabase
-    .from("matches")
-    .update({ status: "rejected" })
-    .eq("id", matchId)
-    .eq("status", "proposal");
+export const rejectProposal = async (matchId: string) => {
+  const { data, error } = await supabase.rpc("reject_match", { p_match_id: matchId });
   if (error) throw error;
+  if (!data) throw new Error("Não foi possível recusar esta proposta");
 };
 
-export const cancelProposal = async (matchId: string, currentUserId: string) => {
-  const { data: match, error: fetchErr } = await supabase
-    .from("matches")
-    .select("user_a_id, status")
-    .eq("id", matchId)
-    .single();
+export const cancelProposal = async (matchId: string) => {
+  const { data, error } = await supabase.rpc("cancel_match" as any, {
+    p_match_id: matchId,
+  });
 
-  if (fetchErr || !match) throw new Error("Proposta não encontrada");
-  if (match.user_a_id !== currentUserId) throw new Error("Apenas quem enviou pode cancelar a proposta");
-  if (match.status !== "proposal") throw new Error("Esta proposta já foi respondida");
-
-  // C3: registra como 'cancelled' (não 'rejected')
-  const { error } = await supabase
-    .from("matches")
-    .update({ status: "cancelled" })
-    .eq("id", matchId)
-    .eq("status", "proposal");
   if (error) throw error;
+  if (!data) throw new Error("Não foi possível cancelar esta negociação");
 };
 
-export const confirmTrade = async (matchId: string, userId: string) => {
-  const { data: match, error: fetchErr } = await supabase
-    .from("matches")
-    .select("user_a_id, user_b_id, status, confirmed_by_a, confirmed_by_b")
-    .eq("id", matchId)
-    .single();
-
-  if (fetchErr || !match) throw new Error("Troca não encontrada");
-  if (match.status !== "accepted") throw new Error("Esta troca não pode ser confirmada");
-
-  const isUserA = match.user_a_id === userId;
-  const isUserB = match.user_b_id === userId;
-  if (!isUserA && !isUserB) throw new Error("Você não faz parte desta troca");
-
-  const updateField = isUserA ? "confirmed_by_a" : "confirmed_by_b";
-  // H4: idempotente — evita UPDATEs redundantes e ruído de realtime
-  if ((isUserA && (match as any).confirmed_by_a) || (isUserB && (match as any).confirmed_by_b)) return;
-
-  const { error } = await supabase
-    .from("matches")
-    .update({ [updateField]: true })
-    .eq("id", matchId)
-    .eq(updateField, false);
+export const confirmTrade = async (matchId: string) => {
+  const { data, error } = await supabase.rpc("confirm_trade_delivery", { p_match_id: matchId });
   if (error) throw error;
+  if (!data) throw new Error("Não foi possível confirmar esta troca");
 };
 
 export const getMatch = async (matchId: string, userId: string): Promise<MatchWithDetails | null> => {
   const { data, error } = await supabase
     .from("matches")
     .select(`
-      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id,
+      id, status, created_at, updated_at, user_a_id, user_b_id, confirmed_by_a, confirmed_by_b, cash_amount_cents, cash_payer_user_id, cancelled_at, cancelled_by, cancellation_reason,
       item_a:item_a_id (id, name, market_value, category, location, item_images (image_url, position)),
       item_b:item_b_id (id, name, market_value, category, location, item_images (image_url, position))
     `)
@@ -290,10 +204,6 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
 
   const isUserA = data.user_a_id === userId;
   const otherUserId = isUserA ? data.user_b_id : data.user_a_id;
-
-  // M14: filtra match com usuário bloqueado
-  const blockedIds = await getBlockedUserIds(userId);
-  if (blockedIds.includes(otherUserId)) return null;
 
   const { data: profile } = await supabase
     .from("public_profiles" as any)
@@ -307,6 +217,9 @@ export const getMatch = async (matchId: string, userId: string): Promise<MatchWi
     created_at: data.created_at,
     cash_amount_cents: (data as any).cash_amount_cents || 0,
     cash_payer_user_id: (data as any).cash_payer_user_id || null,
+    cancelled_at: (data as any).cancelled_at || null,
+    cancelled_by: (data as any).cancelled_by || null,
+    cancellation_reason: (data as any).cancellation_reason || null,
     confirmed_by_a: (data as any).confirmed_by_a,
     confirmed_by_b: (data as any).confirmed_by_b,
     item_a: data.item_a as any,

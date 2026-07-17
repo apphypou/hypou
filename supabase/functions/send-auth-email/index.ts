@@ -49,23 +49,44 @@ function buildConfirmationUrl(p: AuthEmailPayload): string {
   return `${base}/auth/v1/verify?token=${token_hash}&type=${type}&redirect_to=${encodeURIComponent(redirect)}`;
 }
 
-function renderEmail(p: AuthEmailPayload): { subject: string; html: string } {
-  const url = buildConfirmationUrl(p);
+function renderPlainText(p: AuthEmailPayload): string {
   const token = p.email_data.token;
+
   switch (p.email_data.email_action_type) {
     case "recovery":
-      return recoveryTemplate(url, token);
+      return `Redefinir senha no Hypou\n\nSeu código é: ${token}\n\nDigite este código no app. Ele expira em 1 hora.`;
     case "magiclink":
-      return magicLinkTemplate(url, token);
+      return `Entrar no Hypou\n\nSeu código é: ${token}\n\nDigite este código no app. Ele expira em 1 hora.`;
     case "invite":
-      return inviteTemplate(url, token);
+      return `Convite para o Hypou\n\nSeu código é: ${token}\n\nDigite este código no app. Ele expira em 1 hora.`;
     case "email_change":
     case "email_change_current":
     case "email_change_new":
-      return emailChangeTemplate(url, token);
+      return `Confirmar novo e-mail no Hypou\n\nSeu código é: ${token}\n\nDigite este código no app. Ele expira em 1 hora.`;
     case "signup":
     default:
-      return signupTemplate(url, token);
+      return `Bem-vindo ao Hypou\n\nSeu código de confirmação é: ${token}\n\nDigite este código no app. Ele expira em 1 hora.`;
+  }
+}
+
+function renderEmail(p: AuthEmailPayload): { subject: string; html: string; text: string } {
+  const url = buildConfirmationUrl(p);
+  const token = p.email_data.token;
+  const text = renderPlainText(p);
+  switch (p.email_data.email_action_type) {
+    case "recovery":
+      return { ...recoveryTemplate(url, token), text };
+    case "magiclink":
+      return { ...magicLinkTemplate(url, token), text };
+    case "invite":
+      return { ...inviteTemplate(url, token), text };
+    case "email_change":
+    case "email_change_current":
+    case "email_change_new":
+      return { ...emailChangeTemplate(url, token), text };
+    case "signup":
+    default:
+      return { ...signupTemplate(url, token), text };
   }
 }
 
@@ -90,7 +111,7 @@ Deno.serve(async (req) => {
     const wh = new Webhook(secret);
     const payload = wh.verify(payloadRaw, headers) as AuthEmailPayload;
 
-    const { subject, html } = renderEmail(payload);
+    const { subject, html, text } = renderEmail(payload);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -103,6 +124,7 @@ Deno.serve(async (req) => {
         to: [payload.user.email],
         subject,
         html,
+        text,
       }),
     });
 

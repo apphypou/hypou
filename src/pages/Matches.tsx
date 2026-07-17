@@ -20,6 +20,18 @@ import { cdnMedium, cdnThumb } from "@/lib/imageUrl";
 import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
+import { getTradeConfirmationState } from "@/lib/tradeConfirmation";
+import { getTradeBadge } from "@/lib/tradeStatus";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Matches = () => {
   const { data: matches = [], isLoading } = useMatches();
@@ -37,6 +49,7 @@ const Matches = () => {
   const [activeTab, setActiveTab] = useState<"received" | "sent" | "cancelled" | "completed">("received");
   const [showRating, setShowRating] = useState(false);
   const [openingChatMatchId, setOpeningChatMatchId] = useState<string | null>(null);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   // Rating check for completed matches
   const selectedMatchId = selectedMatch?.id;
@@ -61,7 +74,7 @@ const Matches = () => {
     if (!selectedMatch || rejecting) return;
     setRejecting(true);
     try {
-      await rejectProposal(selectedMatch.id, user!.id);
+      await rejectProposal(selectedMatch.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       toast({ title: "Proposta recusada" });
@@ -70,18 +83,18 @@ const Matches = () => {
     } finally {
       setRejecting(false);
     }
-  }, [selectedMatch, rejecting, queryClient, toast]);
+  }, [selectedMatch, rejecting, queryClient, toast, user]);
 
   const handleCancelProposal = useCallback(async () => {
     if (!selectedMatch || cancelling) return;
     setCancelling(true);
     try {
-      await cancelProposal(selectedMatch.id, user!.id);
+      await cancelProposal(selectedMatch.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
-      toast({ title: "Proposta cancelada" });
+      toast({ title: selectedMatch.status === "accepted" ? "Negociação cancelada" : "Proposta cancelada" });
     } catch (err: any) {
-      toast({ title: "Erro ao cancelar proposta", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao cancelar negociação", description: err.message, variant: "destructive" });
     } finally {
       setCancelling(false);
     }
@@ -90,7 +103,7 @@ const Matches = () => {
     if (!selectedMatch || confirmingTrade) return;
     setConfirmingTrade(true);
     try {
-      await confirmTrade(selectedMatch.id, user!.id);
+      await confirmTrade(selectedMatch.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       // Re-fetch the match to check if it transitioned to completed
       const updatedMatch = await getMatch(selectedMatch.id, user!.id);
@@ -136,21 +149,10 @@ const Matches = () => {
   const isSentProposal = (match: MatchWithDetails) =>
     match.status === "proposal" && match.my_item_side === "a";
 
-  const getBadge = (match: MatchWithDetails): { label: string; color: "new" | "accepted" | "pending" | "sent" | "completed" | "cancelled" } | null => {
-    if (match.status === "completed") return { label: "Concluída", color: "completed" };
-    if (match.status === "cancelled") return { label: "Indisponível", color: "cancelled" };
-    if (match.status === "rejected") return { label: "Recusada", color: "cancelled" };
-    if (match.status === "accepted") return { label: "Em negociação", color: "accepted" };
-    if (isSentProposal(match)) return { label: "Enviada", color: "sent" };
-    const age = Date.now() - new Date(match.created_at).getTime();
-    if (age < 24 * 60 * 60 * 1000) return { label: "Nova Proposta", color: "new" };
-    return { label: "Pendente", color: "pending" };
-  };
-
   const badgeStyles: Record<string, string> = {
     new: "bg-primary text-primary-foreground border-primary/50",
     accepted: "bg-success text-on-media border-success/50",
-    pending: "bg-foreground/10 text-foreground/70 border-foreground/20",
+    pending: "bg-black/70 text-white border-white/35 backdrop-blur-md shadow-lg",
     sent: "bg-amber-500 text-on-media border-amber-600",
     completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
     cancelled: "bg-muted text-muted-foreground border-foreground/10",
@@ -160,7 +162,7 @@ const Matches = () => {
     if (!selectedMatch || confirming) return;
     setConfirming(true);
     try {
-      await acceptProposal(selectedMatch.id, user!.id);
+      await acceptProposal(selectedMatch.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       navigate(`/match/${selectedMatch.id}`);
@@ -169,7 +171,7 @@ const Matches = () => {
     } finally {
       setConfirming(false);
     }
-  }, [selectedMatch, confirming, queryClient, navigate, toast]);
+  }, [selectedMatch, confirming, queryClient, navigate, toast, user]);
 
   const otherItem = selectedMatch
     ? selectedMatch.my_item_side === "a" ? selectedMatch.item_b : selectedMatch.item_a
@@ -205,6 +207,10 @@ const Matches = () => {
   );
   const cancelledMatches = useMemo(() => matches.filter((m) => m.status === "rejected" || m.status === "cancelled"), [matches]);
   const completedMatches = useMemo(() => matches.filter((m) => m.status === "completed"), [matches]);
+  const pendingMyConfirmationMatches = useMemo(
+    () => matches.filter((m) => getTradeConfirmationState(m).needsMyConfirmation),
+    [matches],
+  );
   const displayedMatches =
     activeTab === "received" ? receivedMatches
     : activeTab === "sent" ? sentMatches
@@ -274,6 +280,23 @@ const Matches = () => {
 
       {/* Main Content */}
       <main className="relative flex-1 w-full px-4 overflow-y-auto no-scrollbar z-10 pb-28">
+        {pendingMyConfirmationMatches.length > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab(pendingMyConfirmationMatches[0].my_item_side === "a" ? "sent" : "received");
+              setSelectedMatch(pendingMyConfirmationMatches[0]);
+            }}
+            className="mb-4 w-full rounded-2xl border border-primary/25 bg-primary/10 px-4 py-3 text-left active:scale-[0.99]"
+          >
+            <span className="block text-sm font-bold text-primary">Aguardando sua confirmação</span>
+            <span className="text-sm text-muted-foreground">
+              {pendingMyConfirmationMatches.length === 1
+                ? "A outra pessoa marcou uma troca como concluída."
+                : `${pendingMyConfirmationMatches.length} trocas foram marcadas como concluídas pela outra pessoa.`}
+            </span>
+          </button>
+        )}
 
         {isLoading ? (
           <div className="flex flex-col gap-4 py-2">
@@ -318,7 +341,13 @@ const Matches = () => {
             {displayedMatches.map((match) => {
               const otherItemCard = match.my_item_side === "a" ? match.item_b : match.item_a;
               const mainImage = otherItemCard?.item_images?.[0]?.image_url;
-              const badge = getBadge(match);
+              const badge = getTradeBadge({
+                status: match.status,
+                cancellationReason: match.cancellation_reason,
+                isSentProposal: isSentProposal(match),
+                createdAt: match.created_at,
+              });
+              const needsMyConfirmation = getTradeConfirmationState(match).needsMyConfirmation;
 
               return (
                 <GlassCard
@@ -338,8 +367,8 @@ const Matches = () => {
                     )}
                     
                     {badge && (
-                      <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full border text-[10px] font-bold tracking-wider uppercase ${badgeStyles[badge.color]}`}>
-                        {badge.label}
+                      <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full border text-[10px] font-bold tracking-wider uppercase ${badgeStyles[badge.tone]}`}>
+                        {needsMyConfirmation ? "Confirmar entrega" : badge.label}
                       </div>
                     )}
                   </div>
@@ -431,7 +460,10 @@ const Matches = () => {
                 {otherImages[0]?.image_url ? (
                   <button
                     type="button"
-                    onClick={() => setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" })}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" });
+                    }}
                     className="absolute inset-0 h-full w-full"
                   >
                     <img
@@ -516,7 +548,10 @@ const Matches = () => {
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <button type="button" onClick={() => setMediaViewer({ url: img, type: "image", alt: it.name })} className="h-full w-full">
+                                    <button type="button" onClick={(event) => {
+                                      event.stopPropagation();
+                                      setMediaViewer({ url: img, type: "image", alt: it.name });
+                                    }} className="h-full w-full">
                                       <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
                                     </button>
                                   ) : (
@@ -536,7 +571,10 @@ const Matches = () => {
                         <>
                           <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
                             {myImages[0]?.image_url ? (
-                              <button type="button" onClick={() => setMediaViewer({ url: myImages[0].image_url, type: "image", alt: myItem?.name || "Item" })} className="h-full w-full">
+                              <button type="button" onClick={(event) => {
+                                event.stopPropagation();
+                                setMediaViewer({ url: myImages[0].image_url, type: "image", alt: myItem?.name || "Item" });
+                              }} className="h-full w-full">
                                 <img src={cdnMedium(myImages[0].image_url)} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
                               </button>
                             ) : (
@@ -569,7 +607,10 @@ const Matches = () => {
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <button type="button" onClick={() => setMediaViewer({ url: img, type: "image", alt: it.name })} className="h-full w-full">
+                                    <button type="button" onClick={(event) => {
+                                      event.stopPropagation();
+                                      setMediaViewer({ url: img, type: "image", alt: it.name });
+                                    }} className="h-full w-full">
                                       <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
                                     </button>
                                   ) : (
@@ -589,7 +630,10 @@ const Matches = () => {
                         <>
                           <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
                             {otherImages[0]?.image_url ? (
-                              <button type="button" onClick={() => setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" })} className="h-full w-full">
+                              <button type="button" onClick={(event) => {
+                                event.stopPropagation();
+                                setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" });
+                              }} className="h-full w-full">
                                 <img src={cdnMedium(otherImages[0].image_url)} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
                               </button>
                             ) : (
@@ -645,7 +689,10 @@ const Matches = () => {
                     <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-3">Mais fotos</p>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar">
                       {otherImages.slice(1).map((img, i) => (
-                        <button key={i} onClick={() => setMediaViewer({ url: img.image_url, type: "image", alt: otherItem?.name || "Foto do item" })} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
+                        <button key={i} onClick={(event) => {
+                          event.stopPropagation();
+                          setMediaViewer({ url: img.image_url, type: "image", alt: otherItem?.name || "Foto do item" });
+                        }} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
                           <img src={cdnMedium(img.image_url)} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}
@@ -677,40 +724,49 @@ const Matches = () => {
                   )}
                 </div>
               ) : selectedMatch.status === "accepted" ? (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => handleOpenChat(selectedMatch.id)}
-                    disabled={openingChatMatchId === selectedMatch.id}
-                    className="flex-1 h-14 rounded-2xl bg-card border border-foreground/10 text-foreground font-bold text-base flex items-center justify-center gap-2"
-                  >
-                    {openingChatMatchId === selectedMatch.id ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <MessageSquare className="h-5 w-5" />
-                    )}
-                    Chat
-                  </button>
-                  {!myConfirmed ? (
+                <div className="space-y-3">
+                  <div className="flex gap-3">
                     <button
-                      onClick={handleConfirmTrade}
-                      disabled={confirmingTrade}
-                      className="flex-[2] h-14 rounded-2xl bg-success text-on-media font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(142_71%_45%/0.3)] disabled:opacity-50"
+                      onClick={() => handleOpenChat(selectedMatch.id)}
+                      disabled={openingChatMatchId === selectedMatch.id}
+                      className="flex-1 h-14 rounded-2xl bg-card border border-foreground/10 text-foreground font-bold text-base flex items-center justify-center gap-2"
                     >
-                      {confirmingTrade ? (
+                      {openingChatMatchId === selectedMatch.id ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
                       ) : (
-                        <>
-                          <CheckCircle2 className="h-5 w-5" />
-                          Confirmar Troca
-                        </>
+                        <MessageSquare className="h-5 w-5" />
                       )}
+                      Chat
                     </button>
-                  ) : (
-                    <div className="flex-[2] h-14 rounded-2xl bg-success/10 border border-success/20 text-success font-bold text-sm flex items-center justify-center gap-2">
-                      <CheckCircle2 className="h-5 w-5" />
-                      Aguardando outro confirmar
-                    </div>
-                  )}
+                    {!myConfirmed ? (
+                      <button
+                        onClick={handleConfirmTrade}
+                        disabled={confirmingTrade}
+                        className="flex-[2] h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_hsl(var(--primary)/0.35)] disabled:opacity-50"
+                      >
+                        {confirmingTrade ? (
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-5 w-5" />
+                            Confirmar Troca
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <div className="flex-[2] h-14 rounded-2xl bg-success/10 border border-success/20 text-success font-bold text-sm flex items-center justify-center gap-2">
+                        <CheckCircle2 className="h-5 w-5" />
+                        Aguardando outro confirmar
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setCancelDialogOpen(true)}
+                    disabled={cancelling}
+                    className="w-full h-11 rounded-2xl border border-destructive/30 bg-destructive/10 text-destructive text-sm font-bold disabled:opacity-50"
+                  >
+                    {cancelling ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Desistir da negociação"}
+                  </button>
                 </div>
               ) : selectedMatch.status === "rejected" ? (
                 <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-lg flex items-center justify-center">
@@ -718,7 +774,10 @@ const Matches = () => {
                 </div>
               ) : selectedMatch.status === "cancelled" ? (
                 <div className="w-full h-14 rounded-2xl bg-muted text-muted-foreground font-bold text-base flex items-center justify-center text-center px-4">
-                  Item indisponível — já trocado em outra negociação
+                  {getTradeBadge({
+                    status: selectedMatch.status,
+                    cancellationReason: selectedMatch.cancellation_reason,
+                  })?.detail}
                 </div>
               ) : isSentProposal(selectedMatch) ? (
                 <div className="space-y-3">
@@ -727,7 +786,7 @@ const Matches = () => {
                     Aguardando resposta
                   </div>
                   <button
-                    onClick={handleCancelProposal}
+                    onClick={() => setCancelDialogOpen(true)}
                     disabled={cancelling}
                     className="w-full h-14 rounded-2xl bg-card border border-foreground/10 text-foreground/70 font-bold text-base flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-50"
                   >
@@ -779,6 +838,31 @@ const Matches = () => {
       </AnimatePresence>
 
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
+
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {selectedMatch?.status === "accepted" ? "Desistir desta negociação?" : "Cancelar esta proposta?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedMatch?.status === "accepted"
+                ? "Use esta opção somente antes da entrega física. A conversa ficará preservada no histórico."
+                : "A outra pessoa não poderá mais aceitar esta proposta."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={cancelling}
+              onClick={handleCancelProposal}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling ? "Cancelando..." : "Confirmar desistência"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Rating Dialog */}
       {user && selectedMatch && otherUserId && (

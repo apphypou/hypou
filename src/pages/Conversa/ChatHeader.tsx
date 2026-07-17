@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2, Phone, Video, MoreVertical, Flag, Ban, Star } from "lucide-react";
+import { Archive, ArrowLeft, Loader2, Phone, Video, MoreVertical, Flag, Ban, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -20,6 +20,8 @@ interface ChatHeaderProps {
   onOpenReport: () => void;
   onOpenBlock: () => void;
   onOpenRate?: () => void;
+  onArchiveConversation?: () => void;
+  archiving?: boolean;
   /** H13: quando true, esconde botões de chamada (chat encerrado) */
   locked?: boolean;
 }
@@ -32,6 +34,8 @@ export const ChatHeader = ({
   onOpenReport,
   onOpenBlock,
   onOpenRate,
+  onArchiveConversation,
+  archiving = false,
   locked = false,
 }: ChatHeaderProps) => {
   const navigate = useNavigate();
@@ -126,6 +130,16 @@ export const ChatHeader = ({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="bg-card border-foreground/10">
+              {onArchiveConversation && (
+                <DropdownMenuItem
+                  onClick={onArchiveConversation}
+                  disabled={archiving}
+                  className="text-foreground gap-2"
+                >
+                  {archiving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Archive className="h-4 w-4" />}
+                  Arquivar conversa
+                </DropdownMenuItem>
+              )}
               {onOpenRate && (
                 <DropdownMenuItem onClick={onOpenRate} className="text-foreground gap-2">
                   <Star className="h-4 w-4" />

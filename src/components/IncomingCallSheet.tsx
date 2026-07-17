@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useIncomingCalls } from "@/hooks/useIncomingCalls";
 import { acceptCall, declineCall, joinCall } from "@/services/callService";
 import { toast } from "@/hooks/use-toast";
+import { describeCallError, getCallRuntimeDiagnostics, preflightCallMedia } from "@/lib/callDiagnostics";
+import { startCallRingtone } from "@/lib/callRingtone";
 
 /**
  * Global overlay that listens for incoming calls and renders an Apple-style
@@ -14,26 +16,41 @@ export default function IncomingCallSheet() {
   const navigate = useNavigate();
   const { incoming, clear } = useIncomingCalls();
   const [busy, setBusy] = useState(false);
+  const incomingCallId = incoming?.id;
 
-  // Optional ringtone (silent if asset missing)
+  // Native push supplies the background sound; this covers an incoming call
+  // while the user is actively using the app.
   useEffect(() => {
-    if (!incoming) return;
-    const audio = new Audio("/ringtone.mp3");
-    audio.loop = true;
-    audio.volume = 0.6;
-    audio.play().catch(() => {/* autoplay blocked */});
-    return () => {
-      audio.pause();
-      audio.currentTime = 0;
-    };
-  }, [incoming?.id]);
+    if (!incomingCallId) return;
+    return startCallRingtone();
+  }, [incomingCallId]);
 
   const onAccept = async () => {
     if (!incoming || busy) return;
     setBusy(true);
     try {
+      console.info("[call] incoming-accept-request", {
+        callSessionId: incoming.id,
+        kind: incoming.kind,
+        conversationId: incoming.conversation_id,
+        runtime: getCallRuntimeDiagnostics(incoming.kind),
+      });
+      const media = await preflightCallMedia(incoming.kind);
+      console.info("[call] incoming-media-preflight-ok", {
+        callSessionId: incoming.id,
+        kind: incoming.kind,
+        media,
+      });
       await acceptCall(incoming.id);
       const tk = await joinCall(incoming.id);
+      console.info("[call] incoming-token-created", {
+        callSessionId: tk.call_session_id,
+        conversationId: tk.conversation_id,
+        kind: tk.kind,
+        urlHost: (() => {
+          try { return new URL(tk.url).host; } catch { return "invalid-url"; }
+        })(),
+      });
       clear();
       navigate(`/chamada/${tk.room_name}`, {
         state: {
@@ -46,6 +63,12 @@ export default function IncomingCallSheet() {
         },
       });
     } catch (e: any) {
+      console.error("[call] incoming-accept-failed", {
+        callSessionId: incoming.id,
+        kind: incoming.kind,
+        error: describeCallError(e),
+        runtime: getCallRuntimeDiagnostics(incoming.kind),
+      });
       toast({ title: "Não foi possível atender", description: e?.message ?? "Tente novamente", variant: "destructive" });
       clear();
     } finally {

@@ -93,6 +93,21 @@ export const submitRating = async (data: {
   score: number;
   comment?: string;
 }) => {
+  const { data: match, error: matchError } = await supabase
+    .from("matches")
+    .select("status, user_a_id, user_b_id")
+    .eq("id", data.match_id)
+    .maybeSingle();
+
+  if (matchError) throw matchError;
+  if (!match) throw new Error("Troca não encontrada");
+  if (match.status !== "completed") {
+    throw new Error("A avaliação estará disponível quando os dois confirmarem a entrega.");
+  }
+  if (data.rater_id !== match.user_a_id && data.rater_id !== match.user_b_id) {
+    throw new Error("Você não faz parte desta troca");
+  }
+
   const { error } = await supabase.from("ratings").insert(data);
   if (error) throw error;
 };

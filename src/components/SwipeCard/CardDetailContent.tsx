@@ -43,14 +43,14 @@ export const CardDetailContent = ({ item }: { item: any }) => {
   return (
     <div className="space-y-4 px-4 pb-6 pt-2">
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-2xl font-extrabold text-on-media tracking-tight drop-shadow-md">
+        <span className="swipe-detail-price text-2xl font-extrabold tracking-tight">
           {formatValue(item.market_value)}
         </span>
-        <span className="px-2.5 py-0.5 rounded-full bg-white/18 border border-white/25 text-white text-[10px] font-bold tracking-[0.1em] uppercase">
+        <span className="swipe-detail-pill px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-[0.1em] uppercase">
           {item.category}
         </span>
         {conditionLabel && (
-          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/14 text-white/86 text-[10px] font-bold uppercase">
+          <span className="swipe-detail-pill flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">
             <Package className="h-3 w-3" />
             {conditionLabel}
           </span>
@@ -58,27 +58,27 @@ export const CardDetailContent = ({ item }: { item: any }) => {
       </div>
 
       <div className="flex items-center gap-1.5">
-        <MapPin className="h-3.5 w-3.5 text-white/70" />
-        <span className="text-white/88 text-sm">
+        <MapPin className="h-3.5 w-3.5 swipe-detail-icon" />
+        <span className="swipe-detail-body text-sm">
           {item.location || ownerProfile?.location || "Local não informado"}
         </span>
       </div>
 
       {item.description && (
         <div>
-          <h3 className="text-[10px] font-bold text-white/58 uppercase tracking-widest mb-1.5">
+          <h3 className="swipe-detail-label text-[10px] font-bold uppercase tracking-widest mb-1.5">
             Descrição
           </h3>
-          <p className="text-white/92 text-sm leading-relaxed">{item.description}</p>
+          <p className="swipe-detail-body text-sm leading-relaxed">{item.description}</p>
         </div>
       )}
 
       {(item.margin_down > 0 || item.margin_up > 0) && (
         <div>
-          <h3 className="text-[10px] font-bold text-white/58 uppercase tracking-widest mb-1.5">
+          <h3 className="swipe-detail-label text-[10px] font-bold uppercase tracking-widest mb-1.5">
             Aceita trocar por
           </h3>
-          <p className="text-white/86 text-sm">
+          <p className="swipe-detail-body text-sm">
             Itens de {formatValue(Math.round(item.market_value * (1 - (item.margin_down || 0) / 100)))} até {formatValue(Math.round(item.market_value * (1 + (item.margin_up || 0) / 100)))}
           </p>
         </div>
@@ -86,7 +86,7 @@ export const CardDetailContent = ({ item }: { item: any }) => {
 
       {ownerProfile && (
         <div>
-          <h3 className="text-[10px] font-bold text-white/58 uppercase tracking-widest mb-2">
+          <h3 className="swipe-detail-label text-[10px] font-bold uppercase tracking-widest mb-2">
             Anunciante
           </h3>
           <button
@@ -94,7 +94,7 @@ export const CardDetailContent = ({ item }: { item: any }) => {
               e.stopPropagation();
               navigate(`/usuario/${ownerProfile.user_id}`);
             }}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/16 hover:border-white/24 transition-all group"
+            className="swipe-detail-surface-card w-full flex items-center gap-3 p-3 rounded-xl border hover:border-white/24 transition-all group"
           >
             {ownerProfile.avatar_url ? (
               <img
@@ -104,13 +104,13 @@ export const CardDetailContent = ({ item }: { item: any }) => {
               />
             ) : (
               <div className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center border-2 border-white/24">
-                <span className="text-base font-bold text-white/70">
+                <span className="swipe-detail-body text-base font-bold">
                   {(ownerProfile.display_name || "?")[0]?.toUpperCase()}
                 </span>
               </div>
             )}
             <div className="flex-1 text-left">
-              <p className="text-white font-bold text-sm">
+              <p className="swipe-detail-body font-bold text-sm">
                 {ownerProfile.display_name || "Usuário"}
               </p>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -118,26 +118,26 @@ export const CardDetailContent = ({ item }: { item: any }) => {
                   <div className="flex items-center gap-1">
                     <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
                     <span className="text-xs font-semibold text-yellow-400">{rating.average}</span>
-                    <span className="text-[10px] text-on-media/40">({rating.count})</span>
+                    <span className="swipe-detail-label text-[10px]">({rating.count})</span>
                   </div>
                 )}
                 {tradeCount > 0 && (
                   <div className="flex items-center gap-1">
-                    <Repeat className="h-3 w-3 text-white/50" />
-                    <span className="text-[10px] text-white/65">
+                    <Repeat className="h-3 w-3 swipe-detail-icon" />
+                    <span className="swipe-detail-label text-[10px]">
                       {tradeCount} {tradeCount === 1 ? "troca" : "trocas"}
                     </span>
                   </div>
                 )}
                 {memberSince && (
                   <div className="flex items-center gap-1">
-                    <Shield className="h-3 w-3 text-white/50" />
-                    <span className="text-[10px] text-white/65">{memberSince}</span>
+                    <Shield className="h-3 w-3 swipe-detail-icon" />
+                    <span className="swipe-detail-label text-[10px]">{memberSince}</span>
                   </div>
                 )}
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-white/36 group-hover:text-white/60 transition-colors" />
+            <ChevronRight className="h-4 w-4 swipe-detail-icon transition-colors" />
           </button>
         </div>
       )}
