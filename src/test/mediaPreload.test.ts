@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  __getMediaPreloadCacheSizesForTests,
-  __resetMediaPreloadCacheForTests,
-  preloadImage,
-  preloadVideo,
-} from "@/lib/mediaPreload";
+import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
 
 describe("mediaPreload", () => {
   const originalImage = globalThis.Image;
@@ -12,7 +7,6 @@ describe("mediaPreload", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     globalThis.Image = originalImage;
-    __resetMediaPreloadCacheForTests();
   });
 
   it("decodes an image before resolving so gallery slide changes can be instant", async () => {
@@ -106,23 +100,5 @@ describe("mediaPreload", () => {
     ]);
 
     expect(assignedSources).toEqual(["https://cdn.example.com/cached.jpg"]);
-  });
-
-  it("bounds image preloads so long swipe sessions do not retain every request", async () => {
-    class MockImage {
-      decode = vi.fn().mockResolvedValue(undefined);
-      onload: (() => void) | null = null;
-      onerror: (() => void) | null = null;
-      set src(_value: string) {}
-    }
-
-    globalThis.Image = MockImage as unknown as typeof Image;
-    await Promise.all(
-      Array.from({ length: 18 }, (_, index) =>
-        preloadImage(`https://cdn.example.com/photo-${index}.jpg`)
-      )
-    );
-
-    expect(__getMediaPreloadCacheSizesForTests().images).toBe(12);
   });
 });

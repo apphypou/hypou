@@ -35,16 +35,16 @@ describe("mobile visual layout", () => {
 
     expect(source).toContain("swipe-media-stage");
     expect(source).toContain('className="swipe-media-ambient"');
-    expect(source).toContain("swipe-media-foreground ${imageReady");
+    expect(source).toContain('className="swipe-media-foreground"');
     expect(source).toContain("getMediaAspectClass");
-    expect(source).toContain("getMediaObjectPosition(currentImageRecord)");
-    expect(source).toContain("objectPosition: currentObjectPosition");
+    expect(source).not.toContain("getMediaObjectPosition(currentImageRecord)");
+    expect(source).toContain('objectPosition: "50% 50%"');
     expect(source).toContain("onLoad={handleImageLoad}");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-foreground");
     expect(css).toContain("object-position: center center;");
     expect(css).toContain("transform: scale(1);");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-ambient");
-    expect(css).toContain("opacity: 0.48;");
+    expect(css).toContain("opacity: 0.62;");
     expect(css).toContain("object-fit: contain;");
     expect(source).not.toContain('className="w-full h-full object-cover object-center"');
   });
@@ -54,8 +54,7 @@ describe("mobile visual layout", () => {
 
     expect(source).toContain('style={{ top: "calc(var(--safe-area-top) + 2.85rem)" }}');
     expect(source).not.toContain("absolute top-0.5 left-1/2");
-    expect(source).toContain("swipe-media-video");
-    expect(source).toContain("swipe-media-poster");
+    expect(source).toContain("w-full h-full object-cover object-center transition-opacity");
   });
 
   it("places Explore price beside its truncating item title", () => {
@@ -111,7 +110,7 @@ describe("mobile visual layout", () => {
     expect(source).toContain("animate(y, 0");
     expect(source).toContain("y: standby ? 0 : y");
     expect(source).toContain("const standbyOpacity = useTransform(revealProgress, [0, 1], [0, 1]);");
-    expect(source).toContain("const standbyScale = useTransform(revealProgress, [0, 1], [0.985, 1]);");
+    expect(source).toContain("const standbyScale = useTransform(revealProgress, [0, 1], [0.97, 1]);");
     expect(source).toContain("standby ? { opacity: standbyOpacity } : {}");
   });
 
@@ -145,12 +144,12 @@ describe("mobile visual layout", () => {
 
     expect(card).toContain("swipe-edge-glass-bottom-compact");
     expect(source).toContain("--swipe-foreground-top-fade");
-    expect(source).toContain("rgba(0, 0, 0, 0.72) 8%");
-    expect(source).toContain("black 16%");
+    expect(source).toContain("rgba(0, 0, 0, 0.68) 22%");
+    expect(source).toContain("black 31%");
     expect(source).toContain("mask-image: var(--swipe-foreground-top-fade);");
     expect(source).toContain("-webkit-mask-image: var(--swipe-foreground-top-fade);");
-    expect(source).toContain("height: min(22%, 204px);");
-    expect(source).toContain("backdrop-filter: blur(8px) saturate(108%);");
+    expect(source).toContain("height: min(26%, 238px);");
+    expect(source).toContain("backdrop-filter: blur(10px) saturate(110%);");
     expect(source).toContain("rgba(9, 14, 22, 0.26)");
     expect(source).toContain("rgba(0, 0, 0, 0.76) 38%");
   });

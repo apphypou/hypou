@@ -19,15 +19,21 @@ export const SwipeOverlays = ({ x }: SwipeOverlaysProps) => {
   return (
     <>
       <motion.div
-        className="absolute inset-y-0 right-0 w-[34%] z-40 pointer-events-none bg-gradient-to-l from-hype/30 to-transparent"
+        className="absolute inset-0 z-40 pointer-events-none"
         style={{
           opacity: likeGlowOpacity,
+          boxShadow:
+            "inset 0 0 40px hsl(var(--hype) / 0.4), 0 0 30px hsl(var(--hype) / 0.3)",
+          border: "2px solid hsl(var(--hype) / 0.6)",
         }}
       />
       <motion.div
-        className="absolute inset-y-0 left-0 w-[34%] z-40 pointer-events-none bg-gradient-to-r from-flop/30 to-transparent"
+        className="absolute inset-0 z-40 pointer-events-none"
         style={{
           opacity: dislikeGlowOpacity,
+          boxShadow:
+            "inset 0 0 40px hsl(var(--flop) / 0.4), 0 0 30px hsl(var(--flop) / 0.3)",
+          border: "2px solid hsl(var(--flop) / 0.6)",
         }}
       />
 

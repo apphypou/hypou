@@ -32,20 +32,15 @@ import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
 import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
 import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
-import { getMediaObjectPosition } from "@/lib/mediaFrame";
 import { buildPublicItemUrl, shareContent } from "@/lib/share";
 import { measureImageTone, type MediaTone } from "@/lib/mediaContrast";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
 
-const MIN_SWIPE_THRESHOLD = 72;
-const MAX_SWIPE_THRESHOLD = 104;
+const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
 const EXIT_Y = 260;
-
-const getSwipeThreshold = (width: number) =>
-  Math.min(MAX_SWIPE_THRESHOLD, Math.max(MIN_SWIPE_THRESHOLD, width * 0.18));
 
 const STATE_ABBREVIATIONS: Record<string, string> = {
   acre: "AC",
@@ -126,17 +121,25 @@ const SwipeCard = memo(
       const navigate = useNavigate();
       const x = useMotionValue(0);
       const y = useMotionValue(0);
-      const rotate = useTransform(x, [-250, 0, 250], [-6, 0, 6]);
+      const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
       const revealSource = revealMotionX ?? x;
       const revealProgress = useTransform(revealSource, (value) =>
-        Math.min(Math.abs(value) / MIN_SWIPE_THRESHOLD, 1)
+        Math.min(Math.abs(value) / SWIPE_THRESHOLD, 1)
       );
       const standbyOpacity = useTransform(revealProgress, [0, 1], [0, 1]);
-      const standbyScale = useTransform(revealProgress, [0, 1], [0.985, 1]);
+      const standbyScale = useTransform(revealProgress, [0, 1], [0.97, 1]);
 
-      // Keep drag feedback subtle so the full-screen media does not visibly zoom.
+      // 3D lift effect — card pops out as it's dragged
       const absX = useTransform(x, (v) => Math.abs(v));
-      const liftScale = useTransform(absX, [0, 250], [1, 1.018]);
+      const liftScale = useTransform(absX, [0, 250], [1, 1.06]);
+      const liftShadow = useTransform(
+        absX,
+        [0, 250],
+        [
+          "0 4px 20px rgba(0,0,0,0.15)",
+          "0 30px 60px -10px rgba(0,0,0,0.55), 0 18px 36px -8px rgba(0,0,0,0.4)",
+        ]
+      );
 
       // Image + video gallery state
       const images = useMemo(() => item?.item_images || [], [item?.item_images]);
@@ -145,22 +148,16 @@ const SwipeCard = memo(
       const totalSlides = images.length + (hasVideo ? 1 : 0);
       const [activeImageIndex, setActiveImageIndex] = useState(0);
       const isVideoSlide = hasVideo && activeImageIndex === images.length;
-      const currentImageRecord = !isVideoSlide ? images[activeImageIndex] : null;
-      const currentImage = currentImageRecord?.image_url || null;
-      const currentImageSrc = currentImage ? cdnFull(currentImage) : null;
-      const currentObjectPosition = getMediaObjectPosition(currentImageRecord);
+      const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
       const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
       const currentVideoPoster = isVideoSlide
         ? videos[0]?.thumbnail_url || images[Math.max(images.length - 1, 0)]?.image_url
         : null;
       const [videoReady, setVideoReady] = useState(false);
-      const [imageReady, setImageReady] = useState(false);
-      const [mediaError, setMediaError] = useState(false);
       const [imageRatios, setImageRatios] = useState<Record<string, number>>({});
       const [mediaTone, setMediaTone] = useState<MediaTone>("neutral");
       const videoRef = useRef<HTMLVideoElement>(null);
-      const cardElementRef = useRef<HTMLDivElement>(null);
-      const exitingRef = useRef(false);
+      const slideChangeTokenRef = useRef(0);
 
       // Expanded state
       const [expanded, setExpanded] = useState(false);
@@ -170,6 +167,8 @@ const SwipeCard = memo(
         (nextIndex: number) => {
           if (totalSlides <= 1) return;
           const normalizedIndex = (nextIndex + totalSlides) % totalSlides;
+          const token = slideChangeTokenRef.current + 1;
+          slideChangeTokenRef.current = token;
           const nextImage = normalizedIndex < images.length
             ? images[normalizedIndex]?.image_url
             : null;
@@ -177,14 +176,18 @@ const SwipeCard = memo(
             ? videos[0]?.video_url
             : null;
 
-          setMediaTone("neutral");
-          setActiveImageIndex(normalizedIndex);
-
           const nextMediaReady = nextVideo
             ? preloadVideo(nextVideo)
             : preloadImage(nextImage ? cdnFull(nextImage) : null);
 
-          void nextMediaReady.catch(() => undefined);
+          nextMediaReady
+            .catch(() => undefined)
+            .then(() => {
+              if (slideChangeTokenRef.current === token) {
+                setMediaTone("neutral");
+                setActiveImageIndex(normalizedIndex);
+              }
+            });
         },
         [images, totalSlides, videos]
       );
@@ -215,7 +218,6 @@ const SwipeCard = memo(
           previous[source] === ratio ? previous : { ...previous, [source]: ratio }
         ));
         setMediaTone(measureImageTone(event.currentTarget));
-        setImageReady(true);
       }, []);
 
       useEffect(() => {
@@ -229,25 +231,16 @@ const SwipeCard = memo(
       useEffect(() => {
         setActiveImageIndex(0);
         setVideoReady(false);
-        setImageReady(false);
-        setMediaError(false);
         setMediaTone("neutral");
-        exitingRef.current = false;
+        slideChangeTokenRef.current = 0;
         x.set(0);
         y.set(0);
       }, [item?.id, x, y]);
 
       useEffect(() => {
         setVideoReady(false);
-        setMediaError(false);
         setMediaTone("neutral");
       }, [currentVideo]);
-
-      useEffect(() => {
-        setImageReady(false);
-        setMediaError(false);
-        setMediaTone("neutral");
-      }, [currentImageSrc]);
 
       useEffect(() => {
         if (standby) return;
@@ -273,20 +266,19 @@ const SwipeCard = memo(
 
       const doExit = useCallback(
         (direction: "like" | "dislike", velocityX?: number) => {
-          if (disabled || standby || expanded || exitingRef.current) return;
-          exitingRef.current = true;
+          if (disabled || standby || expanded) return;
           const exitX = direction === "like" ? EXIT_X : -EXIT_X;
           const vel = velocityX != null ? velocityX : direction === "like" ? 800 : -800;
           animate(y, EXIT_Y, {
             type: "spring",
-            stiffness: 420,
-            damping: 36,
+            stiffness: 520,
+            damping: 38,
             velocity: Math.abs(vel) * 0.18,
           });
           animate(x, exitX, {
             type: "spring",
-            stiffness: 450,
-            damping: 32,
+            stiffness: 600,
+            damping: 35,
             velocity: vel,
             restSpeed: 100,
             onComplete: () => onSwipeComplete(direction),
@@ -304,16 +296,14 @@ const SwipeCard = memo(
           if (expanded) return;
           const velocity = info.velocity.x;
           const offset = info.offset.x;
-          const cardWidth = cardElementRef.current?.offsetWidth || window.innerWidth;
-          const threshold = getSwipeThreshold(cardWidth);
 
-          if (offset > threshold || velocity > 520) {
+          if (offset > SWIPE_THRESHOLD || velocity > 400) {
             doExit("like", velocity);
-          } else if (offset < -threshold || velocity < -520) {
+          } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
             doExit("dislike", velocity);
           } else {
-            animate(x, 0, { type: "spring", stiffness: 500, damping: 34, mass: 0.75 });
-            animate(y, 0, { type: "spring", stiffness: 500, damping: 34, mass: 0.75 });
+            animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
+            animate(y, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
           }
         },
         [doExit, x, y, expanded]
@@ -323,11 +313,11 @@ const SwipeCard = memo(
       const conditionLabel = translateCondition(item?.condition);
       const compactLocation = formatCompactLocation(item?.location);
       const { data: rating } = useUserRating(ownerProfile?.user_id);
+      const currentImageSrc = currentImage ? cdnFull(currentImage) : null;
       const mediaAspectClass = getMediaAspectClass(currentImageSrc ? imageRatios[currentImageSrc] : undefined);
 
       return (
         <motion.div
-          ref={cardElementRef}
           data-media-tone={mediaTone}
           className={`swipe-card-shell absolute inset-0 w-full h-full ${
             standby ? "pointer-events-none" : expanded ? "" : "touch-none"
@@ -336,6 +326,7 @@ const SwipeCard = memo(
             x: standby ? 0 : x,
             rotate: standby || expanded ? 0 : rotate,
             scale: standby ? standbyScale : expanded ? 1 : liftScale,
+            boxShadow: standby || expanded ? undefined : liftShadow,
             zIndex: standby ? 9 : 60,
             willChange: standby ? "auto" : "transform",
             transformOrigin: "50% 80%",
@@ -346,7 +337,7 @@ const SwipeCard = memo(
           drag={standby || expanded ? false : "x"}
           dragDirectionLock
           dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
-          dragElastic={{ top: 0, bottom: 0, left: 0.34, right: 0.34 }}
+          dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
           onDragEnd={standby || expanded ? undefined : handleDragEnd}
           initial={standby ? false : { scale: 1, opacity: 1 }}
           animate={undefined}
@@ -361,31 +352,23 @@ const SwipeCard = memo(
               onClick={standby ? undefined : handleImageTap}
             >
               {isVideoSlide && currentVideo ? (
-                <div className="swipe-media-stage swipe-media-stage--video">
+                <>
                   {currentVideoPoster ? (
-                    <>
-                      <img
-                        alt=""
-                        aria-hidden
-                        className="swipe-media-ambient"
-                        src={cdnBlur(currentVideoPoster)}
-                        draggable={false}
-                      />
-                      <div className="swipe-media-ambient-scrim" aria-hidden />
-                      <img
-                        alt={item.name}
-                        className={`swipe-media-foreground swipe-media-poster ${videoReady ? "is-hidden" : "is-ready"}`}
-                        src={cdnFull(currentVideoPoster)}
-                        draggable={false}
-                      />
-                    </>
+                    <img
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      src={cdnFull(currentVideoPoster)}
+                      draggable={false}
+                    />
                   ) : (
                     <div className="absolute inset-0 bg-muted" />
                   )}
                   <video
                     ref={videoRef}
                     key={`video-${currentVideo}`}
-                    className={`swipe-media-foreground swipe-media-video ${videoReady ? "is-ready" : ""}`}
+                    className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-150 ${
+                      videoReady ? "opacity-100" : "opacity-0"
+                    }`}
                     src={currentVideo}
                     poster={currentVideoPoster ? cdnFull(currentVideoPoster) : undefined}
                     autoPlay
@@ -397,9 +380,8 @@ const SwipeCard = memo(
                     onLoadedData={(event) => revealVideoWhenFrameIsReady(event.currentTarget)}
                     onCanPlay={(event) => revealVideoWhenFrameIsReady(event.currentTarget)}
                     onPlaying={(event) => revealVideoWhenFrameIsReady(event.currentTarget)}
-                    onError={() => setMediaError(true)}
                   />
-                </div>
+                </>
               ) : currentImage ? (
                 <div className={`swipe-media-stage ${mediaAspectClass}`}>
                   <img
@@ -415,26 +397,20 @@ const SwipeCard = memo(
                   <img
                     key={activeImageIndex}
                     alt={item.name}
-                    className={`swipe-media-foreground ${imageReady ? "is-ready" : ""}`}
+                    className="swipe-media-foreground"
                     src={currentImageSrc || undefined}
                     crossOrigin="anonymous"
                     fetchPriority="high"
                     loading="eager"
                     decoding="async"
-                    style={{ objectPosition: currentObjectPosition }}
+                    style={{ objectPosition: "50% 50%" }}
                     onLoad={handleImageLoad}
-                    onError={() => setMediaError(true)}
                     draggable={false}
                   />
                 </div>
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
                   <Image className="h-16 w-16 text-foreground/10" />
-                </div>
-              )}
-              {mediaError && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/45 backdrop-blur-sm">
-                  <Image className="h-12 w-12 text-foreground/35" />
                 </div>
               )}
             </div>
