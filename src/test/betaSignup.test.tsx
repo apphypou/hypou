@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import Teste from "@/pages/Teste";
@@ -10,6 +10,10 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 describe("Cadastro beta", () => {
+  beforeEach(() => {
+    rpc.mockReset();
+  });
+
   it("envia nome e e-mail somente após aceitar o aviso de privacidade", async () => {
     rpc.mockResolvedValue({ data: null, error: null });
     render(<BrowserRouter><Teste /></BrowserRouter>);
