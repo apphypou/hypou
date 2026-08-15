@@ -54,14 +54,8 @@ const Teste = () => {
       <div className="pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-pink/15 blur-[120px]" />
 
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex items-center justify-between">
+        <header>
           <img src={logoHypou} alt="Hypou" className="w-32 drop-shadow-[0_0_24px_rgba(13,214,224,0.18)] sm:w-40" />
-          <a
-            href="https://app.hypou.app"
-            className="rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-white/80 backdrop-blur-md transition hover:border-primary/50 hover:text-white"
-          >
-            Já tenho acesso
-          </a>
         </header>
 
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-14">
@@ -181,10 +175,6 @@ const Teste = () => {
             </p>
           </section>
         </div>
-
-        <footer className="text-center text-xs text-white/45 lg:text-left">
-          Já tem acesso? Abra o app em <a className="font-semibold text-primary hover:underline" href="https://app.hypou.app">app.hypou.app</a>.
-        </footer>
       </div>
     </main>
   );
