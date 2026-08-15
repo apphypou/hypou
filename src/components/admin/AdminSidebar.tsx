@@ -9,6 +9,7 @@ import {
   LogOut,
   Bot,
   Rocket,
+  FlaskConical,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -38,6 +39,7 @@ const items = [
   { title: "Matches", url: "/admin/matches", icon: Handshake },
   { title: "Reports", url: "/admin/reports", icon: ShieldAlert },
   { title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered },
+  { title: "Testadores beta", url: "/admin/testadores-beta", icon: FlaskConical },
   { title: "Status", url: "/admin/status", icon: Activity },
   { title: "Assistente IA", url: "/admin/assistente", icon: Bot },
   { title: "Lançamento", url: "/admin/lancamento", icon: Rocket },

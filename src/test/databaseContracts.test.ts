@@ -35,7 +35,8 @@ describe("mobile database contracts", () => {
       | keyof Pick<Functions, "toggle_video_like">
       | keyof Pick<Functions, "increment_video_view">
       | keyof Pick<Functions, "get_user_ratings_with_items">
-      | keyof Pick<Functions, "get_waitlist_position">;
+      | keyof Pick<Functions, "get_waitlist_position">
+      | keyof Pick<Functions, "register_beta_tester">;
 
     const rpcNames: RequiredRpc[] = [
       "recommended_items",
@@ -45,8 +46,21 @@ describe("mobile database contracts", () => {
       "increment_video_view",
       "get_user_ratings_with_items",
       "get_waitlist_position",
+      "register_beta_tester",
     ];
 
-    expect(rpcNames).toHaveLength(7);
+    expect(rpcNames).toHaveLength(8);
+  });
+
+  it("exposes beta tester fields needed by TestFlight export", () => {
+    type BetaTester = Tables["beta_testers"]["Row"];
+    const tester: Pick<BetaTester, "first_name" | "last_name" | "email" | "invited_at"> = {
+      first_name: "Ana",
+      last_name: "Silva",
+      email: "ana@example.com",
+      invited_at: null,
+    };
+
+    expect(tester.email).toBe("ana@example.com");
   });
 });

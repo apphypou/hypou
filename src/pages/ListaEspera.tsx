@@ -281,17 +281,7 @@ const ListaEspera = () => {
 
       if (error) {
         if (error.code === "23505") {
-          const { data: existing } = await supabase
-            .from("waitlist" as any)
-            .select("position, referral_code")
-            .eq("email", email)
-            .single();
-          if (existing) {
-            setPosition((existing as any).position);
-            setReferralCode((existing as any).referral_code);
-            setRegistered(true);
-          }
-          toast({ title: "Você já está na lista! 🎉", description: "Mostrando sua posição." });
+          toast({ title: "Você já está na lista! 🎉", description: "Avisaremos você por e-mail quando houver novidades." });
         } else {
           throw error;
         }

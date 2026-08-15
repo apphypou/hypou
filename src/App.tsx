@@ -49,6 +49,7 @@ const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
 const PerfilUsuario = lazy(() => import("./pages/PerfilUsuario"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ListaEspera = lazy(() => import("./pages/ListaEspera"));
+const Teste = lazy(() => import("./pages/Teste"));
 const Baixar = lazy(() => import("./pages/Baixar"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
@@ -59,6 +60,7 @@ const AdminItens = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/ad
 const AdminMatches = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminMatches"));
 const AdminReports = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminReports"));
 const AdminWaitlist = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminWaitlist"));
+const AdminBetaTesters = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminBetaTesters"));
 const AdminStatus = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminStatus"));
 const AdminAssistente = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminAssistente"));
 const AdminLancamento = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLancamento"));
@@ -90,6 +92,19 @@ const ItemRedirect = () => {
   const { itemId } = useParams();
   return <Navigate replace to={`/explorar?item=${encodeURIComponent(itemId || "")}`} />;
 };
+
+const isMarketingHost = typeof window !== "undefined" && ["hypou.app", "www.hypou.app"].includes(window.location.hostname);
+
+const MarketingRoutes = () => (
+  <Suspense fallback={<RouteFallback />}>
+    <Routes>
+      <Route path="/teste" element={<Teste />} />
+      <Route path="/termos" element={<Termos />} />
+      <Route path="/privacidade" element={<Privacidade />} />
+      <Route path="*" element={<Navigate replace to="/teste" />} />
+    </Routes>
+  </Suspense>
+);
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -173,6 +188,7 @@ const AnimatedRoutes = () => {
               <Route path="matches" element={AdminMatches && <AdminMatches />} />
               <Route path="reports" element={AdminReports && <AdminReports />} />
               <Route path="waitlist" element={AdminWaitlist && <AdminWaitlist />} />
+              <Route path="testadores-beta" element={AdminBetaTesters && <AdminBetaTesters />} />
               <Route path="status" element={AdminStatus && <AdminStatus />} />
               <Route path="assistente" element={AdminAssistente && <AdminAssistente />} />
               <Route path="lancamento" element={AdminLancamento && <AdminLancamento />} />
@@ -215,13 +231,15 @@ const App = () => {
           <Sonner />
           {!isOnline && <OfflineScreen />}
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <AuthProvider>
-              <AuthRedirectHandler />
-              <GlobalAlerts />
-              <IncomingCallSheet />
-              <PendingTradeConfirmationDialog />
-              <AnimatedRoutes />
-            </AuthProvider>
+            {isMarketingHost ? <MarketingRoutes /> : (
+              <AuthProvider>
+                <AuthRedirectHandler />
+                <GlobalAlerts />
+                <IncomingCallSheet />
+                <PendingTradeConfirmationDialog />
+                <AnimatedRoutes />
+              </AuthProvider>
+            )}
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>

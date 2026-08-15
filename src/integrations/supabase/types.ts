@@ -903,6 +903,36 @@ export type Database = {
           },
         ]
       }
+      beta_testers: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          invited_at: string | null
+          last_name: string
+          privacy_accepted_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          invited_at?: string | null
+          last_name: string
+          privacy_accepted_at: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          invited_at?: string | null
+          last_name?: string
+          privacy_accepted_at?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           created_at: string
@@ -1029,6 +1059,15 @@ export type Database = {
         }[]
       }
       get_waitlist_position: { Args: never; Returns: number }
+      register_beta_tester: {
+        Args: {
+          p_email: string
+          p_first_name: string
+          p_last_name: string
+          p_privacy_accepted: boolean
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
