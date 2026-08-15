@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, Mail, UserRound } from "lucide-react";
-import HypouLogo from "@/components/HypouLogo";
+import { ArrowRight, CheckCircle2, Mail, ShieldCheck, Sparkles, UserRound, Users } from "lucide-react";
+import logoHypou from "@/assets/logo-hypou.png";
+import authBackground from "@/assets/auth-marketplace-bg.webp";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,99 +42,150 @@ const Teste = () => {
   };
 
   return (
-    <main className="dark min-h-[100dvh] bg-background text-foreground flex items-center justify-center px-4 py-10">
-      <section className="w-full max-w-md rounded-3xl border border-border/60 bg-card/70 p-6 sm:p-8 shadow-2xl shadow-primary/5">
-        <div className="flex justify-center mb-8">
-          <HypouLogo size="lg" />
-        </div>
+    <main className="dark relative min-h-[100dvh] overflow-hidden bg-[#020711] font-display text-white">
+      <img
+        src={authBackground}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(2,7,17,0.9),rgba(2,7,17,0.56),rgba(2,7,17,0.88))]" />
+      <div className="pointer-events-none absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-primary/20 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-pink/15 blur-[120px]" />
 
-        {submitted ? (
-          <div className="text-center space-y-4 py-4">
-            <CheckCircle2 className="mx-auto h-14 w-14 text-primary" />
-            <h1 className="text-2xl font-bold">Cadastro recebido!</h1>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Quando o beta estiver disponível, enviaremos o convite do TestFlight para o seu e-mail.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="text-center mb-7">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary mb-3">Beta fechado</p>
-              <h1 className="text-2xl font-bold">Teste o Hypou antes do lançamento</h1>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Deixe seus dados para receber o convite do TestFlight assim que o beta estiver pronto.
-              </p>
+      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
+        <header className="flex items-center justify-between">
+          <img src={logoHypou} alt="Hypou" className="w-32 drop-shadow-[0_0_24px_rgba(13,214,224,0.18)] sm:w-40" />
+          <a
+            href="https://app.hypou.app"
+            className="rounded-full border border-white/15 bg-white/[0.06] px-3.5 py-2 text-xs font-semibold text-white/80 backdrop-blur-md transition hover:border-primary/50 hover:text-white"
+          >
+            Já tenho acesso
+          </a>
+        </header>
+
+        <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-14">
+          <section className="max-w-xl text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary backdrop-blur-md">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+              Beta fechado · iOS
             </div>
+            <h1 className="mt-6 text-4xl font-extrabold leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
+              Ajude a construir o <span className="bg-[linear-gradient(90deg,#ff1493_0%,#7c3aed_52%,#11d7e5_100%)] bg-clip-text text-transparent">próximo match</span>.
+            </h1>
+            <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/65 sm:text-lg lg:mx-0">
+              Entre para o grupo seleto que vai testar o Hypou antes do lançamento e moldar cada detalhe da experiência.
+            </p>
+            <div className="mt-8 hidden flex-wrap gap-x-6 gap-y-3 text-sm text-white/70 lg:flex">
+              <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" /> Convite individual</span>
+              <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Acesso antecipado</span>
+              <span className="flex items-center gap-2"><Users className="h-4 w-4 text-primary" /> Comunidade fundadora</span>
+            </div>
+          </section>
 
-            <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <label className="space-y-2 text-sm font-medium">
-                  Nome
-                  <span className="relative block">
-                    <UserRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <section className="mx-auto w-full max-w-[460px] rounded-[28px] border border-white/15 bg-[rgba(11,17,29,0.8)] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur-2xl sm:p-7">
+            {submitted ? (
+              <div className="py-8 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+                  <CheckCircle2 className="h-8 w-8 text-primary" />
+                </div>
+                <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">Você está na lista</p>
+                <h2 className="mt-3 text-3xl font-extrabold tracking-tight">Cadastro recebido.</h2>
+                <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-white/60">
+                  Quando o beta estiver disponível, o convite do TestFlight chegará no seu e-mail.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">Acesso antecipado</p>
+                  <h2 className="mt-2 text-2xl font-extrabold tracking-tight">Reserve seu convite.</h2>
+                  <p className="mt-2 text-sm leading-relaxed text-white/55">São seus dados que usaremos para enviar o acesso ao beta.</p>
+                </div>
+
+                <form className="space-y-4" onSubmit={handleSubmit} noValidate>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="text-sm font-medium text-white/85">
+                      Nome
+                      <span className="relative mt-2 block">
+                        <UserRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                        <input
+                          required
+                          autoComplete="given-name"
+                          value={firstName}
+                          onChange={(event) => setFirstName(event.target.value)}
+                          className="h-14 w-full rounded-2xl border border-white/15 bg-black/20 pl-11 pr-4 text-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] outline-none transition placeholder:text-white/35 focus:border-primary/70 focus:ring-2 focus:ring-primary/20"
+                        />
+                      </span>
+                    </label>
+                    <label className="text-sm font-medium text-white/85">
+                      Sobrenome
+                      <input
+                        required
+                        autoComplete="family-name"
+                        value={lastName}
+                        onChange={(event) => setLastName(event.target.value)}
+                        className="mt-2 h-14 w-full rounded-2xl border border-white/15 bg-black/20 px-4 text-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] outline-none transition placeholder:text-white/35 focus:border-primary/70 focus:ring-2 focus:ring-primary/20"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="block text-sm font-medium text-white/85">
+                    E-mail
+                    <span className="relative mt-2 block">
+                      <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                      <input
+                        required
+                        type="email"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        className="h-14 w-full rounded-2xl border border-white/15 bg-black/20 pl-11 pr-4 text-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] outline-none transition placeholder:text-white/35 focus:border-primary/70 focus:ring-2 focus:ring-primary/20"
+                      />
+                    </span>
+                  </label>
+
+                  <label className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.045] p-3.5 text-xs leading-relaxed text-white/58">
                     <input
                       required
-                      autoComplete="given-name"
-                      value={firstName}
-                      onChange={(event) => setFirstName(event.target.value)}
-                      className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none transition focus:border-primary"
+                      type="checkbox"
+                      checked={privacyAccepted}
+                      onChange={(event) => setPrivacyAccepted(event.target.checked)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
                     />
-                  </span>
-                </label>
-                <label className="space-y-2 text-sm font-medium">
-                  Sobrenome
-                  <input
-                    required
-                    autoComplete="family-name"
-                    value={lastName}
-                    onChange={(event) => setLastName(event.target.value)}
-                    className="h-12 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition focus:border-primary"
-                  />
-                </label>
-              </div>
+                    <span>
+                      Concordo que o Hypou use meus dados para enviar o convite e comunicações do beta, conforme a{" "}
+                      <Link to="/privacidade" className="font-semibold text-primary hover:underline">Política de Privacidade</Link>.
+                    </span>
+                  </label>
 
-              <label className="space-y-2 text-sm font-medium block">
-                E-mail
-                <span className="relative block">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    required
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none transition focus:border-primary"
-                  />
-                </span>
-              </label>
+                  {error && <p role="alert" className="text-sm text-[#ff7bbd]">{error}</p>}
 
-              <label className="flex items-start gap-3 rounded-xl border border-border/70 bg-background/50 p-3 text-xs leading-relaxed text-muted-foreground">
-                <input
-                  required
-                  type="checkbox"
-                  checked={privacyAccepted}
-                  onChange={(event) => setPrivacyAccepted(event.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-primary"
-                />
-                <span>
-                  Concordo que o Hypou use meus dados para enviar o convite e comunicações do beta, conforme a{" "}
-                  <Link to="/privacidade" className="font-semibold text-primary hover:underline">Política de Privacidade</Link>.
-                </span>
-              </label>
+                  <NeonButton
+                    type="submit"
+                    icon={ArrowRight}
+                    disabled={isSubmitting}
+                    className="border border-white/25 bg-[linear-gradient(90deg,#ff1493_0%,#7c3aed_52%,#11d7e5_100%)] text-white shadow-[0_0_26px_rgba(21,198,231,0.28)]"
+                  >
+                    {isSubmitting ? "Enviando..." : "Quero participar do beta"}
+                  </NeonButton>
+                </form>
+              </>
+            )}
 
-              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <p className="mt-5 text-center text-xs text-white/45">
+              Convites enviados exclusivamente pelo TestFlight.
+            </p>
+          </section>
+        </div>
 
-              <NeonButton type="submit" icon={ArrowRight} disabled={isSubmitting} className="w-full">
-                {isSubmitting ? "Enviando..." : "Quero participar do beta"}
-              </NeonButton>
-            </form>
-          </>
-        )}
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <footer className="text-center text-xs text-white/45 lg:text-left">
           Já tem acesso? Abra o app em <a className="font-semibold text-primary hover:underline" href="https://app.hypou.app">app.hypou.app</a>.
-        </p>
-      </section>
+        </footer>
+      </div>
     </main>
   );
 };
