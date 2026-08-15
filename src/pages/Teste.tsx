@@ -54,12 +54,13 @@ const Teste = () => {
       <div className="pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-pink/15 blur-[120px]" />
 
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-5 py-6 sm:px-8 lg:px-10">
-        <header>
-          <img src={logoHypou} alt="Hypou" className="w-32 drop-shadow-[0_0_24px_rgba(13,214,224,0.18)] sm:w-40" />
-        </header>
-
-        <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-14">
+        <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
           <section className="max-w-xl text-center lg:text-left">
+            <img
+              src={logoHypou}
+              alt="Hypou"
+              className="mx-auto mb-8 w-36 drop-shadow-[0_0_24px_rgba(13,214,224,0.18)] sm:w-44 lg:mx-0 lg:mb-10"
+            />
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary backdrop-blur-md">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/75" />
