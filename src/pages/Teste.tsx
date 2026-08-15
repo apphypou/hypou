@@ -68,7 +68,7 @@ const Teste = () => {
               Beta fechado · iOS
             </div>
             <h1 className="mt-6 text-4xl font-extrabold leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
-              Ajude a construir o <span className="bg-[linear-gradient(90deg,#ff1493_0%,#7c3aed_52%,#11d7e5_100%)] bg-clip-text text-transparent">próximo match</span>.
+              Ajude a construir o <span className="bg-[linear-gradient(90deg,#ff1493_0%,#7c3aed_52%,#11d7e5_100%)] bg-clip-text text-transparent">futuro das trocas</span>.
             </h1>
             <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-white/65 sm:text-lg lg:mx-0">
               Entre para o grupo seleto que vai testar o Hypou antes do lançamento e moldar cada detalhe da experiência.
