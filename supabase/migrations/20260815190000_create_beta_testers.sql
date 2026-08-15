@@ -45,7 +45,7 @@ BEGIN
   IF char_length(v_first_name) NOT BETWEEN 1 AND 80
     OR char_length(v_last_name) NOT BETWEEN 1 AND 120
     OR char_length(v_email) NOT BETWEEN 3 AND 254
-    OR v_email !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$' THEN
+    OR v_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' THEN
     RAISE EXCEPTION 'Invalid beta tester registration';
   END IF;
 
