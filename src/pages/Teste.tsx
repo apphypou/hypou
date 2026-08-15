@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle2, Mail, ShieldCheck, Sparkles, UserRound, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2, Mail, MessageCircle, ShieldCheck, Sparkles, UserRound, Users } from "lucide-react";
 import logoHypou from "@/assets/logo-hypou.png";
 import authBackground from "@/assets/auth-marketplace-bg.webp";
 import NeonButton from "@/components/NeonButton";
@@ -90,8 +90,16 @@ const Teste = () => {
                 <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">Você está na lista</p>
                 <h2 className="mt-3 text-3xl font-extrabold tracking-tight">Cadastro recebido.</h2>
                 <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-white/60">
-                  Quando o beta estiver disponível, o convite do TestFlight chegará no seu e-mail.
+                  Entre no grupo para acompanhar o beta e enviar seu feedback. O convite do TestFlight chegará no seu e-mail.
                 </p>
+                <a
+                  href="https://chat.whatsapp.com/KWTaRcCEzHcHw5xs0b9ilO"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[#25D366]/50 bg-[#25D366]/15 px-5 text-sm font-bold text-white transition hover:bg-[#25D366]/25"
+                >
+                  <MessageCircle className="h-4 w-4" /> Entrar no grupo do WhatsApp
+                </a>
               </div>
             ) : (
               <>

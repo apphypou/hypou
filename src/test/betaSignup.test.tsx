@@ -31,6 +31,7 @@ describe("Cadastro beta", () => {
       p_privacy_accepted: true,
     }));
     expect(await screen.findByText(/cadastro recebido/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /entrar no grupo do whatsapp/i })).toHaveAttribute("href", "https://chat.whatsapp.com/KWTaRcCEzHcHw5xs0b9ilO");
   });
 
   it("bloqueia envio sem aceite", () => {
