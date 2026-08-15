@@ -26,6 +26,7 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   png: "image/png",
+  webp: "image/webp",
   heic: "image/heic",
   heif: "image/heif",
   mp4: "video/mp4",
@@ -40,6 +41,7 @@ const ITEM_PHOTO_MAX_DIMENSION = 1920;
 type CapacitorMedia = {
   uri?: string;
   webPath?: string;
+  format?: string;
   metadata?: { format?: string };
 };
 
@@ -53,6 +55,62 @@ const normalizeExtension = (format: string | undefined, fallback: string) => {
   return normalized === "jpeg" ? "jpg" : normalized;
 };
 
+export const resolveNativeMediaFileType = (
+  format: string | undefined,
+  blobType: string,
+  fallbackExtension: string,
+  fallbackMime: string,
+) => {
+  const extension = normalizeExtension(format, fallbackExtension);
+  const nativeMime = format ? MIME_BY_EXTENSION[extension] : undefined;
+  const fetchedMime = blobType && blobType !== "application/octet-stream" ? blobType : undefined;
+
+  return {
+    extension,
+    mimeType: nativeMime || fetchedMime || MIME_BY_EXTENSION[extension] || fallbackMime,
+  };
+};
+
+const asciiAt = (bytes: Uint8Array, start: number, length: number) =>
+  String.fromCharCode(...bytes.slice(start, start + length)).toLowerCase();
+
+export const detectMediaFormatFromBytes = (bytes: Uint8Array): string | undefined => {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return "jpg";
+  }
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return "png";
+  }
+  if (bytes.length >= 12 && asciiAt(bytes, 0, 4) === "riff" && asciiAt(bytes, 8, 4) === "webp") {
+    return "webp";
+  }
+  if (bytes.length >= 12 && asciiAt(bytes, 4, 4) === "ftyp") {
+    const brand = asciiAt(bytes, 8, 4);
+    if (["heic", "heix", "hevc", "hevx", "heim", "heis", "hevm", "hevs"].includes(brand)) {
+      return "heic";
+    }
+    if (["mif1", "msf1"].includes(brand)) {
+      return "heif";
+    }
+  }
+  return undefined;
+};
+
+const detectBlobFormat = async (blob: Blob) => {
+  const header = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
+  return detectMediaFormatFromBytes(header);
+};
+
 const toMediaResult = async (
   media: CapacitorMedia,
   namePrefix: string,
@@ -61,9 +119,10 @@ const toMediaResult = async (
   traceId?: string,
 ): Promise<NativeMediaResult> => {
   const source = media.webPath || (media.uri ? Capacitor.convertFileSrc(media.uri) : "");
+  const nativeFormat = media.format || media.metadata?.format;
   logMediaDiagnostic("native.media.source_received", {
     sourceKind: media.webPath ? "webPath" : media.uri ? "uri" : "missing",
-    format: media.metadata?.format,
+    format: nativeFormat,
     namePrefix,
   }, traceId);
   if (!source) {
@@ -91,10 +150,27 @@ const toMediaResult = async (
     throw new Error("O arquivo selecionado está vazio.");
   }
 
-  const extension = normalizeExtension(media.metadata?.format, fallbackExtension);
-  const mimeType = blob.type && blob.type !== "application/octet-stream"
-    ? blob.type
-    : MIME_BY_EXTENSION[extension] || fallbackMime;
+  const detectedFormat = await detectBlobFormat(blob);
+  logMediaDiagnostic("native.media.signature_checked", {
+    namePrefix,
+    detectedFormat: detectedFormat || "unknown",
+    nativeFormat: nativeFormat || "unknown",
+    blobType: blob.type || "unknown",
+  }, traceId);
+
+  const { extension, mimeType } = resolveNativeMediaFileType(
+    detectedFormat || nativeFormat,
+    blob.type,
+    fallbackExtension,
+    fallbackMime,
+  );
+  if ((detectedFormat || nativeFormat) && blob.type && blob.type !== mimeType) {
+    logMediaDiagnostic("native.media.mime_corrected", {
+      format: detectedFormat || nativeFormat,
+      fetchedMime: blob.type,
+      resolvedMime: mimeType,
+    }, traceId);
+  }
   const file = new File([blob], `${namePrefix}_${Date.now()}.${extension}`, {
     type: mimeType,
   });
@@ -107,10 +183,8 @@ const isUserCancellation = (error: unknown) => {
   return message.toLowerCase().includes("cancel");
 };
 
-const mediaError = (action: string, error: unknown) => {
-  const detail = error instanceof Error ? error.message : String(error ?? "erro desconhecido");
-  return new Error(`${action}. ${detail}`);
-};
+// Native details are logged above; they are often in English and should not reach the user.
+const mediaError = (action: string) => new Error(action);
 
 export const takePhoto = async (options?: MediaTraceOptions): Promise<PhotoResult | null> => {
   if (!isNativePlatform()) return null;
@@ -137,7 +211,7 @@ export const takePhoto = async (options?: MediaTraceOptions): Promise<PhotoResul
       return null;
     }
     logMediaError("native.photo.camera_failed", error, undefined, options?.traceId);
-    throw mediaError("Não foi possível tirar a foto", error);
+    throw mediaError("Não foi possível tirar a foto");
   }
 };
 
@@ -154,18 +228,26 @@ export const choosePhotosFromGallery = async (options?: {
       maxFiles: options?.maxFiles ?? 1,
     }, options.traceId);
     const { Camera, MediaTypeSelection } = await import("@capacitor/camera");
-    const galleryResult = await Camera.chooseFromGallery({
-      mediaType: MediaTypeSelection.Photo,
-      allowMultipleSelection: options?.multiple ?? false,
-      limit: options?.maxFiles ?? 1,
-      quality: 85,
-      targetWidth: ITEM_PHOTO_MAX_DIMENSION,
-      targetHeight: ITEM_PHOTO_MAX_DIMENSION,
-      correctOrientation: true,
-      editable: "no",
-      includeMetadata: true,
-    });
-    const selected = galleryResult.results;
+    const maxFiles = options?.maxFiles ?? 1;
+    const selected = Capacitor.getPlatform() === "ios"
+      ? (await Camera.pickImages({
+          quality: 85,
+          width: ITEM_PHOTO_MAX_DIMENSION,
+          height: ITEM_PHOTO_MAX_DIMENSION,
+          correctOrientation: true,
+          limit: maxFiles,
+        })).photos
+      : (await Camera.chooseFromGallery({
+          mediaType: MediaTypeSelection.Photo,
+          allowMultipleSelection: options?.multiple ?? false,
+          limit: maxFiles,
+          quality: 85,
+          targetWidth: ITEM_PHOTO_MAX_DIMENSION,
+          targetHeight: ITEM_PHOTO_MAX_DIMENSION,
+          correctOrientation: true,
+          editable: "no",
+          includeMetadata: true,
+        })).results;
     logMediaDiagnostic("native.photo.gallery_selected", { selectedCount: selected.length }, options.traceId);
     const results = await Promise.all(
       selected.map((photo, index) => toMediaResult(photo, `photo_${index}`, "jpg", "image/jpeg", options.traceId)),
@@ -178,7 +260,7 @@ export const choosePhotosFromGallery = async (options?: {
       return [];
     }
     logMediaError("native.photo.gallery_failed", error, undefined, options.traceId);
-    throw mediaError("Não foi possível abrir a galeria", error);
+    throw mediaError("Não foi possível abrir a galeria");
   }
 };
 
@@ -226,7 +308,7 @@ export const chooseVideoFromGallery = async (options?: MediaTraceOptions): Promi
       return null;
     }
     logMediaError("native.video.gallery_failed", error, undefined, options?.traceId);
-    throw mediaError("Não foi possível escolher o vídeo", error);
+    throw mediaError("Não foi possível escolher o vídeo");
   }
 };
 
@@ -250,7 +332,7 @@ export const recordVideo = async (options?: MediaTraceOptions): Promise<NativeMe
       return null;
     }
     logMediaError("native.video.camera_failed", error, undefined, options?.traceId);
-    throw mediaError("Não foi possível gravar o vídeo", error);
+    throw mediaError("Não foi possível gravar o vídeo");
   }
 };
 

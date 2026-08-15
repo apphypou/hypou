@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { submitRating } from "@/hooks/useRatings";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { getErrorMessage } from "@/lib/utils";
 
 interface RatingDialogProps {
   open: boolean;
@@ -48,7 +49,7 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
       if (err.message?.includes("duplicate")) {
         toast({ title: "Você já avaliou esta troca", variant: "destructive" });
       } else {
-        toast({ title: "Erro ao avaliar", description: err.message, variant: "destructive" });
+        toast({ title: "Erro ao avaliar", description: getErrorMessage(err), variant: "destructive" });
       }
     } finally {
       setSaving(false);

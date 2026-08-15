@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useLocation, useParams } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -50,7 +50,6 @@ const PerfilUsuario = lazy(() => import("./pages/PerfilUsuario"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ListaEspera = lazy(() => import("./pages/ListaEspera"));
 const Baixar = lazy(() => import("./pages/Baixar"));
-const Item = lazy(() => import("./pages/Item"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
 const AdminLayout = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLayout"));
@@ -87,6 +86,11 @@ if (Capacitor.isNativePlatform()) {
 // Lightweight fallback — no spinner to avoid flash on fast chunks
 const RouteFallback = () => <div className="flex-1 bg-background" />;
 
+const ItemRedirect = () => {
+  const { itemId } = useParams();
+  return <Navigate replace to={`/explorar?item=${encodeURIComponent(itemId || "")}`} />;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
 
@@ -115,7 +119,7 @@ const AnimatedRoutes = () => {
 
           {/* Protected routes */}
           <Route path="/explorar" element={<PageTransition><Explorar /></PageTransition>} />
-          <Route path="/item/:itemId" element={<PageTransition><Item /></PageTransition>} />
+          <Route path="/item/:itemId" element={<ItemRedirect />} />
           <Route path="/busca" element={
             <ProtectedRoute><PageTransition><Busca /></PageTransition></ProtectedRoute>
           } />

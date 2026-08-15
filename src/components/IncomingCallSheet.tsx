@@ -7,6 +7,7 @@ import { acceptCall, declineCall, joinCall } from "@/services/callService";
 import { toast } from "@/hooks/use-toast";
 import { describeCallError, getCallRuntimeDiagnostics, preflightCallMedia } from "@/lib/callDiagnostics";
 import { startCallRingtone } from "@/lib/callRingtone";
+import { getErrorMessage } from "@/lib/utils";
 
 /**
  * Global overlay that listens for incoming calls and renders an Apple-style
@@ -69,7 +70,7 @@ export default function IncomingCallSheet() {
         error: describeCallError(e),
         runtime: getCallRuntimeDiagnostics(incoming.kind),
       });
-      toast({ title: "Não foi possível atender", description: e?.message ?? "Tente novamente", variant: "destructive" });
+      toast({ title: "Não foi possível atender", description: getErrorMessage(e), variant: "destructive" });
       clear();
     } finally {
       setBusy(false);

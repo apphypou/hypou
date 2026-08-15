@@ -3,9 +3,10 @@ import { forwardRef, useEffect, useRef, useState } from "react";
 import { AudioPlayer } from "./AudioPlayer";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 import { getMessageDeliveryLabel, getMessageDeliveryStatus } from "@/lib/messageDeliveryStatus";
+import type { Message } from "@/services/messageService";
 
 interface MessageListProps {
-  messages: any[];
+  messages: Message[];
   isLoading: boolean;
   currentUserId: string | undefined;
   onDeleteMessage?: (messageId: string) => void;
@@ -16,7 +17,7 @@ const formatTime = (dateStr: string) => {
   return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
-const renderMessageContent = (msg: any, isMine: boolean, openMedia: (media: MediaViewerItem) => void) => {
+const renderMessageContent = (msg: Message, isMine: boolean, openMedia: (media: MediaViewerItem) => void) => {
   if (msg.deleted_at) {
     return <span className="text-sm italic text-current/60">Mensagem apagada</span>;
   }
@@ -108,7 +109,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
                   <div
                     className={`relative w-fit max-w-[82%] rounded-2xl px-4 py-3 ${
                       isMine
-                        ? "bg-primary/70 text-primary-foreground rounded-br-md"
+                        ? "bg-primary text-primary-foreground rounded-br-md"
                         : "bg-card border border-foreground/5 text-foreground rounded-bl-md"
                     }`}
                     onContextMenu={(event) => {
@@ -130,7 +131,7 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
                   >
                     {renderMessageContent(msg, isMine, setMediaViewer)}
                     <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
-                      <span className={`text-[10px] ${isMine ? "text-primary-foreground/60" : "text-foreground/30"}`}>
+                      <span className={`text-xs ${isMine ? "text-primary-foreground/60" : "text-foreground/30"}`}>
                         {formatTime(msg.created_at)}
                       </span>
                       {deliveryStatus === "read" && (

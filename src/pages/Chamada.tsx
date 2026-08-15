@@ -89,7 +89,10 @@ export default function Chamada() {
     sessionEndedRef.current = true;
     clearMissedTimer();
     try {
-      await endCall(state!.callSessionId);
+      const unanswered = state!.isCaller &&
+        !remoteJoinedRef.current &&
+        callStatusRef.current === "ringing";
+      await (unanswered ? markMissed(state!.callSessionId) : endCall(state!.callSessionId));
       console.info("[call] session-ended", redactCallRouteState(state));
     } catch (error) {
       console.warn("[call] end-call-failed", describeCallError(error));

@@ -168,7 +168,7 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
     <div className="flex items-center gap-3 min-w-[200px]">
       <button
         onClick={toggle}
-        className={`h-9 w-9 shrink-0 rounded-full ${btnBg} flex items-center justify-center transition-transform active:scale-95`}
+        className={`h-11 w-11 shrink-0 rounded-full ${btnBg} flex items-center justify-center transition-transform active:scale-95`}
         aria-label={playing ? "Pausar" : "Reproduzir"}
       >
         {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
@@ -186,7 +186,7 @@ export const AudioPlayer = ({ src, mine }: AudioPlayerProps) => {
             aria-label="Posição do áudio"
           />
         </div>
-        <span className={`text-[10px] font-mono tabular-nums ${accentText}`}>
+        <span className={`text-xs font-mono tabular-nums ${accentText}`}>
           {errored
             ? "erro ao carregar"
             : ready

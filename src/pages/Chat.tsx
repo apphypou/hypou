@@ -1,16 +1,17 @@
 import { Archive, ArchiveRestore, CheckSquare, MessageSquare, PhoneMissed, Square } from "lucide-react";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
-import { useArchiveConversation, useArchiveConversations, useConversations, useUnarchiveConversation } from "@/hooks/useMessages";
+import { useArchiveConversations, useConversations, useUnarchiveConversation } from "@/hooks/useMessages";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SkeletonConversation } from "@/components/SkeletonCard";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { isNewHype } from "@/lib/conversationHype";
+import { getErrorMessage } from "@/lib/utils";
 
 const Chat = () => {
   const [showArchived, setShowArchived] = useState(false);
@@ -21,14 +22,21 @@ const Chat = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const archiveMutation = useArchiveConversation();
   const archiveManyMutation = useArchiveConversations();
   const unarchiveMutation = useUnarchiveConversation();
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressedConversationIdRef = useRef<string | null>(null);
   const selectedCount = selectedConversationIds.size;
+  const unreadConversationCount = conversations.filter((conversation) => conversation.unread_count > 0).length;
+
+  useEffect(() => () => {
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+  }, []);
 
   const resetSelection = () => {
     setSelectingConversations(false);
     setSelectedConversationIds(new Set());
+    longPressedConversationIdRef.current = null;
   };
 
   const toggleConversationSelection = (conversationId: string) => {
@@ -40,23 +48,46 @@ const Chat = () => {
     });
   };
 
+  const clearLongPress = () => {
+    if (!longPressTimerRef.current) return;
+    clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = null;
+  };
+
+  const startConversationLongPress = (conversationId: string) => {
+    if (showArchived || selectingConversations) return;
+
+    clearLongPress();
+    longPressTimerRef.current = setTimeout(() => {
+      longPressedConversationIdRef.current = conversationId;
+      setSelectingConversations(true);
+      setSelectedConversationIds(new Set([conversationId]));
+      longPressTimerRef.current = null;
+    }, 450);
+  };
+
+  const handleConversationClick = (conversationId: string) => {
+    if (longPressedConversationIdRef.current === conversationId) {
+      longPressedConversationIdRef.current = null;
+      return;
+    }
+
+    if (selectingConversations) toggleConversationSelection(conversationId);
+    else navigate(`/chat/${conversationId}`);
+  };
+
   const handleRefresh = async () => {
     await queryClient.refetchQueries({ queryKey: ["conversations"], type: "active" });
   };
 
-  const handleArchiveToggle = async (conversationId: string) => {
+  const handleRestoreConversation = async (conversationId: string) => {
     try {
-      if (showArchived) {
-        await unarchiveMutation.mutateAsync(conversationId);
-        toast({ title: "Conversa desarquivada" });
-      } else {
-        await archiveMutation.mutateAsync(conversationId);
-        toast({ title: "Conversa arquivada" });
-      }
-    } catch (err: any) {
+      await unarchiveMutation.mutateAsync(conversationId);
+      toast({ title: "Conversa desarquivada" });
+    } catch (error: unknown) {
       toast({
-        title: showArchived ? "Erro ao desarquivar" : "Erro ao arquivar",
-        description: err?.message || "Tente novamente.",
+        title: "Erro ao desarquivar",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -69,10 +100,10 @@ const Chat = () => {
       await archiveManyMutation.mutateAsync([...selectedConversationIds]);
       toast({ title: `${selectedConversationIds.size} conversa${selectedConversationIds.size === 1 ? "" : "s"} arquivada${selectedConversationIds.size === 1 ? "" : "s"}` });
       resetSelection();
-    } catch (err: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao arquivar conversas",
-        description: err?.message || "Tente novamente.",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -80,36 +111,36 @@ const Chat = () => {
 
   return (
     <ScreenLayout onRefresh={handleRefresh}>
-      {/* Header */}
-      <header className="relative z-40 flex w-full justify-between items-center px-6 pt-3 pb-4 shrink-0">
-        <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
-          Chat
-        </h1>
-        <div className="flex items-center gap-3">
-          {!showArchived && (
-            <button
-              type="button"
-              onClick={() => selectingConversations ? resetSelection() : setSelectingConversations(true)}
-              className="h-9 rounded-full border border-foreground/10 bg-card/60 px-3 text-[11px] font-bold text-foreground/75 active:scale-95"
-            >
-              {selectingConversations ? "Cancelar" : "Selecionar"}
-            </button>
-          )}
+      <header className="relative z-40 flex w-full items-start justify-between px-5 pt-3 pb-4 shrink-0">
+        <div>
+          <h1 className="text-foreground text-3xl font-extrabold tracking-tight">Chat</h1>
+          <p className="mt-1 text-sm text-foreground/50">
+            {showArchived
+              ? "Conversas guardadas"
+              : unreadConversationCount > 0
+                ? `${unreadConversationCount} conversa${unreadConversationCount === 1 ? "" : "s"} não lida${unreadConversationCount === 1 ? "" : "s"}`
+                : "Suas conversas de troca"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/chamadas")}
             aria-label="Chamadas perdidas"
-            className="h-9 w-9 rounded-full bg-card/60 backdrop-blur-xl border border-foreground/5 flex items-center justify-center active:scale-95 transition"
+            className="grid h-10 w-10 place-items-center rounded-full border border-foreground/10 bg-card/60 text-foreground/70 backdrop-blur-xl transition active:scale-95"
           >
             <PhoneMissed className="h-4 w-4 text-foreground/70" />
           </button>
-          <div className="flex items-center gap-1">
-            <span className="text-primary text-xs font-semibold">
-              {conversations.filter((c) => c.unread_count > 0).length} nova{conversations.filter((c) => c.unread_count > 0).length !== 1 ? "s" : ""}
-            </span>
-            {conversations.some((c) => c.unread_count > 0) && (
-              <span className="h-1.5 w-1.5 rounded-full bg-primary neon-glow" />
-            )}
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              resetSelection();
+              setShowArchived((value) => !value);
+            }}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-foreground/10 bg-card/60 px-3 text-xs font-bold text-foreground/75 backdrop-blur-xl transition active:scale-95"
+          >
+            {showArchived ? <MessageSquare className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+            {showArchived ? "Mensagens" : "Arquivadas"}
+          </button>
         </div>
       </header>
 
@@ -184,35 +215,22 @@ const Chat = () => {
                             onClick={() => navigate(`/chat/${conv.id}`)}
                             className="shrink-0 flex flex-col items-center gap-1.5 w-20"
                           >
-                            <div className="relative">
+                            <div>
                               {conv.other_item.image_url ? (
                                 <img
                                   src={conv.other_item.image_url}
                                   alt={conv.other_item.name || ""}
-                                  className="h-20 w-20 rounded-2xl object-cover border-2 border-primary/60 neon-glow"
+                                  className="h-20 w-20 rounded-2xl object-cover border border-pink/50 shadow-[0_0_18px_hsl(var(--pink)/0.18)]"
                                 />
                               ) : (
-                                <div className="h-20 w-20 rounded-2xl bg-card border-2 border-primary/60 flex items-center justify-center">
-                                  <span className="px-2 text-center text-[10px] font-bold leading-tight text-foreground/40">
+                                <div className="h-20 w-20 rounded-2xl border border-pink/50 bg-card flex items-center justify-center">
+                                  <span className="px-2 text-center text-xs font-bold leading-tight text-foreground/40">
                                     {conv.other_item.name || "Item"}
                                   </span>
                                 </div>
                               )}
-                              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background overflow-hidden bg-card flex items-center justify-center">
-                                {conv.other_user.avatar_url ? (
-                                  <img
-                                    src={conv.other_user.avatar_url}
-                                    alt={conv.other_user.display_name || ""}
-                                    className="h-full w-full object-cover"
-                                  />
-                                ) : (
-                                  <span className="text-[10px] font-bold text-foreground/40">
-                                    {(conv.other_user.display_name || "?")[0].toUpperCase()}
-                                  </span>
-                                )}
-                              </div>
                             </div>
-                            <span className="text-[11px] font-semibold text-foreground/80 truncate w-full text-center">
+                            <span className="text-xs font-semibold text-foreground/80 truncate w-full text-center">
                               {conv.other_user.display_name || "Usuário"}
                             </span>
                           </button>
@@ -222,41 +240,31 @@ const Chat = () => {
                   )}
 
                   <section>
-                    <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                      <h2 className="text-foreground text-sm font-bold">
-                        {showArchived ? "Arquivadas" : "Mensagens"}
+                    <div className="mb-3 flex items-center justify-between px-1">
+                      <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground/50">
+                        {showArchived ? "Arquivadas" : "Conversas"}
                       </h2>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          resetSelection();
-                          setShowArchived((value) => !value);
-                        }}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-foreground/10 bg-card/60 px-3 py-1.5 text-[11px] font-bold text-foreground/70 active:scale-95"
-                      >
-                        {showArchived ? (
-                          <>
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            Mensagens
-                          </>
-                        ) : (
-                          <>
-                            <Archive className="h-3.5 w-3.5" />
-                            Arquivadas
-                          </>
-                        )}
-                      </button>
+                      <span className="text-xs font-semibold tabular-nums text-foreground/40">{withMessages.length}</span>
                     </div>
                     {selectingConversations && !showArchived && withMessages.length > 0 && (
                       <div className="mb-3 flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-3 py-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedConversationIds(allVisibleSelected ? new Set() : new Set(selectableConversationIds))}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground/80"
-                        >
-                          {allVisibleSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4 text-foreground/50" />}
-                          {allVisibleSelected ? "Limpar seleção" : "Selecionar todas"}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedConversationIds(allVisibleSelected ? new Set() : new Set(selectableConversationIds))}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground/80"
+                          >
+                            {allVisibleSelected ? <CheckSquare className="h-4 w-4 text-primary" /> : <Square className="h-4 w-4 text-foreground/50" />}
+                            {allVisibleSelected ? "Limpar seleção" : "Selecionar todas"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={resetSelection}
+                            className="text-xs font-bold text-foreground/55"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
                         <button
                           type="button"
                           onClick={handleArchiveSelected}
@@ -289,23 +297,30 @@ const Chat = () => {
                   key={conv.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => selectingConversations ? toggleConversationSelection(conv.id) : navigate(`/chat/${conv.id}`)}
+                  onClick={() => handleConversationClick(conv.id)}
+                  onPointerDown={(event) => {
+                    if (event.pointerType !== "mouse" || event.button === 0) startConversationLongPress(conv.id);
+                  }}
+                  onPointerUp={clearLongPress}
+                  onPointerCancel={clearLongPress}
+                  onPointerLeave={clearLongPress}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      if (selectingConversations) toggleConversationSelection(conv.id);
-                      else navigate(`/chat/${conv.id}`);
+                      handleConversationClick(conv.id);
                     }
                   }}
-                  className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left ${
+                  aria-label={selectingConversations
+                    ? `Selecionar conversa com ${conv.other_user.display_name || "usuário"}`
+                    : `Abrir conversa com ${conv.other_user.display_name || "usuário"}. Pressione e segure para selecionar.`}
+                  className={`w-full touch-manipulation select-none flex items-center gap-3 rounded-[1.35rem] p-3.5 text-left transition-all ${
                     selectingConversations && selectedConversationIds.has(conv.id)
-                      ? "bg-primary/10 border border-primary/60"
+                      ? "border border-primary/60 bg-primary/10"
                       : hasUnread
-                      ? "bg-primary/5 border border-primary/20"
-                      : "bg-card/30 border border-foreground/5 hover:bg-card/60"
+                      ? "border border-foreground/15 bg-card/75 shadow-[0_8px_20px_hsl(var(--background)/0.12)]"
+                      : "border border-foreground/8 bg-card/35 hover:bg-card/55"
                   }`}
                 >
-                  {/* Produto principal + avatar menor */}
                   {!selectingConversations && <div
                     role="button"
                     tabIndex={0}
@@ -313,6 +328,7 @@ const Chat = () => {
                       e.stopPropagation();
                       navigate(`/usuario/${conv.other_user.user_id}`);
                     }}
+                    onPointerDown={(event) => event.stopPropagation()}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
@@ -320,30 +336,21 @@ const Chat = () => {
                         navigate(`/usuario/${conv.other_user.user_id}`);
                       }
                     }}
-                    className="relative shrink-0"
+                    className="shrink-0"
                   >
                     {conv.other_item.image_url ? (
                       <img
                         src={conv.other_item.image_url}
                         alt={conv.other_item.name || ""}
-                        className="h-16 w-16 rounded-2xl object-cover border border-foreground/10"
+                        className="h-14 w-14 rounded-xl border border-foreground/10 object-cover"
                       />
                     ) : (
-                      <div className="h-16 w-16 rounded-2xl bg-card border border-foreground/10 flex items-center justify-center">
-                        <span className="px-2 text-center text-[10px] font-bold leading-tight text-foreground/40">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-foreground/10 bg-card">
+                        <span className="px-2 text-center text-xs font-bold leading-tight text-foreground/40">
                           {conv.other_item.name || "Item"}
                         </span>
                       </div>
                     )}
-                    <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background overflow-hidden bg-card flex items-center justify-center">
-                      {conv.other_user.avatar_url ? (
-                        <img src={conv.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[10px] font-bold text-foreground/40">
-                          {(conv.other_user.display_name || "?")[0].toUpperCase()}
-                        </span>
-                      )}
-                    </div>
                   </div>}
 
                   {selectingConversations && (
@@ -352,47 +359,47 @@ const Chat = () => {
                     </span>
                   )}
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`font-bold text-sm truncate ${hasUnread ? "text-foreground" : "text-foreground/80"}`}>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <span className={`truncate text-[15px] font-bold ${hasUnread ? "text-foreground" : "text-foreground/85"}`}>
                         {conv.other_user.display_name || "Usuário"}
                       </span>
                       {timeAgo && (
-                        <span className={`text-[10px] shrink-0 ml-2 ${hasUnread ? "text-primary font-bold" : "text-foreground/40"}`}>
+                        <span className={`shrink-0 text-[11px] ${hasUnread ? "font-bold text-pink" : "text-foreground/40"}`}>
                           {timeAgo}
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <p className={`text-xs truncate max-w-[160px] ${hasUnread ? "text-foreground/90 font-medium" : "text-foreground/40"}`}>
+                    <div className="flex items-center gap-2">
+                      <p className={`min-w-0 flex-1 truncate text-[13px] ${hasUnread ? "font-medium text-foreground/85" : "text-foreground/50"}`}>
                         {lastMsg
                           ? `${isMyLastMsg ? "Você: " : ""}${lastMsg.content}`
                           : `Troca: ${conv.my_item.name} ↔ ${conv.other_item.name}`}
                       </p>
                       {hasUnread && (
-                        <span className="shrink-0 ml-2 h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                        <span className="flex min-h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-pink px-1.5 text-[11px] font-bold text-pink-foreground">
                           {conv.unread_count}
                         </span>
                       )}
                     </div>
 
-                    <p className="text-[10px] text-foreground/30 mt-1 truncate">
+                    <p className="mt-1.5 truncate text-[11px] text-foreground/40">
                       {conv.my_item.name} ↔ {conv.other_item.name}
                     </p>
                   </div>
-                  {!selectingConversations && <button
+                  {showArchived && !selectingConversations && <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleArchiveToggle(conv.id);
+                      handleRestoreConversation(conv.id);
                     }}
-                    disabled={archiveMutation.isPending || unarchiveMutation.isPending}
-                    className="ml-1 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-foreground/10 bg-background/50 text-foreground/65 active:scale-95 disabled:opacity-50"
-                    aria-label={showArchived ? "Desarquivar conversa" : "Arquivar conversa"}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    disabled={unarchiveMutation.isPending}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-foreground/10 bg-background/45 text-foreground/65 active:scale-95 disabled:opacity-50"
+                    aria-label="Desarquivar conversa"
                   >
-                    {showArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
+                    <ArchiveRestore className="h-4 w-4" />
                   </button>}
                 </div>
               );

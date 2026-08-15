@@ -37,8 +37,8 @@ describe("mobile visual layout", () => {
     expect(source).toContain('className="swipe-media-ambient"');
     expect(source).toContain('className="swipe-media-foreground"');
     expect(source).toContain("getMediaAspectClass");
-    expect(source).not.toContain("getMediaObjectPosition(currentImageRecord)");
-    expect(source).toContain('objectPosition: "50% 50%"');
+    expect(source).toContain('objectPosition: "center center"');
+    expect(source).toContain("getMediaScale(currentImageRecord)");
     expect(source).toContain("onLoad={handleImageLoad}");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-foreground");
     expect(css).toContain("object-position: center center;");
@@ -102,6 +102,15 @@ describe("mobile visual layout", () => {
     expect(css).toContain(".swipe-detail-surface-card");
   });
 
+  it("keeps expanded Explore details compact and above its floating controls", () => {
+    const card = readSource("src/components/SwipeCard.tsx");
+
+    expect(card).toContain("zIndex: standby ? 9 : expanded ? 80 : 60");
+    expect(card).toContain("bottom-[calc(var(--safe-area-bottom)+4.5rem)]");
+    expect(card).toContain("max-h-[58dvh]");
+    expect(card).toContain("min-h-0 flex-1 overflow-y-auto");
+  });
+
   it("uses a Tinder-like downward exit motion for Explore swipes", () => {
     const source = readSource("src/components/SwipeCard.tsx");
 
@@ -122,6 +131,29 @@ describe("mobile visual layout", () => {
     expect(source).toContain("revealMotionX={dragDirectionValue}");
   });
 
+  it("promotes the prepared Explore card without remounting it", () => {
+    const source = readSource("src/pages/Explorar.tsx");
+
+    expect(source).toContain("key={nextItem.id}");
+    expect(source).toContain("key={currentItem.id}");
+    expect(source).not.toContain("standby-${nextItem.id}");
+    expect(source).not.toContain("active-${currentItem.id}-${epoch}");
+    expect(source).not.toContain("const [epoch, setEpoch]");
+  });
+
+  it("keeps Explore media loading focused on the card the user will see", () => {
+    const explore = readSource("src/pages/Explorar.tsx");
+    const card = readSource("src/components/SwipeCard.tsx");
+    const persistence = explore.slice(explore.indexOf("const recordSwipeInBackground"), explore.indexOf("const handleSwipeComplete"));
+
+    expect(explore).not.toContain("afterNextVideo");
+    expect(explore).toContain("preloadImage(afterNextImage ? cdnFull(afterNextImage) : null)");
+    expect(persistence).toContain("queryClient.setQueryData<any[]>");
+    expect(persistence).not.toContain("refetchQueries");
+    expect(card).toContain('fetchPriority={standby ? "auto" : "high"}');
+    expect(card).toContain('willChange: "transform, opacity"');
+  });
+
   it("hides the bottom navigation while configuring the search", () => {
     const source = readSource("src/pages/Explorar.tsx");
 
@@ -130,11 +162,11 @@ describe("mobile visual layout", () => {
   });
 
   it("shares Explore items through the native share helper with a public URL", () => {
-    const source = readSource("src/components/SwipeCard.tsx");
+    const source = readSource("src/pages/Explorar.tsx");
     const packageSource = readSource("package.json");
 
     expect(source).toContain("shareContent({");
-    expect(source).toContain("buildPublicItemUrl(item.id)");
+    expect(source).toContain("buildPublicItemUrl(currentItem.id)");
     expect(packageSource).toContain('"@capacitor/share"');
   });
 
@@ -144,8 +176,8 @@ describe("mobile visual layout", () => {
 
     expect(card).toContain("swipe-edge-glass-bottom-compact");
     expect(source).toContain("--swipe-foreground-top-fade");
-    expect(source).toContain("rgba(0, 0, 0, 0.68) 22%");
-    expect(source).toContain("black 31%");
+    expect(source).toContain("rgba(0, 0, 0, 0.68) 11%");
+    expect(source).toContain("black 16%");
     expect(source).toContain("mask-image: var(--swipe-foreground-top-fade);");
     expect(source).toContain("-webkit-mask-image: var(--swipe-foreground-top-fade);");
     expect(source).toContain("height: min(26%, 238px);");
@@ -162,6 +194,11 @@ describe("mobile visual layout", () => {
     expect(actions).toContain('className="mt-5 flex items-center justify-center gap-7 pointer-events-auto"');
     expect(actions).toContain("h-14 w-14");
     expect(actions).toContain("h-6 w-6");
+    expect(actions).toContain("border-white/[0.13]");
+    expect(actions).toContain("rgba(26, 30, 31, 0.72)");
+    expect(actions).toContain('disabled ? "opacity-50" : ""');
+    expect(actions).not.toContain("disabled:opacity-50");
+    expect(actions).toContain("[-6, 6, 18, 60]");
     expect(nav).toContain("hypou-bottom-nav");
     expect(css).toContain(".hypou-bottom-nav");
     expect(css).toContain("backdrop-filter: blur(26px) saturate(118%);");
@@ -205,6 +242,7 @@ describe("mobile visual layout", () => {
       expect(source).toContain("Escolher da galeria");
       expect(source).toContain("item-form-scroll");
       expect(source).toContain("item-form-submit");
+      expect(source).toContain("<MediaViewerDialog media={mediaViewer}");
       expect(source).not.toContain("isNativePlatform() ? handleItemPhotos()");
       expect(source).not.toContain("isNativePlatform() ? handleNewPhotos()");
     }
@@ -212,6 +250,15 @@ describe("mobile visual layout", () => {
     expect(css).toContain("body.keyboard-visible .item-form-scroll");
     expect(css).toContain("body.keyboard-visible .item-form-submit");
     expect(css).toContain("var(--keyboard-height, 0px)");
+  });
+
+  it("supports Instagram-like pinch zoom in the full-screen media viewer", () => {
+    const mediaViewer = readSource("src/components/MediaViewerDialog.tsx");
+
+    expect(mediaViewer).toContain("MAX_ZOOM = 4");
+    expect(mediaViewer).toContain("onTouchMove={type === \"image\" ? handleImageTouchMove : undefined}");
+    expect(mediaViewer).toContain("touch-none");
+    expect(mediaViewer).toContain("translate3d(${zoom.x}px, ${zoom.y}px, 0) scale(${zoom.scale})");
   });
 
   it("shows video attachment as a first-class chat action", () => {
@@ -223,10 +270,10 @@ describe("mobile visual layout", () => {
     expect(input).toContain("<span className=\"text-xs text-foreground/70 font-semibold\">Vídeo</span>");
   });
 
-  it("keeps bottom navigation below modals and absent during proposals", () => {
+  it("keeps bottom navigation below overlays and proposal drawers", () => {
     const nav = readSource("src/components/BottomNav.tsx");
     const explore = readSource("src/pages/Explorar.tsx");
-    const profile = readSource("src/pages/MeuPerfil.tsx");
+    const app = readSource("src/App.tsx");
     const css = readSource("src/index.css");
 
     expect(nav).toContain("zIndex: 40");
@@ -234,7 +281,7 @@ describe("mobile visual layout", () => {
     expect(nav).toContain("hypou-bottom-nav-wrapper");
     expect(css).toContain('body[data-bottom-nav-hidden="true"] .hypou-bottom-nav-wrapper');
     expect(explore).toContain("{!filtersOpen && !showSelectItem && <BottomNav");
-    expect(profile).toContain('{!proposalTarget && <BottomNav activeTab="perfil" />}');
+    expect(app).toContain('<Route path="/item/:itemId" element={<ItemRedirect />} />');
   });
 
   it("blocks pull refresh in overlays and item forms", () => {
@@ -256,13 +303,14 @@ describe("mobile visual layout", () => {
     expect(source).toContain('className="relative flex-1 w-full z-10 pb-28 overflow-y-auto no-scrollbar"');
   });
 
-  it("exposes archive actions clearly in chat list and open conversation menu", () => {
+  it("keeps archive actions in chat selection and open conversation menu", () => {
     const chat = readSource("src/pages/Chat.tsx");
     const conversa = readSource("src/pages/Conversa.tsx");
     const header = readSource("src/pages/Conversa/ChatHeader.tsx");
 
-    expect(chat).toContain("Arquivar conversa");
-    expect(chat).toContain("Arquivar");
+    expect(chat).toContain("Pressione e segure para selecionar.");
+    expect(chat).toContain("Arquivar (");
+    expect(chat).toContain("Desarquivar conversa");
     expect(conversa).toContain("useArchiveConversation");
     expect(conversa).toContain("handleArchiveConversation");
     expect(header).toContain("onArchiveConversation");

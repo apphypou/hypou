@@ -4,7 +4,7 @@
  */
 import { describe, it, expect } from "vitest";
 
-const APP_ID = "app.lovable.acb982366bad48cfa029a44082a5c548";
+const APP_ID = "app.hypou.mobile";
 const APP_NAME = "hypou";
 const SAFE_AREA_BOTTOM = "env(safe-area-inset-bottom, 0px)";
 const SAFE_AREA_TOP = "env(safe-area-inset-top, 0px)";
@@ -21,7 +21,7 @@ const allowedImageOrigins = ["data:", "blob:", "https://"];
 const isAllowedImage = (src: string) => allowedImageOrigins.some((p) => src.startsWith(p));
 
 describe("E2E Mobile/Capacitor", () => {
-  it("01 appID válido", () => expect(APP_ID.startsWith("app.lovable.")).toBe(true));
+  it("01 appID válido", () => expect(APP_ID).toBe("app.hypou.mobile"));
   it("02 appName lowercase", () => expect(APP_NAME).toBe(APP_NAME.toLowerCase()));
   it("03 safe-area bottom configurado", () =>
     expect(SAFE_AREA_BOTTOM).toContain("safe-area-inset-bottom"));

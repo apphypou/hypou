@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
 import { getAuthRedirectUrl } from "@/lib/authRedirect";
+import { getErrorMessage } from "@/lib/utils";
 
 const RecuperarSenha = () => {
   const [email, setEmail] = useState("");
@@ -23,7 +24,7 @@ const RecuperarSenha = () => {
     setLoading(false);
 
     if (error) {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro", description: getErrorMessage(error, "Não foi possível enviar o código."), variant: "destructive" });
     } else {
       setSent(true);
       toast({ title: "Código enviado!", description: "Confira seu e-mail." });

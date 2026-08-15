@@ -48,7 +48,7 @@ export const ChatHeader = ({
     >
       <button
         onClick={() => navigate("/chat")}
-        className="h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all"
+        className="h-11 w-11 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
@@ -83,7 +83,7 @@ export const ChatHeader = ({
             ) : (
               <>
                 <p className="font-bold text-sm text-foreground truncate">{userName}</p>
-                <p className="text-[10px] text-foreground/40 truncate">
+                <p className="text-xs text-foreground/40 truncate">
                   {details?.my_item?.name || details?.other_item?.name
                     ? `${details?.my_item?.name || "Seu item"} ↔ ${details?.other_item?.name || "Item"}`
                     : "Conversa ativa"}
@@ -97,7 +97,7 @@ export const ChatHeader = ({
       {!loading && !details && (
         <div className="flex-1 min-w-0">
           <p className="font-bold text-sm text-foreground truncate">Conversa</p>
-          <p className="text-[10px] text-foreground/40 truncate">Não foi possível carregar os dados</p>
+          <p className="text-xs text-foreground/40 truncate">Não foi possível carregar os dados</p>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export const ChatHeader = ({
                 onClick={() => onStartCall("audio")}
                 disabled={!!callingKind}
                 aria-label="Chamada de áudio"
-                className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
+                className="h-11 w-11 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
               >
                 {callingKind === "audio" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
               </button>
@@ -117,7 +117,7 @@ export const ChatHeader = ({
                 onClick={() => onStartCall("video")}
                 disabled={!!callingKind}
                 aria-label="Chamada de vídeo"
-                className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
+                className="h-11 w-11 rounded-full flex items-center justify-center text-foreground/60 hover:text-primary hover:bg-foreground/5 transition-colors disabled:opacity-40"
               >
                 {callingKind === "video" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
               </button>
@@ -125,7 +125,7 @@ export const ChatHeader = ({
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-9 w-9 rounded-full flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors">
+              <button className="h-11 w-11 rounded-full flex items-center justify-center text-foreground/30 hover:text-foreground transition-colors">
                 <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>

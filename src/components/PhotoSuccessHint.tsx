@@ -16,7 +16,7 @@ const PhotoSuccessHint = ({ compact = false }: PhotoSuccessHintProps) => (
     <div>
       <p className="text-sm font-bold text-foreground">Mais fotos, mais chances</p>
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Adicione mais fotos para aumentar suas chances de conseguir um Hypou.
+        Mostre o item inteiro, em boa luz e sem filtros. Mais fotos aumentam suas chances de conseguir um Hypou.
       </p>
     </div>
   </div>

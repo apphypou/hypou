@@ -12,6 +12,7 @@ import { createReport, blockUser, isConversationBlocked } from "@/services/repor
 import { startCall } from "@/services/callService";
 import { cancelProposal, confirmTrade, getMatch, getMatches } from "@/services/matchService";
 import { describeCallError, getCallRuntimeDiagnostics, preflightCallMedia } from "@/lib/callDiagnostics";
+import { getErrorMessage } from "@/lib/utils";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import {
   AlertDialog,
@@ -63,13 +64,13 @@ const useConversationDetails = (conversationId: string | null) => {
           display_name: match.other_user.display_name || "Usuário",
           avatar_url: match.other_user.avatar_url || null,
         },
-        other_item: otherItem as any,
-        my_item: myItem as any,
+        other_item: otherItem,
+        my_item: myItem,
         is_user_b: match.my_item_side === "b",
         my_confirmed: isUserA ? !!match.confirmed_by_a : !!match.confirmed_by_b,
         other_confirmed: isUserA ? !!match.confirmed_by_b : !!match.confirmed_by_a,
-        cash_amount_cents: (match as any).cash_amount_cents || 0,
-        cash_payer_user_id: (match as any).cash_payer_user_id || null,
+        cash_amount_cents: match.cash_amount_cents || 0,
+        cash_payer_user_id: match.cash_payer_user_id || null,
       };
     },
     enabled: !!conversationId && !!user,
@@ -156,8 +157,8 @@ const Conversa = () => {
       });
       setConfirmTradeOpen(false);
       if (bothDone) setRateOpen(true);
-    } catch (err: any) {
-      toast({ title: "Erro ao confirmar troca", description: err?.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro ao confirmar troca", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setConfirmingTrade(false);
     }
@@ -172,8 +173,8 @@ const Conversa = () => {
       await queryClient.invalidateQueries({ queryKey: ["matches", user.id] });
       toast({ title: "Negociação cancelada", description: "Nenhuma entrega foi confirmada." });
       setCancelTradeOpen(false);
-    } catch (err: any) {
-      toast({ title: "Erro ao desistir da negociação", description: err?.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro ao desistir da negociação", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setCancellingTrade(false);
     }
@@ -209,14 +210,14 @@ const Conversa = () => {
           isCaller: true,
         },
       });
-    } catch (e: any) {
+    } catch (error: unknown) {
       console.error("[call] start-failed", {
         conversationId,
         kind,
-        error: describeCallError(e),
+        error: describeCallError(error),
         runtime: getCallRuntimeDiagnostics(kind),
       });
-      toast({ title: "Não foi possível iniciar a chamada", description: e?.message ?? "Tente novamente", variant: "destructive" });
+      toast({ title: "Não foi possível iniciar a chamada", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setCallingKind(null);
     }
@@ -230,7 +231,7 @@ const Conversa = () => {
         .select("chat_terms_accepted_at")
         .eq("user_id", user!.id)
         .single();
-      return !!(data as any)?.chat_terms_accepted_at;
+      return !!data?.chat_terms_accepted_at;
     },
     enabled: !!user,
   });
@@ -291,8 +292,8 @@ const Conversa = () => {
         }
       };
 
-      recorder.onerror = (ev: any) => {
-        console.error("[audio] recorder error", ev?.error || ev);
+      recorder.onerror = (event: Event & { error?: unknown }) => {
+        console.error("[audio] recorder error", event.error || event);
       };
 
       recorder.onstop = async () => {
@@ -344,12 +345,13 @@ const Conversa = () => {
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
       setShowAttachMenu(false);
-    } catch (err: any) {
-      console.error("[audio] startRecording error", err);
+    } catch (error: unknown) {
+      console.error("[audio] startRecording error", error);
       let description = "Não foi possível acessar o microfone.";
-      if (err?.name === "NotAllowedError") description = "Permissão negada. Libere o microfone nas configurações.";
-      else if (err?.name === "NotFoundError") description = "Nenhum microfone encontrado.";
-      else if (err?.name === "NotReadableError") description = "Microfone em uso por outro app.";
+      const errorName = error instanceof DOMException ? error.name : "";
+      if (errorName === "NotAllowedError") description = "Permissão negada. Libere o microfone nas configurações.";
+      else if (errorName === "NotFoundError") description = "Nenhum microfone encontrado.";
+      else if (errorName === "NotReadableError") description = "Microfone em uso por outro app.";
       toast({ title: "Erro", description, variant: "destructive" });
     }
   }, [handleFileSelect]);
@@ -411,10 +413,10 @@ const Conversa = () => {
       await archiveMutation.mutateAsync(conversationId);
       toast({ title: "Conversa arquivada" });
       navigate("/chat");
-    } catch (err: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao arquivar",
-        description: err?.message || "Tente novamente.",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -425,10 +427,10 @@ const Conversa = () => {
     try {
       await deleteMessageMutation.mutateAsync({ messageId, conversationId });
       toast({ title: "Mensagem apagada" });
-    } catch (err: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao apagar mensagem",
-        description: err?.message || "Tente novamente.",
+        description: getErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -441,7 +443,7 @@ const Conversa = () => {
   const chatLocked = chatUnavailable || conversationBlocked;
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
+    <div className="hypou-screen flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden">
       {user && (
         <ChatSafetyDialog
           open={showSafetyDialog}

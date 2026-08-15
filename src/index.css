@@ -46,6 +46,8 @@
     --danger-foreground: 0 0% 100%;
     --pink: 331 92% 58%;
     --pink-foreground: 0 0% 100%;
+    --brand-violet: 260 83% 65%;
+    --brand-gradient: linear-gradient(90deg, hsl(var(--pink)), hsl(var(--brand-violet)) 52%, hsl(var(--primary)));
 
     /* Brand semantic — Hypou (like) / Flopou (dislike) */
     --hype: 178 88% 48%;
@@ -163,6 +165,11 @@
   body {
     @apply bg-background text-foreground font-display antialiased;
   }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 3px;
+  }
 }
 
 @layer utilities {
@@ -192,6 +199,33 @@
     box-shadow: none;
   }
 
+  /* Shared internal-screen treatment: dark gray remains dominant, brand color stays atmospheric. */
+  .hypou-screen {
+    isolation: isolate;
+    background:
+      radial-gradient(90% 56% at 6% -8%, hsl(var(--primary) / 0.07), transparent 58%),
+      radial-gradient(72% 48% at 104% 0%, hsl(var(--pink) / 0.055), transparent 62%),
+      hsl(var(--background));
+  }
+
+  .brand-card {
+    border-color: hsl(var(--foreground) / 0.09);
+    background:
+      linear-gradient(135deg, hsl(var(--primary) / 0.045), transparent 42%),
+      hsl(var(--card));
+  }
+
+  .dark .brand-card {
+    background:
+      linear-gradient(135deg, hsl(var(--primary) / 0.06), transparent 42%),
+      hsl(0 0% 15% / 0.88);
+    border-color: hsl(var(--foreground) / 0.075);
+  }
+
+  .brand-gradient {
+    background-image: var(--brand-gradient);
+  }
+
   .neon-glow {
     box-shadow: 0 0 14px hsl(var(--primary) / 0.22);
   }
@@ -215,9 +249,9 @@
     --swipe-foreground-top-fade: linear-gradient(
       to bottom,
       transparent 0%,
-      rgba(0, 0, 0, 0.18) 10%,
-      rgba(0, 0, 0, 0.68) 22%,
-      black 31%,
+      rgba(0, 0, 0, 0.18) 5%,
+      rgba(0, 0, 0, 0.68) 11%,
+      black 16%,
       black 100%
     );
     background:
@@ -537,6 +571,17 @@
     background-image: linear-gradient(to right, hsl(var(--foreground)), hsl(var(--primary) / 0.8));
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   @keyframes float {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
@@ -619,8 +664,4 @@
 .native-app textarea {
   -webkit-user-select: text;
   user-select: text;
-}
-
-#lovable-badge {
-  display: none !important;
 }

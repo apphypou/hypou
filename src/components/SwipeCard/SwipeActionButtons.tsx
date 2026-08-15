@@ -21,23 +21,26 @@ export const SwipeActionButtons = ({
   onDislike,
   onLike,
 }: SwipeActionButtonsProps) => {
+  const disabledClass = disabled ? "opacity-50" : "";
   const dislikeBtnScale = useTransform(x, [-150, 0, 150], [1.18, 1, 0.92]);
   const likeBtnScale = useTransform(x, [-150, 0, 150], [0.92, 1, 1.18]);
 
   const dislikeBtnBg = useTransform(
     x,
-    [-60, -10, 0],
+    [-60, -18, -6, 6],
     [
       "hsl(var(--flop))",
       "hsl(var(--flop))",
-      "hsl(var(--glass-surface))",
+      "rgba(26, 30, 31, 0.72)",
+      "rgba(26, 30, 31, 0.72)",
     ]
   );
   const likeBtnBg = useTransform(
     x,
-    [0, 10, 60],
+    [-6, 6, 18, 60],
     [
-      "hsl(var(--glass-surface))",
+      "rgba(26, 30, 31, 0.72)",
+      "rgba(26, 30, 31, 0.72)",
       "hsl(var(--hype))",
       "hsl(var(--hype))",
     ]
@@ -88,7 +91,7 @@ export const SwipeActionButtons = ({
           boxShadow: dislikeBtnShadow,
           color: dislikeIconColor,
         }}
-        className="h-14 w-14 rounded-full border border-white/14 backdrop-blur-xl flex items-center justify-center transition-colors disabled:opacity-50"
+        className={`h-14 w-14 rounded-full border border-white/[0.13] backdrop-blur-xl flex items-center justify-center transition-colors ${disabledClass}`}
       >
         <ThumbsDown
           className="h-6 w-6"
@@ -112,7 +115,7 @@ export const SwipeActionButtons = ({
           boxShadow: likeBtnShadow,
           color: likeIconColor,
         }}
-        className="h-14 w-14 rounded-full border border-white/14 backdrop-blur-xl flex items-center justify-center disabled:opacity-50"
+        className={`h-14 w-14 rounded-full border border-white/[0.13] backdrop-blur-xl flex items-center justify-center ${disabledClass}`}
       >
         <ThumbsUp
           className="h-6 w-6"

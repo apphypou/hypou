@@ -13,7 +13,17 @@ describe("send-push delivery contract", () => {
     expect(source).not.toContain('skipped: "FCM not configured"');
   });
 
-  it("sends iOS notifications as alert pushes", () => {
+  it("does not hide zero-delivery results as success", () => {
+    expect(source).toContain('ok: false, sent: 0, reason: "no_device_tokens"');
+    expect(source).toContain("ok: sent > 0");
+    expect(source).toContain("failures:");
+  });
+
+  it("sends iOS notifications directly through APNs as alert pushes", () => {
+    expect(source).toContain('t.platform === "ios"');
+    expect(source).toContain('https://api.push.apple.com/3/device/${opts.token}');
+    expect(source).toContain('APNS_PRIVATE_KEY');
+    expect(source).toContain('"apns-topic": opts.bundleId');
     expect(source).toContain('"apns-push-type": "alert"');
     expect(source).toContain('"content-available": 1');
   });

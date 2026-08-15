@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { startCall, joinCall } from "@/services/callService";
 import { toast } from "@/hooks/use-toast";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
+import { getErrorMessage } from "@/lib/utils";
 
 interface MissedCall {
   id: string;
@@ -77,7 +78,7 @@ export default function ChamadasPerdidas() {
         },
       });
     } catch (e: any) {
-      toast({ title: "Não foi possível ligar", description: e?.message ?? "Tente novamente", variant: "destructive" });
+      toast({ title: "Não foi possível ligar", description: getErrorMessage(e), variant: "destructive" });
     }
   };
 

@@ -37,6 +37,7 @@ export const useUserRating = (userId: string | undefined) => {
       return { average: Math.round(avg * 10) / 10, count: data.length };
     },
     enabled: !!userId,
+    staleTime: 1000 * 60 * 30,
   });
 };
 

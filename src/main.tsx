@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { Capacitor } from "@capacitor/core";
+import { configureNativeKeyboardResize } from "@/lib/nativeKeyboard";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -24,7 +25,7 @@ if (Capacitor.isNativePlatform()) {
   });
 
   import("@capacitor/keyboard").then(({ Keyboard, KeyboardResize }) => {
-    Keyboard.setResizeMode({ mode: KeyboardResize.None });
+    void configureNativeKeyboardResize(Keyboard, KeyboardResize.None);
 
     Keyboard.addListener("keyboardWillShow", (info) => {
       document.documentElement.style.setProperty("--keyboard-height", `${info.keyboardHeight}px`);

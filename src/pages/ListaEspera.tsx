@@ -8,6 +8,7 @@ import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import { getErrorMessage } from "@/lib/utils";
 
 // ── CONFIG ──────────────────────────────────────────────────────────
 const LAUNCH_DATE = new Date();
@@ -301,7 +302,7 @@ const ListaEspera = () => {
         toast({ title: "Você está dentro! 🚀", description: `Posição #${nextPos} garantida.` });
       }
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message || "Tente novamente.", variant: "destructive" });
+      toast({ title: "Erro", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setLoading(false);
     }

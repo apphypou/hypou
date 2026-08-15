@@ -46,6 +46,6 @@ describe("Auth: error translation pt-BR", () => {
 
 describe("Auth: OAuth redirect URL", () => {
   it("includes origin", () => {
-    expect(buildRedirectUrl("https://hypou.lovable.app")).toBe("https://hypou.lovable.app/explorar");
+    expect(buildRedirectUrl("https://app.hypou.app")).toBe("https://app.hypou.app/explorar");
   });
 });

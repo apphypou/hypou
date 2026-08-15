@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/lib/utils";
 
 interface GeoPosition {
   lat: number;
@@ -42,7 +43,7 @@ export const useGeolocation = (userId: string | undefined) => {
         setLoading(false);
       },
       (err) => {
-        setError(err.message);
+        setError(getErrorMessage(err, "Não foi possível obter sua localização."));
         setLoading(false);
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }

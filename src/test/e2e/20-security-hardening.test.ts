@@ -21,8 +21,8 @@ const maskPII = (s: string) =>
 
 const isSafeRedirect = (url: string) => {
   try {
-    const u = new URL(url, "https://hypou.lovable.app");
-    return u.origin === "https://hypou.lovable.app";
+    const u = new URL(url, "https://app.hypou.app");
+    return u.origin === "https://app.hypou.app";
   } catch {
     return false;
   }
@@ -54,7 +54,7 @@ describe("E2E Security Hardening", () => {
   it("14 mascara cartão", () =>
     expect(maskPII("cartao 1234567812345678")).toContain("**** **** **** ****"));
   it("15 redirect mesma origem permitido", () =>
-    expect(isSafeRedirect("https://hypou.lovable.app/explorar")).toBe(true));
+    expect(isSafeRedirect("https://app.hypou.app/explorar")).toBe(true));
   it("16 redirect externo rejeitado", () =>
     expect(isSafeRedirect("https://evil.com/x")).toBe(false));
   it("17 redirect path relativo OK", () =>

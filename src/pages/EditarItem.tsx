@@ -24,7 +24,8 @@ import TradeRangeCard from "@/components/TradeRangeCard";
 import LocationSearch from "@/components/LocationSearch";
 import { categories, conditions } from "@/constants/categories";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
-import { FocalPointEditor, type FocalPoint } from "@/components/media/FocalPointEditor";
+import { FocalPointEditor } from "@/components/media/FocalPointEditor";
+import { getErrorMessage } from "@/lib/utils";
 
 const formatCurrency = (value: string): string => {
   const digits = value.replace(/\D/g, "");
@@ -76,7 +77,6 @@ const EditarItem = () => {
   const [existingImages, setExistingImages] = useState<any[]>([]);
   const [newPhotos, setNewPhotos] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
-  const [newPhotoFocalPoints, setNewPhotoFocalPoints] = useState<FocalPoint[]>([]);
   const [editingNewPhotoIndex, setEditingNewPhotoIndex] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -145,10 +145,6 @@ const EditarItem = () => {
     const startIndex = newPhotos.length;
     setNewPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
     setNewPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
-    setNewPhotoFocalPoints((prev) => [
-      ...prev,
-      ...results.map(() => ({ focal_x: 50, focal_y: 50 })),
-    ]);
     setEditingNewPhotoIndex(startIndex);
   };
 
@@ -208,7 +204,11 @@ const EditarItem = () => {
         setItemValue(formatCurrency(String(avg)));
         toast({ title: "💡 Preço sugerido!", description: `Baseado em preços reais: ${formatCentsDisplay(result.suggestedMin)} — ${formatCentsDisplay(result.suggestedMax)}` });
       } else {
-        toast({ title: "Não foi possível sugerir um preço", variant: "destructive" });
+        toast({
+          title: "Não foi possível sugerir um preço",
+          description: result.reason || "Tente preencher manualmente.",
+          variant: "destructive",
+        });
       }
     } catch {
       toast({ title: "Erro ao buscar preço", variant: "destructive" });
@@ -234,7 +234,7 @@ const EditarItem = () => {
 
       for (let i = 0; i < newPhotos.length; i++) {
         const position = existingImages.length + i;
-        await uploadItemImage(user.id, itemId, newPhotos[i], position, newPhotoFocalPoints[i]);
+        await uploadItemImage(user.id, itemId, newPhotos[i], position);
       }
 
       // Upload new video if selected
@@ -265,7 +265,7 @@ const EditarItem = () => {
       toast({ title: "Item atualizado com sucesso!" });
       navigate("/meu-perfil");
     } catch (err: any) {
-      toast({ title: "Erro ao atualizar item", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao atualizar item", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -495,7 +495,6 @@ const EditarItem = () => {
                     URL.revokeObjectURL(newPreviews[i]);
                     setNewPhotos((prev) => prev.filter((_, idx) => idx !== i));
                     setNewPreviews((prev) => prev.filter((_, idx) => idx !== i));
-                    setNewPhotoFocalPoints((prev) => prev.filter((_, idx) => idx !== i));
                     setEditingNewPhotoIndex((current) => {
                       if (current === null) return null;
                       if (current === i) return null;
@@ -685,12 +684,19 @@ const EditarItem = () => {
 
       <FocalPointEditor
         open={editingNewPhotoIndex !== null}
+        imageFile={editingNewPhotoIndex !== null ? newPhotos[editingNewPhotoIndex] : null}
         imageUrl={editingNewPhotoIndex !== null ? newPreviews[editingNewPhotoIndex] : null}
-        value={editingNewPhotoIndex !== null ? newPhotoFocalPoints[editingNewPhotoIndex] : null}
         onClose={() => setEditingNewPhotoIndex(null)}
-        onSave={(point) => {
+        onSave={(file) => {
           if (editingNewPhotoIndex !== null) {
-            setNewPhotoFocalPoints((prev) => prev.map((p, i) => (i === editingNewPhotoIndex ? point : p)));
+            const index = editingNewPhotoIndex;
+            const previewUrl = URL.createObjectURL(file);
+            setNewPhotos((prev) => prev.map((photo, i) => (i === index ? file : photo)));
+            setNewPreviews((prev) => prev.map((preview, i) => {
+              if (i !== index) return preview;
+              URL.revokeObjectURL(preview);
+              return previewUrl;
+            }));
           }
           setEditingNewPhotoIndex(null);
         }}

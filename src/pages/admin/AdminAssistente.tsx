@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -140,7 +141,7 @@ const AdminAssistente = () => {
       onDelta: upsert,
       onDone: () => setIsLoading(false),
       onError: (e) => {
-        toast.error(e);
+        toast.error(getErrorMessage(e, "Não foi possível responder agora."));
         setIsLoading(false);
       },
     });

@@ -19,6 +19,7 @@ import {
 
 import { categories as allCategories } from "@/constants/categories";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
+import { getErrorMessage } from "@/lib/utils";
 
 const CATEGORIES = [
   { label: "Todos", value: "" },
@@ -134,7 +135,7 @@ const Shorts = () => {
     } catch (err: any) {
       toast({
         title: "Erro",
-        description: err?.message || "Não foi possível enviar a proposta.",
+        description: getErrorMessage(err, "Não foi possível enviar a proposta."),
         variant: "destructive",
       });
     } finally {

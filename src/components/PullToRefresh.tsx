@@ -119,9 +119,9 @@ const PullToRefresh = ({ enabled, onRefresh, children, className, style }: PullT
         <Loader2 className={`h-6 w-6 text-primary ${refreshing ? "animate-spin" : ""}`} />
       </motion.div>
 
-      <motion.div className="flex min-h-0 flex-1 flex-col" style={{ y: pullY }}>
+      <div className="flex min-h-0 flex-1 flex-col">
         {children}
-      </motion.div>
+      </div>
     </div>
   );
 };

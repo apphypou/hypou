@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 
-const PUBLIC_APP_URL = "https://hypou.lovable.app";
+const PUBLIC_APP_URL = "https://app.hypou.app";
 
 type ShareContent = {
   title: string;

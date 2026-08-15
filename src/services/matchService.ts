@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage } from "@/lib/utils";
 
 export interface MatchWithDetails {
   id: string;
@@ -151,7 +152,7 @@ export const createProposal = async (
 };
 
 export const getProposalErrorMessage = (error: { code?: string; message?: string }) => {
-  const message = error.message || "Não foi possível enviar a proposta.";
+  const message = error.message || "";
   if (
     error.code === "PGRST202" &&
     message.includes("create_proposal") &&
@@ -159,7 +160,7 @@ export const getProposalErrorMessage = (error: { code?: string; message?: string
   ) {
     return "O banco do Hypou precisa ser atualizado para aceitar proposta com dinheiro. A migration de completar com dinheiro ainda não foi aplicada no Supabase.";
   }
-  return message;
+  return getErrorMessage(message, "Não foi possível enviar a proposta.");
 };
 
 export const acceptProposal = async (matchId: string) => {

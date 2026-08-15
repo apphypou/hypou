@@ -23,7 +23,7 @@ describe("native sharing", () => {
 
   it("builds a public item URL instead of a Capacitor-local URL", () => {
     expect(buildPublicItemUrl("item 123")).toBe(
-      "https://hypou.lovable.app/item/item%20123",
+      "https://app.hypou.app/item/item%20123",
     );
   });
 
@@ -34,13 +34,13 @@ describe("native sharing", () => {
     await shareContent({
       title: "Notebook — Hypou",
       text: "Veja este item",
-      url: "https://hypou.lovable.app/item/123",
+      url: "https://app.hypou.app/item/123",
     });
 
     expect(mocks.nativeShare).toHaveBeenCalledWith({
       title: "Notebook — Hypou",
       text: "Veja este item",
-      url: "https://hypou.lovable.app/item/123",
+      url: "https://app.hypou.app/item/123",
       dialogTitle: "Notebook — Hypou",
     });
   });

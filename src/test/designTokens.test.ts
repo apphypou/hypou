@@ -10,6 +10,8 @@ describe("Hypou design tokens", () => {
   it("uses the refined semantic color values", () => {
     expect(css).toContain("--primary: 178 88% 48%");
     expect(css).toContain("--pink: 331 92% 58%");
+    expect(css).toContain("--brand-violet: 260 83% 65%");
+    expect(css).toContain("--brand-gradient: linear-gradient(90deg");
     expect(css).toContain("--hype: 178 88% 48%");
     expect(css).toContain("--flop: 331 100% 58%");
   });
@@ -18,6 +20,14 @@ describe("Hypou design tokens", () => {
     expect(css).toContain("--overlay-scrim: 0 0% 0% / 0.28");
     expect(css).toContain("0 0 14px hsl(var(--primary) / 0.22)");
     expect(css).toContain("0 0 22px hsl(var(--primary) / 0.32)");
+  });
+
+  it("keeps dark gray as the internal screen base with restrained brand atmosphere", () => {
+    expect(css).toContain(".hypou-screen");
+    expect(css).toContain("hsl(var(--background))");
+    expect(css).toContain("hsl(var(--primary) / 0.07)");
+    expect(css).toContain("hsl(var(--pink) / 0.055)");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
   });
 
   it("defaults new beta sessions to dark mode", () => {

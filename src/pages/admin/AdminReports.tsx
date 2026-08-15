@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils";
 
 const AdminReports = () => {
   const { user } = useAuth();
@@ -59,7 +60,7 @@ const AdminReports = () => {
       setSelectedReport(null);
       setResolutionNotes("");
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setResolving(false);
     }
@@ -71,7 +72,7 @@ const AdminReports = () => {
       await blockUser(user.id, userId);
       toast({ title: "Usuário bloqueado 🚫", description: "Este usuário não aparecerá mais para você." });
     } catch (err: any) {
-      toast({ title: "Erro ao bloquear", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao bloquear", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

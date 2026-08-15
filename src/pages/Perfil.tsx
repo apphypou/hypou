@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { categories } from "@/constants/categories";
 import LocationSearch from "@/components/LocationSearch";
+import { getErrorMessage } from "@/lib/utils";
 
 const stepLabels = ["Perfil", "Interesses", "Pronto!"];
 
@@ -80,7 +81,7 @@ const Perfil = () => {
       });
       goToStep(2);
     } catch (err: any) {
-      toast({ title: "Erro ao salvar perfil", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar perfil", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -96,7 +97,7 @@ const Perfil = () => {
       await saveUserCategories(user.id, selected);
       goToStep(3);
     } catch (err: any) {
-      toast({ title: "Erro ao salvar categorias", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar categorias", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -112,7 +113,7 @@ const Perfil = () => {
       queryClient.setQueryData(["profile", user.id], (old: any) => old ? { ...old, onboarding_completed: true } : old);
       navigate(goTo === "explorar" ? "/explorar" : "/novo-item");
     } catch (err: any) {
-      toast({ title: "Erro ao finalizar", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao finalizar", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -142,14 +143,14 @@ const Perfil = () => {
       queryClient.setQueryData(["profile", user.id], (old: any) => old ? { ...old, onboarding_completed: true } : old);
       navigate("/explorar");
     } catch (err: any) {
-      toast({ title: "Erro ao pular", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao pular", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden antialiased">
+    <div className="hypou-screen flex flex-col h-[100dvh] bg-background text-foreground font-display overflow-hidden antialiased">
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} />
 
       {/* Header */}
@@ -256,7 +257,7 @@ const Perfil = () => {
                     }}
                     placeholder="Ex: São Paulo, SP"
                   />
-                  <p className="text-[11px] text-muted-foreground mt-2 pl-1 leading-relaxed">
+                  <p className="text-xs text-muted-foreground mt-2 pl-1 leading-relaxed">
                     Usamos sua localização para mostrar trocas perto de você. Nunca compartilhamos seu endereço exato.
                   </p>
                 </div>

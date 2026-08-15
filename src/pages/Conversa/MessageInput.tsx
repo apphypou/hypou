@@ -220,7 +220,7 @@ export const MessageInput = ({
                 <button
                   type="button"
                   onClick={() => onStopRecording(false)}
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[hsl(260_85%_65%)] text-primary-foreground shadow-lg active:scale-95"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:scale-95"
                   aria-label="Enviar áudio"
                 >
                   <Send className="h-5 w-5" />
@@ -233,7 +233,7 @@ export const MessageInput = ({
                 onPointerUp={handleHoldEnd}
                 onPointerCancel={handleHoldEnd}
                 style={{ transform: `translateX(${slideOffset}px) scale(${willCancel ? 0.9 : 1.15})` }}
-                className={`h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center shadow-lg transition-transform select-none touch-none ${willCancel ? "bg-gradient-to-br from-destructive to-destructive/70" : "bg-gradient-to-br from-primary to-[hsl(260_85%_65%)]"}`}
+                className={`h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center shadow-lg transition-transform select-none touch-none ${willCancel ? "bg-destructive" : "bg-primary"}`}
                 aria-label="Solte para enviar, arraste para cima para travar ou para esquerda para cancelar"
               >
                 {willCancel ? <Trash2 className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
@@ -258,7 +258,7 @@ export const MessageInput = ({
                   type="button"
                   onClick={() => setShowAttachMenu(!showAttachMenu)}
                   disabled={uploading}
-                  className="h-9 w-9 rounded-full bg-background/60 border border-foreground/10 text-foreground/70 hover:text-primary flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
+                  className="h-11 w-11 rounded-full bg-background/60 border border-foreground/10 text-foreground/70 hover:text-primary flex items-center justify-center transition-all active:scale-90 disabled:opacity-30"
                   aria-label={showAttachMenu ? "Fechar anexos" : "Anexar mídia"}
                 >
                   {showAttachMenu ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -269,7 +269,7 @@ export const MessageInput = ({
               <button
                 onClick={onSend}
                 disabled={sending || uploading}
-                className="h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center transition-all active:scale-90 disabled:opacity-30 disabled:active:scale-100 shadow-lg bg-gradient-to-br from-primary to-[hsl(260_85%_65%)]"
+                className="h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center transition-all active:scale-90 disabled:opacity-30 disabled:active:scale-100 shadow-lg bg-primary"
                 aria-label="Enviar"
               >
                 {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
@@ -281,7 +281,7 @@ export const MessageInput = ({
                 onPointerUp={handleHoldEnd}
                 onPointerCancel={handleHoldEnd}
                 disabled={uploading}
-                className="h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center transition-all active:scale-110 disabled:opacity-30 shadow-lg bg-gradient-to-br from-primary to-[hsl(260_85%_65%)] select-none touch-none"
+                className="h-11 w-11 shrink-0 rounded-full text-primary-foreground flex items-center justify-center transition-all active:scale-110 disabled:opacity-30 shadow-lg bg-primary select-none touch-none"
                 aria-label="Segure para gravar áudio"
               >
                 <Mic className="h-5 w-5" />

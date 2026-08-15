@@ -7,12 +7,13 @@ type Functions = Database["public"]["Functions"];
 describe("mobile database contracts", () => {
   it("exposes image focal point columns used by mobile crop", () => {
     type ItemImage = Tables["item_images"]["Row"];
-    const image: Pick<ItemImage, "focal_x" | "focal_y"> = {
+    const image: Pick<ItemImage, "focal_x" | "focal_y" | "focal_scale"> = {
       focal_x: 50,
       focal_y: 50,
+      focal_scale: 1,
     };
 
-    expect(image).toEqual({ focal_x: 50, focal_y: 50 });
+    expect(image).toEqual({ focal_x: 50, focal_y: 50, focal_scale: 1 });
   });
 
   it("exposes cash proposal columns used by mobile offers", () => {

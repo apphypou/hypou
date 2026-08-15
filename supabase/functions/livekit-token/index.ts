@@ -75,6 +75,18 @@ Deno.serve(async (req) => {
       if (blockError) return json({ error: "Não foi possível validar a disponibilidade da conversa" }, 500);
       if (blocked) return json({ error: "Esta conversa está indisponível" }, 403);
 
+      const { data: presence, error: presenceError } = await admin
+        .from("user_app_presence")
+        .select("active, last_seen")
+        .eq("user_id", calleeId)
+        .maybeSingle();
+      if (presenceError) return json({ error: "Não foi possível verificar a disponibilidade do usuário" }, 500);
+
+      const lastSeen = presence?.last_seen ? Date.parse(presence.last_seen) : 0;
+      // Preserve calls for older app versions until they report presence once.
+      const calleeIsActive =
+        !presence ||
+        (presence.active === true && Date.now() - lastSeen <= 30_000);
       const { data: created, error: insErr } = await supabase
         .from("call_sessions")
         .insert({
@@ -82,10 +94,17 @@ Deno.serve(async (req) => {
           caller_id: userId,
           callee_id: calleeId,
           kind,
+          status: calleeIsActive ? "ringing" : "missed",
         })
         .select("*")
         .single();
       if (insErr) return json({ error: insErr.message }, 400);
+      if (!calleeIsActive) {
+        return json({
+          error: "Usuário indisponível",
+          call_session_id: created.id,
+        }, 409);
+      }
       session = created;
     } else {
       // join

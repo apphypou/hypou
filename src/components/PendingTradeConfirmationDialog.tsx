@@ -6,6 +6,7 @@ import { usePendingTradeConfirmations } from "@/hooks/usePendingTradeConfirmatio
 import { confirmTrade } from "@/services/matchService";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 const hiddenOnRoutes = [
   "/",
@@ -55,7 +56,7 @@ export default function PendingTradeConfirmationDialog() {
     } catch (err: any) {
       toast({
         title: "Erro ao confirmar troca",
-        description: err?.message || "Tente novamente.",
+        description: getErrorMessage(err),
         variant: "destructive",
       });
     } finally {

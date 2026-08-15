@@ -29,7 +29,7 @@ const ScreenLayout = ({
       enabled={refreshable}
       onRefresh={onRefresh ?? refreshActiveQueries}
       className={cn(
-        "relative flex flex-col h-[100dvh] bg-background text-foreground overflow-hidden font-display antialiased",
+        "hypou-screen relative flex flex-col h-[100dvh] bg-background text-foreground overflow-hidden font-display antialiased",
         className
       )}
       style={{

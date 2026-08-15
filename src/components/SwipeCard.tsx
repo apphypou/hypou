@@ -24,16 +24,14 @@ import {
   ChevronDown,
   Star,
   Repeat,
-  Share2,
-  SlidersHorizontal,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserRating } from "@/hooks/useRatings";
 import { formatValue, translateCondition } from "@/lib/utils";
 import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
 import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
-import { buildPublicItemUrl, shareContent } from "@/lib/share";
 import { measureImageTone, type MediaTone } from "@/lib/mediaContrast";
+import { getMediaScale } from "@/lib/mediaFrame";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
@@ -108,14 +106,12 @@ interface SwipeCardProps {
   standby?: boolean;
   revealMotionX?: MotionValue<number>;
   matchedOwnItem?: MatchedOwnItem | null;
-  onOpenFilters?: () => void;
-  hasActiveFilters?: boolean;
 }
 
 const SwipeCard = memo(
   forwardRef<SwipeCardHandle, SwipeCardProps>(
     (
-      { item, onSwipeComplete, onDragDirectionChange, disabled, standby, revealMotionX, matchedOwnItem, onOpenFilters, hasActiveFilters },
+      { item, onSwipeComplete, onDragDirectionChange, disabled, standby, revealMotionX, matchedOwnItem },
       ref
     ) => {
       const navigate = useNavigate();
@@ -132,14 +128,6 @@ const SwipeCard = memo(
       // 3D lift effect — card pops out as it's dragged
       const absX = useTransform(x, (v) => Math.abs(v));
       const liftScale = useTransform(absX, [0, 250], [1, 1.06]);
-      const liftShadow = useTransform(
-        absX,
-        [0, 250],
-        [
-          "0 4px 20px rgba(0,0,0,0.15)",
-          "0 30px 60px -10px rgba(0,0,0,0.55), 0 18px 36px -8px rgba(0,0,0,0.4)",
-        ]
-      );
 
       // Image + video gallery state
       const images = useMemo(() => item?.item_images || [], [item?.item_images]);
@@ -148,6 +136,7 @@ const SwipeCard = memo(
       const totalSlides = images.length + (hasVideo ? 1 : 0);
       const [activeImageIndex, setActiveImageIndex] = useState(0);
       const isVideoSlide = hasVideo && activeImageIndex === images.length;
+      const currentImageRecord = !isVideoSlide ? images[activeImageIndex] : null;
       const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
       const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
       const currentVideoPoster = isVideoSlide
@@ -158,6 +147,7 @@ const SwipeCard = memo(
       const [mediaTone, setMediaTone] = useState<MediaTone>("neutral");
       const videoRef = useRef<HTMLVideoElement>(null);
       const slideChangeTokenRef = useRef(0);
+      const exitingRef = useRef(false);
 
       // Expanded state
       const [expanded, setExpanded] = useState(false);
@@ -233,6 +223,7 @@ const SwipeCard = memo(
         setVideoReady(false);
         setMediaTone("neutral");
         slideChangeTokenRef.current = 0;
+        exitingRef.current = false;
         x.set(0);
         y.set(0);
       }, [item?.id, x, y]);
@@ -266,7 +257,8 @@ const SwipeCard = memo(
 
       const doExit = useCallback(
         (direction: "like" | "dislike", velocityX?: number) => {
-          if (disabled || standby || expanded) return;
+          if (disabled || standby || expanded || exitingRef.current) return;
+          exitingRef.current = true;
           const exitX = direction === "like" ? EXIT_X : -EXIT_X;
           const vel = velocityX != null ? velocityX : direction === "like" ? 800 : -800;
           animate(y, EXIT_Y, {
@@ -319,18 +311,18 @@ const SwipeCard = memo(
       return (
         <motion.div
           data-media-tone={mediaTone}
-          className={`swipe-card-shell absolute inset-0 w-full h-full ${
+          className={`swipe-card-shell absolute inset-0 h-full w-full overflow-hidden rounded-[1.75rem] ${
             standby ? "pointer-events-none" : expanded ? "" : "touch-none"
           }`}
           style={{
             x: standby ? 0 : x,
             rotate: standby || expanded ? 0 : rotate,
             scale: standby ? standbyScale : expanded ? 1 : liftScale,
-            boxShadow: standby || expanded ? undefined : liftShadow,
-            zIndex: standby ? 9 : 60,
-            willChange: standby ? "auto" : "transform",
+            boxShadow: standby || expanded ? undefined : "0 18px 36px -12px rgba(0,0,0,0.42)",
+            zIndex: standby ? 9 : expanded ? 80 : 60,
+            willChange: "transform, opacity",
             transformOrigin: "50% 80%",
-            borderRadius: 0,
+            borderRadius: "1.75rem",
             y: standby ? 0 : y,
             ...(standby ? { opacity: standbyOpacity } : {}),
           }}
@@ -343,7 +335,7 @@ const SwipeCard = memo(
           animate={undefined}
         >
           {/* Inner card */}
-          <div className="absolute inset-0 overflow-hidden z-[1]">
+          <div className="absolute inset-0 z-[1] overflow-hidden rounded-[inherit]">
             {!standby && !expanded && <SwipeOverlays x={x} />}
 
             {/* ===== FULL IMAGE / VIDEO ===== */}
@@ -400,10 +392,13 @@ const SwipeCard = memo(
                     className="swipe-media-foreground"
                     src={currentImageSrc || undefined}
                     crossOrigin="anonymous"
-                    fetchPriority="high"
+                    fetchPriority={standby ? "auto" : "high"}
                     loading="eager"
                     decoding="async"
-                    style={{ objectPosition: "50% 50%" }}
+                    style={{
+                      objectPosition: "center center",
+                      transform: `scale(${getMediaScale(currentImageRecord)})`,
+                    }}
                     onLoad={handleImageLoad}
                     draggable={false}
                   />
@@ -473,47 +468,6 @@ const SwipeCard = memo(
               </div>
             )}
 
-            {/* Share + filters */}
-            {!expanded && (
-              <div
-                className="absolute right-4 z-30 flex flex-col items-center gap-2"
-                style={{ top: "calc(var(--safe-area-top) + 0.75rem)" }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void shareContent({
-                      title: `${item.name} — Hypou`,
-                      text: `Olha esse item no Hypou: ${item.name} por ${formatValue(item.market_value)}! Quer trocar?`,
-                      url: buildPublicItemUrl(item.id),
-                    }).catch((error) => {
-                      if (error?.name !== "AbortError") console.error("Falha ao compartilhar item", error);
-                    });
-                  }}
-                  aria-label="Compartilhar item"
-                  className="h-8 w-8 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
-                >
-                  <Share2 className="h-3.5 w-3.5 text-on-media" />
-                </button>
-                {onOpenFilters && !standby && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenFilters();
-                    }}
-                    className="relative h-8 w-8 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10 flex items-center justify-center"
-                    aria-label="Configurar interesses"
-                  >
-                    <SlidersHorizontal className="h-3.5 w-3.5 text-on-media" />
-                    {hasActiveFilters && (
-                      <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-primary ring-1 ring-scrim/70" />
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
-
             {/* Dark glass edge fade */}
             <div
               className="swipe-edge-glass swipe-edge-glass-top z-20"
@@ -555,7 +509,7 @@ const SwipeCard = memo(
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 30 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="swipe-detail-glass-panel absolute inset-x-3 bottom-3 top-[18%] z-30 flex flex-col rounded-2xl backdrop-blur-2xl border shadow-[0_18px_60px_rgba(0,0,0,0.42)] overflow-hidden"
+                  className="swipe-detail-glass-panel absolute inset-x-3 bottom-[calc(var(--safe-area-bottom)+4.5rem)] z-30 flex max-h-[58dvh] min-h-0 flex-col overflow-hidden rounded-2xl border shadow-[0_18px_60px_rgba(0,0,0,0.42)] backdrop-blur-2xl"
                 >
                   <button
                     onClick={toggleExpand}
@@ -569,7 +523,7 @@ const SwipeCard = memo(
 
                   <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto no-scrollbar overscroll-contain"
+                    className="min-h-0 flex-1 overflow-y-auto no-scrollbar overscroll-contain"
                     onTouchMove={(e) => e.stopPropagation()}
                   >
                     <div className="px-4 pb-2">

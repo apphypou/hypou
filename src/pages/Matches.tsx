@@ -15,11 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { formatValue } from "@/lib/utils";
+import { formatValue, getErrorMessage } from "@/lib/utils";
 import { cdnMedium, cdnThumb } from "@/lib/imageUrl";
 import { useMatchRating } from "@/hooks/useRatings";
 import RatingDialog from "@/components/RatingDialog";
-import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
+import ItemPreviewDialog from "@/components/ItemPreviewDialog";
 import { getTradeConfirmationState } from "@/lib/tradeConfirmation";
 import { getTradeBadge } from "@/lib/tradeStatus";
 import {
@@ -45,11 +45,15 @@ const Matches = () => {
   const [rejecting, setRejecting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [confirmingTrade, setConfirmingTrade] = useState(false);
-  const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"received" | "sent" | "cancelled" | "completed">("received");
   const [showRating, setShowRating] = useState(false);
   const [openingChatMatchId, setOpeningChatMatchId] = useState<string | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+  const openItemDetails = (itemId?: string) => {
+    if (itemId) setPreviewItemId(itemId);
+  };
 
   // Rating check for completed matches
   const selectedMatchId = selectedMatch?.id;
@@ -78,12 +82,12 @@ const Matches = () => {
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       toast({ title: "Proposta recusada" });
-    } catch (err: any) {
-      toast({ title: "Erro ao recusar proposta", description: err.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro ao recusar proposta", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setRejecting(false);
     }
-  }, [selectedMatch, rejecting, queryClient, toast, user]);
+  }, [selectedMatch, rejecting, queryClient, toast]);
 
   const handleCancelProposal = useCallback(async () => {
     if (!selectedMatch || cancelling) return;
@@ -93,12 +97,12 @@ const Matches = () => {
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       toast({ title: selectedMatch.status === "accepted" ? "Negociação cancelada" : "Proposta cancelada" });
-    } catch (err: any) {
-      toast({ title: "Erro ao cancelar negociação", description: err.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro ao cancelar negociação", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setCancelling(false);
     }
-  }, [selectedMatch, cancelling, queryClient, toast, user]);
+  }, [selectedMatch, cancelling, queryClient, toast]);
   const handleConfirmTrade = useCallback(async () => {
     if (!selectedMatch || confirmingTrade) return;
     setConfirmingTrade(true);
@@ -118,8 +122,8 @@ const Matches = () => {
         setSelectedMatch(null);
         toast({ title: "Entrega confirmada! ✅" });
       }
-    } catch (err: any) {
-      toast({ title: "Erro ao confirmar troca", description: err.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro ao confirmar troca", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setConfirmingTrade(false);
     }
@@ -132,10 +136,10 @@ const Matches = () => {
       const conversationId = await getConversationIdForMatch(matchId);
       setSelectedMatch(null);
       navigate(conversationId ? `/chat/${conversationId}` : "/chat");
-    } catch (err: any) {
+    } catch (error: unknown) {
       toast({
         title: "Erro ao abrir chat",
-        description: err?.message || "Não foi possível encontrar a conversa dessa proposta.",
+        description: getErrorMessage(error, "Não foi possível encontrar a conversa dessa proposta."),
         variant: "destructive",
       });
     } finally {
@@ -153,8 +157,8 @@ const Matches = () => {
     new: "bg-primary text-primary-foreground border-primary/50",
     accepted: "bg-success text-on-media border-success/50",
     pending: "bg-black/70 text-white border-white/35 backdrop-blur-md shadow-lg",
-    sent: "bg-amber-500 text-on-media border-amber-600",
-    completed: "bg-emerald-600/20 text-emerald-500 border-emerald-500/30",
+    sent: "bg-pink text-pink-foreground border-pink/80",
+    completed: "bg-success text-on-media border-success/50 shadow-lg",
     cancelled: "bg-muted text-muted-foreground border-foreground/10",
   };
 
@@ -166,12 +170,12 @@ const Matches = () => {
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       navigate(`/match/${selectedMatch.id}`);
-    } catch (err: any) {
-      toast({ title: "Erro ao confirmar troca", description: err.message, variant: "destructive" });
+    } catch (error: unknown) {
+      toast({ title: "Erro ao confirmar troca", description: getErrorMessage(error), variant: "destructive" });
     } finally {
       setConfirming(false);
     }
-  }, [selectedMatch, confirming, queryClient, navigate, toast, user]);
+  }, [selectedMatch, confirming, queryClient, navigate, toast]);
 
   const otherItem = selectedMatch
     ? selectedMatch.my_item_side === "a" ? selectedMatch.item_b : selectedMatch.item_a
@@ -235,10 +239,11 @@ const Matches = () => {
       </header>
 
       {/* Tabs */}
-      <div className="grid grid-cols-4 gap-1.5 px-4 pb-3 shrink-0">
+      <div className="grid grid-cols-4 gap-1 px-3 pb-3 shrink-0">
         <button
           onClick={() => setActiveTab("received")}
-          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
+          aria-pressed={activeTab === "received"}
+          className={`h-10 min-w-0 rounded-full px-1 text-[10px] font-bold tracking-tight whitespace-nowrap transition-all ${
             activeTab === "received"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -248,7 +253,8 @@ const Matches = () => {
         </button>
         <button
           onClick={() => setActiveTab("sent")}
-          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
+          aria-pressed={activeTab === "sent"}
+          className={`h-10 min-w-0 rounded-full px-1 text-[10px] font-bold tracking-tight whitespace-nowrap transition-all ${
             activeTab === "sent"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -258,7 +264,8 @@ const Matches = () => {
         </button>
         <button
           onClick={() => setActiveTab("cancelled")}
-          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
+          aria-pressed={activeTab === "cancelled"}
+          className={`h-10 min-w-0 rounded-full px-1 text-[10px] font-bold tracking-tight whitespace-nowrap transition-all ${
             activeTab === "cancelled"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -268,7 +275,8 @@ const Matches = () => {
         </button>
         <button
           onClick={() => setActiveTab("completed")}
-          className={`h-9 min-w-0 rounded-full px-1 text-[10px] font-bold transition-all ${
+          aria-pressed={activeTab === "completed"}
+          className={`h-10 min-w-0 rounded-full px-1 text-[10px] font-bold tracking-tight whitespace-nowrap transition-all ${
             activeTab === "completed"
               ? "bg-primary text-primary-foreground"
               : "bg-card border border-foreground/10 text-foreground/50"
@@ -367,7 +375,7 @@ const Matches = () => {
                     )}
                     
                     {badge && (
-                      <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full border text-[10px] font-bold tracking-wider uppercase ${badgeStyles[badge.tone]}`}>
+                      <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full border text-xs font-bold tracking-wider uppercase ${badgeStyles[badge.tone]}`}>
                         {needsMyConfirmation ? "Confirmar entrega" : badge.label}
                       </div>
                     )}
@@ -401,7 +409,7 @@ const Matches = () => {
                             src={cdnThumb(match.other_user.avatar_url)}
                           />
                         ) : (
-                          <div className="h-7 w-7 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                          <div className="h-7 w-7 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-xs font-bold text-primary">
                             {(match.other_user.display_name || "?")[0]}
                           </div>
                         )}
@@ -448,7 +456,7 @@ const Matches = () => {
             {/* Back button */}
             <button
               onClick={() => setSelectedMatch(null)}
-              className="absolute top-4 left-4 z-50 h-10 w-10 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-lg border border-foreground/10 hover:bg-background transition-colors"
+              className="absolute top-4 left-4 z-50 h-11 w-11 flex items-center justify-center rounded-full bg-background/80 backdrop-blur-sm text-foreground shadow-lg border border-foreground/10 hover:bg-background transition-colors"
               style={{ marginTop: "env(safe-area-inset-top)" }}
             >
               <ArrowLeft className="h-5 w-5" />
@@ -462,7 +470,7 @@ const Matches = () => {
                     type="button"
                     onClick={(event) => {
                       event.stopPropagation();
-                      setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" });
+                      openItemDetails(otherItem?.id);
                     }}
                     className="absolute inset-0 h-full w-full"
                   >
@@ -530,7 +538,7 @@ const Matches = () => {
 
                 {/* Exchange visualization */}
                 <div className="rounded-2xl bg-foreground/[0.07] border border-foreground/10 p-5 mb-6 overflow-hidden">
-                  <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-4 text-center">
+                  <p className="text-xs uppercase tracking-widest text-foreground/40 font-bold mb-4 text-center">
                     {selectedMatch.status === "completed" ? "Troca Concluída ✅" : "Proposta de Troca"}
                   </p>
                   <div className="flex items-center gap-3">
@@ -542,48 +550,44 @@ const Matches = () => {
                             {myItems.slice(0, 3).map((it, idx) => {
                               const img = (it.item_images || []).sort((a, b) => a.position - b.position)[0]?.image_url;
                               return (
-                                <div
+                                <button
+                                  type="button"
                                   key={it.id}
+                                  onClick={() => openItemDetails(it.id)}
                                   className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-background shadow-md"
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <button type="button" onClick={(event) => {
-                                      event.stopPropagation();
-                                      setMediaViewer({ url: img, type: "image", alt: it.name });
-                                    }} className="h-full w-full">
-                                      <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
-                                    </button>
+                                    <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
                                   )}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
                           <p className="text-foreground/90 text-xs font-semibold w-full px-1">
                             {myItems.length} itens
                           </p>
-                          <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(myItemsTotal)}</p>
-                          <p className="text-foreground/30 text-[9px] mt-1">Sua oferta</p>
+                          <p className="text-primary text-xs font-bold mt-0.5">{formatValue(myItemsTotal)}</p>
+                          <p className="text-foreground/30 text-xs mt-1">Sua oferta</p>
                         </>
                       ) : (
                         <>
-                          <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md">
+                          <button
+                            type="button"
+                            onClick={() => openItemDetails(myItem?.id)}
+                            className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-foreground/10 mb-2.5 shadow-md"
+                          >
                             {myImages[0]?.image_url ? (
-                              <button type="button" onClick={(event) => {
-                                event.stopPropagation();
-                                setMediaViewer({ url: myImages[0].image_url, type: "image", alt: myItem?.name || "Item" });
-                              }} className="h-full w-full">
-                                <img src={cdnMedium(myImages[0].image_url)} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
-                              </button>
+                              <img src={cdnMedium(myImages[0].image_url)} alt={myItem?.name || "Item"} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                             )}
-                          </div>
+                          </button>
                           <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{myItem?.name || "Item"}</p>
-                          <p className="text-primary text-[11px] font-bold mt-0.5">{myItem ? formatValue(myItem.market_value) : "—"}</p>
-                          <p className="text-foreground/30 text-[9px] mt-1">Seu item</p>
+                          <p className="text-primary text-xs font-bold mt-0.5">{myItem ? formatValue(myItem.market_value) : "—"}</p>
+                          <p className="text-foreground/30 text-xs mt-1">Seu item</p>
                         </>
                       )}
                     </div>
@@ -601,48 +605,44 @@ const Matches = () => {
                             {otherItems.slice(0, 3).map((it, idx) => {
                               const img = (it.item_images || []).sort((a, b) => a.position - b.position)[0]?.image_url;
                               return (
-                                <div
+                                <button
+                                  type="button"
                                   key={it.id}
+                                  onClick={() => openItemDetails(it.id)}
                                   className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-background ring-2 ring-primary/20 shadow-md"
                                   style={{ zIndex: 3 - idx }}
                                 >
                                   {img ? (
-                                    <button type="button" onClick={(event) => {
-                                      event.stopPropagation();
-                                      setMediaViewer({ url: img, type: "image", alt: it.name });
-                                    }} className="h-full w-full">
-                                      <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
-                                    </button>
+                                    <img src={cdnMedium(img)} alt={it.name} className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full bg-muted flex items-center justify-center text-base">📦</div>
                                   )}
-                                </div>
+                                </button>
                               );
                             })}
                           </div>
                           <p className="text-foreground/90 text-xs font-semibold w-full px-1">
                             {otherItems.length} itens
                           </p>
-                          <p className="text-primary text-[11px] font-bold mt-0.5">{formatValue(otherItemsTotal)}</p>
-                          <p className="text-foreground/30 text-[9px] mt-1">Oferta deles</p>
+                          <p className="text-primary text-xs font-bold mt-0.5">{formatValue(otherItemsTotal)}</p>
+                          <p className="text-foreground/30 text-xs mt-1">Oferta deles</p>
                         </>
                       ) : (
                         <>
-                          <div className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10">
+                          <button
+                            type="button"
+                            onClick={() => openItemDetails(otherItem?.id)}
+                            className="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border border-primary/20 mb-2.5 ring-2 ring-primary/20 shadow-md shadow-primary/10"
+                          >
                             {otherImages[0]?.image_url ? (
-                              <button type="button" onClick={(event) => {
-                                event.stopPropagation();
-                                setMediaViewer({ url: otherImages[0].image_url, type: "image", alt: otherItem?.name || "Item" });
-                              }} className="h-full w-full">
-                                <img src={cdnMedium(otherImages[0].image_url)} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
-                              </button>
+                              <img src={cdnMedium(otherImages[0].image_url)} alt={otherItem?.name || "Item"} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full bg-muted flex items-center justify-center text-xl">📦</div>
                             )}
-                          </div>
+                          </button>
                           <p className="text-foreground/90 text-xs font-semibold truncate w-full px-1">{otherItem?.name || "Item"}</p>
-                          <p className="text-primary text-[11px] font-bold mt-0.5">{otherItem ? formatValue(otherItem.market_value) : "—"}</p>
-                          <p className="text-foreground/30 text-[9px] mt-1">Item deles</p>
+                          <p className="text-primary text-xs font-bold mt-0.5">{otherItem ? formatValue(otherItem.market_value) : "—"}</p>
+                          <p className="text-foreground/30 text-xs mt-1">Item deles</p>
                         </>
                       )}
                     </div>
@@ -653,7 +653,7 @@ const Matches = () => {
                         <Banknote className="h-4 w-4 text-primary" />
                         {cashPayerIsMe ? "Você completa" : "A outra pessoa completa"} com {formatValue(cashAmount)}
                       </div>
-                      <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                         Valor apenas registrado como combinado. O Hypou não processa pagamentos.
                       </p>
                     </div>
@@ -662,7 +662,7 @@ const Matches = () => {
                   {/* Trade confirmation status */}
                   {selectedMatch.status === "accepted" && (
                     <div className="mt-4 pt-3 border-t border-foreground/10">
-                      <p className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold mb-2 text-center">
+                      <p className="text-xs uppercase tracking-widest text-foreground/40 font-bold mb-2 text-center">
                         Confirmação de entrega
                       </p>
                       <div className="flex justify-center gap-4">
@@ -689,10 +689,7 @@ const Matches = () => {
                     <p className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-3">Mais fotos</p>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar">
                       {otherImages.slice(1).map((img, i) => (
-                        <button key={i} onClick={(event) => {
-                          event.stopPropagation();
-                          setMediaViewer({ url: img.image_url, type: "image", alt: otherItem?.name || "Foto do item" });
-                        }} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
+                        <button key={i} onClick={() => openItemDetails(otherItem?.id)} className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border border-foreground/10">
                           <img src={cdnMedium(img.image_url)} alt="" className="w-full h-full object-cover" />
                         </button>
                       ))}
@@ -826,7 +823,7 @@ const Matches = () => {
                     ) : (
                       <>
                         <Handshake className="h-5 w-5" />
-                        Aceitar Proposta
+                        Negociar Proposta
                       </>
                     )}
                   </button>
@@ -837,7 +834,7 @@ const Matches = () => {
         )}
       </AnimatePresence>
 
-      <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
+      <ItemPreviewDialog itemId={previewItemId} open={!!previewItemId} onOpenChange={(open) => !open && setPreviewItemId(null)} />
 
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>

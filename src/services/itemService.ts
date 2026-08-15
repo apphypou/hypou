@@ -43,7 +43,7 @@ export const updateItem = async (itemId: string, data: {
 export const getItemById = async (itemId: string) => {
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position, focal_x, focal_y)`)
+    .select(`*, item_images (id, image_url, position, focal_x, focal_y, focal_scale)`)
     .eq("id", itemId)
     .single();
   if (error) throw error;
@@ -68,7 +68,7 @@ export const uploadItemImage = async (
   itemId: string,
   file: File,
   position: number,
-  focalPoint?: { focal_x?: number; focal_y?: number },
+  focalPoint?: { focal_x?: number; focal_y?: number; focal_scale?: number },
   traceId?: string,
 ): Promise<string> => {
   logMediaDiagnostic("storage.image.validation_started", { position, ...describeMediaFile(file) }, traceId);
@@ -109,6 +109,7 @@ export const uploadItemImage = async (
     position,
     focal_x: focalPoint?.focal_x ?? 50,
     focal_y: focalPoint?.focal_y ?? 50,
+    focal_scale: focalPoint?.focal_scale ?? 1,
   };
   const { data: existing, error: lookupError } = await supabase
     .from("item_images")
@@ -169,12 +170,12 @@ export const validateItemPrice = async (
 
 /** Fetch recommended items for a logged-in user via RPC */
 export const getRecommendedItems = async (userId: string, limit = 50) => {
-  const blockedIds = await getBlockedUserIds(userId);
-
-  const { data, error } = await supabase.rpc("recommended_items", {
+  const blockedIdsPromise = getBlockedUserIds(userId);
+  const recommendationsPromise = supabase.rpc("recommended_items", {
     p_user_id: userId,
     p_limit: limit,
   });
+  const [blockedIds, { data, error }] = await Promise.all([blockedIdsPromise, recommendationsPromise]);
   if (error) throw error;
 
   const loadFallbackRows = async () => {
@@ -198,7 +199,7 @@ export const getRecommendedItems = async (userId: string, limit = 50) => {
 
     if (itemIds.length > 0) {
       const [{ data: images }, { data: videos }] = await Promise.all([
-        supabase.from("item_images").select("id, item_id, image_url, position, focal_x, focal_y").in("item_id", itemIds),
+        supabase.from("item_images").select("id, item_id, image_url, position, focal_x, focal_y, focal_scale").in("item_id", itemIds),
         supabase.from("item_videos").select("id, item_id, video_url, thumbnail_url").in("item_id", itemIds),
       ]);
       (images || []).forEach((img) => {
@@ -280,7 +281,7 @@ export const getPublicExploreItems = async (page = 0, pageSize = 50) => {
 
   const { data, error } = await supabase
     .from("items")
-    .select(`*, item_images (id, image_url, position, focal_x, focal_y), item_videos (id, video_url, thumbnail_url)`)
+    .select(`*, item_images (id, image_url, position, focal_x, focal_y, focal_scale), item_videos (id, video_url, thumbnail_url)`)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .range(from, to);

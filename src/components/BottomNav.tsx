@@ -81,18 +81,18 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
               {isActive && (
                 <motion.div
                   layoutId="nav-pill"
-                  className="absolute inset-0 bg-foreground rounded-full shadow-sm"
+                  className="absolute inset-0 rounded-full bg-primary shadow-[0_0_18px_hsl(var(--primary)/0.26)]"
                   transition={{ type: "spring", stiffness: 400, damping: 30 }}
                 />
               )}
               <item.icon
                 className={`h-[18px] w-[18px] relative z-10 transition-colors duration-200 ${
-                  isActive ? "text-background" : "text-foreground/70"
+                  isActive ? "text-primary-foreground" : "text-foreground/70"
                 }`}
               />
               <span
-                className={`relative z-10 text-[9.5px] font-semibold leading-none transition-colors duration-200 ${
-                  isActive ? "text-background" : "text-foreground/70"
+                className={`relative z-10 text-xs font-semibold leading-none transition-colors duration-200 ${
+                  isActive ? "text-primary-foreground" : "text-foreground/70"
                 }`}
               >
                 {item.label}
@@ -100,7 +100,7 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
               {item.unreadCount && item.unreadCount > 0 ? (
                 <span
                   aria-label={`${item.unreadCount} novas mensagens`}
-                  className="absolute top-1 right-[calc(50%-18px)] min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold leading-none flex items-center justify-center border-2 border-background z-20"
+                  className="absolute top-1 right-[calc(50%-18px)] min-w-[18px] h-[18px] px-1 rounded-full bg-pink text-pink-foreground text-xs font-bold leading-none flex items-center justify-center border-2 border-background z-20"
                 >
                   {formatBadge(item.unreadCount)}
                 </span>

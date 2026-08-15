@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { getErrorMessage } from "@/lib/utils";
 
 const ResetPassword = () => {
   const [params] = useSearchParams();
@@ -64,7 +65,7 @@ const ResetPassword = () => {
       const friendly =
         msg.includes("expired") ? "Código expirado. Solicite um novo."
         : msg.includes("invalid") ? "Código inválido. Confere os dígitos."
-        : error.message;
+        : getErrorMessage(error, "Não foi possível verificar o código. Tente novamente.");
       toast({ title: "Não rolou", description: friendly, variant: "destructive" });
       setCode("");
       return;

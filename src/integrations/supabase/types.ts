@@ -275,6 +275,7 @@ export type Database = {
           created_at: string
           focal_x: number
           focal_y: number
+          focal_scale: number
           id: string
           image_url: string
           item_id: string
@@ -284,6 +285,7 @@ export type Database = {
           created_at?: string
           focal_x?: number
           focal_y?: number
+          focal_scale?: number
           id?: string
           image_url: string
           item_id: string
@@ -293,6 +295,7 @@ export type Database = {
           created_at?: string
           focal_x?: number
           focal_y?: number
+          focal_scale?: number
           id?: string
           image_url?: string
           item_id?: string

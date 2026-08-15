@@ -46,7 +46,12 @@ describe("ScreenLayout", () => {
     expect((container.firstChild as HTMLElement).className).toMatch(/custom-x/);
   });
 
-  it("07 atualiza uma vez depois de um gesto vertical acima do limite", async () => {
+  it("07 aplica a atmosfera compartilhada das telas internas", () => {
+    const { container } = renderScreen(<ScreenLayout>x</ScreenLayout>);
+    expect(container.firstChild).toHaveClass("hypou-screen");
+  });
+
+  it("08 atualiza uma vez depois de um gesto vertical acima do limite", async () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const { getByTestId } = renderScreen(<ScreenLayout onRefresh={onRefresh}>x</ScreenLayout>);
 
@@ -55,7 +60,7 @@ describe("ScreenLayout", () => {
     await waitFor(() => expect(onRefresh).toHaveBeenCalledTimes(1));
   });
 
-  it("08 ignora swipe horizontal", () => {
+  it("09 ignora swipe horizontal", () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const { getByTestId } = renderScreen(<ScreenLayout onRefresh={onRefresh}>x</ScreenLayout>);
 
@@ -68,7 +73,7 @@ describe("ScreenLayout", () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
-  it("09 respeita refreshable false", () => {
+  it("10 respeita refreshable false", () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const { getByTestId } = renderScreen(
       <ScreenLayout refreshable={false} onRefresh={onRefresh}>x</ScreenLayout>,
@@ -79,7 +84,7 @@ describe("ScreenLayout", () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
-  it("10 ignora gestos iniciados em campos", () => {
+  it("11 ignora gestos iniciados em campos", () => {
     const onRefresh = vi.fn().mockResolvedValue(undefined);
     const { getByLabelText } = renderScreen(
       <ScreenLayout onRefresh={onRefresh}><input aria-label="valor" /></ScreenLayout>,
@@ -90,7 +95,7 @@ describe("ScreenLayout", () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
-  it("11 limpa o indicador depois de uma falha", async () => {
+  it("12 limpa o indicador depois de uma falha", async () => {
     const onRefresh = vi.fn().mockRejectedValue(new Error("network"));
     const { getByTestId } = renderScreen(<ScreenLayout onRefresh={onRefresh}>x</ScreenLayout>);
 

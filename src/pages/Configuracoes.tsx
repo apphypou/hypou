@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage } from "@/lib/utils";
 
 const Configuracoes = () => {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ const Configuracoes = () => {
       toast({ title: "Categorias atualizadas! ✨" });
       setCategoriesDialogOpen(false);
     } catch (err: any) {
-      toast({ title: "Erro ao salvar categorias", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao salvar categorias", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setSavingCategories(false);
     }
@@ -147,7 +148,7 @@ const Configuracoes = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast({ title: "Erro ao alterar senha", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao alterar senha", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setChangingPassword(false);
     }
@@ -164,7 +165,7 @@ const Configuracoes = () => {
       toast({ title: "Conta excluída. Até logo! 👋" });
       navigate("/");
     } catch (err: any) {
-      toast({ title: "Erro ao excluir conta", description: err.message, variant: "destructive" });
+      toast({ title: "Erro ao excluir conta", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setDeleting(false);
     }

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureAndroidNotificationChannel } from "@/lib/androidPush";
 
 /**
  * Registers the native device for push and stores the token in `device_tokens`.
@@ -23,6 +24,8 @@ export function usePushRegistration() {
     (async () => {
       try {
         const { PushNotifications } = await import("@capacitor/push-notifications");
+
+        await ensureAndroidNotificationChannel(PushNotifications);
 
         // Permission
         let perm = await PushNotifications.checkPermissions();

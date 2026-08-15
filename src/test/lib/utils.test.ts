@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cn, formatValue, translateCondition, CONDITION_MAP } from "@/lib/utils";
+import { cn, formatValue, getErrorMessage, translateCondition, CONDITION_MAP } from "@/lib/utils";
 
 describe("utils", () => {
   it("01 cn merge classes simples", () => {
@@ -34,5 +34,20 @@ describe("utils", () => {
   });
   it("11 CONDITION_MAP completa", () => {
     expect(Object.keys(CONDITION_MAP).length).toBeGreaterThanOrEqual(6);
+  });
+  it("12 getErrorMessage preserva mensagem em português", () => {
+    expect(getErrorMessage(new Error("Falha na rede"))).toBe("Falha na rede");
+  });
+  it("13 getErrorMessage usa fallback para valor desconhecido", () => {
+    expect(getErrorMessage({ code: "unexpected" }, "Não foi possível concluir.")).toBe("Não foi possível concluir.");
+  });
+  it("14 traduz os erros técnicos mais comuns", () => {
+    expect(getErrorMessage(new Error("Invalid login credentials"))).toBe("E-mail ou senha incorretos.");
+    expect(getErrorMessage(new Error("permission denied"))).toBe("Você não tem permissão para concluir esta ação.");
+    expect(getErrorMessage(new Error("Failed to fetch"))).toBe("Não foi possível conectar. Verifique sua internet e tente novamente.");
+    expect(getErrorMessage(new Error("Unauthorized"))).toBe("Sua sessão expirou. Entre novamente para continuar.");
+  });
+  it("15 oculta erro técnico desconhecido", () => {
+    expect(getErrorMessage(new Error("unhandled_database_exception"), "Não foi possível salvar.")).toBe("Não foi possível salvar.");
   });
 });

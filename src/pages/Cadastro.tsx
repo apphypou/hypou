@@ -9,6 +9,7 @@ import AuthSocialButtons from "@/components/auth/AuthSocialButtons";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { startOAuthSignIn } from "@/lib/oauth";
+import { getErrorMessage } from "@/lib/utils";
 
 const Cadastro = () => {
   const [email, setEmail] = useState("");
@@ -56,7 +57,7 @@ const Cadastro = () => {
         ? "Muitos cadastros nesta rede agora. Tente novamente em alguns minutos ou troque de conexão."
         : msg.includes("already") || msg.includes("registered")
           ? "Este e-mail já tem conta. Faça login."
-          : error?.message || "Não foi possível criar a conta.";
+          : getErrorMessage(error, "Não foi possível criar a conta.");
       setLoading(false);
       toast({
         title: "Erro ao criar conta",
@@ -93,7 +94,7 @@ const Cadastro = () => {
     if (error) {
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: getErrorMessage(error, "Não foi possível criar a conta com esta opção."),
         variant: "destructive",
       });
     }

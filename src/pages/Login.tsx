@@ -7,6 +7,7 @@ import AuthShell from "@/components/auth/AuthShell";
 import AuthSocialButtons from "@/components/auth/AuthSocialButtons";
 import { useToast } from "@/hooks/use-toast";
 import { startOAuthSignIn } from "@/lib/oauth";
+import { getErrorMessage } from "@/lib/utils";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ const Login = () => {
     setLoading(false);
 
     if (error) {
-      let description = error.message;
+      let description = getErrorMessage(error, "Não foi possível entrar. Tente novamente.");
       if (error.message?.includes("Email not confirmed")) {
         description = "E-mail ainda não confirmado. Verifique sua caixa de entrada.";
         toast({
@@ -62,7 +63,7 @@ const Login = () => {
     if (error) {
       toast({
         title: "Erro ao entrar",
-        description: error.message,
+        description: getErrorMessage(error, "Não foi possível entrar com esta conta."),
         variant: "destructive",
       });
     }

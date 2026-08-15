@@ -1,5 +1,5 @@
 // Edge function: send-push
-// Receives { user_id, title, body, data } from triggers, fans out via FCM HTTP v1.
+// Receives { user_id, title, body, data } from triggers, fans out via APNs or FCM.
 // Auth: protected by PUSH_HOOK_SECRET (used as Bearer) — triggers send it via pg_net.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -35,6 +35,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 }
 
 let cachedToken: { token: string; expires: number } | null = null;
+let cachedApnsToken: { token: string; expires: number } | null = null;
 
 async function getAccessToken(serviceAccount: any): Promise<string> {
   if (cachedToken && cachedToken.expires > Date.now() + 60_000) return cachedToken.token;
@@ -133,6 +134,73 @@ async function sendFcm(opts: {
   return { ok: resp.ok, status: resp.status, body: parsed };
 }
 
+// Capacitor returns an APNs token on iOS, not an FCM registration token. Those
+// tokens must be delivered directly to Apple's Push Notification service.
+async function getApnsAuthToken(opts: {
+  keyId: string;
+  teamId: string;
+  privateKey: string;
+}): Promise<string> {
+  if (cachedApnsToken && cachedApnsToken.expires > Date.now() + 60_000) {
+    return cachedApnsToken.token;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const unsigned = `${base64UrlEncode(JSON.stringify({ alg: "ES256", kid: opts.keyId }))}.${base64UrlEncode(JSON.stringify({ iss: opts.teamId, iat: now }))}`;
+  const key = await crypto.subtle.importKey(
+    "pkcs8",
+    pemToArrayBuffer(opts.privateKey.replace(/\\n/g, "\n")),
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    new TextEncoder().encode(unsigned),
+  );
+  const token = `${unsigned}.${base64UrlEncode(signature)}`;
+  cachedApnsToken = { token, expires: Date.now() + 50 * 60_000 };
+  return token;
+}
+
+async function sendApns(opts: {
+  token: string;
+  authToken: string;
+  bundleId: string;
+  title: string;
+  body: string;
+  data: Record<string, string>;
+}): Promise<{ ok: boolean; status: number; body: any }> {
+  const isIncomingCall = opts.data.type === "call";
+  const conversationId = opts.data.conversation_id || "";
+  const payload = {
+    aps: {
+      alert: { title: opts.title, body: opts.body },
+      sound: "default",
+      "content-available": 1,
+      ...(isIncomingCall ? { "interruption-level": "time-sensitive", category: "HYPOU_CALL" } : {}),
+      ...(conversationId ? { "thread-id": conversationId } : {}),
+    },
+    ...opts.data,
+  };
+  const resp = await fetch(`https://api.push.apple.com/3/device/${opts.token}`, {
+    method: "POST",
+    headers: {
+      Authorization: `bearer ${opts.authToken}`,
+      "apns-topic": opts.bundleId,
+      "apns-push-type": "alert",
+      "apns-priority": "10",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+  const text = await resp.text();
+  let parsed: any;
+  try { parsed = JSON.parse(text); } catch { parsed = text; }
+  return { ok: resp.ok, status: resp.status, body: parsed };
+}
+
 // ───────────── main handler ─────────────
 
 Deno.serve(async (req) => {
@@ -148,18 +216,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
-    if (!fcmJson) {
-      console.error("send-push configuration error: FCM service account is missing");
-      return new Response(JSON.stringify({ error: "Push notifications are not configured" }), {
-        status: 503,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    let serviceAccount: any;
-    try { serviceAccount = JSON.parse(fcmJson); }
-    catch { throw new Error("FCM_SERVICE_ACCOUNT_JSON is not valid JSON"); }
 
     const { user_id, title, body, data } = await req.json();
     if (!user_id || !title) {
@@ -180,21 +236,63 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id);
     if (tErr) throw tErr;
     if (!tokens || tokens.length === 0) {
-      return new Response(JSON.stringify({ ok: true, sent: 0 }), {
+      return new Response(JSON.stringify({ ok: false, sent: 0, reason: "no_device_tokens" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const accessToken = await getAccessToken(serviceAccount);
-    const projectId = serviceAccount.project_id;
+    const iosTokens = tokens.filter((t: any) => t.platform === "ios");
+    const fcmTokens = tokens.filter((t: any) => t.platform !== "ios");
+    const dataStr = Object.fromEntries(
+      Object.entries(data || {}).map(([key, value]) => [key, String(value ?? "")]),
+    );
+
+    const apnsKeyId = Deno.env.get("APNS_KEY_ID");
+    const apnsTeamId = Deno.env.get("APNS_TEAM_ID");
+    const apnsPrivateKey = Deno.env.get("APNS_PRIVATE_KEY");
+    if (iosTokens.length && (!apnsKeyId || !apnsTeamId || !apnsPrivateKey)) {
+      console.error("send-push configuration error: APNs credentials are missing");
+      return new Response(JSON.stringify({ error: "Push notifications are not configured" }), {
+        status: 503,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let apnsAuthToken = "";
+    if (iosTokens.length) {
+      apnsAuthToken = await getApnsAuthToken({
+        keyId: apnsKeyId!, teamId: apnsTeamId!, privateKey: apnsPrivateKey!,
+      });
+    }
+
+    const fcmJson = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
+    let serviceAccount: any;
+    let accessToken = "";
+    if (fcmTokens.length) {
+      if (!fcmJson) {
+        console.error("send-push configuration error: FCM service account is missing");
+        return new Response(JSON.stringify({ error: "Push notifications are not configured" }), {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      try { serviceAccount = JSON.parse(fcmJson); }
+      catch { throw new Error("FCM_SERVICE_ACCOUNT_JSON is not valid JSON"); }
+      accessToken = await getAccessToken(serviceAccount);
+    }
 
     const results = await Promise.all(
       tokens.map((t: any) =>
-        sendFcm({
-          projectId, accessToken, token: t.token, platform: t.platform,
-          title, body: body || "", data: data || {},
-        }).catch((e) => ({ ok: false, status: 0, body: String(e) })),
+        t.platform === "ios"
+          ? sendApns({
+            token: t.token, authToken: apnsAuthToken, bundleId: "app.hypou.mobile",
+            title, body: body || "", data: dataStr,
+          }).catch((e) => ({ ok: false, status: 0, body: String(e) }))
+          : sendFcm({
+            projectId: serviceAccount.project_id, accessToken, token: t.token, platform: t.platform,
+            title, body: body || "", data: data || {},
+          }).catch((e) => ({ ok: false, status: 0, body: String(e) })),
       ),
     );
 
@@ -202,7 +300,7 @@ Deno.serve(async (req) => {
     const toDelete: string[] = [];
     results.forEach((r, i) => {
       const errStr = JSON.stringify(r.body ?? "");
-      if (r.status === 404 || errStr.includes("UNREGISTERED") || errStr.includes("INVALID_ARGUMENT")) {
+      if (r.status === 400 || r.status === 404 || r.status === 410 || errStr.includes("UNREGISTERED") || errStr.includes("INVALID_ARGUMENT")) {
         toDelete.push(tokens[i].token);
       }
     });
@@ -211,8 +309,14 @@ Deno.serve(async (req) => {
     }
 
     const sent = results.filter((r) => r.ok).length;
-    return new Response(JSON.stringify({ ok: true, sent, total: tokens.length, removed: toDelete.length }), {
-      status: 200,
+    return new Response(JSON.stringify({
+      ok: sent > 0,
+      sent,
+      total: tokens.length,
+      removed: toDelete.length,
+      failures: results.filter((r) => !r.ok).map((r) => ({ status: r.status, body: r.body })),
+    }), {
+      status: sent > 0 ? 200 : 502,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

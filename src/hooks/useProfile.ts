@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useRealtimeInvalidate } from "./useRealtimeInvalidate";
-import { isTradedProfileItem } from "@/lib/profileItems";
+import { isTradedProfileItem, sortProfileItemsByTradeStatus } from "@/lib/profileItems";
 
 export const useProfile = () => {
   const { user } = useAuth();
@@ -87,10 +87,12 @@ export const useProfile = () => {
         }
       }
 
-      return items.map((item) => ({
-        ...item,
-        is_traded: isTradedProfileItem(item, completedMatchItemIds),
-      }));
+      return sortProfileItemsByTradeStatus(
+        items.map((item) => ({
+          ...item,
+          is_traded: isTradedProfileItem(item, completedMatchItemIds),
+        }))
+      );
     },
     enabled: !!user,
   });

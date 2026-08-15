@@ -1,13 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import tailwindcss from "tailwindcss";
 
 const isMobileBuild = process.env.HYPOU_MOBILE_BUILD === "1";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   define: {
     __HYPOU_MOBILE_BUILD__: JSON.stringify(isMobileBuild),
   },
@@ -21,10 +20,7 @@ export default defineConfig(({ mode }) => ({
       ignored: ["**/build/**", "**/.codex-screenshots/**", "**/.superpowers/**"],
     },
   },
-  plugins: [
-    react(),
-    mode === "development" && componentTagger(),
-  ].filter(Boolean),
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

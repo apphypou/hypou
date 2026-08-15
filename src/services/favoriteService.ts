@@ -50,6 +50,16 @@ export const getFavorites = async (userId: string) => {
   }));
 };
 
+export const getFavoriteItemIds = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("favorites")
+    .select("item_id")
+    .eq("user_id", userId);
+  if (error) throw error;
+
+  return (data || []).map((favorite) => favorite.item_id);
+};
+
 export const isFavorited = async (userId: string, itemId: string): Promise<boolean> => {
   const { data } = await supabase
     .from("favorites")
