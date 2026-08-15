@@ -18,6 +18,7 @@ import { usePushRegistration } from "@/hooks/usePushRegistration";
 import { useAppLifecycleSync } from "@/hooks/useAppLifecycleSync";
 import IncomingCallSheet from "@/components/IncomingCallSheet";
 import PendingTradeConfirmationDialog from "@/components/PendingTradeConfirmationDialog";
+import { isMarketingRoute } from "@/lib/domainRouting";
 
 const GlobalAlerts = () => {
   useGlobalRealtimeAlerts();
@@ -92,8 +93,6 @@ const ItemRedirect = () => {
   const { itemId } = useParams();
   return <Navigate replace to={`/explorar?item=${encodeURIComponent(itemId || "")}`} />;
 };
-
-const isMarketingHost = typeof window !== "undefined" && ["hypou.app", "www.hypou.app"].includes(window.location.hostname);
 
 const MarketingRoutes = () => (
   <Suspense fallback={<RouteFallback />}>
@@ -220,6 +219,21 @@ const useOnlineStatus = () => {
   return isOnline;
 };
 
+const HostRoutes = () => {
+  const location = useLocation();
+  const showMarketingRoutes = typeof window !== "undefined" && isMarketingRoute(window.location.hostname, location.pathname);
+
+  return showMarketingRoutes ? <MarketingRoutes /> : (
+    <AuthProvider>
+      <AuthRedirectHandler />
+      <GlobalAlerts />
+      <IncomingCallSheet />
+      <PendingTradeConfirmationDialog />
+      <AnimatedRoutes />
+    </AuthProvider>
+  );
+};
+
 const App = () => {
   const isOnline = useOnlineStatus();
 
@@ -231,15 +245,7 @@ const App = () => {
           <Sonner />
           {!isOnline && <OfflineScreen />}
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            {isMarketingHost ? <MarketingRoutes /> : (
-              <AuthProvider>
-                <AuthRedirectHandler />
-                <GlobalAlerts />
-                <IncomingCallSheet />
-                <PendingTradeConfirmationDialog />
-                <AnimatedRoutes />
-              </AuthProvider>
-            )}
+            <HostRoutes />
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
