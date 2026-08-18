@@ -11,4 +11,9 @@ describe("isMarketingRoute", () => {
     expect(isMarketingRoute("hypou.app", "/teste")).toBe(true);
     expect(isMarketingRoute("hypou.app", "/admin-help")).toBe(true);
   });
+
+  it("keeps the login flow available for the admin panel", () => {
+    expect(isMarketingRoute("hypou.app", "/login")).toBe(false);
+    expect(isMarketingRoute("hypou.app", "/recuperar-senha")).toBe(false);
+  });
 });

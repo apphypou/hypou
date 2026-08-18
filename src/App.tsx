@@ -220,7 +220,8 @@ const useOnlineStatus = () => {
 };
 
 const HostRoutes = () => {
-  const showMarketingRoutes = typeof window !== "undefined" && isMarketingRoute(window.location.hostname, window.location.pathname);
+  const location = useLocation();
+  const showMarketingRoutes = typeof window !== "undefined" && isMarketingRoute(window.location.hostname, location.pathname);
 
   return showMarketingRoutes ? <MarketingRoutes /> : (
     <AuthProvider>

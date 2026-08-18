@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
+  const location = useLocation();
 
   const { data: isAdmin, isLoading: roleLoading } = useQuery({
     queryKey: ["admin-role", user?.id],
@@ -30,8 +31,20 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user || !isAdmin) {
-    return <Navigate to="/" replace />;
+  if (!user) {
+    const redirect = `${location.pathname}${location.search}`;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />;
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background p-6 text-center text-foreground">
+        <div>
+          <h1 className="text-2xl font-bold">Acesso restrito</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Sua conta não tem permissão para acessar o painel administrativo.</p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;
