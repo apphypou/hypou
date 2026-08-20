@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENROUTER_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,6 +59,24 @@ Você pensa e aconselha combinando as abordagens de:
 - Considere o contexto brasileiro (cultura, redes sociais populares, sazonalidade)
 - Use formatação markdown rica: títulos, listas, negrito, tabelas, blocos de destaque`;
 
+async function getMetricsContext() {
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const [users, items, matches, ratings] = await Promise.all([
+    admin.from("profiles").select("id", { count: "exact", head: true }),
+    admin.from("items").select("id", { count: "exact", head: true }).eq("status", "active"),
+    admin.from("matches").select("status"),
+    admin.from("ratings").select("score"),
+  ]);
+  if (users.error || items.error || matches.error || ratings.error) return "Dados operacionais indisponíveis nesta consulta.";
+
+  const matchRows = matches.data || [];
+  const ratingsRows = ratings.data || [];
+  const completed = matchRows.filter((match) => match.status === "completed").length;
+  const progressed = matchRows.filter((match) => match.status === "accepted" || match.status === "completed").length;
+  const averageRating = ratingsRows.length ? (ratingsRows.reduce((sum, rating) => sum + rating.score, 0) / ratingsRows.length).toFixed(1) : "sem avaliações";
+  return `Dados atuais do painel (use somente como contexto, sem inventar métricas ausentes): ${users.count || 0} usuários, ${items.count || 0} itens ativos, ${matchRows.length} negociações, ${progressed} negociações avançadas, ${completed} trocas concluídas e avaliação média ${averageRating}.`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -103,7 +122,7 @@ serve(async (req) => {
     }
 
     const { messages } = await req.json();
-    if (!messages || !Array.isArray(messages)) {
+    if (!messages || !Array.isArray(messages) || messages.length > 30 || messages.some((message) => !["user", "assistant"].includes(message?.role) || typeof message?.content !== "string" || message.content.length > 4_000)) {
       return new Response(JSON.stringify({ error: "messages array required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -115,6 +134,7 @@ serve(async (req) => {
       throw new Error("OPENROUTER_API_KEY não configurada");
     }
 
+    const metricsContext = await getMetricsContext().catch(() => "Dados operacionais indisponíveis nesta consulta.");
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -125,7 +145,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: OPENROUTER_MODEL,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: `${SYSTEM_PROMPT}\n\n## Contexto operacional atual\n${metricsContext}` },
           ...messages,
         ],
         stream: true,

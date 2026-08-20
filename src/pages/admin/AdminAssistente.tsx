@@ -103,12 +103,28 @@ async function streamChat({
 }
 
 const AdminAssistente = () => {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(`hypou-admin-assistant:${user.id}`) || "[]");
+      if (Array.isArray(saved)) setMessages(saved.filter((message): message is Msg => ["user", "assistant"].includes(message?.role) && typeof message?.content === "string").slice(-30));
+    } catch {
+      setMessages([]);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const timeout = window.setTimeout(() => window.localStorage.setItem(`hypou-admin-assistant:${user.id}`, JSON.stringify(messages.slice(-30))), 350);
+    return () => window.clearTimeout(timeout);
+  }, [messages, user?.id]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -168,7 +184,7 @@ const AdminAssistente = () => {
           </div>
         </div>
         {messages.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => setMessages([])} className="text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" size="sm" onClick={() => { setMessages([]); if (user?.id) window.localStorage.removeItem(`hypou-admin-assistant:${user.id}`); }} className="text-muted-foreground hover:text-destructive">
             <Trash2 className="h-4 w-4 mr-1" /> Limpar
           </Button>
         )}
