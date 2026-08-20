@@ -44,9 +44,9 @@ const componentDefs = [
   { name: "Autenticação", key: "auth", icon: Shield, desc: "Login, registro e sessões" },
   { name: "Banco de Dados", key: "database", icon: Database, desc: "Armazenamento e consultas" },
   { name: "API Principal", key: "api", icon: Server, desc: "Endpoints REST e CRUD" },
-  { name: "Sistema de Matches", key: "matches", icon: Zap, desc: "Motor de matching e propostas" },
-  { name: "Chat & Mensagens", key: "chat", icon: MessageSquare, desc: "Realtime messaging" },
-  { name: "CDN & Storage", key: "cdn", icon: Globe, desc: "Imagens, vídeos e assets" },
+  { name: "Storage", key: "storage", icon: Globe, desc: "Imagens, vídeos e assets" },
+  { name: "Push", key: "push", icon: Zap, desc: "Envio de notificações aos dispositivos" },
+  { name: "Chamadas", key: "calls", icon: MessageSquare, desc: "Infraestrutura de chamadas em tempo real" },
 ];
 
 const AdminStatus = () => {

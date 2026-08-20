@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.admin-ai-chat]
 verify_jwt = false
 
+[functions.admin-health-check]
+verify_jwt = false
+
 [functions.send-auth-email]
 verify_jwt = false
 
