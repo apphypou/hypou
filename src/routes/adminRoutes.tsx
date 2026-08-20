@@ -36,10 +36,10 @@ export const adminRoutes = !__HYPOU_MOBILE_BUILD__ && AdminLayout ? (
       <Route path="reports" element={AdminReports && <AdminReports />} />
       <Route path="waitlist" element={AdminWaitlist && <AdminWaitlist />} />
       <Route path="testadores-beta" element={AdminBetaTesters && <AdminBetaTesters />} />
-      <Route path="membros" element={AdminMembers && <AdminMembers />} />
+      <Route path="membros" element={AdminMembers && <AdminProtectedRoute allowedRoles={["admin"]}><AdminMembers /></AdminProtectedRoute>} />
       <Route path="status" element={AdminStatus && <AdminStatus />} />
       <Route path="assistente" element={AdminAssistente && <AdminAssistente />} />
-      <Route path="lancamento" element={AdminLancamento && <AdminLancamento />} />
+      <Route path="lancamento" element={AdminLancamento && <AdminProtectedRoute allowedRoles={["admin"]}><AdminLancamento /></AdminProtectedRoute>} />
     </Route>
   </>
 ) : null;

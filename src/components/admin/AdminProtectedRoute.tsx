@@ -1,26 +1,12 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { type AdminRole, useAdminRole } from "@/hooks/useAdminRole";
 
-const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const AdminProtectedRoute = ({ children, allowedRoles = ["admin", "moderator"] }: { children: React.ReactNode; allowedRoles?: AdminRole[] }) => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
-
-  const { data: isStaff, isLoading: roleLoading } = useQuery({
-    queryKey: ["admin-staff-role", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user!.id)
-        .in("role", ["admin", "moderator"]);
-      if (error) throw error;
-      return (data || []).length > 0;
-    },
-    enabled: !!user,
-  });
+  const { data: roles = [], isLoading: roleLoading } = useAdminRole(user?.id);
 
   if (authLoading || (roleLoading && !!user)) {
     return (
@@ -35,7 +21,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to={`/admin/login?redirect=${encodeURIComponent(redirect)}`} replace />;
   }
 
-  if (!isStaff) {
+  if (!roles.some((role) => allowedRoles.includes(role))) {
     return (
       <div className="flex h-screen items-center justify-center bg-background p-6 text-center text-foreground">
         <div>
