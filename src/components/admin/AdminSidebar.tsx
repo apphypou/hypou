@@ -31,16 +31,15 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { HYPOU_LOGO } from "@/config/brand";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 const groups = [
   { title: "Visão geral", items: [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard }, { title: "Métricas", url: "/admin/metricas", icon: BarChart3 }] },
-  { title: "Operação", items: [{ title: "Usuários", url: "/admin/usuarios", icon: Users }, { title: "Itens", url: "/admin/itens", icon: Package }, { title: "Negociações", url: "/admin/matches", icon: Handshake }] },
-  { title: "Segurança", items: [{ title: "Relatos", url: "/admin/reports", icon: ShieldAlert }, { title: "Status", url: "/admin/status", icon: Activity }] },
+  { title: "Plataforma", items: [{ title: "Usuários", url: "/admin/usuarios", icon: Users }, { title: "Itens", url: "/admin/itens", icon: Package }, { title: "Trocas", url: "/admin/matches", icon: Handshake }] },
+  { title: "Suporte e risco", items: [{ title: "Relatos", url: "/admin/reports", icon: ShieldAlert }, { title: "Status", url: "/admin/status", icon: Activity }] },
   { title: "Crescimento", items: [{ title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered }, { title: "Testadores beta", url: "/admin/testadores-beta", icon: FlaskConical }, { title: "Lançamento", url: "/admin/lancamento", icon: Rocket, adminOnly: true }] },
-  { title: "Administração", items: [{ title: "Membros", url: "/admin/membros", icon: Crown, adminOnly: true }, { title: "Assistente IA", url: "/admin/assistente", icon: Bot }] },
+  { title: "Configurações", items: [{ title: "Membros", url: "/admin/membros", icon: Crown, adminOnly: true }, { title: "Assistente IA", url: "/admin/assistente", icon: Bot }] },
 ];
 
 export function AdminSidebar() {
@@ -59,26 +58,21 @@ export function AdminSidebar() {
       : location.pathname.startsWith(path);
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="p-4">
+    <Sidebar collapsible="icon" className="admin-sidebar border-r-0">
+      <SidebarHeader className="admin-sidebar__header !px-4 !pt-4 !pb-2">
         <div className="flex items-center justify-center">
-          <img src={HYPOU_LOGO} alt="Hypou" className={collapsed ? "h-8 w-8 object-cover object-left" : "h-auto w-28"} />
+          <img src={HYPOU_LOGO} alt="Hypou" className={collapsed ? "h-7 w-7 object-cover object-left" : "h-auto w-[92px]"} />
         </div>
-        {!collapsed && (
-          <span className="text-[10px] font-semibold text-primary/60 uppercase tracking-[0.2em] text-center mt-1">
-            Painel Admin
-          </span>
-        )}
       </SidebarHeader>
 
-      <SidebarContent className="px-2 pt-4">
+      <SidebarContent className="admin-sidebar__content">
         {groups.map((group) => {
           const items = group.items.filter((item) => !item.adminOnly || isAdmin);
           if (!items.length) return null;
-          return <SidebarGroup key={group.title} className="py-1">
-          {!collapsed && <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">{group.title}</p>}
+          return <SidebarGroup key={group.title} className="admin-nav-section">
+          {!collapsed && <p>{group.title}</p>}
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-0.5">
               {items.map((item) => {
                 const active = isActive(item.url);
                 return (
@@ -87,20 +81,14 @@ export function AdminSidebar() {
                       <NavLink
                         to={item.url}
                         end={item.url === "/admin"}
-                        className={`
-                          relative rounded-xl transition-all duration-200 py-2.5
-                          ${active
-                            ? "bg-primary/10 text-primary font-semibold shadow-sm"
-                            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                          }
-                        `}
+                        className={`admin-sidebar-link ${active ? "is-active" : ""}`}
                         activeClassName=""
                       >
                         {active && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary" />
+                          <div className="admin-sidebar-link__rail" />
                         )}
-                        <item.icon className={`ml-1 ${collapsed ? "h-5 w-5" : "h-5 w-5 mr-3"}`} />
-                        {!collapsed && <span className="text-sm">{item.title}</span>}
+                        <item.icon className={collapsed ? "h-4 w-4" : "h-4 w-4 mr-3"} />
+                        {!collapsed && <span>{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -111,9 +99,9 @@ export function AdminSidebar() {
         </SidebarGroup>})}
       </SidebarContent>
 
-      <SidebarFooter className="p-3 space-y-2">
+      <SidebarFooter className="admin-sidebar__footer">
         {!collapsed && (
-          <div className="flex items-center gap-2 px-1 py-1">
+          <div className="admin-user-card">
             <Avatar className="h-8 w-8 ring-1 ring-border">
               <AvatarImage src={profile?.avatar_url || ""} />
               <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
@@ -121,11 +109,11 @@ export function AdminSidebar() {
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">
-                {profile?.display_name || "Admin"}
+              <p>
+                {profile?.display_name || "Equipe Hypou"}
               </p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                {user?.email}
+              <p className="admin-user-card__role">
+                {isAdmin ? "Administrador" : "Moderador"}
               </p>
             </div>
           </div>
@@ -133,7 +121,7 @@ export function AdminSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-200"
+          className="admin-signout"
           onClick={async () => {
             await signOut();
             navigate("/admin/login");

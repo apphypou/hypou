@@ -13,7 +13,7 @@ const requestSchema = z.object({
   query: z.string().max(120).optional(),
 });
 
-const safeSearch = (value: string | undefined) => (value || "").trim().replace(/[^a-zA-Z0-9@._+\-]/g, "");
+const safeSearch = (value: string | undefined) => (value || "").trim().replace(/[^a-zA-Z0-9@._+-]/g, "");
 
 async function requireStaff(authHeader: string) {
   const url = Deno.env.get("SUPABASE_URL")!;
