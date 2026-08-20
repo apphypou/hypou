@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type TouchEvent } from "react";
+import { useEffect, useRef, useState, type Touch, type TouchEvent } from "react";
 import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cdnFull } from "@/lib/imageUrl";
@@ -23,7 +23,7 @@ type Zoom = {
   y: number;
 };
 
-const getTouchDistance = (first: globalThis.Touch, second: globalThis.Touch) =>
+const getTouchDistance = (first: Touch, second: Touch) =>
   Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
 
 const clampZoom = (scale: number) => Math.min(MAX_ZOOM, Math.max(1, scale));

@@ -7,6 +7,8 @@ import {
   useRef,
   memo,
   useMemo,
+  type Touch,
+  type TouchEvent,
 } from "react";
 import {
   motion,
@@ -39,6 +41,7 @@ import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
 const SWIPE_THRESHOLD = 80;
 const EXIT_X = 500;
 const EXIT_Y = 260;
+const MAX_MEDIA_ZOOM = 4;
 
 const STATE_ABBREVIATIONS: Record<string, string> = {
   acre: "AC",
@@ -108,6 +111,20 @@ interface SwipeCardProps {
   matchedOwnItem?: MatchedOwnItem | null;
 }
 
+type MediaZoom = {
+  scale: number;
+  x: number;
+  y: number;
+};
+
+const getTouchDistance = (first: Touch, second: Touch) =>
+  Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
+
+const clampMediaPan = (value: number, viewportSize: number, scale: number) => {
+  const limit = (viewportSize * (scale - 1)) / 2;
+  return Math.min(limit, Math.max(-limit, value));
+};
+
 const SwipeCard = memo(
   forwardRef<SwipeCardHandle, SwipeCardProps>(
     (
@@ -152,9 +169,36 @@ const SwipeCard = memo(
       // Expanded state
       const [expanded, setExpanded] = useState(false);
       const scrollRef = useRef<HTMLDivElement>(null);
+      const [mediaZoom, setMediaZoom] = useState<MediaZoom>({ scale: 1, x: 0, y: 0 });
+      const [isMediaGestureActive, setIsMediaGestureActive] = useState(false);
+      const mediaZoomRef = useRef(mediaZoom);
+      const mediaGestureRef = useRef({
+        pinchDistance: 0,
+        pinchScale: 1,
+        panStartX: 0,
+        panStartY: 0,
+        panOriginX: 0,
+        panOriginY: 0,
+        pinching: false,
+        panning: false,
+      });
+      const suppressImageTapRef = useRef(false);
+
+      const updateMediaZoom = useCallback((next: MediaZoom) => {
+        mediaZoomRef.current = next;
+        setMediaZoom(next);
+      }, []);
+
+      const resetMediaZoom = useCallback(() => {
+        mediaGestureRef.current.pinching = false;
+        mediaGestureRef.current.panning = false;
+        updateMediaZoom({ scale: 1, x: 0, y: 0 });
+        setIsMediaGestureActive(false);
+      }, [updateMediaZoom]);
 
       const showSlide = useCallback(
         (nextIndex: number) => {
+          if (mediaZoomRef.current.scale > 1.01) return;
           if (totalSlides <= 1) return;
           const normalizedIndex = (nextIndex + totalSlides) % totalSlides;
           const token = slideChangeTokenRef.current + 1;
@@ -184,6 +228,7 @@ const SwipeCard = memo(
 
       const handleImageTap = useCallback(
         (e: React.MouseEvent<HTMLDivElement>) => {
+          if (suppressImageTapRef.current || mediaZoomRef.current.scale > 1.01) return;
           if (expanded) return;
           if (totalSlides <= 1) return;
           const rect = e.currentTarget.getBoundingClientRect();
@@ -196,8 +241,98 @@ const SwipeCard = memo(
 
       const toggleExpand = useCallback((e?: React.MouseEvent) => {
         e?.stopPropagation();
+        resetMediaZoom();
         setExpanded((v) => !v);
-      }, []);
+      }, [resetMediaZoom]);
+
+      const handleMediaTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+        if (isVideoSlide || standby) return;
+        const gesture = mediaGestureRef.current;
+
+        if (event.touches.length === 2) {
+          event.preventDefault();
+          event.stopPropagation();
+          gesture.pinchDistance = getTouchDistance(event.touches[0], event.touches[1]);
+          gesture.pinchScale = mediaZoomRef.current.scale;
+          gesture.pinching = true;
+          gesture.panning = false;
+          suppressImageTapRef.current = true;
+          setIsMediaGestureActive(true);
+          x.set(0);
+          y.set(0);
+          return;
+        }
+
+        if (event.touches.length === 1 && mediaZoomRef.current.scale > 1.01) {
+          const touch = event.touches[0];
+          gesture.panStartX = touch.clientX;
+          gesture.panStartY = touch.clientY;
+          gesture.panOriginX = mediaZoomRef.current.x;
+          gesture.panOriginY = mediaZoomRef.current.y;
+          gesture.panning = true;
+          setIsMediaGestureActive(true);
+        }
+      }, [isVideoSlide, standby, x, y]);
+
+      const handleMediaTouchMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
+        if (isVideoSlide || standby) return;
+        const gesture = mediaGestureRef.current;
+
+        if (event.touches.length === 2 && gesture.pinching) {
+          event.preventDefault();
+          event.stopPropagation();
+          const distance = getTouchDistance(event.touches[0], event.touches[1]);
+          const scale = Math.min(
+            MAX_MEDIA_ZOOM,
+            Math.max(1, gesture.pinchScale * (distance / gesture.pinchDistance)),
+          );
+          const stage = event.currentTarget;
+          updateMediaZoom({
+            scale,
+            x: clampMediaPan(mediaZoomRef.current.x, stage.clientWidth, scale),
+            y: clampMediaPan(mediaZoomRef.current.y, stage.clientHeight, scale),
+          });
+          return;
+        }
+
+        if (event.touches.length === 1 && gesture.panning && mediaZoomRef.current.scale > 1.01) {
+          event.preventDefault();
+          event.stopPropagation();
+          const touch = event.touches[0];
+          const stage = event.currentTarget;
+          const scale = mediaZoomRef.current.scale;
+          updateMediaZoom({
+            scale,
+            x: clampMediaPan(gesture.panOriginX + touch.clientX - gesture.panStartX, stage.clientWidth, scale),
+            y: clampMediaPan(gesture.panOriginY + touch.clientY - gesture.panStartY, stage.clientHeight, scale),
+          });
+        }
+      }, [isVideoSlide, standby, updateMediaZoom]);
+
+      const handleMediaTouchEnd = useCallback((event: TouchEvent<HTMLDivElement>) => {
+        const gesture = mediaGestureRef.current;
+
+        if (event.touches.length === 1 && mediaZoomRef.current.scale > 1.01) {
+          const touch = event.touches[0];
+          gesture.pinching = false;
+          gesture.panning = true;
+          gesture.panStartX = touch.clientX;
+          gesture.panStartY = touch.clientY;
+          gesture.panOriginX = mediaZoomRef.current.x;
+          gesture.panOriginY = mediaZoomRef.current.y;
+          return;
+        }
+
+        if (event.touches.length > 0) return;
+        gesture.pinching = false;
+        gesture.panning = false;
+        setIsMediaGestureActive(false);
+        window.setTimeout(() => {
+          suppressImageTapRef.current = false;
+        }, 180);
+
+        if (mediaZoomRef.current.scale < 1.05) resetMediaZoom();
+      }, [resetMediaZoom]);
 
       const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
         const image = event.currentTarget;
@@ -229,6 +364,10 @@ const SwipeCard = memo(
       }, [item?.id, x, y]);
 
       useEffect(() => {
+        resetMediaZoom();
+      }, [activeImageIndex, resetMediaZoom]);
+
+      useEffect(() => {
         setVideoReady(false);
         setMediaTone("neutral");
       }, [currentVideo]);
@@ -257,7 +396,7 @@ const SwipeCard = memo(
 
       const doExit = useCallback(
         (direction: "like" | "dislike", velocityX?: number) => {
-          if (disabled || standby || expanded || exitingRef.current) return;
+          if (disabled || standby || expanded || mediaZoomRef.current.scale > 1.01 || exitingRef.current) return;
           exitingRef.current = true;
           const exitX = direction === "like" ? EXIT_X : -EXIT_X;
           const vel = velocityX != null ? velocityX : direction === "like" ? 800 : -800;
@@ -285,7 +424,7 @@ const SwipeCard = memo(
 
       const handleDragEnd = useCallback(
         (_: any, info: PanInfo) => {
-          if (expanded) return;
+          if (expanded || mediaZoomRef.current.scale > 1.01) return;
           const velocity = info.velocity.x;
           const offset = info.offset.x;
 
@@ -326,7 +465,7 @@ const SwipeCard = memo(
             y: standby ? 0 : y,
             ...(standby ? { opacity: standbyOpacity } : {}),
           }}
-          drag={standby || expanded ? false : "x"}
+          drag={standby || expanded || isMediaGestureActive || mediaZoom.scale > 1.01 ? false : "x"}
           dragDirectionLock
           dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
           dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
@@ -340,8 +479,12 @@ const SwipeCard = memo(
 
             {/* ===== FULL IMAGE / VIDEO ===== */}
             <div
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 h-full w-full touch-none"
               onClick={standby ? undefined : handleImageTap}
+              onTouchStart={handleMediaTouchStart}
+              onTouchMove={handleMediaTouchMove}
+              onTouchEnd={handleMediaTouchEnd}
+              onTouchCancel={handleMediaTouchEnd}
             >
               {isVideoSlide && currentVideo ? (
                 <>
@@ -397,7 +540,8 @@ const SwipeCard = memo(
                     decoding="async"
                     style={{
                       objectPosition: "center center",
-                      transform: `scale(${getMediaScale(currentImageRecord)})`,
+                      transform: `translate3d(${mediaZoom.x}px, ${mediaZoom.y}px, 0) scale(${getMediaScale(currentImageRecord) * mediaZoom.scale})`,
+                      willChange: "transform",
                     }}
                     onLoad={handleImageLoad}
                     draggable={false}
@@ -473,26 +617,6 @@ const SwipeCard = memo(
               className="swipe-edge-glass swipe-edge-glass-top z-20"
               aria-hidden
             />
-
-            {/* Tap zones */}
-            {!expanded && !standby && totalSlides > 1 && (
-              <>
-                <div
-                  className="absolute top-0 bottom-0 left-0 w-1/2 z-[25]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    showSlide(activeImageIndex - 1);
-                  }}
-                />
-                <div
-                  className="absolute top-0 bottom-0 right-0 w-1/2 z-[25]"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    showSlide(activeImageIndex + 1);
-                  }}
-                />
-              </>
-            )}
 
             {expanded && (
               <div

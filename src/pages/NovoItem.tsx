@@ -19,6 +19,7 @@ import {
   logMediaDiagnostic,
   logMediaError,
 } from "@/lib/mediaDiagnostics";
+import { getErrorMessage } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -37,7 +38,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FocalPointEditor, type FocalPoint } from "@/components/media/FocalPointEditor";
+import { FocalPointEditor } from "@/components/media/FocalPointEditor";
+import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 
 import { categories, conditions } from "@/constants/categories";
 
@@ -78,8 +80,8 @@ const NovoItem = () => {
   const [devalorization, setDevalorization] = useState(10);
   const [itemPhotos, setItemPhotos] = useState<File[]>([]);
   const [itemPreviews, setItemPreviews] = useState<string[]>([]);
-  const [photoFocalPoints, setPhotoFocalPoints] = useState<FocalPoint[]>([]);
   const [editingPhotoIndex, setEditingPhotoIndex] = useState<number | null>(null);
+  const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [videoThumb, setVideoThumb] = useState<string | null>(null);
@@ -149,10 +151,6 @@ const NovoItem = () => {
     const startIndex = itemPhotos.length;
     setItemPhotos((prev) => [...prev, ...usable.map((r) => r.file)]);
     setItemPreviews((prev) => [...prev, ...usable.map((r) => r.previewUrl)]);
-    setPhotoFocalPoints((prev) => [
-      ...prev,
-      ...usable.map(() => ({ focal_x: 50, focal_y: 50 })),
-    ]);
     setEditingPhotoIndex(startIndex);
     logMediaDiagnostic("item.photo.queued_for_editor", {
       acceptedCount: usable.length,
@@ -185,7 +183,7 @@ const NovoItem = () => {
         logMediaError("item.photo.camera_failed", error, undefined, mediaTraceId);
         toast({
           title: "Não foi possível tirar a foto",
-          description: error instanceof Error ? error.message : "Verifique a permissão da câmera.",
+          description: getErrorMessage(error, "Verifique a permissão da câmera."),
           variant: "destructive",
         });
       }
@@ -209,7 +207,7 @@ const NovoItem = () => {
         logMediaError("item.photo.gallery_failed", error, undefined, mediaTraceId);
         toast({
           title: "Não foi possível abrir a galeria",
-          description: error instanceof Error ? error.message : "Verifique a permissão das fotos.",
+          description: getErrorMessage(error, "Verifique a permissão das fotos."),
           variant: "destructive",
         });
       }
@@ -223,7 +221,6 @@ const NovoItem = () => {
     URL.revokeObjectURL(itemPreviews[index]);
     setItemPhotos((prev) => prev.filter((_, i) => i !== index));
     setItemPreviews((prev) => prev.filter((_, i) => i !== index));
-    setPhotoFocalPoints((prev) => prev.filter((_, i) => i !== index));
     setEditingPhotoIndex((current) => {
       if (current === null) return null;
       if (current === index) return null;
@@ -317,7 +314,7 @@ const NovoItem = () => {
       logMediaError("item.video.camera_failed", error, undefined, mediaTraceId);
       toast({
         title: "Não foi possível gravar o vídeo",
-        description: error instanceof Error ? error.message : "Verifique a permissão da câmera.",
+        description: getErrorMessage(error, "Verifique a permissão da câmera."),
         variant: "destructive",
       });
     }
@@ -337,7 +334,7 @@ const NovoItem = () => {
       logMediaError("item.video.gallery_failed", error, undefined, mediaTraceId);
       toast({
         title: "Não foi possível escolher o vídeo",
-        description: error instanceof Error ? error.message : "Verifique a permissão da galeria.",
+        description: getErrorMessage(error, "Verifique a permissão da galeria."),
         variant: "destructive",
       });
     }
@@ -371,7 +368,11 @@ const NovoItem = () => {
         setItemValue(formatCurrency(String(avg)));
         toast({ title: "💡 Preço sugerido!", description: `Baseado em preços reais do mercado: ${formatCentsDisplay(result.suggestedMin)} — ${formatCentsDisplay(result.suggestedMax)}` });
       } else {
-        toast({ title: "Não foi possível sugerir um preço", description: "Tente preencher manualmente.", variant: "destructive" });
+        toast({
+          title: "Não foi possível sugerir um preço",
+          description: result.reason || "Tente preencher manualmente.",
+          variant: "destructive",
+        });
       }
     } catch {
       toast({ title: "Erro ao buscar preço", variant: "destructive" });
@@ -418,7 +419,7 @@ const NovoItem = () => {
           ...describeMediaFile(itemPhotos[i]),
         }, mediaTraceId);
         uploadedImageUrls.push(
-          await uploadItemImage(user.id, itemId, itemPhotos[i], i, photoFocalPoints[i], mediaTraceId)
+          await uploadItemImage(user.id, itemId, itemPhotos[i], i, undefined, mediaTraceId)
         );
         logMediaDiagnostic("item.image_upload_completed", { position: i }, mediaTraceId);
       }
@@ -439,7 +440,7 @@ const NovoItem = () => {
       logMediaError("item.save_failed", err, { uploadStatus: uploadStatus || "not_started" }, mediaTraceId);
       toast({
         title: "Não foi possível enviar as mídias",
-        description: err?.message || "Tente novamente. O item não será concluído sem as mídias.",
+        description: getErrorMessage(err, "Tente novamente. O item não será concluído sem as mídias."),
         variant: "destructive",
       });
     } finally {
@@ -641,13 +642,20 @@ const NovoItem = () => {
             <div className="flex gap-3 overflow-x-auto no-scrollbar px-1 pt-1">
               {itemPreviews.map((url, i) => (
                 <div key={i} className="relative w-24 h-24 rounded-2xl shrink-0 border border-primary/30">
-                  <img
-                    src={url}
-                    alt={`Foto ${i + 1}`}
-                    className="w-full h-full object-cover rounded-2xl"
-                    onLoad={() => logMediaDiagnostic("item.photo.preview_loaded", { index: i }, mediaTraceId)}
-                    onError={() => logMediaDiagnostic("item.photo.preview_failed", { index: i }, mediaTraceId)}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setMediaViewer({ url, type: "image", alt: `Foto ${i + 1}` })}
+                    className="h-full w-full rounded-2xl"
+                    aria-label={`Ampliar foto ${i + 1}`}
+                  >
+                    <img
+                      src={url}
+                      alt={`Foto ${i + 1}`}
+                      className="w-full h-full object-cover rounded-2xl"
+                      onLoad={() => logMediaDiagnostic("item.photo.preview_loaded", { index: i }, mediaTraceId)}
+                      onError={() => logMediaDiagnostic("item.photo.preview_failed", { index: i }, mediaTraceId)}
+                    />
+                  </button>
                   <button
                     type="button"
                     onClick={() => removePhoto(i)}
@@ -837,24 +845,31 @@ const NovoItem = () => {
 
       <FocalPointEditor
         open={editingPhotoIndex !== null}
+        imageFile={editingPhotoIndex !== null ? itemPhotos[editingPhotoIndex] : null}
         imageUrl={editingPhotoIndex !== null ? itemPreviews[editingPhotoIndex] : null}
-        value={editingPhotoIndex !== null ? photoFocalPoints[editingPhotoIndex] : null}
         onClose={() => setEditingPhotoIndex(null)}
-        onSave={(point) => {
-          logMediaDiagnostic("item.photo.focal_point_saved", {
+        onSave={(file) => {
+          logMediaDiagnostic("item.photo.crop_saved", {
             index: editingPhotoIndex ?? -1,
-            focalX: Math.round(point.focal_x),
-            focalY: Math.round(point.focal_y),
+            ...describeMediaFile(file),
           }, mediaTraceId);
           if (editingPhotoIndex !== null) {
-            setPhotoFocalPoints((prev) => prev.map((p, i) => (i === editingPhotoIndex ? point : p)));
+            const index = editingPhotoIndex;
+            const previewUrl = URL.createObjectURL(file);
+            setItemPhotos((prev) => prev.map((photo, i) => (i === index ? file : photo)));
+            setItemPreviews((prev) => prev.map((preview, i) => {
+              if (i !== index) return preview;
+              URL.revokeObjectURL(preview);
+              return previewUrl;
+            }));
           }
           setEditingPhotoIndex(null);
         }}
       />
+      <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
 
       {/* Submit */}
-      <div className="item-form-submit fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(1rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
+      <div className="item-form-submit fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(0.5rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}

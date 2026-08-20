@@ -1,4 +1,4 @@
-import { ArrowLeft, Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star, Video, Heart, CheckCircle2 } from "lucide-react";
+import { Settings, MapPin, Pencil, PlusCircle, Camera, Loader2, Trash2, AlertTriangle, Edit3, Star, Bookmark, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef } from "react";
 import ScreenLayout from "@/components/ScreenLayout";
@@ -29,8 +29,6 @@ import { formatValue } from "@/lib/utils";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { uploadVideo } from "@/services/videoService";
 import { softDeleteItem } from "@/services/itemService";
-import SelectItemDialog from "@/components/SelectItemDialog";
-import { createProposal } from "@/services/matchService";
 import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
@@ -70,32 +68,6 @@ const MeuPerfil = () => {
     queryFn: () => getFavorites(user!.id),
     enabled: !!user && showFavorites,
   });
-
-  // Propose trade from favorites
-  const [proposalTarget, setProposalTarget] = useState<any>(null);
-  const [proposalLoading, setProposalLoading] = useState(false);
-
-  const handleProposalConfirm = async (myItemIds: string[], cashAmountCents = 0) => {
-    if (!user || !proposalTarget) return;
-    setProposalLoading(true);
-    try {
-      await createProposal(user.id, myItemIds, proposalTarget.id, proposalTarget.user_id, cashAmountCents);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["matches", user.id] }),
-        queryClient.invalidateQueries({ queryKey: ["profile-stats", user.id] }),
-      ]);
-      toast({ title: "Proposta enviada! 🎉" });
-    } catch (err: any) {
-      if (err.message?.includes("duplicate")) {
-        toast({ title: "Proposta já enviada" });
-      } else {
-        toast({ title: "Erro", description: err.message, variant: "destructive" });
-      }
-    } finally {
-      setProposalLoading(false);
-      setProposalTarget(null);
-    }
-  };
 
   const openEdit = () => {
     setEditName(profile?.display_name ?? "");
@@ -302,13 +274,74 @@ const MeuPerfil = () => {
             Cadastrar novo item
           </button>
 
-          {/* ===== MEUS ITENS ===== */}
-            <div className="w-full flex flex-col gap-4">
-              <div className="flex items-center justify-between px-1">
-                <h2 className="text-lg font-bold text-foreground tracking-tight">Meus Itens</h2>
-              </div>
+          <div className="w-full flex flex-col gap-4">
+            <div className="flex items-center gap-5 border-b border-foreground/10 px-1">
+              <button
+                type="button"
+                onClick={() => setShowFavorites(false)}
+                className={`border-b-2 pb-2 text-lg font-bold tracking-tight transition-colors ${
+                  !showFavorites ? "border-primary text-foreground" : "border-transparent text-foreground/45"
+                }`}
+              >
+                Meus Itens
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowFavorites(true)}
+                className={`border-b-2 pb-2 text-lg font-bold tracking-tight transition-colors ${
+                  showFavorites ? "border-primary text-foreground" : "border-transparent text-foreground/45"
+                }`}
+              >
+                Itens Salvos
+              </button>
+            </div>
 
-              {items.length === 0 ? (
+            {showFavorites ? (
+              loadingFavorites ? (
+                <div className="space-y-3 pb-24">
+                  <Skeleton className="h-28 rounded-2xl" />
+                  <Skeleton className="h-28 rounded-2xl" />
+                </div>
+              ) : favorites.length === 0 ? (
+                <GlassCard className="mb-24 p-5 flex flex-col items-center gap-2.5 text-center">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Bookmark className="h-7 w-7 text-primary/50" />
+                  </div>
+                  <h3 className="text-base font-bold text-foreground">Nenhum item salvo</h3>
+                  <p className="text-muted-foreground text-sm max-w-[280px] leading-relaxed">
+                    Salve itens no Explorar para voltar a eles depois.
+                  </p>
+                </GlassCard>
+              ) : (
+                <div className="space-y-3 pb-24">
+                  {favorites.map((item: any) => {
+                    const mainImage = [...(item.item_images || [])].sort((a: any, b: any) => a.position - b.position)[0];
+                    return (
+                      <GlassCard
+                        key={item.id}
+                        hoverable
+                        onClick={() => navigate("/explorar", { state: { focusedItem: item } })}
+                        className="p-3 flex gap-4 active:scale-[0.99] cursor-pointer"
+                      >
+                        <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
+                          {mainImage ? (
+                            <img alt={item.name} className="w-full h-full object-cover opacity-80" src={mainImage.image_url} draggable={false} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-foreground/20 text-xs">Sem foto</div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1 flex flex-col justify-center gap-1">
+                          <span className="text-[10px] font-bold text-primary tracking-wider uppercase">{item.category}</span>
+                          <h3 className="text-base font-bold text-foreground leading-tight truncate">{item.name}</h3>
+                          <span className="text-xs text-foreground/45 truncate">{item.profiles?.display_name || "Usuário"}</span>
+                          <span className="text-primary text-sm font-semibold">{formatValue(item.market_value)}</span>
+                        </div>
+                      </GlassCard>
+                    );
+                  })}
+                </div>
+              )
+            ) : items.length === 0 ? (
                 <GlassCard className="mb-24 p-5 flex flex-col items-center gap-2.5 text-center">
                   <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
                     <PlusCircle className="h-7 w-7 text-primary/50" />
@@ -318,7 +351,7 @@ const MeuPerfil = () => {
                     Cadastre algo parado em casa para aparecer no Explorar e receber propostas.
                   </p>
                 </GlassCard>
-              ) : (
+            ) : (
                 <div className="space-y-3 pb-24">
                   {items.map((item: any) => {
                     const mainImage = item.item_images?.sort((a: any, b: any) => a.position - b.position)[0];
@@ -354,9 +387,7 @@ const MeuPerfil = () => {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (mainImage?.image_url) {
-                              setMediaViewer({ url: mainImage.image_url, type: "image", alt: item.name });
-                            }
+                            navigate(`/editar-item/${item.id}`);
                           }}
                           className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10"
                         >
@@ -385,12 +416,12 @@ const MeuPerfil = () => {
                     );
                   })}
                 </div>
-              )}
-            </div>
+            )}
+          </div>
         </div>
       </main>
 
-      {!proposalTarget && <BottomNav activeTab="perfil" />}
+      <BottomNav activeTab="perfil" />
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
       <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
 
@@ -423,15 +454,6 @@ const MeuPerfil = () => {
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* Select Item Dialog for proposals from favorites */}
-      <SelectItemDialog
-        open={!!proposalTarget}
-        onClose={() => setProposalTarget(null)}
-        onConfirm={handleProposalConfirm}
-        targetItemName={proposalTarget?.name}
-        loading={proposalLoading}
-      />
 
       {/* Edit Profile Sheet */}
       <Sheet open={editOpen} onOpenChange={setEditOpen}>

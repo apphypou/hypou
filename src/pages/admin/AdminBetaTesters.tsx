@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
-const csvField = (value: string) => `"${value.replaceAll('"', '""')}"`;
+const csvField = (value: string) => `"${value.replace(/"/g, '""')}"`;
 
 const AdminBetaTesters = () => {
   const [search, setSearch] = useState("");
