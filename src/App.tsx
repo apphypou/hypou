@@ -225,7 +225,9 @@ const useOnlineStatus = () => {
 
 const HostRoutes = () => {
   const location = useLocation();
-  const showMarketingRoutes = typeof window !== "undefined" && isMarketingRoute(window.location.hostname, location.pathname);
+  const showMarketingRoutes = !Capacitor.isNativePlatform()
+    && typeof window !== "undefined"
+    && isMarketingRoute(window.location.hostname, location.pathname);
 
   return showMarketingRoutes ? <MarketingRoutes /> : (
     <AuthProvider>
