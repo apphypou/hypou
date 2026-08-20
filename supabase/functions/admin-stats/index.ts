@@ -111,6 +111,12 @@ Deno.serve(async (req) => {
     const npsScore = npsData.length ? Math.round(((npsData.filter((entry) => entry.score >= 9).length - npsData.filter((entry) => entry.score <= 6).length) / npsData.length) * 100) : null;
     const totalSpendCents = (spend.data || []).reduce((sum, entry) => sum + entry.amount_cents, 0);
     const openEvents = events.filter((event) => event.event_name === "app_opened" || event.event_name === "session_started");
+    const usersWithRecentSessions = (days: number) => new Set(openEvents
+      .filter((event) => new Date(event.occurred_at).getTime() >= now.getTime() - days * 86_400_000)
+      .map((event) => event.user_id)
+      .filter(Boolean)).size;
+    const sessionsLast30Days = openEvents.filter((event) => new Date(event.occurred_at).getTime() >= now.getTime() - 30 * 86_400_000).length;
+    const activeUsersLast30Days = usersWithRecentSessions(30);
     const totalUsers = count(profiles);
     const attributedUsers = (attribution.data || []).filter((entry) => entry.source).length;
     const acquisitionSources = new Map<string, number>();
@@ -124,7 +130,14 @@ Deno.serve(async (req) => {
       validation: {
         acquisition: { signups: totalUsers, attributedUsers, sourceConfigured: attributedUsers > 0, cpaCents: totalUsers && totalSpendCents ? Math.round(totalSpendCents / totalUsers) : null },
         activation: { firstItem: itemOwners.size, firstSearch: eventUsers("search_performed"), firstTrade: tradeParticipants.size, activated: new Set([...itemOwners, ...tradeParticipants]).size },
-        engagement: { wau: count(active7d), mau: count(active30d), active90d: count(active90d), interactions: events.length },
+        engagement: {
+          dau: usersWithRecentSessions(1),
+          wau: count(active7d),
+          mau: count(active30d),
+          active90d: count(active90d),
+          interactions: events.length,
+          accessFrequency: activeUsersLast30Days ? Math.round((sessionsLast30Days / activeUsersLast30Days) * 10) / 10 : null,
+        },
         liquidity: { itemsPublished: count(activeItems), tradesOpen: statuses("proposal") + statuses("accepted"), tradesProgressed: progressedTrades, completedTrades, progressRate: matchRows.length ? Math.round((progressedTrades / matchRows.length) * 100) : 0 },
         retention: {
           d7: retentionForDay(retentionProfiles.data || [], openEvents, 7),
@@ -132,7 +145,7 @@ Deno.serve(async (req) => {
           d90: retentionForDay(retentionProfiles.data || [], openEvents, 90),
           configured: openEvents.length > 0,
         },
-        satisfaction: { averageRating, ratingsCount: ratingsData.length, nps: npsScore, npsResponses: npsData.length },
+        satisfaction: { averageRating, ratingsCount: ratingsData.length, nps: npsScore, npsResponses: npsData.length, npsPromoters: npsData.filter((entry) => entry.score >= 9).length },
         monetization: { configured: false, paidUsers: 0, arpuCents: null, mrrCents: null, ltvCents: null },
       },
       charts: {

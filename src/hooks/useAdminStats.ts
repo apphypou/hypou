@@ -18,10 +18,10 @@ export interface AdminStats {
   validation: {
     acquisition: { signups: number; attributedUsers: number; sourceConfigured: boolean; cpaCents: number | null };
     activation: { firstItem: number; firstSearch: number; firstTrade: number; activated: number };
-    engagement: { wau: number; mau: number; active90d: number; interactions: number };
+    engagement: { dau: number; wau: number; mau: number; active90d: number; interactions: number; accessFrequency: number | null };
     liquidity: { itemsPublished: number; tradesOpen: number; tradesProgressed: number; completedTrades: number; progressRate: number };
     retention: { d7: number | null; d30: number | null; d90: number | null; configured: boolean };
-    satisfaction: { averageRating: number | null; ratingsCount: number; nps: number | null; npsResponses: number };
+    satisfaction: { averageRating: number | null; ratingsCount: number; nps: number | null; npsResponses: number; npsPromoters: number };
     monetization: { configured: boolean; paidUsers: number; arpuCents: number | null; mrrCents: number | null; ltvCents: number | null };
   };
   charts: {
