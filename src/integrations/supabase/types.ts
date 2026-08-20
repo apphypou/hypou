@@ -1181,6 +1181,7 @@ export type Database = {
       }
       waitlist: {
         Row: {
+          converted_at: string | null
           created_at: string
           email: string
           id: string
@@ -1189,6 +1190,7 @@ export type Database = {
           referred_by: string | null
         }
         Insert: {
+          converted_at?: string | null
           created_at?: string
           email: string
           id?: string
@@ -1197,6 +1199,7 @@ export type Database = {
           referred_by?: string | null
         }
         Update: {
+          converted_at?: string | null
           created_at?: string
           email?: string
           id?: string

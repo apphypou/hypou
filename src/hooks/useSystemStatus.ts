@@ -30,32 +30,6 @@ export interface UptimeCheck {
   checked_at: string;
 }
 
-export interface HealthData {
-  checks: PromiseSettledResult<any>[];
-  dbLatency: number;
-  timestamp: Date;
-}
-
-export function useHealthCheck() {
-  return useQuery<HealthData>({
-    queryKey: ["admin-health"],
-    queryFn: async () => {
-      const start = Date.now();
-      const checks = await Promise.allSettled([
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("items").select("id", { count: "exact", head: true }),
-        supabase.from("matches").select("id", { count: "exact", head: true }),
-        supabase.from("messages").select("id", { count: "exact", head: true }),
-        supabase.from("waitlist").select("id", { count: "exact", head: true }),
-        supabase.auth.getSession(),
-      ]);
-      const dbLatency = Date.now() - start;
-      return { checks, dbLatency, timestamp: new Date() };
-    },
-    refetchInterval: 15000,
-  });
-}
-
 export function useIncidents() {
   return useQuery<SystemIncident[]>({
     queryKey: ["system-incidents"],
@@ -176,16 +150,5 @@ export function useUpdateIncidentStatus() {
       if (updError) throw updError;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["system-incidents"] }),
-  });
-}
-
-export function useSaveUptimeCheck() {
-  return useMutation({
-    mutationFn: async (checks: { component: string; status: string; latency_ms: number | null }[]) => {
-      const { error } = await supabase
-        .from("uptime_checks")
-        .insert(checks.map(c => ({ ...c, checked_at: new Date().toISOString() })));
-      if (error) throw error;
-    },
   });
 }

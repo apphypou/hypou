@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNow, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  useHealthCheck, useIncidents, useUptimeHistory,
+  useIncidents, useUptimeHistory,
   type SystemIncident,
 } from "@/hooks/useSystemStatus";
 import CreateIncidentDialog from "@/components/admin/CreateIncidentDialog";
@@ -41,26 +41,29 @@ const severityConfig: Record<string, { label: string; color: string }> = {
 };
 
 const componentDefs = [
-  { name: "Autenticação", key: "auth", icon: Shield, desc: "Login, registro e sessões", checkIdx: 5 },
-  { name: "Banco de Dados", key: "database", icon: Database, desc: "Armazenamento e consultas", checkIdx: 0 },
-  { name: "API Principal", key: "api", icon: Server, desc: "Endpoints REST e CRUD", checkIdx: 1 },
-  { name: "Sistema de Matches", key: "matches", icon: Zap, desc: "Motor de matching e propostas", checkIdx: 2 },
-  { name: "Chat & Mensagens", key: "chat", icon: MessageSquare, desc: "Realtime messaging", checkIdx: 3 },
-  { name: "CDN & Storage", key: "cdn", icon: Globe, desc: "Imagens, vídeos e assets", checkIdx: -1 },
+  { name: "Autenticação", key: "auth", icon: Shield, desc: "Login, registro e sessões" },
+  { name: "Banco de Dados", key: "database", icon: Database, desc: "Armazenamento e consultas" },
+  { name: "API Principal", key: "api", icon: Server, desc: "Endpoints REST e CRUD" },
+  { name: "Sistema de Matches", key: "matches", icon: Zap, desc: "Motor de matching e propostas" },
+  { name: "Chat & Mensagens", key: "chat", icon: MessageSquare, desc: "Realtime messaging" },
+  { name: "CDN & Storage", key: "cdn", icon: Globe, desc: "Imagens, vídeos e assets" },
 ];
 
 const AdminStatus = () => {
   const [expandedIncident, setExpandedIncident] = useState<string | null>(null);
-  const { data: healthData } = useHealthCheck();
   const { data: incidents = [] } = useIncidents();
   const { data: uptimeChecks = [] } = useUptimeHistory();
 
-  function getComponentStatus(checkIndex: number): ServiceStatus {
-    if (!healthData || checkIndex === -1) return "unknown";
-    const check = healthData.checks[checkIndex];
-    if (check.status === "rejected") return "major_outage";
-    if (check.status === "fulfilled" && "error" in check.value && check.value.error) return "degraded";
-    return "operational";
+  function latestCheck(componentKey: string) {
+    return uptimeChecks.find((check) => check.component === componentKey) || null;
+  }
+
+  function getComponentStatus(componentKey: string): ServiceStatus {
+    const check = latestCheck(componentKey);
+    if (!check || Date.now() - new Date(check.checked_at).getTime() > 15 * 60 * 1000) return "unknown";
+    return ["operational", "degraded", "partial_outage", "major_outage"].includes(check.status)
+      ? check.status as ServiceStatus
+      : "unknown";
   }
 
   // Compute real uptime from stored checks (last 30 days)
@@ -92,16 +95,19 @@ const AdminStatus = () => {
 
   const components = componentDefs.map((def) => {
     const { pct, bars } = computeUptime(def.key);
+    const latest = latestCheck(def.key);
     return {
       ...def,
-      status: getComponentStatus(def.checkIdx),
+      status: getComponentStatus(def.key),
       uptime: pct,
       uptimeBars: bars,
-      latency: def.key === "database" ? healthData?.dbLatency : undefined,
+      latency: latest?.latency_ms,
+      checkedAt: latest?.checked_at || null,
     };
   });
 
-  const overallStatus: ServiceStatus = components.some((c) => c.status === "major_outage")
+  const activeMonitors = components.filter((component) => component.status !== "unknown");
+  const overallStatus: ServiceStatus = activeMonitors.length === 0 ? "unknown" : components.some((c) => c.status === "major_outage")
     ? "major_outage"
     : components.some((c) => c.status === "partial_outage")
     ? "partial_outage"
@@ -115,11 +121,12 @@ const AdminStatus = () => {
   const last30 = incidents.filter((i) => new Date(i.created_at) >= subDays(new Date(), 30));
   const unresolvedCount = last30.filter((i) => i.status !== "resolved").length;
 
-  // Average uptime across components
-  const monitoredComponents = components.filter((component) => component.uptime !== null);
-  const avgUptime = monitoredComponents.length
-    ? (monitoredComponents.reduce((sum, component) => sum + (component.uptime || 0), 0) / monitoredComponents.length).toFixed(2)
+  const componentsWithUptime = components.filter((component) => component.uptime !== null);
+  const avgUptime = componentsWithUptime.length
+    ? (componentsWithUptime.reduce((sum, component) => sum + (component.uptime || 0), 0) / componentsWithUptime.length).toFixed(2)
     : "—";
+  const lastCheckAt = components.map((component) => component.checkedAt).filter(Boolean).sort().slice(-1)[0] || null;
+  const databaseLatency = components.find((component) => component.key === "database")?.latency;
 
   return (
     <div className="space-y-8">
@@ -136,8 +143,10 @@ const AdminStatus = () => {
                   <h2 className={`text-xl sm:text-2xl font-bold ${overall.color}`}>{overall.label}</h2>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                     {overallStatus === "operational"
-                      ? "Todos os sistemas estão funcionando normalmente"
-                      : "Alguns serviços estão com problemas"}
+                      ? "Todos os serviços monitorados estão funcionando normalmente"
+                      : overallStatus === "unknown"
+                        ? "Nenhum check automático recente para todos os serviços"
+                        : "Alguns serviços monitorados estão com problemas"}
                   </p>
                 </div>
               </div>
@@ -145,17 +154,9 @@ const AdminStatus = () => {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Activity className="h-3.5 w-3.5" />
                   <span>
-                    Última verificação:{" "}
-                    {healthData?.timestamp
-                      ? formatDistanceToNow(healthData.timestamp, { addSuffix: true, locale: ptBR })
-                      : "—"}
+                    Última execução automática: {lastCheckAt ? formatDistanceToNow(new Date(lastCheckAt), { addSuffix: true, locale: ptBR }) : "—"}
                   </span>
                 </div>
-                {healthData?.dbLatency && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Latência DB: <span className="font-mono font-semibold text-foreground">{healthData.dbLatency}ms</span>
-                  </p>
-                )}
               </div>
             </div>
           </CardContent>
@@ -190,7 +191,7 @@ const AdminStatus = () => {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-semibold text-foreground truncate">{component.name}</h4>
-                          {component.latency !== undefined && (
+                          {component.latency !== null && component.latency !== undefined && (
                             <span className="text-[10px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded flex-shrink-0">
                               {component.latency}ms
                             </span>
@@ -238,7 +239,7 @@ const AdminStatus = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: "Uptime (30 dias)", value: avgUptime === "—" ? "—" : `${avgUptime}%`, sub: "média dos componentes monitorados" },
-          { label: "Tempo médio de resposta", value: `${healthData?.dbLatency || "—"}ms`, sub: "latência atual" },
+          { label: "Última latência do banco", value: databaseLatency === null || databaseLatency === undefined ? "—" : `${databaseLatency}ms`, sub: "medida por check automático" },
           { label: "Incidentes (30 dias)", value: String(last30.length), sub: `${unresolvedCount} não resolvido(s)` },
         ].map((metric, i) => (
           <motion.div key={metric.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
@@ -289,7 +290,7 @@ const AdminStatus = () => {
       {/* Footer */}
       <div className="text-center py-4">
         <p className="text-xs text-muted-foreground">
-          Esta tela mostra a verificação atual. Uptime só aparece após existir monitoramento independente.
+          Apenas checks persistidos por monitoramento independente são exibidos. Serviços sem check automático aparecem como “Sem monitoramento”.
         </p>
       </div>
     </div>
