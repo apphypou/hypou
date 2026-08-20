@@ -3,8 +3,9 @@ import { ensureMobileNode } from "./mobile-node.mjs";
 
 ensureMobileNode();
 
+const android = process.argv.includes("--android");
 const steps = [
-  ["mobile doctor", "npm", ["run", "mobile:doctor"]],
+  ["mobile doctor", "npm", ["run", android ? "mobile:doctor:android" : "mobile:doctor"]],
   ["TypeScript", "npx", ["tsc", "-p", "tsconfig.app.json", "--noEmit"]],
   [
     "targeted tests",

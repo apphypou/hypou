@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, MailCheck } from "lucide-react";
-import logoHypou from "@/assets/logo-hypou.png";
+import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import logoHypou from "@/assets/logo-hypou.png";
+import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import authBackground from "@/assets/auth-marketplace-bg.webp";
 import { cn } from "@/lib/utils";
 

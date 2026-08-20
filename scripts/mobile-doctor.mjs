@@ -4,6 +4,7 @@ import { ensureMobileNode } from "./mobile-node.mjs";
 
 ensureMobileNode();
 
+const platform = process.argv.includes("--android") ? "android" : "ios";
 const run = (cmd, args = []) => execFileSync(cmd, args, { stdio: "pipe", encoding: "utf8" }).trim();
 const fail = (msg) => {
   console.error(`FAIL: ${msg}`);
@@ -26,7 +27,7 @@ try {
   const availableKb = Number(df?.[3] || 0);
   const availableGb = availableKb / 1024 / 1024;
   if (availableGb < 15) {
-    fail(`Pouco espaco livre em disco: ${availableGb.toFixed(1)}GB. Libere pelo menos 15GB antes de builds iOS/TestFlight`);
+    fail(`Pouco espaco livre em disco: ${availableGb.toFixed(1)}GB. Libere pelo menos 15GB antes de builds mobile`);
   }
 } catch {
   fail("Nao foi possivel verificar espaco livre em disco");
@@ -41,12 +42,37 @@ if (existsSync(fsProbe)) {
   readFileSync(fsProbe, "utf8");
 }
 
-if (!existsSync("ios/App/App.xcodeproj")) fail("Missing iOS Xcode project");
+if (platform === "ios") {
+  if (!existsSync("ios/App/App.xcodeproj")) fail("Missing iOS Xcode project");
 
-try {
-  run("xcodebuild", ["-version"]);
-} catch {
-  fail("Xcode command line tools not available");
+  try {
+    run("xcodebuild", ["-version"]);
+  } catch {
+    fail("Xcode command line tools not available");
+  }
 }
 
-console.log("OK: mobile environment is usable");
+if (platform === "android") {
+  const externalAndroidHome = "/Volumes/ADATA SC735/Android/sdk";
+  const defaultAndroidHome = `${process.env.HOME}/Library/Android/sdk`;
+  const androidHome = process.env.ANDROID_HOME
+    || process.env.ANDROID_SDK_ROOT
+    || [externalAndroidHome, defaultAndroidHome].find((path) => existsSync(path))
+    || externalAndroidHome;
+
+  const externalJavaHome = "/Volumes/ADATA SC735/Applications/Android Studio.app/Contents/jbr/Contents/Home";
+  const defaultJavaHome = "/Applications/Android Studio.app/Contents/jbr/Contents/Home";
+  const javaHome = process.env.JAVA_HOME
+    || [externalJavaHome, defaultJavaHome].find((path) => existsSync(`${path}/bin/java`))
+    || externalJavaHome;
+
+  if (!existsSync(`${javaHome}/bin/java`)) fail(`Android Studio JDK not found: ${javaHome}`);
+  if (!existsSync(`${androidHome}/platform-tools/adb`)) fail(`Android platform-tools not found: ${androidHome}`);
+  if (!existsSync(`${androidHome}/platforms/android-36`)) fail(`Android SDK 36 not found: ${androidHome}`);
+  if (!existsSync("android/gradlew")) fail("Missing Android Gradle project");
+
+  run(`${javaHome}/bin/java`, ["-version"]);
+  run(`${androidHome}/platform-tools/adb`, ["version"]);
+}
+
+console.log(`OK: mobile ${platform} environment is usable`);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Mail, MessageCircle, ShieldCheck, Sparkles, UserRound, Users } from "lucide-react";
-import logoHypou from "@/assets/logo-hypou.png";
+import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import authBackground from "@/assets/auth-marketplace-bg.webp";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";

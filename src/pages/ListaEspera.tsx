@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, ArrowRight, Flame, Copy, Check, Share2, MessageCircle } from "lucide-react";
 import HypouLogo from "@/components/HypouLogo";
-import logoHypou from "@/assets/logo-hypou.png";
+import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";

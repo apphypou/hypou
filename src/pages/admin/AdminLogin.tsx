@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LockKeyhole, Mail, ShieldCheck } from "lucide-react";
-import logoHypou from "@/assets/logo-hypou.png";
+import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import authBackground from "@/assets/auth-marketplace-bg.webp";
 import NeonButton from "@/components/NeonButton";
 import { useAuth } from "@/hooks/useAuth";

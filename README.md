@@ -1,125 +1,54 @@
-# Hypou — Troque o que tá parado
+# Hypou — troque o que está parado
 
-> Plataforma de trocas inteligentes baseada em swipe + match.
-> Dê match, negocie e troque com segurança.
+Hypou é um aplicativo nativo para iOS e Android que conecta pessoas para trocar
+itens. O navegador hospeda somente o site institucional, o cadastro do beta e o
+painel administrativo; não há versão web do produto para clientes.
 
-**URL:** [https://hypou.lovable.app](https://hypou.lovable.app)
+- Site e beta: [hypou.app](https://hypou.app)
+- Painel: [hypou.app/admin](https://hypou.app/admin)
+- Aplicativo: Capacitor para iOS e Android
 
----
+## Início rápido
 
-## Visão Geral
-
-Hypou é uma plataforma brasileira de troca de itens do dia a dia. A mecânica é simples: os usuários navegam por um feed de itens com swipe (à la Tinder), curtem os que interessam e, quando há interesse mútuo, um **match** é formado. A partir daí, os usuários conversam via chat integrado para combinar a troca.
-
-### Principais recursos
-- **Feed de swipe** com recomendações inteligentes baseadas em valor e proximidade geográfica
-- **Match + Chat** para negociar trocas diretamente
-- **Avaliação de confiança** entre usuários após cada troca
-- **Painel administrativo** com KPIs, moderação e assistente IA
-- **Chamada de vídeo** integrada via LiveKit
-- **100% gratuito** — sem taxas, sem pagamentos
-
----
-
-## Stack Tecnológica
-
-| Camada | Tecnologia |
-|--------|-----------|
-| Framework | React 18 + TypeScript |
-| Build | Vite 5 |
-| Estilos | Tailwind CSS 3 + shadcn/ui |
-| Animações | Framer Motion |
-| Estado servidor | TanStack React Query |
-| Backend | Supabase (Auth, Postgres, Storage, Realtime, Edge Functions) |
-| Mobile | Capacitor (iOS/Android) |
-| Testes | Vitest + Testing Library |
-
----
-
-## Estrutura do Projeto
-
-```
-src/
-├── components/          # UI reutilizável + shadcn/ui
-│   ├── admin/           # Componentes do painel admin
-│   ├── landing/         # Seções da landing page
-│   └── ui/              # 40+ componentes Radix/shadcn
-├── pages/               # Telas da aplicação
-│   └── admin/           # Telas do painel admin
-├── hooks/               # Lógica de estado e queries
-├── services/            # Acesso a dados (Supabase SDK)
-├── lib/                 # Utilitários e helpers
-├── constants/           # Dados estáticos (categorias, etc.)
-├── integrations/
-│   └── supabase/        # Cliente SDK + tipos gerados
-└── test/                # Testes unitários e e2e
-```
-
----
-
-## Scripts disponíveis
+Use Node `>=22 <25` e npm. Em máquinas com Node 25 instalado, prefixe os
+comandos móveis com `PATH="/opt/homebrew/opt/node@22/bin:$PATH"`.
 
 ```bash
-# Ambiente de desenvolvimento
-bun dev
-
-# Build para produção
-bun build
-
-# Preview do build
-bun preview
-
-# Lint
-bun lint
-
-# Testes
-bun test
-bun test:watch
+npm ci
+npm run dev
+npm run typecheck
+npm run lint
+npm test
 ```
 
----
-
-## Principais fluxos
-
-1. **Explorar** — Swipe cards de itens, curta os que interessam
-2. **Propor troca** — Selecione um item seu para oferecer em troca
-3. **Match** — Quando o dono aceita, abre-se o chat
-4. **Negociar** — Chat com mídia, chamada de vídeo e banner de contexto da troca
-5. **Confirmar** — Ambos confirmam a entrega; troca finalizada
-6. **Avaliar** — Rating de 1-5 estrelas para construir reputação
-
----
-
-## Arquitetura de Dados
-
-- **Supabase Postgres** com RLS (Row Level Security) em todas as tabelas
-- **Supabase Realtime** para atualizações ao vivo (matches, mensagens, notificações)
-- **Supabase Storage** para fotos de itens, avatares e mídia de chat
-- **Edge Functions** para validação de preços com IA, push notifications e exclusão de conta
-
----
-
-## Mobile (Capacitor)
-
-O app é empacotado como PWA e também como app nativo via Capacitor:
+## Comandos principais
 
 ```bash
-# Sincronizar plataformas nativas
-npx cap sync
+# Site institucional e painel
+npm run build:web
 
-# Rodar no Android
-npx cap run android
+# Aplicativo e ambientes nativos
+npm run build:mobile
+npm run mobile:doctor
+npm run mobile:doctor:android
 
-# Rodar no iOS
-npx cap run ios
+# Validação de release (não publica)
+npm run release -- web --check
+npm run release -- ios --check
+npm run release -- android --check
 ```
 
----
+Consulte [docs/README.md](docs/README.md) para arquitetura, banco, QA e release.
 
-## Licença
+## Estrutura
+
+```text
+src/        Aplicação React, páginas, módulos de domínio e testes
+supabase/   Migrations e Edge Functions
+ios/        Projeto nativo iOS
+android/    Projeto nativo Android
+docs/       Documentação operacional atual
+scripts/    Automação local de build, banco e release
+```
 
 Projeto privado. Todos os direitos reservados.
-
----
-
-> Desenvolvido com ❤️ no Brasil.

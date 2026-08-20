@@ -78,8 +78,20 @@ const fail = (message) => {
 };
 
 const migrationList = run("Supabase migration list", supabaseCli, ["migration", "list"]);
+let migrationRows = null;
+try {
+  const parsedMigrationList = JSON.parse(migrationList);
+  if (Array.isArray(parsedMigrationList.migrations)) {
+    migrationRows = parsedMigrationList.migrations;
+  }
+} catch {
+  // Older CLI versions print a table instead of JSON.
+}
+
 for (const version of requiredRecentMigrations) {
-  const aligned = new RegExp(`${version}\\s+\\|\\s+${version}`).test(migrationList);
+  const aligned = migrationRows
+    ? migrationRows.some((migration) => migration.local === version && migration.remote === version)
+    : new RegExp(`${version}\\s+\\|\\s+${version}`).test(migrationList);
   if (!aligned) fail(`remote migration ${version} is not aligned with local history`);
 }
 

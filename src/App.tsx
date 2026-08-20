@@ -1,79 +1,28 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Capacitor } from "@capacitor/core";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Routes, Route, useLocation, useParams } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
-import { Capacitor } from "@capacitor/core";
-import { AuthProvider } from "@/hooks/useAuth";
-import { ThemeProvider } from "@/hooks/useTheme";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import AdminProtectedRoute from "@/components/admin/AdminProtectedRoute";
-import OfflineScreen from "@/components/OfflineScreen";
-import PageTransition from "@/components/PageTransition";
 import AuthRedirectHandler from "@/components/AuthRedirectHandler";
+import IncomingCallSheet from "@/components/IncomingCallSheet";
+import OfflineScreen from "@/components/OfflineScreen";
+import PendingTradeConfirmationDialog from "@/components/PendingTradeConfirmationDialog";
+import { AuthProvider } from "@/hooks/useAuth";
+import { useAppLifecycleSync } from "@/hooks/useAppLifecycleSync";
 import { useGlobalRealtimeAlerts } from "@/hooks/useGlobalRealtimeAlerts";
 import { usePushRegistration } from "@/hooks/usePushRegistration";
-import { useAppLifecycleSync } from "@/hooks/useAppLifecycleSync";
-import IncomingCallSheet from "@/components/IncomingCallSheet";
-import PendingTradeConfirmationDialog from "@/components/PendingTradeConfirmationDialog";
+import { ThemeProvider } from "@/hooks/useTheme";
 import { isMarketingRoute } from "@/lib/domainRouting";
-
-const GlobalAlerts = () => {
-  useGlobalRealtimeAlerts();
-  usePushRegistration();
-  useAppLifecycleSync();
-  return null;
-};
-
-// Eager-load critical entry routes for instant first paint
-import Login from "./pages/Login";
-import Explorar from "./pages/Explorar";
-
-// Lazy-load everything else to keep the initial bundle small
-const Cadastro = lazy(() => import("./pages/Cadastro"));
-const ConfirmarCodigo = lazy(() => import("./pages/ConfirmarCodigo"));
-const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Busca = lazy(() => import("./pages/Busca"));
-const Shorts = lazy(() => import("./pages/Shorts"));
-const Matches = lazy(() => import("./pages/Matches"));
-const Configuracoes = lazy(() => import("./pages/Configuracoes"));
-const NovoItem = lazy(() => import("./pages/NovoItem"));
-const EditarItem = lazy(() => import("./pages/EditarItem"));
-const Match = lazy(() => import("./pages/Match"));
-const Chat = lazy(() => import("./pages/Chat"));
-const Conversa = lazy(() => import("./pages/Conversa"));
-const Perfil = lazy(() => import("./pages/Perfil"));
-const MeuPerfil = lazy(() => import("./pages/MeuPerfil"));
-const PerfilUsuario = lazy(() => import("./pages/PerfilUsuario"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const ListaEspera = lazy(() => import("./pages/ListaEspera"));
-const Teste = lazy(() => import("./pages/Teste"));
-const Baixar = lazy(() => import("./pages/Baixar"));
-const Termos = lazy(() => import("./pages/Termos"));
-const Privacidade = lazy(() => import("./pages/Privacidade"));
-const AdminLayout = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLayout"));
-const AdminDashboard = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminUsuarios = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminUsuarios"));
-const AdminItens = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminItens"));
-const AdminMatches = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminMatches"));
-const AdminReports = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminReports"));
-const AdminWaitlist = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminWaitlist"));
-const AdminBetaTesters = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminBetaTesters"));
-const AdminStatus = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminStatus"));
-const AdminAssistente = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminAssistente"));
-const AdminLancamento = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLancamento"));
-const AdminLogin = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLogin"));
-const Chamada = lazy(() => import("./pages/Chamada"));
-const ChamadasPerdidas = lazy(() => import("./pages/ChamadasPerdidas"));
+import MarketingRoutes from "@/routes/MarketingRoutes";
+import ProductRoutes from "@/routes/ProductRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      gcTime: 1000 * 60 * 30, // 30 min cache for offline resilience
-      staleTime: 1000 * 30, // 30s — realtime mantém fresh; refetch leve no foco
+      gcTime: 1000 * 60 * 30,
+      staleTime: 1000 * 30,
       refetchOnWindowFocus: true,
       refetchOnReconnect: "always",
       refetchOnMount: true,
@@ -82,131 +31,18 @@ const queryClient = new QueryClient({
   },
 });
 
-// Apply native class to body on Capacitor
 if (Capacitor.isNativePlatform()) {
   document.body.classList.add("native-app");
 }
 
-// Lightweight fallback — no spinner to avoid flash on fast chunks
-const RouteFallback = () => <div className="flex-1 bg-background" />;
+function GlobalAlerts() {
+  useGlobalRealtimeAlerts();
+  usePushRegistration();
+  useAppLifecycleSync();
+  return null;
+}
 
-const ItemRedirect = () => {
-  const { itemId } = useParams();
-  return <Navigate replace to={`/explorar?item=${encodeURIComponent(itemId || "")}`} />;
-};
-
-const MarketingRoutes = () => (
-  <Suspense fallback={<RouteFallback />}>
-    <Routes>
-      <Route path="/teste" element={<Teste />} />
-      <Route path="/termos" element={<Termos />} />
-      <Route path="/privacidade" element={<Privacidade />} />
-      <Route path="*" element={<Navigate replace to="/teste" />} />
-    </Routes>
-  </Suspense>
-);
-
-const AnimatedRoutes = () => {
-  const location = useLocation();
-
-  return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes location={location} key={location.pathname}>
-          {/* Public routes */}
-          <Route path="/" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/lista-espera" element={<PageTransition><ListaEspera /></PageTransition>} />
-          <Route path="/baixar" element={<PageTransition><Baixar /></PageTransition>} />
-          <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-          <Route path="/cadastro" element={<PageTransition><Cadastro /></PageTransition>} />
-          <Route path="/confirmar-codigo" element={<PageTransition><ConfirmarCodigo /></PageTransition>} />
-          <Route path="/recuperar-senha" element={<PageTransition><RecuperarSenha /></PageTransition>} />
-          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-          <Route path="/termos" element={<PageTransition><Termos /></PageTransition>} />
-          <Route path="/privacidade" element={<PageTransition><Privacidade /></PageTransition>} />
-
-          {/* Onboarding */}
-          <Route path="/onboarding" element={
-            <ProtectedRoute requireOnboarding={false}>
-              <PageTransition><Perfil /></PageTransition>
-            </ProtectedRoute>
-          } />
-
-          {/* Protected routes */}
-          <Route path="/explorar" element={<PageTransition><Explorar /></PageTransition>} />
-          <Route path="/item/:itemId" element={<ItemRedirect />} />
-          <Route path="/busca" element={
-            <ProtectedRoute><PageTransition><Busca /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/shorts" element={
-            <ProtectedRoute><PageTransition><Shorts /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/partidas" element={
-            <ProtectedRoute><PageTransition><Matches /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/match/:matchId" element={
-            <ProtectedRoute><PageTransition><Match /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/chat" element={
-            <ProtectedRoute><PageTransition><Chat /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/chat/:conversationId" element={
-            <ProtectedRoute><PageTransition><Conversa /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/chamada/:roomName" element={
-            <ProtectedRoute><Chamada /></ProtectedRoute>
-          } />
-          <Route path="/chamadas" element={
-            <ProtectedRoute><PageTransition><ChamadasPerdidas /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/meu-perfil" element={
-            <ProtectedRoute><PageTransition><MeuPerfil /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/configuracoes" element={
-            <ProtectedRoute><PageTransition><Configuracoes /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/novo-item" element={
-            <ProtectedRoute><PageTransition><NovoItem /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/editar-item/:itemId" element={
-            <ProtectedRoute><PageTransition><EditarItem /></PageTransition></ProtectedRoute>
-          } />
-          <Route path="/usuario/:userId" element={
-            <ProtectedRoute><PageTransition><PerfilUsuario /></PageTransition></ProtectedRoute>
-          } />
-
-          {/* Admin routes */}
-          {!__HYPOU_MOBILE_BUILD__ && AdminLayout && (
-            <>
-              <Route path="/admin/login" element={AdminLogin && <AdminLogin />} />
-              <Route path="/admin" element={
-                <AdminProtectedRoute>
-                  <AdminLayout />
-                </AdminProtectedRoute>
-              }>
-                <Route index element={AdminDashboard && <AdminDashboard />} />
-                <Route path="usuarios" element={AdminUsuarios && <AdminUsuarios />} />
-                <Route path="itens" element={AdminItens && <AdminItens />} />
-                <Route path="matches" element={AdminMatches && <AdminMatches />} />
-                <Route path="reports" element={AdminReports && <AdminReports />} />
-                <Route path="waitlist" element={AdminWaitlist && <AdminWaitlist />} />
-                <Route path="testadores-beta" element={AdminBetaTesters && <AdminBetaTesters />} />
-                <Route path="status" element={AdminStatus && <AdminStatus />} />
-                <Route path="assistente" element={AdminAssistente && <AdminAssistente />} />
-                <Route path="lancamento" element={AdminLancamento && <AdminLancamento />} />
-              </Route>
-            </>
-          )}
-
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-        </Routes>
-      </Suspense>
-    </AnimatePresence>
-  );
-};
-
-const useOnlineStatus = () => {
+function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -221,26 +57,30 @@ const useOnlineStatus = () => {
   }, []);
 
   return isOnline;
-};
+}
 
-const HostRoutes = () => {
+function HostRoutes() {
   const location = useLocation();
-  const showMarketingRoutes = !Capacitor.isNativePlatform()
+  const isMarketing = !Capacitor.isNativePlatform()
     && typeof window !== "undefined"
     && isMarketingRoute(window.location.hostname, location.pathname);
 
-  return showMarketingRoutes ? <MarketingRoutes /> : (
+  if (isMarketing) {
+    return <MarketingRoutes />;
+  }
+
+  return (
     <AuthProvider>
       <AuthRedirectHandler />
       <GlobalAlerts />
       <IncomingCallSheet />
       <PendingTradeConfirmationDialog />
-      <AnimatedRoutes />
+      <ProductRoutes />
     </AuthProvider>
   );
-};
+}
 
-const App = () => {
+export default function App() {
   const isOnline = useOnlineStatus();
 
   return (
@@ -257,6 +97,4 @@ const App = () => {
       </ThemeProvider>
     </QueryClientProvider>
   );
-};
-
-export default App;
+}

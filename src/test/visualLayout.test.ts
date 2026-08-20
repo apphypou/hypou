@@ -273,7 +273,7 @@ describe("mobile visual layout", () => {
   it("keeps bottom navigation below overlays and proposal drawers", () => {
     const nav = readSource("src/components/BottomNav.tsx");
     const explore = readSource("src/pages/Explorar.tsx");
-    const app = readSource("src/App.tsx");
+    const routes = readSource("src/routes/ProductRoutes.tsx");
     const css = readSource("src/index.css");
 
     expect(nav).toContain("zIndex: 40");
@@ -281,7 +281,7 @@ describe("mobile visual layout", () => {
     expect(nav).toContain("hypou-bottom-nav-wrapper");
     expect(css).toContain('body[data-bottom-nav-hidden="true"] .hypou-bottom-nav-wrapper');
     expect(explore).toContain("{!filtersOpen && !showSelectItem && <BottomNav");
-    expect(app).toContain('<Route path="/item/:itemId" element={<ItemRedirect />} />');
+    expect(routes).toContain('<Route path="/item/:itemId" element={<ItemRedirect />} />');
   });
 
   it("blocks pull refresh in overlays and item forms", () => {

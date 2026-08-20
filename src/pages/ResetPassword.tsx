@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Lock, Check, Eye, EyeOff, ArrowLeft, MailCheck } from "lucide-react";
-import logoHypou from "@/assets/logo-hypou.png";
+import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import { supabase } from "@/integrations/supabase/client";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
