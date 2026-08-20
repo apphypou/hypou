@@ -3,6 +3,7 @@
 // Auth: protected by PUSH_HOOK_SECRET (used as Bearer) — triggers send it via pg_net.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { createEdgeObservation, edgeLog, persistEdgeObservation } from "../_shared/observability.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -206,6 +207,10 @@ async function sendApns(opts: {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const observation = createEdgeObservation(req, "send-push");
+  let supabase: any;
+  edgeLog(observation, "info", "push.request_started");
+
   try {
     // Validate caller: must include the push hook secret (triggers send it via pg_net)
     const auth = req.headers.get("Authorization") || "";
@@ -225,7 +230,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
+    observation.userId = typeof user_id === "string" ? user_id : undefined;
+    supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
@@ -236,6 +242,11 @@ Deno.serve(async (req) => {
       .eq("user_id", user_id);
     if (tErr) throw tErr;
     if (!tokens || tokens.length === 0) {
+      edgeLog(observation, "warn", "push.no_device_tokens");
+      await persistEdgeObservation(supabase, observation, "warn", "push.no_device_tokens", {
+        action: "push_delivery",
+        httpStatus: 200,
+      });
       return new Response(JSON.stringify({ ok: false, sent: 0, reason: "no_device_tokens" }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -252,7 +263,11 @@ Deno.serve(async (req) => {
     const apnsTeamId = Deno.env.get("APNS_TEAM_ID");
     const apnsPrivateKey = Deno.env.get("APNS_PRIVATE_KEY");
     if (iosTokens.length && (!apnsKeyId || !apnsTeamId || !apnsPrivateKey)) {
-      console.error("send-push configuration error: APNs credentials are missing");
+      edgeLog(observation, "error", "push.apns_not_configured");
+      await persistEdgeObservation(supabase, observation, "error", "push.apns_not_configured", {
+        action: "push_delivery",
+        httpStatus: 503,
+      });
       return new Response(JSON.stringify({ error: "Push notifications are not configured" }), {
         status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -271,7 +286,11 @@ Deno.serve(async (req) => {
     let accessToken = "";
     if (fcmTokens.length) {
       if (!fcmJson) {
-        console.error("send-push configuration error: FCM service account is missing");
+        edgeLog(observation, "error", "push.fcm_not_configured");
+        await persistEdgeObservation(supabase, observation, "error", "push.fcm_not_configured", {
+          action: "push_delivery",
+          httpStatus: 503,
+        });
         return new Response(JSON.stringify({ error: "Push notifications are not configured" }), {
           status: 503,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -309,6 +328,17 @@ Deno.serve(async (req) => {
     }
 
     const sent = results.filter((r) => r.ok).length;
+    const failed = results.length - sent;
+    if (failed > 0) {
+      edgeLog(observation, "warn", "push.delivery_partial_failure", { sent, failed, total: tokens.length });
+      await persistEdgeObservation(supabase, observation, "warn", "push.delivery_partial_failure", {
+        action: "push_delivery",
+        httpStatus: sent > 0 ? 200 : 502,
+        metadata: { sent, failed, total: tokens.length, removed: toDelete.length },
+      });
+    } else {
+      edgeLog(observation, "info", "push.request_completed", { sent, total: tokens.length });
+    }
     return new Response(JSON.stringify({
       ok: sent > 0,
       sent,
@@ -320,7 +350,16 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {
-    console.error("send-push error", e);
+    edgeLog(observation, "error", "push.request_failed", {
+      errorName: e instanceof Error ? e.name : "UnknownError",
+    });
+    if (supabase) {
+      await persistEdgeObservation(supabase, observation, "error", "push.request_failed", {
+        action: "push_delivery",
+        httpStatus: 500,
+        error: e,
+      });
+    }
     return new Response(JSON.stringify({ error: e?.message ?? String(e) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

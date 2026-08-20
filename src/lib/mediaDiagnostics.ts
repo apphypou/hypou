@@ -80,7 +80,11 @@ export const logMediaError = (
   error: unknown,
   data?: DiagnosticData,
   traceId?: string,
-) => logMediaDiagnostic(event, { ...data, ...safeError(error) }, traceId);
+) => {
+  const resolvedTraceId = traceId ?? createTraceId("media");
+  logMediaDiagnostic(event, { ...data, ...safeError(error) }, resolvedTraceId);
+  logError(event, "media", resolvedTraceId, error, data);
+};
 
 export const createMediaTraceId = () => `media-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -91,3 +95,4 @@ export const describeMediaFile = (file: File): DiagnosticData => ({
   mediaType: file.type || "unknown",
   mediaSizeBytes: file.size,
 });
+import { createTraceId, logError } from "@/lib/observability";

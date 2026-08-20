@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getBlockedUserIds } from "@/services/reportService";
 import { validateImageFile, prepareImageForUpload } from "@/lib/fileValidation";
 import { describeMediaFile, logMediaDiagnostic, logMediaError } from "@/lib/mediaDiagnostics";
+import { createTraceId, logError, logInfo, logWarn } from "@/lib/observability";
 
 export const createItem = async (data: {
   user_id: string;
@@ -148,23 +149,55 @@ export const validateItemPrice = async (
   suggestedMax: number;
   /** C4: true quando o validador não conseguiu opinar (timeout, sem chave, parse falho) */
   unavailable?: boolean;
+  traceId: string;
 }> => {
+  const traceId = createTraceId("price");
+  const startedAt = performance.now();
+  logInfo("price.suggestion_started", "price_suggestion", traceId, { category, condition });
+
   try {
     const { data, error } = await supabase.functions.invoke("validate-item-price", {
       body: { name, category, condition, value_cents: valueCents, description },
+      headers: { "x-hypou-trace-id": traceId },
     });
-    if (error) throw error;
-    return {
+    if (error) {
+      const context = (error as { context?: Response }).context;
+      let reason = "Validação indisponível";
+      let status: number | undefined;
+      if (context instanceof Response) {
+        status = context.status;
+        try {
+          const body = await context.clone().json();
+          if (typeof body?.reason === "string") reason = body.reason;
+          else if (typeof body?.error === "string") reason = body.error;
+        } catch {
+          // A function response is not guaranteed to be JSON on network failures.
+        }
+      }
+      logError("price.suggestion_failed", "price_suggestion", traceId, error, { status });
+      return { valid: true, reason, suggestedMin: 0, suggestedMax: 0, unavailable: true, traceId };
+    }
+
+    const result = {
       valid: data.valid ?? true,
       reason: data.reason ?? "",
       suggestedMin: data.suggested_min_cents ?? 0,
       suggestedMax: data.suggested_max_cents ?? 0,
       unavailable: !!data.unavailable,
+      traceId,
     };
+    const durationMs = Math.round(performance.now() - startedAt);
+    if (result.unavailable) {
+      logWarn("price.suggestion_unavailable", "price_suggestion", traceId, { durationMs });
+    } else {
+      logInfo("price.suggestion_completed", "price_suggestion", traceId, { durationMs });
+    }
+    return result;
   } catch (err) {
-    console.error("Price validation failed:", err);
-    // C4: marca como unavailable em vez de fail-open silencioso
-    return { valid: true, reason: "Validação indisponível", suggestedMin: 0, suggestedMax: 0, unavailable: true };
+    logError("price.suggestion_failed", "price_suggestion", traceId, err, {
+      durationMs: Math.round(performance.now() - startedAt),
+    });
+    return { valid: true, reason: "Validação indisponível", suggestedMin: 0, suggestedMax: 0, unavailable: true, traceId };
   }
 };
 

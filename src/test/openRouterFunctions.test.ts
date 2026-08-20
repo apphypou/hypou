@@ -24,7 +24,8 @@ describe("OpenRouter AI functions", () => {
   });
 
   it("records provider failures without returning provider details to the app", () => {
-    expect(priceValidator).toContain("OpenRouter price validation failed");
+    expect(priceValidator).toContain("price.provider_http_failed");
+    expect(priceValidator).toContain("price.provider_timeout");
     expect(priceValidator).toContain("Serviço de sugestão indisponível. Tente novamente em alguns minutos.");
   });
 

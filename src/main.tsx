@@ -1,8 +1,11 @@
 import { createRoot } from "react-dom/client";
 import { Capacitor } from "@capacitor/core";
 import { configureNativeKeyboardResize } from "@/lib/nativeKeyboard";
+import { installGlobalErrorMonitoring } from "@/lib/observability";
 import App from "./App.tsx";
 import "./index.css";
+
+installGlobalErrorMonitoring();
 
 // Kill-switch: remove leftover PWA caches so app updates don't keep stale UI.
 if ("serviceWorker" in navigator) {

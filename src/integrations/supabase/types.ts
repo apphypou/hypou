@@ -32,6 +32,36 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_testers: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          invited_at: string | null
+          last_name: string
+          privacy_accepted_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          invited_at?: string | null
+          last_name: string
+          privacy_accepted_at: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          invited_at?: string | null
+          last_name?: string
+          privacy_accepted_at?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_id: string
@@ -273,9 +303,9 @@ export type Database = {
       item_images: {
         Row: {
           created_at: string
+          focal_scale: number
           focal_x: number
           focal_y: number
-          focal_scale: number
           id: string
           image_url: string
           item_id: string
@@ -283,9 +313,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          focal_scale?: number
           focal_x?: number
           focal_y?: number
-          focal_scale?: number
           id?: string
           image_url: string
           item_id: string
@@ -293,9 +323,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          focal_scale?: number
           focal_x?: number
           focal_y?: number
-          focal_scale?: number
           id?: string
           image_url?: string
           item_id?: string
@@ -597,6 +627,63 @@ export type Database = {
         }
         Relationships: []
       }
+      observability_events: {
+        Row: {
+          action: string
+          app_version: string | null
+          created_at: string
+          duration_ms: number | null
+          error_code: string | null
+          event: string
+          function_name: string | null
+          http_status: number | null
+          id: number
+          level: string
+          metadata: Json
+          platform: string | null
+          screen: string | null
+          source: string
+          trace_id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          app_version?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          event: string
+          function_name?: string | null
+          http_status?: number | null
+          id?: never
+          level: string
+          metadata?: Json
+          platform?: string | null
+          screen?: string | null
+          source: string
+          trace_id: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          app_version?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_code?: string | null
+          event?: string
+          function_name?: string | null
+          http_status?: number | null
+          id?: never
+          level?: string
+          metadata?: Json
+          platform?: string | null
+          screen?: string | null
+          source?: string
+          trace_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -835,6 +922,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_app_presence: {
+        Row: {
+          active: boolean
+          last_seen: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          last_seen?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          last_seen?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_categories: {
         Row: {
           category: string
@@ -902,36 +1007,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      beta_testers: {
-        Row: {
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          invited_at: string | null
-          last_name: string
-          privacy_accepted_at: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          first_name: string
-          id?: string
-          invited_at?: string | null
-          last_name: string
-          privacy_accepted_at: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          invited_at?: string | null
-          last_name?: string
-          privacy_accepted_at?: string
-        }
-        Relationships: []
       }
       waitlist: {
         Row: {
@@ -1059,15 +1134,6 @@ export type Database = {
         }[]
       }
       get_waitlist_position: { Args: never; Returns: number }
-      register_beta_tester: {
-        Args: {
-          p_email: string
-          p_first_name: string
-          p_last_name: string
-          p_privacy_accepted: boolean
-        }
-        Returns: undefined
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1138,7 +1204,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      register_beta_tester: {
+        Args: {
+          p_email: string
+          p_first_name: string
+          p_last_name: string
+          p_privacy_accepted: boolean
+        }
+        Returns: undefined
+      }
       reject_match: { Args: { p_match_id: string }; Returns: boolean }
+      set_app_presence: { Args: { p_active: boolean }; Returns: undefined }
       soft_delete_item: { Args: { p_item_id: string }; Returns: undefined }
       soft_delete_message: {
         Args: { p_message_id: string }

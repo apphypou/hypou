@@ -3,6 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndroidNotificationChannel } from "@/lib/androidPush";
+import { createTraceId, logError, logInfo, logWarn } from "@/lib/observability";
 
 /**
  * Registers the native device for push and stores the token in `device_tokens`.
@@ -20,9 +21,11 @@ export function usePushRegistration() {
     if (!Capacitor.isNativePlatform()) return;
 
     let cleanup: (() => void) | null = null;
+    const traceId = createTraceId("push-registration");
 
     (async () => {
       try {
+        logInfo("push.registration_started", "push_registration", traceId);
         const { PushNotifications } = await import("@capacitor/push-notifications");
 
         await ensureAndroidNotificationChannel(PushNotifications);
@@ -32,7 +35,10 @@ export function usePushRegistration() {
         if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
           perm = await PushNotifications.requestPermissions();
         }
-        if (perm.receive !== "granted") return;
+        if (perm.receive !== "granted") {
+          logWarn("push.permission_not_granted", "push_registration", traceId);
+          return;
+        }
 
         const reg = await PushNotifications.addListener("registration", async (token) => {
           const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
@@ -44,19 +50,15 @@ export function usePushRegistration() {
             );
 
           if (error) {
-            console.error("Push token storage failed", {
-              code: error.code,
-              message: error.message,
-              platform,
-            });
+            logError("push.token_store_failed", "push_registration", traceId, error, { platform });
             return;
           }
 
-          console.info("Push registration completed", { platform });
+          logInfo("push.registration_completed", "push_registration", traceId, { platform });
         });
 
         const err = await PushNotifications.addListener("registrationError", (e) => {
-          console.error("Push registration error", e);
+          logError("push.native_registration_failed", "push_registration", traceId, e);
         });
 
         // Realtime remains the primary path, but iOS can deliver the native push
@@ -96,7 +98,7 @@ export function usePushRegistration() {
           tap.remove();
         };
       } catch (e) {
-        console.error("usePushRegistration failed", e);
+        logError("push.registration_failed", "push_registration", traceId, e);
       }
     })();
 

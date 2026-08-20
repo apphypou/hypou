@@ -6,6 +6,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { AccessToken } from "npm:livekit-server-sdk@2";
 import { z } from "npm:zod@3";
+import { createEdgeObservation, edgeLog, persistEdgeObservation } from "../_shared/observability.ts";
 
 const BodySchema = z.object({
   action: z.enum(["start", "join"]),
@@ -16,6 +17,10 @@ const BodySchema = z.object({
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const observation = createEdgeObservation(req, "livekit-token");
+  let admin: any;
+  edgeLog(observation, "info", "call.token_request_started");
 
   try {
     const LIVEKIT_API_KEY = Deno.env.get("LIVEKIT_API_KEY");
@@ -33,7 +38,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } },
     );
-    const admin = createClient(
+    admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
@@ -42,6 +47,7 @@ Deno.serve(async (req) => {
     const { data: claimsData, error: claimsErr } = await supabase.auth.getClaims(token);
     if (claimsErr || !claimsData?.claims) return json({ error: "Unauthorized" }, 401);
     const userId = claimsData.claims.sub as string;
+    observation.userId = userId;
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
@@ -147,6 +153,7 @@ Deno.serve(async (req) => {
       canPublishData: true,
     });
     const jwt = await at.toJwt();
+    edgeLog(observation, "info", "call.token_request_completed", { action });
 
     return json({
       token: jwt,
@@ -159,7 +166,16 @@ Deno.serve(async (req) => {
       conversation_id: session.conversation_id,
     });
   } catch (e) {
-    console.error("livekit-token error", e);
+    edgeLog(observation, "error", "call.token_request_failed", {
+      errorName: e instanceof Error ? e.name : "UnknownError",
+    });
+    if (admin) {
+      await persistEdgeObservation(admin, observation, "error", "call.token_request_failed", {
+        action: "call_token",
+        httpStatus: 500,
+        error: e,
+      });
+    }
     return json({ error: (e as Error).message ?? "Erro interno" }, 500);
   }
 });
