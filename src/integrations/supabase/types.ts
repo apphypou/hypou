@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      acquisition_attribution: {
+        Row: {
+          campaign: string | null
+          captured_at: string
+          medium: string | null
+          source: string | null
+          user_id: string
+        }
+        Insert: {
+          campaign?: string | null
+          captured_at?: string
+          medium?: string | null
+          source?: string | null
+          user_id: string
+        }
+        Update: {
+          campaign?: string | null
+          captured_at?: string
+          medium?: string | null
+          source?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+        }
+        Relationships: []
+      }
       ai_validation_throttle: {
         Row: {
           created_at: string
@@ -436,6 +487,39 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_spend: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          id: string
+          period_end: string
+          period_start: string
+          source: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          period_end: string
+          period_start: string
+          source: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          source?: string
+        }
+        Relationships: []
+      }
       match_items: {
         Row: {
           created_at: string
@@ -594,18 +678,6 @@ export type Database = {
           },
         ]
       }
-      marketing_spend: {
-        Row: { amount_cents: number; created_at: string; created_by: string | null; currency: string; id: string; period_end: string; period_start: string; source: string }
-        Insert: { amount_cents: number; created_at?: string; created_by?: string | null; currency?: string; id?: string; period_end: string; period_start: string; source: string }
-        Update: { amount_cents?: number; created_at?: string; created_by?: string | null; currency?: string; id?: string; period_end?: string; period_start?: string; source?: string }
-        Relationships: []
-      }
-      nps_responses: {
-        Row: { comment: string | null; created_at: string; id: string; score: number; user_id: string | null }
-        Insert: { comment?: string | null; created_at?: string; id?: string; score: number; user_id?: string | null }
-        Update: { comment?: string | null; created_at?: string; id?: string; score?: number; user_id?: string | null }
-        Relationships: []
-      }
       notifications: {
         Row: {
           body: string | null
@@ -636,6 +708,30 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      nps_responses: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          score: number
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          score: number
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          score?: number
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -697,15 +793,39 @@ export type Database = {
         Relationships: []
       }
       product_events: {
-        Row: { anonymous_id: string | null; app_version: string | null; event_name: string; id: string; occurred_at: string; platform: string | null; properties: Json; session_id: string | null; user_id: string | null }
-        Insert: { anonymous_id?: string | null; app_version?: string | null; event_name: string; id?: string; occurred_at?: string; platform?: string | null; properties?: Json; session_id?: string | null; user_id?: string | null }
-        Update: { anonymous_id?: string | null; app_version?: string | null; event_name?: string; id?: string; occurred_at?: string; platform?: string | null; properties?: Json; session_id?: string | null; user_id?: string | null }
-        Relationships: []
-      }
-      acquisition_attribution: {
-        Row: { campaign: string | null; captured_at: string; medium: string | null; source: string | null; user_id: string }
-        Insert: { campaign?: string | null; captured_at?: string; medium?: string | null; source?: string | null; user_id: string }
-        Update: { campaign?: string | null; captured_at?: string; medium?: string | null; source?: string | null; user_id?: string }
+        Row: {
+          anonymous_id: string | null
+          app_version: string | null
+          event_name: string
+          id: string
+          occurred_at: string
+          platform: string | null
+          properties: Json
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          anonymous_id?: string | null
+          app_version?: string | null
+          event_name: string
+          id?: string
+          occurred_at?: string
+          platform?: string | null
+          properties?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          anonymous_id?: string | null
+          app_version?: string | null
+          event_name?: string
+          id?: string
+          occurred_at?: string
+          platform?: string | null
+          properties?: Json
+          session_id?: string | null
+          user_id?: string | null
+        }
         Relationships: []
       }
       profiles: {
