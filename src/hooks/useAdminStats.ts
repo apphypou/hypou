@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AdminStats {
-  meta: { periodDays: number; updatedAt: string };
+  meta: { periodDays: number; updatedAt: string; comparison: { signupsDelta: number; matchesDelta: number } };
   kpis: {
     totalUsers: number;
     activeItems: number;

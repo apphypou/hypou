@@ -61,12 +61,13 @@ Deno.serve(async (req) => {
     const periodDays = [7, 30, 90].includes(Number(requested.periodDays)) ? Number(requested.periodDays) : 30;
     const now = new Date();
     const periodStart = new Date(now.getTime() - periodDays * 86_400_000).toISOString();
+    const previousPeriodStart = new Date(now.getTime() - periodDays * 2 * 86_400_000).toISOString();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86_400_000).toISOString();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 86_400_000).toISOString();
     const today = new Date(now); today.setHours(0, 0, 0, 0);
 
-    const [profiles, activeItems, matches, messages, swipesToday, pendingReports, waitlist, profilesByDay, matchesByDay, itemsByCategory, waitlistByDay, ratings, active7d, active30d, active90d, allItems, productEvents, attribution, spend, nps, retentionProfiles] = await Promise.all([
+    const [profiles, activeItems, matches, messages, swipesToday, pendingReports, waitlist, profilesByDay, matchesByDay, itemsByCategory, waitlistByDay, ratings, active7d, active30d, active90d, allItems, productEvents, attribution, spend, nps, retentionProfiles, previousProfiles, previousMatches] = await Promise.all([
       admin.from("profiles").select("id", { count: "exact", head: true }),
       admin.from("items").select("id", { count: "exact", head: true }).eq("status", "active"),
       admin.from("matches").select("id, status, user_a_id, user_b_id, created_at"),
@@ -88,6 +89,8 @@ Deno.serve(async (req) => {
       admin.from("marketing_spend").select("amount_cents").gte("period_end", thirtyDaysAgo.slice(0, 10)),
       admin.from("nps_responses").select("score").gte("created_at", ninetyDaysAgo),
       admin.from("profiles").select("user_id, created_at").gte("created_at", new Date(now.getTime() - 91 * 86_400_000).toISOString()),
+      admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", previousPeriodStart).lt("created_at", periodStart),
+      admin.from("matches").select("id", { count: "exact", head: true }).gte("created_at", previousPeriodStart).lt("created_at", periodStart),
     ]);
 
     const matchRows = matches.data || [];
@@ -157,7 +160,14 @@ Deno.serve(async (req) => {
         acquisitionSources: [...acquisitionSources.entries()].sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value })),
       },
       activity: events.slice(0, 12).map((event) => ({ name: event.event_name, occurredAt: event.occurred_at, platform: event.platform })),
-      meta: { periodDays, updatedAt: now.toISOString() },
+      meta: {
+        periodDays,
+        updatedAt: now.toISOString(),
+        comparison: {
+          signupsDelta: (profilesByDay.data || []).length - count(previousProfiles),
+          matchesDelta: matchRows.length - count(previousMatches),
+        },
+      },
     }, { headers: corsHeaders });
   } catch (error) {
     const status = String(error).includes("Unauthorized") ? 401 : 500;

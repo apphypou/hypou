@@ -40,7 +40,7 @@ const AdminDashboard = () => {
   return <div className="space-y-7">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><h1 className="text-3xl font-bold tracking-tight">Visão geral</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe a validação do Hypou com dados reais.</p></div>
-      <div className="flex items-center gap-2"><Select value={String(periodDays)} onValueChange={(value) => setPeriodDays(Number(value))}><SelectTrigger aria-label="Período das métricas" className="w-28 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">7 dias</SelectItem><SelectItem value="30">30 dias</SelectItem><SelectItem value="90">90 dias</SelectItem></SelectContent></Select><span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">Atualiza a cada 30 segundos</span></div>
+      <div className="flex items-center gap-2"><Select value={String(periodDays)} onValueChange={(value) => setPeriodDays(Number(value))}><SelectTrigger aria-label="Período das métricas" className="w-28 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">7 dias</SelectItem><SelectItem value="30">30 dias</SelectItem><SelectItem value="90">90 dias</SelectItem></SelectContent></Select><span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">{stats.meta.comparison.signupsDelta >= 0 ? "+" : ""}{stats.meta.comparison.signupsDelta} cadastros · {stats.meta.comparison.matchesDelta >= 0 ? "+" : ""}{stats.meta.comparison.matchesDelta} negociações vs. período anterior</span></div>
     </div>
 
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
