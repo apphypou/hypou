@@ -163,10 +163,10 @@ const Matches = () => {
   };
 
   const handleConfirmMatch = useCallback(async () => {
-    if (!selectedMatch || confirming) return;
+    if (!selectedMatch || confirming || !user) return;
     setConfirming(true);
     try {
-      await acceptProposal(selectedMatch.id, user?.id);
+      await acceptProposal(selectedMatch.id, user.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       navigate(`/match/${selectedMatch.id}`);
@@ -175,7 +175,7 @@ const Matches = () => {
     } finally {
       setConfirming(false);
     }
-  }, [selectedMatch, confirming, queryClient, navigate, toast]);
+  }, [selectedMatch, confirming, queryClient, navigate, toast, user]);
 
   const otherItem = selectedMatch
     ? selectedMatch.my_item_side === "a" ? selectedMatch.item_b : selectedMatch.item_a

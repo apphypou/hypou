@@ -76,14 +76,14 @@ Deno.serve(async (req) => {
       admin.from("waitlist").select("id", { count: "exact", head: true }),
       admin.from("profiles").select("created_at").gte("created_at", periodStart),
       admin.from("matches").select("created_at").gte("created_at", periodStart),
-      admin.from("items").select("category").eq("status", "active"),
+      admin.from("items").select("category, location").eq("status", "active"),
       admin.from("waitlist").select("created_at").gte("created_at", periodStart),
       admin.from("ratings").select("score"),
       admin.from("user_app_presence").select("user_id", { count: "exact", head: true }).gte("last_seen", sevenDaysAgo),
       admin.from("user_app_presence").select("user_id", { count: "exact", head: true }).gte("last_seen", thirtyDaysAgo),
       admin.from("user_app_presence").select("user_id", { count: "exact", head: true }).gte("last_seen", ninetyDaysAgo),
       admin.from("items").select("user_id"),
-      admin.from("product_events").select("event_name, user_id, occurred_at, platform").gte("occurred_at", ninetyDaysAgo),
+      admin.from("product_events").select("event_name, user_id, occurred_at, platform").gte("occurred_at", ninetyDaysAgo).order("occurred_at", { ascending: false }).limit(5000),
       admin.from("acquisition_attribution").select("source, medium, campaign"),
       admin.from("marketing_spend").select("amount_cents").gte("period_end", thirtyDaysAgo.slice(0, 10)),
       admin.from("nps_responses").select("score").gte("created_at", ninetyDaysAgo),
@@ -100,7 +100,11 @@ Deno.serve(async (req) => {
     const events = productEvents.data || [];
     const eventUsers = (eventName: string) => new Set(events.filter((event) => event.event_name === eventName && event.user_id).map((event) => event.user_id)).size;
     const categories = new Map<string, number>();
-    for (const item of itemsByCategory.data || []) categories.set(item.category, (categories.get(item.category) || 0) + 1);
+    const cities = new Map<string, number>();
+    for (const item of itemsByCategory.data || []) {
+      categories.set(item.category, (categories.get(item.category) || 0) + 1);
+      if (item.location?.trim()) cities.set(item.location.trim(), (cities.get(item.location.trim()) || 0) + 1);
+    }
     const ratingsData = ratings.data || [];
     const averageRating = ratingsData.length ? ratingsData.reduce((sum, rating) => sum + rating.score, 0) / ratingsData.length : null;
     const npsData = nps.data || [];
@@ -109,6 +113,11 @@ Deno.serve(async (req) => {
     const openEvents = events.filter((event) => event.event_name === "app_opened" || event.event_name === "session_started");
     const totalUsers = count(profiles);
     const attributedUsers = (attribution.data || []).filter((entry) => entry.source).length;
+    const acquisitionSources = new Map<string, number>();
+    for (const entry of attribution.data || []) {
+      const source = entry.source?.trim();
+      if (source) acquisitionSources.set(source, (acquisitionSources.get(source) || 0) + 1);
+    }
 
     return Response.json({
       kpis: { totalUsers, activeItems: count(activeItems), totalMatches: matchRows.length, totalMessages: count(messages), swipesToday: count(swipesToday), pendingReports: count(pendingReports), waitlistCount: count(waitlist), activationRate: totalUsers ? Math.round((itemOwners.size / totalUsers) * 100) : 0, completionRate: resolvedTrades ? Math.round((completedTrades / resolvedTrades) * 100) : 0, averageRating },
@@ -131,7 +140,10 @@ Deno.serve(async (req) => {
         matchesByDay: daysWithZeros(matchesByDay.data, periodDays),
         waitlistByDay: daysWithZeros(waitlistByDay.data, periodDays),
         itemsByCategory: [...categories.entries()].map(([name, value]) => ({ name, value })),
+        liquidityByCity: [...cities.entries()].sort(([, a], [, b]) => b - a).slice(0, 8).map(([name, value]) => ({ name, value })),
+        acquisitionSources: [...acquisitionSources.entries()].sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value })),
       },
+      activity: events.slice(0, 12).map((event) => ({ name: event.event_name, occurredAt: event.occurred_at, platform: event.platform })),
       meta: { periodDays, updatedAt: now.toISOString() },
     }, { headers: corsHeaders });
   } catch (error) {

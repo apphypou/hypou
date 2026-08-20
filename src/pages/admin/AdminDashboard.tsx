@@ -3,6 +3,8 @@ import { useAdminStats } from "@/hooks/useAdminStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, ArrowRight, CheckCircle2, CircleDollarSign, FlaskConical, Handshake, Loader2, Search, Star, Users } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -66,15 +68,18 @@ const AdminDashboard = () => {
 
     <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
       <Card className="brand-card"><CardHeader><PanelTitle>Negociações iniciadas</PanelTitle><p className="text-xs text-muted-foreground">Novas propostas por dia.</p></CardHeader><CardContent><div className="h-[190px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={charts.matchesByDay}><XAxis dataKey="date" tickFormatter={(date) => date.slice(5)} tickLine={false} axisLine={false} fontSize={10} /><YAxis allowDecimals={false} width={24} tickLine={false} axisLine={false} fontSize={10} /><Tooltip /><Bar dataKey="count" fill="hsl(var(--brand-violet))" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer></div></CardContent></Card>
-      <Card className="brand-card"><CardHeader><PanelTitle>Fontes ainda pendentes</PanelTitle><p className="text-xs text-muted-foreground">Indicadores que exigem integração antes de entrar na decisão.</p></CardHeader><CardContent className="space-y-3">
-        <p className="flex items-center gap-2 text-sm"><CircleDollarSign className="h-4 w-4 text-muted-foreground" /> Receita, ARPU, MRR e LTV <span className="ml-auto text-xs text-muted-foreground">não configurados</span></p>
-        <p className="flex items-center gap-2 text-sm"><Search className="h-4 w-4 text-muted-foreground" /> Retenção D7, D30 e D90 <span className="ml-auto text-xs text-muted-foreground">aguardando eventos</span></p>
-        <p className="flex items-center gap-2 text-sm"><FlaskConical className="h-4 w-4 text-muted-foreground" /> NPS <span className="ml-auto text-xs text-muted-foreground">{validation.satisfaction.npsResponses ? `${validation.satisfaction.npsResponses} respostas` : "sem respostas"}</span></p>
+      <Card className="brand-card"><CardHeader><PanelTitle>Origem e liquidez</PanelTitle><p className="text-xs text-muted-foreground">Canais identificados e cidades com itens ativos.</p></CardHeader><CardContent className="space-y-3">
+        {charts.acquisitionSources.length ? charts.acquisitionSources.slice(0, 3).map((source) => <p key={source.name} className="flex items-center gap-2 text-sm"><Users className="h-4 w-4 text-primary" />{source.name}<span className="ml-auto font-semibold">{format(source.value)}</span></p>) : <p className="flex items-center gap-2 text-sm"><Search className="h-4 w-4 text-muted-foreground" />Origem de aquisição <span className="ml-auto text-xs text-muted-foreground">aguardando atribuição</span></p>}
+        {charts.liquidityByCity.length ? charts.liquidityByCity.slice(0, 3).map((city) => <p key={city.name} className="flex items-center gap-2 text-sm"><FlaskConical className="h-4 w-4 text-brand-violet" />{city.name}<span className="ml-auto font-semibold">{format(city.value)} itens</span></p>) : <p className="text-sm text-muted-foreground">Ainda não há cidades suficientes para comparação.</p>}
+        <p className="flex items-center gap-2 text-sm"><CircleDollarSign className="h-4 w-4 text-muted-foreground" />Receita, ARPU, MRR e LTV <span className="ml-auto text-xs text-muted-foreground">não configurados</span></p>
         <Link to="/admin/metricas" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">Entender como configurar <ArrowRight className="h-3.5 w-3.5" /></Link>
       </CardContent></Card>
     </div>
 
-    {kpis.pendingReports > 0 && <Link to="/admin/reports" className="flex items-center justify-between rounded-xl border border-pink/30 bg-pink/5 px-4 py-3 text-sm"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-pink" />{format(kpis.pendingReports)} relatos aguardam análise</span><ArrowRight className="h-4 w-4 text-pink" /></Link>}
+    <div className="grid gap-5 xl:grid-cols-[.8fr_1.2fr]">
+      {kpis.pendingReports > 0 ? <Link to="/admin/reports" className="flex items-center justify-between rounded-xl border border-pink/30 bg-pink/5 px-4 py-3 text-sm"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-pink" />{format(kpis.pendingReports)} relatos aguardam análise</span><ArrowRight className="h-4 w-4 text-pink" /></Link> : <Card className="brand-card"><CardContent className="p-5 text-sm text-muted-foreground">Nenhum relato pendente no momento.</CardContent></Card>}
+      <Card className="brand-card"><CardHeader><PanelTitle>Atividade recente</PanelTitle><p className="text-xs text-muted-foreground">Eventos de produto recebidos do aplicativo.</p></CardHeader><CardContent>{stats.activity.length ? <div className="space-y-2">{stats.activity.slice(0, 5).map((event, index) => <div key={`${event.name}-${event.occurredAt}-${index}`} className="flex items-center justify-between border-b border-border/70 pb-2 text-sm last:border-0 last:pb-0"><span className="capitalize">{event.name.replace(/_/g, " ")}</span><span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(event.occurredAt), { addSuffix: true, locale: ptBR })}</span></div>)}</div> : <p className="py-3 text-sm text-muted-foreground">A atividade aparecerá assim que a nova versão do app registrar eventos.</p>}</CardContent></Card>
+    </div>
   </div>;
 };
 

@@ -29,7 +29,10 @@ export interface AdminStats {
     matchesByDay: { date: string; count: number }[];
     itemsByCategory: { name: string; value: number }[];
     waitlistByDay: { date: string; count: number }[];
+    liquidityByCity: { name: string; value: number }[];
+    acquisitionSources: { name: string; value: number }[];
   };
+  activity: { name: string; occurredAt: string; platform: string | null }[];
 }
 
 export function useAdminStats(periodDays = 30) {
