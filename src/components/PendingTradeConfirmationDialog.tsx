@@ -45,7 +45,7 @@ export default function PendingTradeConfirmationDialog() {
   const finishTrade = async () => {
     setConfirmingId(match.id);
     try {
-      await confirmTrade(match.id);
+      await confirmTrade(match.id, user.id);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["matches"] }),
         queryClient.invalidateQueries({ queryKey: ["pending-trade-confirmations"] }),

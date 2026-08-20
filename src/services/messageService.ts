@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 import { validateChatMedia, prepareImageForUpload } from "@/lib/fileValidation";
 import { getLatestNonSystemMessagesByConversation } from "@/lib/conversationPreview";
 import { sortConversationsByActivity } from "@/lib/conversationOrdering";
@@ -266,6 +267,7 @@ export const sendMessage = async (
     .single();
 
   if (error) throw error;
+  trackProductEventSafely("message_sent", senderId, { type: messageType });
   return data;
 };
 

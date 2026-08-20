@@ -10,6 +10,7 @@ const requestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("list") }),
   z.object({ action: z.literal("invite"), email: z.string().email(), role: z.enum(["admin", "moderator"]) }),
   z.object({ action: z.literal("set_role"), userId: z.string().uuid(), role: z.enum(["admin", "moderator", "user"]) }),
+  z.object({ action: z.literal("resend_invite"), userId: z.string().uuid() }),
 ]);
 
 Deno.serve(async (req) => {
@@ -32,21 +33,45 @@ Deno.serve(async (req) => {
 
     const body = requestSchema.parse(await req.json());
     if (body.action === "list") {
-      const [{ data: roles, error: rolesError }, { data: profiles, error: profilesError }] = await Promise.all([
+      const [{ data: roles, error: rolesError }, { data: profiles, error: profilesError }, { data: authUsers, error: authUsersError }] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("role", ["admin", "moderator"]),
         admin.from("profiles").select("id, display_name, avatar_url, created_at"),
+        admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
       ]);
-      if (rolesError || profilesError) throw rolesError || profilesError;
+      if (rolesError || profilesError || authUsersError) throw rolesError || profilesError || authUsersError;
       const profileById = new Map((profiles || []).map((profile) => [profile.id, profile]));
-      return Response.json({ members: (roles || []).map((member) => ({ ...member, profile: profileById.get(member.user_id) || null })) }, { headers: corsHeaders });
+      const userById = new Map((authUsers.users || []).map((member) => [member.id, member]));
+      return Response.json({ members: (roles || []).map((member) => {
+        const authUser = userById.get(member.user_id);
+        return {
+          ...member,
+          profile: profileById.get(member.user_id) || null,
+          email: authUser?.email || null,
+          status: authUser?.email_confirmed_at ? "active" : "invited",
+          lastAccessAt: authUser?.last_sign_in_at || null,
+        };
+      }) }, { headers: corsHeaders });
     }
 
     if (body.action === "invite") {
       const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(body.email, { redirectTo: "https://hypou.app/admin/login" });
       if (error) throw error;
+      await admin.from("user_roles").delete().eq("user_id", invited.user.id).in("role", ["admin", "moderator"]);
       await admin.from("user_roles").upsert({ user_id: invited.user.id, role: body.role }, { onConflict: "user_id,role" });
       await admin.from("admin_audit_logs").insert({ actor_id: caller.id, action: "admin_invited", target_id: invited.user.id, metadata: { role: body.role } });
       return Response.json({ member: { user_id: invited.user.id, role: body.role } }, { headers: corsHeaders });
+    }
+
+    if (body.action === "resend_invite") {
+      const { data: invitedUser, error: userError } = await admin.auth.admin.getUserById(body.userId);
+      if (userError || !invitedUser.user.email) throw userError || new Error("E-mail do membro não encontrado");
+      if (invitedUser.user.email_confirmed_at) {
+        return new Response(JSON.stringify({ error: "Este membro já ativou o acesso." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(invitedUser.user.email, { redirectTo: "https://hypou.app/admin/login" });
+      if (inviteError) throw inviteError;
+      await admin.from("admin_audit_logs").insert({ actor_id: caller.id, action: "admin_invite_resent", target_id: body.userId });
+      return Response.json({ ok: true }, { headers: corsHeaders });
     }
 
     if (body.userId === caller.id && body.role !== "admin") {

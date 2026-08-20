@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AdminStats {
+  meta: { periodDays: number; updatedAt: string };
   kpis: {
     totalUsers: number;
     activeItems: number;
@@ -31,14 +32,15 @@ export interface AdminStats {
   };
 }
 
-export function useAdminStats() {
+export function useAdminStats(periodDays = 30) {
   return useQuery<AdminStats>({
-    queryKey: ["admin-stats"],
+    queryKey: ["admin-stats", periodDays],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
       const { data, error } = await supabase.functions.invoke("admin-stats", {
+        body: { periodDays },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

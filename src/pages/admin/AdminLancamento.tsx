@@ -118,6 +118,24 @@ const AdminLancamento = () => {
   };
 
   const handleSave = () => {
+    for (const key of LAUNCH_SETTINGS_KEYS) {
+      const value = formValues[key]?.trim();
+      if (!value || value === "PLACEHOLDER") continue;
+      if (key === "launch_date") {
+        if (Number.isNaN(new Date(value).getTime())) {
+          toast({ title: "Data de lançamento inválida", variant: "destructive" });
+          return;
+        }
+        continue;
+      }
+      try {
+        const url = new URL(value);
+        if (url.protocol !== "https:") throw new Error("https");
+      } catch {
+        toast({ title: `Informe uma URL HTTPS válida para ${settingLabels[key].label}`, variant: "destructive" });
+        return;
+      }
+    }
     const entries = LAUNCH_SETTINGS_KEYS
       .filter((key) => formValues[key] !== undefined && formValues[key] !== "")
       .map((key) => ({ key, value: formValues[key] }));
@@ -190,6 +208,15 @@ const AdminLancamento = () => {
       </div>
 
       <Separator />
+
+      <Card className="brand-card">
+        <CardHeader><CardTitle className="text-lg">Pré-visualização</CardTitle><CardDescription>Como a configuração será apresentada antes do lançamento.</CardDescription></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p><span className="text-muted-foreground">Data:</span> {formValues.launch_date ? new Date(formValues.launch_date).toLocaleString("pt-BR") : "Não definida"}</p>
+          <p><span className="text-muted-foreground">Grupo de feedback:</span> {formValues.whatsapp_group_url && formValues.whatsapp_group_url !== "PLACEHOLDER" ? "WhatsApp configurado" : "Não configurado"}</p>
+          <p><span className="text-muted-foreground">Canais sociais:</span> {["telegram_group_url", "discord_invite_url", "instagram_url"].filter((key) => formValues[key] && formValues[key] !== "PLACEHOLDER").length} configurado(s)</p>
+        </CardContent>
+      </Card>
 
       {/* Settings form */}
       <Card>

@@ -145,7 +145,7 @@ const Conversa = () => {
     if (!user || !details?.match_id) return;
     setConfirmingTrade(true);
     try {
-      await confirmTrade(details.match_id);
+      await confirmTrade(details.match_id, user.id);
       await queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
       await queryClient.invalidateQueries({ queryKey: ["matches", user.id] });
       const bothDone = details.other_confirmed;

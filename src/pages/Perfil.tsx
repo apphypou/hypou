@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { categories } from "@/constants/categories";
 import LocationSearch from "@/components/LocationSearch";
 import { getErrorMessage } from "@/lib/utils";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 const stepLabels = ["Perfil", "Interesses", "Pronto!"];
 
@@ -108,6 +109,7 @@ const Perfil = () => {
     setSaving(true);
     try {
       await updateProfile(user.id, { onboarding_completed: true });
+      trackProductEventSafely("onboarding_completed", user.id);
       queryClient.setQueryData(["profile-onboarding", user.id], { onboarding_completed: true });
       queryClient.setQueryData(["onboarding-check", user.id], { onboarding_completed: true });
       queryClient.setQueryData(["profile", user.id], (old: any) => old ? { ...old, onboarding_completed: true } : old);
@@ -138,6 +140,7 @@ const Perfil = () => {
       if (selected.length > 0) {
         await saveUserCategories(user.id, selected);
       }
+      trackProductEventSafely("onboarding_completed", user.id, { skipped: true });
       queryClient.setQueryData(["profile-onboarding", user.id], { onboarding_completed: true });
       queryClient.setQueryData(["onboarding-check", user.id], { onboarding_completed: true });
       queryClient.setQueryData(["profile", user.id], (old: any) => old ? { ...old, onboarding_completed: true } : old);

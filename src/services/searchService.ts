@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getBlockedUserIds } from "@/services/reportService";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 export interface SearchFilters {
   query?: string;
@@ -13,6 +14,11 @@ export interface SearchFilters {
 }
 
 export const searchItems = async (userId: string, filters: SearchFilters) => {
+  trackProductEventSafely("search_performed", userId, {
+    has_query: Boolean(filters.query?.trim()),
+    has_category: Boolean(filters.category),
+    has_condition: Boolean(filters.condition),
+  });
   const blockedUserIds = await getBlockedUserIds(userId);
 
   let q = supabase

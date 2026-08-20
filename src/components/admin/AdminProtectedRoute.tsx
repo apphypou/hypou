@@ -8,17 +8,16 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
   const location = useLocation();
 
-  const { data: isAdmin, isLoading: roleLoading } = useQuery({
-    queryKey: ["admin-role", user?.id],
+  const { data: isStaff, isLoading: roleLoading } = useQuery({
+    queryKey: ["admin-staff-role", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user!.id)
-        .eq("role", "admin")
-        .maybeSingle();
+        .in("role", ["admin", "moderator"]);
       if (error) throw error;
-      return !!data;
+      return (data || []).length > 0;
     },
     enabled: !!user,
   });
@@ -36,7 +35,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to={`/admin/login?redirect=${encodeURIComponent(redirect)}`} replace />;
   }
 
-  if (!isAdmin) {
+  if (!isStaff) {
     return (
       <div className="flex h-screen items-center justify-center bg-background p-6 text-center text-foreground">
         <div>

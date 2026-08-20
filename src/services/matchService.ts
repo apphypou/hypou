@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getErrorMessage } from "@/lib/utils";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 export interface MatchWithDetails {
   id: string;
@@ -132,7 +133,7 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 };
 
 export const createProposal = async (
-  _userId: string,
+  userId: string,
   myItemIds: string | string[],
   theirItemId: string,
   _theirUserId: string,
@@ -148,6 +149,7 @@ export const createProposal = async (
     p_cash_amount_cents: Math.max(0, cashAmountCents || 0),
   });
   if (error) throw new Error(getProposalErrorMessage(error));
+  trackProductEventSafely("trade_started", userId, { item_count: ids.length, has_cash: cashAmountCents > 0 });
   return { id: data as unknown as string };
 };
 
@@ -163,10 +165,11 @@ export const getProposalErrorMessage = (error: { code?: string; message?: string
   return getErrorMessage(message, "Não foi possível enviar a proposta.");
 };
 
-export const acceptProposal = async (matchId: string) => {
+export const acceptProposal = async (matchId: string, userId?: string) => {
   const { data, error } = await supabase.rpc("accept_match", { p_match_id: matchId });
   if (error) throw error;
   if (!data) throw new Error("Não foi possível aceitar esta proposta");
+  if (userId) trackProductEventSafely("trade_accepted", userId);
 };
 
 export const rejectProposal = async (matchId: string) => {
@@ -184,10 +187,11 @@ export const cancelProposal = async (matchId: string) => {
   if (!data) throw new Error("Não foi possível cancelar esta negociação");
 };
 
-export const confirmTrade = async (matchId: string) => {
+export const confirmTrade = async (matchId: string, userId?: string) => {
   const { data, error } = await supabase.rpc("confirm_trade_delivery", { p_match_id: matchId });
   if (error) throw error;
   if (!data) throw new Error("Não foi possível confirmar esta troca");
+  if (userId) trackProductEventSafely("trade_completed", userId);
 };
 
 export const getMatch = async (matchId: string, userId: string): Promise<MatchWithDetails | null> => {

@@ -3,6 +3,7 @@ import { getBlockedUserIds } from "@/services/reportService";
 import { validateImageFile, prepareImageForUpload } from "@/lib/fileValidation";
 import { describeMediaFile, logMediaDiagnostic, logMediaError } from "@/lib/mediaDiagnostics";
 import { createTraceId, logError, logInfo, logWarn } from "@/lib/observability";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 export const createItem = async (data: {
   user_id: string;
@@ -21,6 +22,7 @@ export const createItem = async (data: {
     .select()
     .single();
   if (error) throw error;
+  trackProductEventSafely("item_created", data.user_id, { category: data.category });
   return item;
 };
 

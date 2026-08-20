@@ -5,6 +5,8 @@ import { submitRating } from "@/hooks/useRatings";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getErrorMessage } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 interface RatingDialogProps {
   open: boolean;
@@ -19,6 +21,7 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
   const [score, setScore] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState("");
+  const [npsScore, setNpsScore] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,6 +40,14 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
         score,
         comment: comment.trim() || undefined,
       });
+      if (npsScore !== null) {
+        const { error: npsError } = await supabase.from("nps_responses").insert({
+          user_id: raterId,
+          score: npsScore,
+          comment: comment.trim() || null,
+        });
+        if (!npsError) trackProductEventSafely("nps_answered", raterId, { score: npsScore });
+      }
       queryClient.invalidateQueries({ queryKey: ["match-rating"] });
       queryClient.invalidateQueries({ queryKey: ["user-rating"] });
       queryClient.invalidateQueries({ queryKey: ["user-ratings-list"] });
@@ -110,6 +121,14 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
               maxLength={300}
               className="w-full bg-background border border-foreground/10 text-foreground rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all placeholder:text-foreground/20 resize-none mb-4"
             />
+
+            <div className="mb-5">
+              <p className="text-sm font-semibold text-foreground">De 0 a 10, quanto você indicaria o Hypou?</p>
+              <div className="mt-2 grid grid-cols-11 gap-1" role="group" aria-label="Nota de recomendação do Hypou">
+                {Array.from({ length: 11 }, (_, value) => <button key={value} type="button" onClick={() => setNpsScore(value)} className={`h-8 rounded-md text-xs font-bold transition-colors ${npsScore === value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"}`}>{value}</button>)}
+              </div>
+              <div className="mt-1 flex justify-between text-[10px] text-muted-foreground"><span>Não indicaria</span><span>Indicaria muito</span></div>
+            </div>
 
             <div className="flex gap-3">
               <button

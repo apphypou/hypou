@@ -34,19 +34,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { HYPOU_LOGO } from "@/config/brand";
 
-const items = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Métricas", url: "/admin/metricas", icon: BarChart3 },
-  { title: "Usuários", url: "/admin/usuarios", icon: Users },
-  { title: "Itens", url: "/admin/itens", icon: Package },
-  { title: "Negociações", url: "/admin/matches", icon: Handshake },
-  { title: "Relatos", url: "/admin/reports", icon: ShieldAlert },
-  { title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered },
-  { title: "Testadores beta", url: "/admin/testadores-beta", icon: FlaskConical },
-  { title: "Membros", url: "/admin/membros", icon: Crown },
-  { title: "Status", url: "/admin/status", icon: Activity },
-  { title: "Assistente IA", url: "/admin/assistente", icon: Bot },
-  { title: "Lançamento", url: "/admin/lancamento", icon: Rocket },
+const groups = [
+  { title: "Visão geral", items: [{ title: "Dashboard", url: "/admin", icon: LayoutDashboard }, { title: "Métricas", url: "/admin/metricas", icon: BarChart3 }] },
+  { title: "Operação", items: [{ title: "Usuários", url: "/admin/usuarios", icon: Users }, { title: "Itens", url: "/admin/itens", icon: Package }, { title: "Negociações", url: "/admin/matches", icon: Handshake }] },
+  { title: "Segurança", items: [{ title: "Relatos", url: "/admin/reports", icon: ShieldAlert }, { title: "Status", url: "/admin/status", icon: Activity }] },
+  { title: "Crescimento", items: [{ title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered }, { title: "Testadores beta", url: "/admin/testadores-beta", icon: FlaskConical }, { title: "Lançamento", url: "/admin/lancamento", icon: Rocket }] },
+  { title: "Administração", items: [{ title: "Membros", url: "/admin/membros", icon: Crown }, { title: "Assistente IA", url: "/admin/assistente", icon: Bot }] },
 ];
 
 export function AdminSidebar() {
@@ -76,10 +69,11 @@ export function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 pt-4">
-        <SidebarGroup>
+        {groups.map((group) => <SidebarGroup key={group.title} className="py-1">
+          {!collapsed && <p className="px-3 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">{group.title}</p>}
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
-              {items.map((item) => {
+              {group.items.map((item) => {
                 const active = isActive(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
@@ -108,7 +102,7 @@ export function AdminSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup>)}
       </SidebarContent>
 
       <SidebarFooter className="p-3 space-y-2">

@@ -107,7 +107,7 @@ const Matches = () => {
     if (!selectedMatch || confirmingTrade) return;
     setConfirmingTrade(true);
     try {
-      await confirmTrade(selectedMatch.id);
+      await confirmTrade(selectedMatch.id, user!.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       // Re-fetch the match to check if it transitioned to completed
       const updatedMatch = await getMatch(selectedMatch.id, user!.id);
@@ -166,7 +166,7 @@ const Matches = () => {
     if (!selectedMatch || confirming) return;
     setConfirming(true);
     try {
-      await acceptProposal(selectedMatch.id);
+      await acceptProposal(selectedMatch.id, user?.id);
       await queryClient.invalidateQueries({ queryKey: ["matches"] });
       setSelectedMatch(null);
       navigate(`/match/${selectedMatch.id}`);

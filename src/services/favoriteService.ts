@@ -1,10 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 export const addFavorite = async (userId: string, itemId: string) => {
   const { error } = await supabase
     .from("favorites")
     .insert({ user_id: userId, item_id: itemId });
   if (error && !error.message?.includes("duplicate")) throw error;
+  trackProductEventSafely("favorite_created", userId);
 };
 
 export const removeFavorite = async (userId: string, itemId: string) => {

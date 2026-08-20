@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { forceReconnect } from "@/lib/realtimeManager";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { trackProductEventSafely } from "@/services/productAnalyticsService";
 
 const PRESENCE_HEARTBEAT_MS = 15_000;
 
@@ -85,6 +86,8 @@ export function useAppLifecycleSync() {
     }
 
     if (document.visibilityState === "visible") startHeartbeat();
+    trackProductEventSafely("session_started", userId);
+    trackProductEventSafely("app_opened", userId);
 
     return () => {
       stopHeartbeat();

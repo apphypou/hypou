@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { blockUser } from "@/services/reportService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +9,6 @@ import { Loader2, ShieldAlert, Search, CheckCircle2, XCircle, Ban } from "lucide
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +20,6 @@ import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/utils";
 
 const AdminReports = () => {
-  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -66,13 +63,15 @@ const AdminReports = () => {
     }
   };
 
-  const handleBlockUser = async (userId: string) => {
-    if (!user) return;
+  const handleSuspendReportedUser = async (userId: string) => {
+    if (!window.confirm("Suspender esta conta? A pessoa não poderá criar itens, swipes, mensagens ou atualizar negociações.")) return;
+    const reason = resolutionNotes.trim() || "Suspensão aplicada após análise de relato.";
     try {
-      await blockUser(user.id, userId);
-      toast({ title: "Usuário bloqueado 🚫", description: "Este usuário não aparecerá mais para você." });
+      const { error } = await supabase.rpc("admin_set_user_suspension", { p_user_id: userId, p_suspended: true, p_reason: reason });
+      if (error) throw error;
+      toast({ title: "Usuário suspenso", description: "A suspensão foi registrada na auditoria." });
     } catch (err: any) {
-      toast({ title: "Erro ao bloquear", description: getErrorMessage(err), variant: "destructive" });
+      toast({ title: "Erro ao suspender", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -251,6 +250,9 @@ const AdminReports = () => {
                   Resolver
                 </Button>
               </div>
+              <Button variant="destructive" className="w-full" disabled={resolving} onClick={() => handleSuspendReportedUser(selectedReport.reported_user_id)}>
+                <Ban className="mr-1.5 h-4 w-4" />Suspender usuário reportado
+              </Button>
             </div>
           )}
         </DialogContent>

@@ -1123,6 +1123,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_suspensions: {
+        Row: {
+          lifted_at: string | null
+          lifted_by: string | null
+          reason: string
+          suspended_at: string
+          suspended_by: string | null
+          user_id: string
+        }
+        Insert: {
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason: string
+          suspended_at?: string
+          suspended_by?: string | null
+          user_id: string
+        }
+        Update: {
+          lifted_at?: string | null
+          lifted_by?: string | null
+          reason?: string
+          suspended_at?: string
+          suspended_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       video_likes: {
         Row: {
           created_at: string
@@ -1220,6 +1247,10 @@ export type Database = {
     }
     Functions: {
       accept_match: { Args: { p_match_id: string }; Returns: boolean }
+      admin_set_user_suspension: {
+        Args: { p_reason: string; p_suspended: boolean; p_user_id: string }
+        Returns: undefined
+      }
       cancel_match: { Args: { p_match_id: string }; Returns: boolean }
       confirm_trade_delivery: { Args: { p_match_id: string }; Returns: boolean }
       create_proposal:
@@ -1296,6 +1327,8 @@ export type Database = {
       }
       is_item_owner: { Args: { _item_id: string }; Returns: boolean }
       is_match_participant: { Args: { _match_id: string }; Returns: boolean }
+      is_staff: { Args: { _user_id: string }; Returns: boolean }
+      is_user_suspended: { Args: { _user_id: string }; Returns: boolean }
       nearby_items: {
         Args: {
           p_lat: number
@@ -1348,6 +1381,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      record_database_uptime_check: { Args: never; Returns: undefined }
       register_beta_tester: {
         Args: {
           p_email: string

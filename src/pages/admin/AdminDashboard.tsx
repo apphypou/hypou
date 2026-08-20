@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, ArrowRight, CheckCircle2, CircleDollarSign, FlaskConical, Handshake, Loader2, Search, Star, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const format = (value: number) => value.toLocaleString("pt-BR");
 const percent = (value: number) => `${value}%`;
@@ -19,7 +21,8 @@ function PanelTitle({ children }: { children: React.ReactNode }) {
 }
 
 const AdminDashboard = () => {
-  const { data: stats, isLoading, error } = useAdminStats();
+  const [periodDays, setPeriodDays] = useState(30);
+  const { data: stats, isLoading, error } = useAdminStats(periodDays);
   if (isLoading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (error || !stats) return <div className="py-16 text-center text-muted-foreground">Não foi possível carregar as métricas. Atualize a página ou confirme sua permissão de administrador.</div>;
 
@@ -34,15 +37,17 @@ const AdminDashboard = () => {
 
   return <div className="space-y-7">
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <div><h1 className="text-3xl font-bold tracking-tight">Visão geral</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe a validação do Hypou com dados reais dos últimos 30 dias.</p></div>
-      <span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">Atualiza a cada 30 segundos</span>
+      <div><h1 className="text-3xl font-bold tracking-tight">Visão geral</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe a validação do Hypou com dados reais.</p></div>
+      <div className="flex items-center gap-2"><Select value={String(periodDays)} onValueChange={(value) => setPeriodDays(Number(value))}><SelectTrigger aria-label="Período das métricas" className="w-28 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">7 dias</SelectItem><SelectItem value="30">30 dias</SelectItem><SelectItem value="90">90 dias</SelectItem></SelectContent></Select><span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">Atualiza a cada 30 segundos</span></div>
     </div>
 
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <MetricCard label="Usuários cadastrados" value={format(kpis.totalUsers)} caption="Base total do aplicativo" icon={Users} />
       <MetricCard label="Ativação por item" value={percent(kpis.activationRate)} caption="Usuários com ao menos um item" icon={Activity} tone="text-pink" />
       <MetricCard label="Trocas concluídas" value={format(validation.liquidity.completedTrades)} caption={`${percent(kpis.completionRate)} das negociações resolvidas`} icon={Handshake} tone="text-brand-violet" />
       <MetricCard label="Avaliação média" value={kpis.averageRating ? kpis.averageRating.toFixed(1).replace(".", ",") : "—"} caption={validation.satisfaction.ratingsCount ? `${format(validation.satisfaction.ratingsCount)} avaliações` : "Ainda sem avaliações"} icon={Star} tone="text-amber-400" />
+      <MetricCard label="Retenção D30" value={validation.retention.d30 === null ? "—" : percent(validation.retention.d30)} caption={validation.retention.configured ? "Coorte do 30º dia" : "Aguardando eventos de abertura"} icon={Activity} tone="text-brand-violet" />
+      <MetricCard label="NPS" value={validation.satisfaction.nps === null ? "—" : String(validation.satisfaction.nps)} caption={validation.satisfaction.npsResponses ? `${format(validation.satisfaction.npsResponses)} respostas` : "Ainda sem respostas"} icon={Star} tone="text-pink" />
     </div>
 
     <div className="grid gap-5 xl:grid-cols-[1.1fr_1fr_.95fr]">
