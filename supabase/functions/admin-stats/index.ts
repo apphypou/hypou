@@ -3,14 +3,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const count = (value: { count: number | null }) => value.count || 0;
 
-function daysWithZeros(rows: { created_at: string }[] | null, days = 30) {
+function daysWithZeros(rows: { created_at: string }[] | null, days = 30, endAt = new Date()) {
   const values = new Map<string, number>();
   for (const row of rows || []) {
     const day = row.created_at.slice(0, 10);
     values.set(day, (values.get(day) || 0) + 1);
   }
   return Array.from({ length: days }, (_, index) => {
-    const date = new Date();
+    const date = new Date(endAt);
     date.setUTCHours(0, 0, 0, 0);
     date.setUTCDate(date.getUTCDate() - (days - index - 1));
     const day = date.toISOString().slice(0, 10);
@@ -58,10 +58,14 @@ Deno.serve(async (req) => {
     if (!role) return Response.json({ error: "Forbidden" }, { status: 403, headers: corsHeaders });
 
     const requested = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const periodDays = [7, 30, 90].includes(Number(requested.periodDays)) ? Number(requested.periodDays) : 30;
     const now = new Date();
-    const periodStart = new Date(now.getTime() - periodDays * 86_400_000).toISOString();
-    const previousPeriodStart = new Date(now.getTime() - periodDays * 2 * 86_400_000).toISOString();
+    const customStart = typeof requested.startDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(requested.startDate) ? new Date(`${requested.startDate}T00:00:00.000Z`) : null;
+    const customEnd = typeof requested.endDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(requested.endDate) ? new Date(`${requested.endDate}T23:59:59.999Z`) : null;
+    if ((customStart || customEnd) && (!customStart || !customEnd || customStart > customEnd || customEnd.getTime() - customStart.getTime() > 365 * 86_400_000)) throw new Error("Invalid period");
+    const periodDays = customStart && customEnd ? Math.round((customEnd.getTime() - customStart.getTime()) / 86_400_000) + 1 : [7, 30, 90].includes(Number(requested.periodDays)) ? Number(requested.periodDays) : 30;
+    const periodEnd = customEnd || now;
+    const periodStart = (customStart || new Date(now.getTime() - periodDays * 86_400_000)).toISOString();
+    const previousPeriodStart = new Date(new Date(periodStart).getTime() - periodDays * 86_400_000).toISOString();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86_400_000).toISOString();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 86_400_000).toISOString();
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 86_400_000).toISOString();
@@ -70,15 +74,15 @@ Deno.serve(async (req) => {
     const [profiles, activeItems, matches, messages, swipesToday, pendingReports, waitlist, profilesByDay, matchesByDay, itemsByCategory, waitlistByDay, ratings, active7d, active30d, active90d, allItems, productEvents, attribution, spend, nps, retentionProfiles, previousProfiles, previousMatches] = await Promise.all([
       admin.from("profiles").select("id", { count: "exact", head: true }),
       admin.from("items").select("id", { count: "exact", head: true }).eq("status", "active"),
-      admin.from("matches").select("id, status, user_a_id, user_b_id, created_at"),
+      admin.from("matches").select("id, status, user_a_id, user_b_id, created_at").gte("created_at", periodStart).lte("created_at", periodEnd.toISOString()),
       admin.from("messages").select("id", { count: "exact", head: true }),
       admin.from("swipes").select("id", { count: "exact", head: true }).gte("created_at", today.toISOString()),
       admin.from("reports").select("id", { count: "exact", head: true }).eq("status", "pending"),
       admin.from("waitlist").select("id", { count: "exact", head: true }),
-      admin.from("profiles").select("created_at").gte("created_at", periodStart),
-      admin.from("matches").select("created_at").gte("created_at", periodStart),
+      admin.from("profiles").select("created_at").gte("created_at", periodStart).lte("created_at", periodEnd.toISOString()),
+      admin.from("matches").select("created_at").gte("created_at", periodStart).lte("created_at", periodEnd.toISOString()),
       admin.from("items").select("category, location").eq("status", "active"),
-      admin.from("waitlist").select("created_at").gte("created_at", periodStart),
+      admin.from("waitlist").select("created_at").gte("created_at", periodStart).lte("created_at", periodEnd.toISOString()),
       admin.from("ratings").select("score"),
       admin.from("user_app_presence").select("user_id", { count: "exact", head: true }).gte("last_seen", sevenDaysAgo),
       admin.from("user_app_presence").select("user_id", { count: "exact", head: true }).gte("last_seen", thirtyDaysAgo),
@@ -152,16 +156,16 @@ Deno.serve(async (req) => {
         monetization: { configured: false, paidUsers: 0, arpuCents: null, mrrCents: null, ltvCents: null },
       },
       charts: {
-        usersByDay: daysWithZeros(profilesByDay.data, periodDays),
-        matchesByDay: daysWithZeros(matchesByDay.data, periodDays),
-        waitlistByDay: daysWithZeros(waitlistByDay.data, periodDays),
+        usersByDay: daysWithZeros(profilesByDay.data, periodDays, periodEnd),
+        matchesByDay: daysWithZeros(matchesByDay.data, periodDays, periodEnd),
+        waitlistByDay: daysWithZeros(waitlistByDay.data, periodDays, periodEnd),
         itemsByCategory: [...categories.entries()].map(([name, value]) => ({ name, value })),
         liquidityByCity: [...cities.entries()].sort(([, a], [, b]) => b - a).slice(0, 8).map(([name, value]) => ({ name, value })),
         acquisitionSources: [...acquisitionSources.entries()].sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value })),
       },
       activity: events.slice(0, 12).map((event) => ({ name: event.event_name, occurredAt: event.occurred_at, platform: event.platform })),
       meta: {
-        periodDays,
+        periodDays, periodStart, periodEnd: periodEnd.toISOString(),
         updatedAt: now.toISOString(),
         comparison: {
           signupsDelta: (profilesByDay.data || []).length - count(previousProfiles),

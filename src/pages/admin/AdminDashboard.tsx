@@ -24,7 +24,10 @@ function PanelTitle({ children }: { children: React.ReactNode }) {
 
 const AdminDashboard = () => {
   const [periodDays, setPeriodDays] = useState(30);
-  const { data: stats, isLoading, error } = useAdminStats(periodDays);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
+  const isCustom = periodDays === 0;
+  const { data: stats, isLoading, error } = useAdminStats(isCustom ? 30 : periodDays, isCustom && customStart && customEnd ? customStart : undefined, isCustom && customStart && customEnd ? customEnd : undefined);
   if (isLoading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (error || !stats) return <div className="py-16 text-center text-muted-foreground">Não foi possível carregar as métricas. Atualize a página ou confirme sua permissão de administrador.</div>;
 
@@ -40,7 +43,7 @@ const AdminDashboard = () => {
   return <div className="space-y-7">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div><h1 className="text-3xl font-bold tracking-tight">Visão geral</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe a validação do Hypou com dados reais.</p></div>
-      <div className="flex items-center gap-2"><Select value={String(periodDays)} onValueChange={(value) => setPeriodDays(Number(value))}><SelectTrigger aria-label="Período das métricas" className="w-28 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">7 dias</SelectItem><SelectItem value="30">30 dias</SelectItem><SelectItem value="90">90 dias</SelectItem></SelectContent></Select><span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">{stats.meta.comparison.signupsDelta >= 0 ? "+" : ""}{stats.meta.comparison.signupsDelta} cadastros · {stats.meta.comparison.matchesDelta >= 0 ? "+" : ""}{stats.meta.comparison.matchesDelta} negociações vs. período anterior</span></div>
+      <div className="flex flex-wrap items-center gap-2"><Select value={String(periodDays)} onValueChange={(value) => setPeriodDays(Number(value))}><SelectTrigger aria-label="Período das métricas" className="w-32 rounded-lg"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">7 dias</SelectItem><SelectItem value="30">30 dias</SelectItem><SelectItem value="90">90 dias</SelectItem><SelectItem value="0">Personalizado</SelectItem></SelectContent></Select>{isCustom && <><input aria-label="Início do período" type="date" value={customStart} max={customEnd || undefined} onChange={(event) => setCustomStart(event.target.value)} className="h-9 rounded-lg border border-border bg-card px-2 text-xs" /><input aria-label="Fim do período" type="date" value={customEnd} min={customStart || undefined} onChange={(event) => setCustomEnd(event.target.value)} className="h-9 rounded-lg border border-border bg-card px-2 text-xs" /></>}<span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">{stats.meta.comparison.signupsDelta >= 0 ? "+" : ""}{stats.meta.comparison.signupsDelta} cadastros · {stats.meta.comparison.matchesDelta >= 0 ? "+" : ""}{stats.meta.comparison.matchesDelta} negociações vs. período anterior</span></div>
     </div>
 
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
