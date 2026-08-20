@@ -33,7 +33,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) {
     const redirect = `${location.pathname}${location.search}`;
-    return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />;
+    return <Navigate to={`/admin/login?redirect=${encodeURIComponent(redirect)}`} replace />;
   }
 
   if (!isAdmin) {

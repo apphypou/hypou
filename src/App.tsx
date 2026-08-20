@@ -65,6 +65,7 @@ const AdminBetaTesters = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pa
 const AdminStatus = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminStatus"));
 const AdminAssistente = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminAssistente"));
 const AdminLancamento = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLancamento"));
+const AdminLogin = __HYPOU_MOBILE_BUILD__ ? null : lazy(() => import("./pages/admin/AdminLogin"));
 const Chamada = lazy(() => import("./pages/Chamada"));
 const ChamadasPerdidas = lazy(() => import("./pages/ChamadasPerdidas"));
 
@@ -176,22 +177,25 @@ const AnimatedRoutes = () => {
 
           {/* Admin routes */}
           {!__HYPOU_MOBILE_BUILD__ && AdminLayout && (
-            <Route path="/admin" element={
-              <AdminProtectedRoute>
-                <AdminLayout />
-              </AdminProtectedRoute>
-            }>
-              <Route index element={AdminDashboard && <AdminDashboard />} />
-              <Route path="usuarios" element={AdminUsuarios && <AdminUsuarios />} />
-              <Route path="itens" element={AdminItens && <AdminItens />} />
-              <Route path="matches" element={AdminMatches && <AdminMatches />} />
-              <Route path="reports" element={AdminReports && <AdminReports />} />
-              <Route path="waitlist" element={AdminWaitlist && <AdminWaitlist />} />
-              <Route path="testadores-beta" element={AdminBetaTesters && <AdminBetaTesters />} />
-              <Route path="status" element={AdminStatus && <AdminStatus />} />
-              <Route path="assistente" element={AdminAssistente && <AdminAssistente />} />
-              <Route path="lancamento" element={AdminLancamento && <AdminLancamento />} />
-            </Route>
+            <>
+              <Route path="/admin/login" element={AdminLogin && <AdminLogin />} />
+              <Route path="/admin" element={
+                <AdminProtectedRoute>
+                  <AdminLayout />
+                </AdminProtectedRoute>
+              }>
+                <Route index element={AdminDashboard && <AdminDashboard />} />
+                <Route path="usuarios" element={AdminUsuarios && <AdminUsuarios />} />
+                <Route path="itens" element={AdminItens && <AdminItens />} />
+                <Route path="matches" element={AdminMatches && <AdminMatches />} />
+                <Route path="reports" element={AdminReports && <AdminReports />} />
+                <Route path="waitlist" element={AdminWaitlist && <AdminWaitlist />} />
+                <Route path="testadores-beta" element={AdminBetaTesters && <AdminBetaTesters />} />
+                <Route path="status" element={AdminStatus && <AdminStatus />} />
+                <Route path="assistente" element={AdminAssistente && <AdminAssistente />} />
+                <Route path="lancamento" element={AdminLancamento && <AdminLancamento />} />
+              </Route>
+            </>
           )}
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

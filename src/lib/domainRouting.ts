@@ -1,6 +1,8 @@
 const marketingHosts = new Set(["hypou.app", "www.hypou.app"]);
-const appPaths = /^\/(?:admin|login|cadastro|confirmar-codigo|recuperar-senha|reset-password)(?:\/|$)/;
+const adminPath = /^\/admin(?:\/|$)/;
+
+export const isAdminPath = (pathname: string) => adminPath.test(pathname);
 
 export const isMarketingRoute = (hostname: string, pathname: string) => (
-  marketingHosts.has(hostname) && !appPaths.test(pathname)
+  marketingHosts.has(hostname) && !isAdminPath(pathname)
 );

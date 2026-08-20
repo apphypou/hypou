@@ -12,11 +12,11 @@ describe("AdminProtectedRoute", () => {
     const { getByText } = renderWithProviders(
       <Routes>
         <Route path="/admin" element={<AdminProtectedRoute><div>Admin</div></AdminProtectedRoute>} />
-        <Route path="/login" element={<div>Login</div>} />
+        <Route path="/admin/login" element={<div>Login administrativo</div>} />
       </Routes>,
       { route: "/admin" },
     );
 
-    expect(getByText("Login")).toBeInTheDocument();
+    expect(getByText("Login administrativo")).toBeInTheDocument();
   });
 });

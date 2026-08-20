@@ -132,7 +132,7 @@ export function AdminSidebar() {
           className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-200"
           onClick={async () => {
             await signOut();
-            navigate("/login");
+            navigate("/admin/login");
           }}
         >
           <LogOut className="h-4 w-4 mr-2" />
