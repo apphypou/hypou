@@ -33,6 +33,18 @@ const infoPlistPath = "ios/App/App/Info.plist";
 const devServerUrl = process.env.HYPOU_CAP_SERVER_URL;
 const googleIOSClientId = process.env.VITE_GOOGLE_IOS_CLIENT_ID;
 const googleReversedClientId = process.env.VITE_GOOGLE_IOS_REVERSED_CLIENT_ID;
+const googleWebClientId = process.env.VITE_GOOGLE_WEB_CLIENT_ID;
+
+const missingGoogleConfig = [
+  ["VITE_GOOGLE_WEB_CLIENT_ID", googleWebClientId],
+  ["VITE_GOOGLE_IOS_CLIENT_ID", googleIOSClientId],
+  ["VITE_GOOGLE_IOS_REVERSED_CLIENT_ID", googleReversedClientId],
+].filter(([, value]) => !value).map(([name]) => name);
+
+if (missingGoogleConfig.length) {
+  console.error(`FAIL: configure ${missingGoogleConfig.join(", ")} before synchronizing iOS. This prevents the Google login from falling back to the web OAuth flow.`);
+  process.exit(1);
+}
 
 if (!existsSync(distDir)) {
   console.error("FAIL: dist nao existe. Rode npm run build:mobile antes.");
@@ -145,6 +157,4 @@ if (addedGoogleScheme) {
 }
 if (setGoogleId) {
   console.log(`OK: ${infoPlistPath} recebeu GIDClientID do Google`);
-} else if (!googleReversedClientId) {
-  console.log("WARN: VITE_GOOGLE_IOS_CLIENT_ID/VITE_GOOGLE_IOS_REVERSED_CLIENT_ID ausentes; login nativo Google no iOS usara fallback se necessario");
 }
