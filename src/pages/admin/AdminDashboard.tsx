@@ -1,249 +1,76 @@
 import { useAdminStats } from "@/hooks/useAdminStats";
-import { KpiCard } from "@/components/admin/KpiCard";
-import { RealtimeActivityFeed } from "@/components/admin/RealtimeActivityFeed";
-import {
-  Users,
-  Package,
-  Handshake,
-  MessageSquare,
-  Zap,
-  ShieldAlert,
-  ListOrdered,
-  TrendingUp,
-  Loader2,
-  BarChart3,
-  PieChart as PieChartIcon,
-  CalendarDays,
-} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  ResponsiveContainer,
-} from "recharts";
+import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Activity, ArrowRight, CheckCircle2, CircleDollarSign, FlaskConical, Handshake, Loader2, Search, Star, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const COLORS = [
-  "hsl(var(--primary))",
-  "hsl(210, 70%, 55%)",
-  "hsl(150, 60%, 45%)",
-  "hsl(40, 80%, 55%)",
-  "hsl(340, 65%, 50%)",
-  "hsl(270, 55%, 55%)",
-  "hsl(190, 65%, 45%)",
-  "hsl(20, 70%, 50%)",
-];
+const format = (value: number) => value.toLocaleString("pt-BR");
+const percent = (value: number) => `${value}%`;
+
+function MetricCard({ label, value, caption, icon: Icon, tone = "text-primary" }: { label: string; value: string; caption: string; icon: typeof Users; tone?: string }) {
+  return <Card className="brand-card overflow-hidden"><CardContent className="flex items-start gap-4 p-5">
+    <span className={`rounded-xl bg-background/70 p-3 ${tone}`}><Icon className="h-5 w-5" /></span>
+    <div className="min-w-0"><p className="text-xs font-medium text-muted-foreground">{label}</p><p className="mt-1 text-3xl font-bold tracking-tight tabular-nums">{value}</p><p className="mt-1 text-xs text-muted-foreground">{caption}</p></div>
+  </CardContent></Card>;
+}
+
+function PanelTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="text-base font-semibold tracking-tight">{children}</h2>;
+}
 
 const AdminDashboard = () => {
   const { data: stats, isLoading, error } = useAdminStats();
+  if (isLoading) return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (error || !stats) return <div className="py-16 text-center text-muted-foreground">Não foi possível carregar as métricas. Atualize a página ou confirme sua permissão de administrador.</div>;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const { kpis, validation, charts } = stats;
+  const funnel = [
+    ["Cadastros", validation.acquisition.signups],
+    ["Primeiro item", validation.activation.firstItem],
+    ["Primeira busca", validation.activation.firstSearch],
+    ["Primeira negociação", validation.activation.firstTrade],
+  ].filter(([, value]) => value as number > 0) as [string, number][];
+  const maximumFunnel = Math.max(validation.acquisition.signups, 1);
 
-  if (error || !stats) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        Erro ao carregar estatísticas. Verifique se você tem permissão de admin.
-      </div>
-    );
-  }
-
-  const { kpis, charts } = stats;
-  const totalItemsByCategory = charts.itemsByCategory.reduce((sum: number, c: { value: number }) => sum + c.value, 0);
-
-  return (
-    <div className="space-y-8">
-      {/* Page title */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Visão geral do sistema em tempo real</p>
-      </div>
-
-      {/* KPIs */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Métricas</h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <KpiCard title="Total Usuários" value={kpis.totalUsers} icon={Users} colorClass="bg-blue-500/10 text-blue-500" />
-          <KpiCard title="Itens Ativos" value={kpis.activeItems} icon={Package} colorClass="bg-emerald-500/10 text-emerald-500" />
-          <KpiCard title="Matches Hoje" value={kpis.matchesToday} icon={Handshake} description={`${kpis.totalMatches} total`} colorClass="bg-amber-500/10 text-amber-500" />
-          <KpiCard title="Swipes Hoje" value={kpis.swipesToday} icon={Zap} colorClass="bg-violet-500/10 text-violet-500" />
-          <KpiCard title="Mensagens Total" value={kpis.totalMessages} icon={MessageSquare} colorClass="bg-purple-500/10 text-purple-500" />
-          <KpiCard title="Taxa Aceitação" value={`${kpis.acceptanceRate}%`} icon={TrendingUp} colorClass="bg-teal-500/10 text-teal-500" />
-          <KpiCard title="Reports" value={kpis.pendingReports} icon={ShieldAlert} colorClass="bg-red-500/10 text-red-500" />
-          <KpiCard title="Waitlist" value={kpis.waitlistCount} icon={ListOrdered} colorClass="bg-orange-500/10 text-orange-500" />
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Gráficos</h2>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Users by day */}
-          <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Users className="h-4 w-4 text-blue-500" />
-                  Cadastros
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] rounded-full">30 dias</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{ count: { label: "Cadastros", color: "hsl(210, 70%, 55%)" } }} className="h-[200px]">
-                <AreaChart data={charts.usersByDay}>
-                  <defs>
-                    <linearGradient id="gradUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(210, 70%, 55%)" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(210, 70%, 55%)" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} className="text-[10px]" />
-                  <YAxis width={30} className="text-[10px]" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area type="monotone" dataKey="count" fill="url(#gradUsers)" stroke="hsl(210, 70%, 55%)" strokeWidth={2} />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Matches by day */}
-          <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Handshake className="h-4 w-4 text-amber-500" />
-                  Matches
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] rounded-full">30 dias</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{ count: { label: "Matches", color: "hsl(40, 80%, 55%)" } }} className="h-[200px]">
-                <BarChart data={charts.matchesByDay}>
-                  <defs>
-                    <linearGradient id="gradMatches" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(40, 80%, 55%)" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="hsl(40, 80%, 55%)" stopOpacity={0.4} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} className="text-[10px]" />
-                  <YAxis width={30} className="text-[10px]" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="url(#gradMatches)" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          {/* Items by category - Donut */}
-          <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <PieChartIcon className="h-4 w-4 text-emerald-500" />
-                  Itens por Categoria
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] rounded-full">{totalItemsByCategory} itens</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <div className="h-[220px] w-full max-w-[300px] relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={charts.itemsByCategory}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={85}
-                      innerRadius={50}
-                      paddingAngle={3}
-                      label={({ name, value }) => `${name}: ${value}`}
-                    >
-                      {charts.itemsByCategory.map((_: unknown, i: number) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Central label */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <p className="text-xl font-bold text-foreground tabular-nums">{totalItemsByCategory}</p>
-                    <p className="text-[10px] text-muted-foreground">total</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Waitlist growth */}
-          <Card className="border-border/50">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <ListOrdered className="h-4 w-4 text-orange-500" />
-                  Crescimento Waitlist
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] rounded-full">30 dias</Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={{ count: { label: "Inscritos", color: "hsl(20, 70%, 50%)" } }} className="h-[200px]">
-                <AreaChart data={charts.waitlistByDay}>
-                  <defs>
-                    <linearGradient id="gradWaitlist" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(20, 70%, 50%)" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(20, 70%, 50%)" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="date" tickFormatter={(v) => v.slice(5)} className="text-[10px]" />
-                  <YAxis width={30} className="text-[10px]" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area type="monotone" dataKey="count" fill="url(#gradWaitlist)" stroke="hsl(20, 70%, 50%)" strokeWidth={2} />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Realtime Feed */}
-      <div>
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tempo Real</h2>
-        </div>
-        <RealtimeActivityFeed />
-      </div>
+  return <div className="space-y-7">
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div><h1 className="text-3xl font-bold tracking-tight">Visão geral</h1><p className="mt-1 text-sm text-muted-foreground">Acompanhe a validação do Hypou com dados reais dos últimos 30 dias.</p></div>
+      <span className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground">Atualiza a cada 30 segundos</span>
     </div>
-  );
+
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <MetricCard label="Usuários cadastrados" value={format(kpis.totalUsers)} caption="Base total do aplicativo" icon={Users} />
+      <MetricCard label="Ativação por item" value={percent(kpis.activationRate)} caption="Usuários com ao menos um item" icon={Activity} tone="text-pink" />
+      <MetricCard label="Trocas concluídas" value={format(validation.liquidity.completedTrades)} caption={`${percent(kpis.completionRate)} das negociações resolvidas`} icon={Handshake} tone="text-brand-violet" />
+      <MetricCard label="Avaliação média" value={kpis.averageRating ? kpis.averageRating.toFixed(1).replace(".", ",") : "—"} caption={validation.satisfaction.ratingsCount ? `${format(validation.satisfaction.ratingsCount)} avaliações` : "Ainda sem avaliações"} icon={Star} tone="text-amber-400" />
+    </div>
+
+    <div className="grid gap-5 xl:grid-cols-[1.1fr_1fr_.95fr]">
+      <Card className="brand-card"><CardHeader><PanelTitle>Funil de ativação</PanelTitle><p className="text-xs text-muted-foreground">A jornada é preenchida à medida que o app envia eventos.</p></CardHeader><CardContent className="space-y-3">
+        {funnel.length ? funnel.map(([label, value], index) => <div key={label}><div className="mb-1 flex justify-between text-xs"><span>{label}</span><span className="text-muted-foreground">{format(value)} · {percent(Math.round(value / maximumFunnel * 100))}</span></div><div className="h-8 rounded-lg bg-muted/70 p-1"><div className="h-full rounded-md brand-gradient" style={{ width: `${Math.max(8, value / maximumFunnel * 100)}%`, opacity: 1 - index * .12 }} /></div></div>) : <div className="py-12 text-center text-sm text-muted-foreground">Eventos de ativação ainda não foram recebidos.</div>}
+        <Link to="/admin/metricas" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">Ver definição das métricas <ArrowRight className="h-3.5 w-3.5" /></Link>
+      </CardContent></Card>
+
+      <Card className="brand-card"><CardHeader><PanelTitle>Cadastros</PanelTitle><p className="text-xs text-muted-foreground">Evolução diária, com dias sem novos cadastros incluídos.</p></CardHeader><CardContent><div className="h-[210px]"><ResponsiveContainer width="100%" height="100%"><AreaChart data={charts.usersByDay}><defs><linearGradient id="admin-users-gradient" x1="0" y1="0" x2="0" y2="1"><stop stopColor="hsl(var(--primary))" stopOpacity=".35" /><stop offset="1" stopColor="hsl(var(--primary))" stopOpacity="0" /></linearGradient></defs><XAxis dataKey="date" tickFormatter={(date) => date.slice(5)} tickLine={false} axisLine={false} fontSize={10} /><YAxis allowDecimals={false} width={24} tickLine={false} axisLine={false} fontSize={10} /><Tooltip /><Area dataKey="count" type="monotone" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#admin-users-gradient)" /></AreaChart></ResponsiveContainer></div></CardContent></Card>
+
+      <Card className="brand-card"><CardHeader><PanelTitle>Liquidez</PanelTitle><p className="text-xs text-muted-foreground">Itens e negociações no funil de troca.</p></CardHeader><CardContent className="space-y-4">
+        {[["Itens publicados", validation.liquidity.itemsPublished, "text-primary"], ["Negociações abertas", validation.liquidity.tradesOpen, "text-brand-violet"], ["Trocas concluídas", validation.liquidity.completedTrades, "text-pink"]].map(([label, value, tone]) => <div key={label as string} className="flex items-center justify-between border-b border-border/70 pb-3 last:border-0 last:pb-0"><span className="text-sm text-muted-foreground">{label}</span><span className={`text-lg font-bold tabular-nums ${tone}`}>{format(value as number)}</span></div>)}
+        <p className="rounded-lg bg-muted/70 px-3 py-2 text-xs text-muted-foreground">{percent(validation.liquidity.progressRate)} das negociações avançaram.</p>
+      </CardContent></Card>
+    </div>
+
+    <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+      <Card className="brand-card"><CardHeader><PanelTitle>Negociações iniciadas</PanelTitle><p className="text-xs text-muted-foreground">Novas propostas por dia.</p></CardHeader><CardContent><div className="h-[190px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={charts.matchesByDay}><XAxis dataKey="date" tickFormatter={(date) => date.slice(5)} tickLine={false} axisLine={false} fontSize={10} /><YAxis allowDecimals={false} width={24} tickLine={false} axisLine={false} fontSize={10} /><Tooltip /><Bar dataKey="count" fill="hsl(var(--brand-violet))" radius={[5, 5, 0, 0]} /></BarChart></ResponsiveContainer></div></CardContent></Card>
+      <Card className="brand-card"><CardHeader><PanelTitle>Fontes ainda pendentes</PanelTitle><p className="text-xs text-muted-foreground">Indicadores que exigem integração antes de entrar na decisão.</p></CardHeader><CardContent className="space-y-3">
+        <p className="flex items-center gap-2 text-sm"><CircleDollarSign className="h-4 w-4 text-muted-foreground" /> Receita, ARPU, MRR e LTV <span className="ml-auto text-xs text-muted-foreground">não configurados</span></p>
+        <p className="flex items-center gap-2 text-sm"><Search className="h-4 w-4 text-muted-foreground" /> Retenção D7, D30 e D90 <span className="ml-auto text-xs text-muted-foreground">aguardando eventos</span></p>
+        <p className="flex items-center gap-2 text-sm"><FlaskConical className="h-4 w-4 text-muted-foreground" /> NPS <span className="ml-auto text-xs text-muted-foreground">{validation.satisfaction.npsResponses ? `${validation.satisfaction.npsResponses} respostas` : "sem respostas"}</span></p>
+        <Link to="/admin/metricas" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">Entender como configurar <ArrowRight className="h-3.5 w-3.5" /></Link>
+      </CardContent></Card>
+    </div>
+
+    {kpis.pendingReports > 0 && <Link to="/admin/reports" className="flex items-center justify-between rounded-xl border border-pink/30 bg-pink/5 px-4 py-3 text-sm"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-pink" />{format(kpis.pendingReports)} relatos aguardam análise</span><ArrowRight className="h-4 w-4 text-pink" /></Link>}
+  </div>;
 };
 
 export default AdminDashboard;

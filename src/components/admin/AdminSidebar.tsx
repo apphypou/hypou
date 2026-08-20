@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  BarChart3,
   Users,
   Package,
   Handshake,
@@ -10,6 +11,7 @@ import {
   Bot,
   Rocket,
   FlaskConical,
+  Crown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -30,16 +32,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import HypouLogo from "@/components/HypouLogo";
+import { HYPOU_LOGO } from "@/config/brand";
 
 const items = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Métricas", url: "/admin/metricas", icon: BarChart3 },
   { title: "Usuários", url: "/admin/usuarios", icon: Users },
   { title: "Itens", url: "/admin/itens", icon: Package },
-  { title: "Matches", url: "/admin/matches", icon: Handshake },
-  { title: "Reports", url: "/admin/reports", icon: ShieldAlert },
+  { title: "Negociações", url: "/admin/matches", icon: Handshake },
+  { title: "Relatos", url: "/admin/reports", icon: ShieldAlert },
   { title: "Waitlist", url: "/admin/waitlist", icon: ListOrdered },
   { title: "Testadores beta", url: "/admin/testadores-beta", icon: FlaskConical },
+  { title: "Membros", url: "/admin/membros", icon: Crown },
   { title: "Status", url: "/admin/status", icon: Activity },
   { title: "Assistente IA", url: "/admin/assistente", icon: Bot },
   { title: "Lançamento", url: "/admin/lancamento", icon: Rocket },
@@ -62,7 +66,7 @@ export function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center justify-center">
-          <HypouLogo size={collapsed ? "sm" : "md"} />
+          <img src={HYPOU_LOGO} alt="Hypou" className={collapsed ? "h-8 w-8 object-cover object-left" : "h-auto w-28"} />
         </div>
         {!collapsed && (
           <span className="text-[10px] font-semibold text-primary/60 uppercase tracking-[0.2em] text-center mt-1">

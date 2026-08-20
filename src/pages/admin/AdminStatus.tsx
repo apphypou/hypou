@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -11,19 +11,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, formatDistanceToNow, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  useHealthCheck, useIncidents, useUptimeHistory, useSaveUptimeCheck,
+  useHealthCheck, useIncidents, useUptimeHistory,
   type SystemIncident,
 } from "@/hooks/useSystemStatus";
 import CreateIncidentDialog from "@/components/admin/CreateIncidentDialog";
 import UpdateIncidentDialog from "@/components/admin/UpdateIncidentDialog";
 
-type ServiceStatus = "operational" | "degraded" | "partial_outage" | "major_outage";
+type ServiceStatus = "operational" | "degraded" | "partial_outage" | "major_outage" | "unknown";
 
 const statusConfig: Record<ServiceStatus, { label: string; color: string; icon: React.ElementType; bg: string; dot: string }> = {
   operational: { label: "Operacional", color: "text-emerald-600 dark:text-emerald-400", icon: CheckCircle2, bg: "bg-emerald-500/10", dot: "bg-emerald-500" },
   degraded: { label: "Degradado", color: "text-amber-600 dark:text-amber-400", icon: AlertTriangle, bg: "bg-amber-500/10", dot: "bg-amber-500" },
   partial_outage: { label: "Interrupção Parcial", color: "text-orange-600 dark:text-orange-400", icon: AlertTriangle, bg: "bg-orange-500/10", dot: "bg-orange-500" },
   major_outage: { label: "Interrupção Total", color: "text-red-600 dark:text-red-400", icon: XCircle, bg: "bg-red-500/10", dot: "bg-red-500" },
+  unknown: { label: "Sem monitoramento", color: "text-muted-foreground", icon: Clock, bg: "bg-muted", dot: "bg-muted-foreground" },
 };
 
 const incidentStatusConfig: Record<string, { label: string; color: string }> = {
@@ -40,12 +41,12 @@ const severityConfig: Record<string, { label: string; color: string }> = {
 };
 
 const componentDefs = [
-  { name: "Autenticação", key: "auth", icon: Shield, desc: "Login, registro e sessões", checkIdx: 5, latencyMul: 0.3 },
-  { name: "Banco de Dados", key: "database", icon: Database, desc: "Armazenamento e consultas", checkIdx: 0, latencyMul: 0.8 },
-  { name: "API Principal", key: "api", icon: Server, desc: "Endpoints REST e CRUD", checkIdx: 1, latencyMul: 1.0 },
-  { name: "Sistema de Matches", key: "matches", icon: Zap, desc: "Motor de matching e propostas", checkIdx: 2, latencyMul: 1.1 },
-  { name: "Chat & Mensagens", key: "chat", icon: MessageSquare, desc: "Realtime messaging", checkIdx: 3, latencyMul: 0.9 },
-  { name: "CDN & Storage", key: "cdn", icon: Globe, desc: "Imagens, vídeos e assets", checkIdx: -1, latencyMul: 0.4 },
+  { name: "Autenticação", key: "auth", icon: Shield, desc: "Login, registro e sessões", checkIdx: 5 },
+  { name: "Banco de Dados", key: "database", icon: Database, desc: "Armazenamento e consultas", checkIdx: 0 },
+  { name: "API Principal", key: "api", icon: Server, desc: "Endpoints REST e CRUD", checkIdx: 1 },
+  { name: "Sistema de Matches", key: "matches", icon: Zap, desc: "Motor de matching e propostas", checkIdx: 2 },
+  { name: "Chat & Mensagens", key: "chat", icon: MessageSquare, desc: "Realtime messaging", checkIdx: 3 },
+  { name: "CDN & Storage", key: "cdn", icon: Globe, desc: "Imagens, vídeos e assets", checkIdx: -1 },
 ];
 
 const AdminStatus = () => {
@@ -53,23 +54,9 @@ const AdminStatus = () => {
   const { data: healthData } = useHealthCheck();
   const { data: incidents = [] } = useIncidents();
   const { data: uptimeChecks = [] } = useUptimeHistory();
-  const saveUptime = useSaveUptimeCheck();
-
-  // Save uptime check whenever health data refreshes
-  useEffect(() => {
-    if (!healthData) return;
-    const checks = componentDefs.map((c) => ({
-      component: c.key,
-      status: getComponentStatus(c.checkIdx) as string,
-      latency_ms: healthData.dbLatency ? Math.round(healthData.dbLatency * c.latencyMul) : null,
-    }));
-    saveUptime.mutate(checks);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [healthData?.timestamp]);
 
   function getComponentStatus(checkIndex: number): ServiceStatus {
-    if (!healthData) return "operational";
-    if (checkIndex === -1) return "operational";
+    if (!healthData || checkIndex === -1) return "unknown";
     const check = healthData.checks[checkIndex];
     if (check.status === "rejected") return "major_outage";
     if (check.status === "fulfilled" && "error" in check.value && check.value.error) return "degraded";
@@ -81,7 +68,7 @@ const AdminStatus = () => {
     const checks = uptimeChecks.filter(
       (c) => c.component === componentKey && new Date(c.checked_at) >= subDays(new Date(), 30)
     );
-    if (checks.length === 0) return { pct: 100, bars: [] as string[] };
+    if (checks.length === 0) return { pct: null, bars: [] as string[] };
     const operational = checks.filter((c) => c.status === "operational").length;
     const pct = parseFloat(((operational / checks.length) * 100).toFixed(2));
 
@@ -110,7 +97,7 @@ const AdminStatus = () => {
       status: getComponentStatus(def.checkIdx),
       uptime: pct,
       uptimeBars: bars,
-      latency: healthData?.dbLatency ? Math.round(healthData.dbLatency * def.latencyMul) : undefined,
+      latency: def.key === "database" ? healthData?.dbLatency : undefined,
     };
   });
 
@@ -129,9 +116,10 @@ const AdminStatus = () => {
   const unresolvedCount = last30.filter((i) => i.status !== "resolved").length;
 
   // Average uptime across components
-  const avgUptime = components.length > 0
-    ? (components.reduce((s, c) => s + c.uptime, 0) / components.length).toFixed(2)
-    : "100.00";
+  const monitoredComponents = components.filter((component) => component.uptime !== null);
+  const avgUptime = monitoredComponents.length
+    ? (monitoredComponents.reduce((sum, component) => sum + (component.uptime || 0), 0) / monitoredComponents.length).toFixed(2)
+    : "—";
 
   return (
     <div className="space-y-8">
@@ -230,7 +218,7 @@ const AdminStatus = () => {
                       </div>
 
                       <span className="text-xs font-mono text-muted-foreground hidden md:block w-16 text-right">
-                        {component.uptime}%
+                        {component.uptime === null ? "—" : `${component.uptime}%`}
                       </span>
 
                       <div className="flex items-center gap-1.5">
@@ -249,7 +237,7 @@ const AdminStatus = () => {
       {/* Uptime Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: "Uptime (30 dias)", value: `${avgUptime}%`, sub: "média dos componentes" },
+          { label: "Uptime (30 dias)", value: avgUptime === "—" ? "—" : `${avgUptime}%`, sub: "média dos componentes monitorados" },
           { label: "Tempo médio de resposta", value: `${healthData?.dbLatency || "—"}ms`, sub: "latência atual" },
           { label: "Incidentes (30 dias)", value: String(last30.length), sub: `${unresolvedCount} não resolvido(s)` },
         ].map((metric, i) => (
@@ -301,7 +289,7 @@ const AdminStatus = () => {
       {/* Footer */}
       <div className="text-center py-4">
         <p className="text-xs text-muted-foreground">
-          Status atualizado automaticamente a cada 15 segundos • Uptime calculado com dados reais
+          Esta tela mostra a verificação atual. Uptime só aparece após existir monitoramento independente.
         </p>
       </div>
     </div>

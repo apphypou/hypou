@@ -18,11 +18,14 @@ import { Moon, Sun } from "lucide-react";
 
 const routeLabels: Record<string, string> = {
   "/admin": "Dashboard",
+  "/admin/metricas": "Métricas",
   "/admin/usuarios": "Usuários",
   "/admin/itens": "Itens",
   "/admin/matches": "Matches",
   "/admin/reports": "Reports",
   "/admin/waitlist": "Waitlist",
+  "/admin/testadores-beta": "Testadores beta",
+  "/admin/membros": "Membros",
   "/admin/status": "Status",
   "/admin/assistente": "Assistente IA",
   "/admin/lancamento": "Lançamento",
@@ -39,7 +42,7 @@ const AdminLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-muted/20">
+      <div className="hypou-screen min-h-screen flex w-full">
         <AdminSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header with blur + breadcrumbs */}
@@ -90,8 +93,8 @@ const AdminLayout = () => {
             </div>
           </header>
 
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <div className="max-w-7xl mx-auto">
+          <main className="flex-1 overflow-auto p-4 md:p-7">
+            <div className="mx-auto max-w-[1440px]">
               <Outlet />
             </div>
           </main>
