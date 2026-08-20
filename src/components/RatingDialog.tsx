@@ -74,7 +74,7 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] bg-background/90 backdrop-blur-md flex items-center justify-center px-6"
+          className="fixed inset-0 z-[200] flex overflow-y-auto bg-background/90 px-6 py-6 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
@@ -82,7 +82,7 @@ const RatingDialog = ({ open, onClose, matchId, raterId, ratedId, ratedName }: R
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm bg-card border border-foreground/10 rounded-3xl p-6"
+            className="my-auto w-full max-w-sm bg-card border border-foreground/10 rounded-3xl p-6"
           >
             <h2 className="text-xl font-extrabold text-foreground text-center mb-1">
               Avaliar Troca

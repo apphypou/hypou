@@ -112,7 +112,7 @@ const ResetPassword = () => {
 
   if (step === "code" && !verifiedSession) {
     return (
-      <div className="dark relative flex flex-col items-center min-h-screen bg-background text-foreground font-display antialiased px-6 py-10">
+      <div className="dark relative flex min-h-[100dvh] flex-col items-center overflow-y-auto bg-background px-6 py-10 font-display text-foreground antialiased">
         <div className="w-full max-w-sm flex items-center justify-start mb-4">
           <Link to="/recuperar-senha" className="text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-5 h-5" />
@@ -176,7 +176,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="dark relative flex flex-col items-center justify-center min-h-screen bg-background text-foreground font-display antialiased px-6">
+    <div className="dark relative flex min-h-[100dvh] flex-col items-center justify-center overflow-y-auto bg-background px-6 py-10 font-display text-foreground antialiased">
       <div className="flex flex-col items-center pb-8 w-full max-w-sm">
         <img src={logoHypou} alt="Hypou" className="h-20 w-auto object-contain mb-6" />
         <h1 className="text-3xl font-bold tracking-tight">

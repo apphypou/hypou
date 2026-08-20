@@ -19,9 +19,9 @@ describe("native keyboard resize", () => {
     const setResizeMode = vi.fn().mockResolvedValue(undefined);
     const { configureNativeKeyboardResize } = await import("@/lib/nativeKeyboard");
 
-    await configureNativeKeyboardResize({ setResizeMode }, "none");
+    await configureNativeKeyboardResize({ setResizeMode }, "native");
 
-    expect(setResizeMode).toHaveBeenCalledWith({ mode: "none" });
+    expect(setResizeMode).toHaveBeenCalledWith({ mode: "native" });
   });
 
   it("does not call the iOS-only API on Android", async () => {
@@ -29,7 +29,7 @@ describe("native keyboard resize", () => {
     const setResizeMode = vi.fn();
     const { configureNativeKeyboardResize } = await import("@/lib/nativeKeyboard");
 
-    await configureNativeKeyboardResize({ setResizeMode }, "none");
+    await configureNativeKeyboardResize({ setResizeMode }, "native");
 
     expect(setResizeMode).not.toHaveBeenCalled();
   });

@@ -153,13 +153,14 @@
 
   html {
     -webkit-text-size-adjust: 100%;
-    scroll-padding-bottom: calc(var(--keyboard-height, 0px) + var(--safe-area-bottom));
+    scroll-padding-bottom: calc(1rem + var(--safe-area-bottom));
   }
 
   input,
   textarea,
   select {
     font-size: 16px;
+    scroll-margin-block: 1rem;
   }
 
   body {
@@ -521,8 +522,7 @@
   }
 
   body.keyboard-visible .proposal-drawer {
-    bottom: var(--keyboard-height, 0px);
-    max-height: calc(100dvh - var(--keyboard-height, 0px) - var(--safe-area-top));
+    max-height: calc(100dvh - var(--safe-area-top));
   }
 
   body.keyboard-visible .proposal-item-list,
@@ -533,19 +533,11 @@
 
   .item-form-scroll {
     scroll-padding-top: calc(var(--safe-area-top) + 1rem);
-    scroll-padding-bottom: calc(9rem + var(--safe-area-bottom) + var(--keyboard-height, 0px));
+    scroll-padding-bottom: calc(9rem + var(--safe-area-bottom));
   }
 
   body.keyboard-visible .item-form-scroll {
-    padding-bottom: calc(2rem + var(--keyboard-height, 0px) + var(--safe-area-bottom));
-  }
-
-  .item-form-submit {
-    transition: transform 180ms ease, opacity 180ms ease;
-  }
-
-  body.keyboard-visible .item-form-submit {
-    transform: translateY(calc(-1 * var(--keyboard-height, 0px) + 0.5rem));
+    padding-bottom: calc(7rem + var(--safe-area-bottom));
   }
 
   .shadow-glow-hype {

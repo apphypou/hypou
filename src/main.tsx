@@ -20,26 +20,21 @@ if ("caches" in window) {
 
 // Initialize native plugins when running on a native platform
 if (Capacitor.isNativePlatform()) {
-  document.documentElement.style.setProperty("--keyboard-height", "0px");
-
   import("@capacitor/status-bar").then(({ StatusBar, Style }) => {
     StatusBar.setStyle({ style: Style.Dark });
     StatusBar.setBackgroundColor({ color: "#1C1C1C" });
   });
 
   import("@capacitor/keyboard").then(({ Keyboard, KeyboardResize }) => {
-    void configureNativeKeyboardResize(Keyboard, KeyboardResize.None);
+    void configureNativeKeyboardResize(Keyboard, KeyboardResize.Native);
 
-    Keyboard.addListener("keyboardWillShow", (info) => {
-      document.documentElement.style.setProperty("--keyboard-height", `${info.keyboardHeight}px`);
+    Keyboard.addListener("keyboardWillShow", () => {
       document.body.classList.add("keyboard-visible");
     });
     Keyboard.addListener("keyboardWillHide", () => {
-      document.documentElement.style.setProperty("--keyboard-height", "0px");
       document.body.classList.remove("keyboard-visible");
     });
     Keyboard.addListener("keyboardDidHide", () => {
-      document.documentElement.style.setProperty("--keyboard-height", "0px");
       document.body.classList.remove("keyboard-visible");
     });
   });

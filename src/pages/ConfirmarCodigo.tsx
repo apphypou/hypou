@@ -95,7 +95,7 @@ const ConfirmarCodigo = () => {
   };
 
   return (
-    <div className="dark relative flex min-h-[100dvh] flex-col items-center justify-center bg-background px-6 py-10 font-display text-foreground antialiased">
+    <div className="dark relative flex min-h-[100dvh] flex-col items-center justify-center overflow-y-auto bg-background px-6 py-10 font-display text-foreground antialiased">
       <Link
         to="/cadastro"
         className="absolute left-6 top-[calc(env(safe-area-inset-top)+1.5rem)] text-muted-foreground transition-colors hover:text-foreground"

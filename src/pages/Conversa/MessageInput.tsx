@@ -151,10 +151,9 @@ export const MessageInput = ({
       />
 
       <div
-        className="shrink-0 px-4 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl will-change-transform transition-transform duration-200 ease-out"
+        className="shrink-0 px-4 pt-3 border-t border-foreground/5 bg-background/80 backdrop-blur-xl"
         style={{
           paddingBottom: "max(1rem, var(--safe-area-bottom))",
-          transform: "translateY(calc(-1 * var(--keyboard-height, 0px)))",
         }}
       >
         {showAttachMenu && !isRecording && (

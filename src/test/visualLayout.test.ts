@@ -208,6 +208,10 @@ describe("mobile visual layout", () => {
     const dialog = readSource("src/components/SelectItemDialog.tsx");
     const css = readSource("src/index.css");
     const html = readSource("index.html");
+    const capacitorConfig = readSource("capacitor.config.ts");
+    const iosSync = readSource("scripts/sync-ios-web.mjs");
+    const main = readSource("src/main.tsx");
+    const messageInput = readSource("src/pages/Conversa/MessageInput.tsx");
 
     expect(dialog).toContain("proposal-drawer");
     expect(dialog).toContain("shouldScaleBackground={false}");
@@ -221,14 +225,18 @@ describe("mobile visual layout", () => {
     expect(dialog).toContain("proposal-cash-note");
     expect(html).toContain("maximum-scale=1");
     expect(html).toContain("user-scalable=no");
+    expect(capacitorConfig).toContain("resize: 'native'");
+    expect(iosSync).toContain('resize: "native"');
+    expect(main).toContain("KeyboardResize.Native");
     expect(css).toContain("body.keyboard-visible .proposal-drawer");
     expect(css).toContain("body.keyboard-visible .proposal-item-list");
-    expect(css).toContain("bottom: var(--keyboard-height, 0px);");
-    expect(css).toContain("100dvh - var(--keyboard-height, 0px) - var(--safe-area-top)");
+    expect(css).toContain("max-height: calc(100dvh - var(--safe-area-top));");
     expect(css).toContain("-webkit-text-size-adjust: 100%;");
     expect(css).toContain("input,");
     expect(css).toContain("font-size: 16px;");
-    expect(css).toContain("scroll-padding-bottom: calc(var(--keyboard-height, 0px) + var(--safe-area-bottom));");
+    expect(css).toContain("scroll-margin-block: 1rem;");
+    expect(messageInput).not.toContain("--keyboard-height");
+    expect(css).not.toContain("--keyboard-height");
   });
 
   it("keeps item forms keyboard-safe and exposes photo source choices", () => {
@@ -248,8 +256,31 @@ describe("mobile visual layout", () => {
     }
 
     expect(css).toContain("body.keyboard-visible .item-form-scroll");
-    expect(css).toContain("body.keyboard-visible .item-form-submit");
-    expect(css).toContain("var(--keyboard-height, 0px)");
+    expect(css).toContain("scroll-padding-bottom: calc(9rem + var(--safe-area-bottom));");
+  });
+
+  it("keeps form dialogs scrollable inside the resized viewport", () => {
+    const dialog = readSource("src/components/ui/dialog.tsx");
+    const alertDialog = readSource("src/components/ui/alert-dialog.tsx");
+    const sheet = readSource("src/components/ui/sheet.tsx");
+    const ratingDialog = readSource("src/components/RatingDialog.tsx");
+    const confirmation = readSource("src/pages/ConfirmarCodigo.tsx");
+    const recovery = readSource("src/pages/RecuperarSenha.tsx");
+    const reset = readSource("src/pages/ResetPassword.tsx");
+
+    for (const source of [dialog, alertDialog]) {
+      expect(source).toContain("max-h-[calc(100dvh-2rem)]");
+      expect(source).toContain("overflow-y-auto overscroll-contain");
+    }
+
+    expect(ratingDialog).toContain("flex overflow-y-auto");
+    expect(ratingDialog).toContain("my-auto w-full max-w-sm");
+    expect(sheet).toContain("max-h-[calc(100dvh-var(--safe-area-top))] overflow-y-auto overscroll-contain");
+
+    for (const source of [confirmation, recovery, reset]) {
+      expect(source).toContain("min-h-[100dvh]");
+      expect(source).toContain("overflow-y-auto");
+    }
   });
 
   it("supports Instagram-like pinch zoom in the full-screen media viewer", () => {
@@ -293,6 +324,12 @@ describe("mobile visual layout", () => {
     expect(readSource("src/pages/EditarItem.tsx")).toContain("<ScreenLayout refreshable={false}>");
     expect(readSource("src/pages/Perfil.tsx")).not.toContain("ScreenLayout");
     expect(readSource("src/pages/Chamada.tsx")).not.toContain("ScreenLayout");
+  });
+
+  it("keeps the onboarding progress below the iPhone Dynamic Island", () => {
+    const source = readSource("src/pages/Perfil.tsx");
+
+    expect(source).toContain("pt-[calc(var(--safe-area-top)+0.75rem)]");
   });
 
   it("uses only the global pull-to-refresh controller in Chat", () => {

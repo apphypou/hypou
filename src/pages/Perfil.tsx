@@ -157,9 +157,9 @@ const Perfil = () => {
       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} />
 
       {/* Header */}
-      <header className="relative z-40 flex w-full flex-col items-center px-6 pt-2 pb-2">
+      <header className="relative z-40 flex w-full flex-col items-center px-6 pt-[calc(var(--safe-area-top)+0.75rem)] pb-2">
         {/* Back button */}
-        <div className="w-full flex justify-start mb-1">
+        <div className="absolute left-6 top-[calc(var(--safe-area-top)+0.5rem)]">
           <button
             onClick={() => step > 1 && goToStep(step - 1)}
             className={`h-10 w-10 flex items-center justify-center rounded-full text-foreground/60 hover:text-foreground hover:bg-foreground/10 transition-all ${step === 1 ? "opacity-0 pointer-events-none" : ""}`}

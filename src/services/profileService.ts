@@ -13,11 +13,14 @@ interface ProfileUpdate {
 }
 
 export const updateProfile = async (userId: string, data: ProfileUpdate) => {
-  const { error } = await supabase
+  const { data: persistedProfile, error } = await supabase
     .from("profiles")
-    .update(data)
-    .eq("user_id", userId);
+    .upsert({ user_id: userId, ...data }, { onConflict: "user_id" })
+    .select("*")
+    .single();
   if (error) throw error;
+  if (!persistedProfile) throw new Error("Não foi possível salvar o perfil.");
+  return persistedProfile;
 };
 
 export const uploadAvatar = async (userId: string, file: File): Promise<string> => {
