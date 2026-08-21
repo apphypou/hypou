@@ -704,7 +704,7 @@ const EditarItem = () => {
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
 
       {/* Submit */}
-      <div className="item-form-submit relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
+      <div className="item-form-submit keyboard-dismiss-on-input relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent shrink-0">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}

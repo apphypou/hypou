@@ -28,15 +28,17 @@ if (Capacitor.isNativePlatform()) {
   import("@capacitor/keyboard").then(({ Keyboard, KeyboardResize }) => {
     void configureNativeKeyboardResize(Keyboard, KeyboardResize.Native);
 
-    Keyboard.addListener("keyboardWillShow", () => {
+    const showKeyboard = () => {
       document.body.classList.add("keyboard-visible");
-    });
-    Keyboard.addListener("keyboardWillHide", () => {
+    };
+    const hideKeyboard = () => {
       document.body.classList.remove("keyboard-visible");
-    });
-    Keyboard.addListener("keyboardDidHide", () => {
-      document.body.classList.remove("keyboard-visible");
-    });
+    };
+
+    Keyboard.addListener("keyboardWillShow", showKeyboard);
+    Keyboard.addListener("keyboardDidShow", showKeyboard);
+    Keyboard.addListener("keyboardWillHide", hideKeyboard);
+    Keyboard.addListener("keyboardDidHide", hideKeyboard);
   });
 
   // Hide splash screen once app is rendered

@@ -267,7 +267,7 @@ const Perfil = () => {
               </div>
             </main>
 
-            <div className="relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
+            <div className="keyboard-dismiss-on-input relative z-50 w-full p-6 pb-10 bg-gradient-to-t from-background via-background to-transparent">
               <button
                 onClick={handleStep1Next}
                 disabled={saving}

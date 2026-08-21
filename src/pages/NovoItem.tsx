@@ -869,7 +869,7 @@ const NovoItem = () => {
       <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />
 
       {/* Submit */}
-      <div className="item-form-submit fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(0.5rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
+      <div className="item-form-submit keyboard-dismiss-on-input fixed inset-x-0 bottom-0 z-50 bg-background/92 px-6 pb-[calc(0.5rem+var(--safe-area-bottom))] pt-3 backdrop-blur-xl border-t border-foreground/8">
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}

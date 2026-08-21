@@ -228,6 +228,7 @@ describe("mobile visual layout", () => {
     expect(capacitorConfig).toContain("resize: 'native'");
     expect(iosSync).toContain('resize: "native"');
     expect(main).toContain("KeyboardResize.Native");
+    expect(main).toContain('Keyboard.addListener("keyboardDidShow", showKeyboard)');
     expect(css).toContain("body.keyboard-visible .proposal-drawer");
     expect(css).toContain("body.keyboard-visible .proposal-item-list");
     expect(css).toContain("max-height: calc(100dvh - var(--safe-area-top));");
@@ -242,6 +243,7 @@ describe("mobile visual layout", () => {
   it("keeps item forms keyboard-safe and exposes photo source choices", () => {
     const novo = readSource("src/pages/NovoItem.tsx");
     const editar = readSource("src/pages/EditarItem.tsx");
+    const perfil = readSource("src/pages/Perfil.tsx");
     const css = readSource("src/index.css");
 
     for (const source of [novo, editar]) {
@@ -250,6 +252,7 @@ describe("mobile visual layout", () => {
       expect(source).toContain("Escolher da galeria");
       expect(source).toContain("item-form-scroll");
       expect(source).toContain("item-form-submit");
+      expect(source).toContain("keyboard-dismiss-on-input");
       expect(source).toContain("<MediaViewerDialog media={mediaViewer}");
       expect(source).not.toContain("isNativePlatform() ? handleItemPhotos()");
       expect(source).not.toContain("isNativePlatform() ? handleNewPhotos()");
@@ -257,6 +260,9 @@ describe("mobile visual layout", () => {
 
     expect(css).toContain("body.keyboard-visible .item-form-scroll");
     expect(css).toContain("scroll-padding-bottom: calc(9rem + var(--safe-area-bottom));");
+    expect(css).toContain("body.keyboard-visible .keyboard-dismiss-on-input");
+    expect(css).toContain("padding-bottom: calc(1rem + var(--safe-area-bottom));");
+    expect(perfil).toContain("keyboard-dismiss-on-input");
   });
 
   it("keeps form dialogs scrollable inside the resized viewport", () => {

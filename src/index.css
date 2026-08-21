@@ -537,7 +537,13 @@
   }
 
   body.keyboard-visible .item-form-scroll {
-    padding-bottom: calc(7rem + var(--safe-area-bottom));
+    padding-bottom: calc(1rem + var(--safe-area-bottom));
+    scroll-padding-bottom: calc(1rem + var(--safe-area-bottom));
+  }
+
+  /* The native keyboard owns the bottom edge while editing. */
+  body.keyboard-visible .keyboard-dismiss-on-input {
+    display: none;
   }
 
   .shadow-glow-hype {
