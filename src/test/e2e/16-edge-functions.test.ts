@@ -41,6 +41,8 @@ describe("E2E Edge Functions", () => {
     expect(isValidatePriceInput({ name: "x" })).toBe(false));
   it("03 validate-price input value_cents negativo rejeitado", () =>
     expect(isValidatePriceInput({ name: "x", category: "y", condition: "used", value_cents: -1 })).toBe(false));
+  it("03a validate-price aceita imóvel acima de R$ 500 mil", () =>
+    expect(isValidatePriceInput({ name: "Imóvel", category: "Imóveis", condition: "used", value_cents: 190_000_000 })).toBe(true));
   it("04 validate-price output válido", () =>
     expect(isValidatePriceOutput({ valid: true, reason: "ok", suggested_min: 100, suggested_max: 200 })).toBe(true));
   it("05 validate-price output min>max rejeitado", () =>

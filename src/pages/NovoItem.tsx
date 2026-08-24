@@ -471,13 +471,8 @@ const NovoItem = () => {
       toast({ title: "Selecione a condição do item", variant: "destructive" });
       return;
     }
-    // H10: validação de faixa de preço client-side (R$ 1 .. R$ 500.000)
     if (valueCents < 100) {
       toast({ title: "Valor mínimo de R$ 1,00", variant: "destructive" });
-      return;
-    }
-    if (valueCents > 50_000_000) {
-      toast({ title: "Valor máximo de R$ 500.000,00", variant: "destructive" });
       return;
     }
     if (!location.trim()) {

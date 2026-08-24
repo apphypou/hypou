@@ -13,7 +13,7 @@ const BodySchema = z.object({
   name: z.string().min(1).max(255),
   category: z.string().min(1).max(100),
   condition: z.string().max(50).optional(),
-  value_cents: z.number().int().min(0).max(100_000_000),
+  value_cents: z.number().int().min(0),
   description: z.string().max(2000).optional(),
 });
 
