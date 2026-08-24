@@ -11,7 +11,7 @@ const parseCurrencyToCents = (formatted: string): number => {
   return parseInt(digits || "0", 10);
 };
 
-const MAX_PHOTOS = 5;
+const MAX_PHOTOS = 10;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 const isMarginValid = (m: number) => m >= 1 && m <= 100;
@@ -35,8 +35,8 @@ describe("Items: currency", () => {
 });
 
 describe("Items: limits", () => {
-  it("rejects 6th photo", () => {
-    const photos = new Array(5).fill(null);
+  it("rejects 11th photo", () => {
+    const photos = new Array(10).fill(null);
     expect(photos.length >= MAX_PHOTOS).toBe(true);
   });
   it("rejects video over 50MB", () => {

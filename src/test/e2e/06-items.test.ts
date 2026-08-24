@@ -15,7 +15,7 @@ const tradeRange = (value: number, marginDown: number, marginUp: number) => ({
   min: Math.round(value * (1 - marginDown / 100)),
   max: Math.round(value * (1 + marginUp / 100)),
 });
-const validatePhotos = (n: number) => n >= 1 && n <= 5;
+const validatePhotos = (n: number) => n >= 1 && n <= 10;
 const validateVideo = (bytes: number) => bytes <= 50 * 1024 * 1024;
 const validateMargin = (m: number) => m >= 1 && m <= 100;
 const requiredFields = ["name", "category", "market_value"];
@@ -35,8 +35,8 @@ describe("E2E Items", () => {
     expect(r.max).toBe(11500);
   });
   it("05 mínimo 1 foto", () => expect(validatePhotos(1)).toBe(true));
-  it("06 máximo 5 fotos", () => expect(validatePhotos(5)).toBe(true));
-  it("07 rejeita 6 fotos", () => expect(validatePhotos(6)).toBe(false));
+  it("06 máximo 10 fotos", () => expect(validatePhotos(10)).toBe(true));
+  it("07 rejeita 11 fotos", () => expect(validatePhotos(11)).toBe(false));
   it("08 rejeita 0 fotos", () => expect(validatePhotos(0)).toBe(false));
   it("09 vídeo 49MB ok", () => expect(validateVideo(49 * 1024 * 1024)).toBe(true));
   it("10 vídeo 51MB recusado", () => expect(validateVideo(51 * 1024 * 1024)).toBe(false));

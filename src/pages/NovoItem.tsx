@@ -105,7 +105,7 @@ const NovoItem = () => {
   const addPhotoResults = async (results: { file: File; previewUrl: string }[]) => {
     logMediaDiagnostic("item.photo.results_received", { resultCount: results.length }, mediaTraceId);
     if (results.length === 0) return;
-    const availableSlots = 5 - itemPhotos.length;
+    const availableSlots = 10 - itemPhotos.length;
     const accepted = results.slice(0, availableSlots).filter((result) => {
       const validationError = validateImageFile(result.file);
       if (!validationError) {
@@ -161,7 +161,7 @@ const NovoItem = () => {
 
   const handleItemPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const maxNew = 5 - itemPhotos.length;
+    const maxNew = 10 - itemPhotos.length;
     const toAdd = files.slice(0, maxNew);
     logMediaDiagnostic("item.photo.browser_selected", {
       selectedCount: files.length,
@@ -199,7 +199,7 @@ const NovoItem = () => {
         logMediaDiagnostic("item.photo.gallery_requested", undefined, mediaTraceId);
         const results = await choosePhotosFromGallery({
           multiple: true,
-          maxFiles: 5 - itemPhotos.length,
+          maxFiles: 10 - itemPhotos.length,
           traceId: mediaTraceId,
         });
         await addPhotoResults(results);
@@ -672,7 +672,7 @@ const NovoItem = () => {
                   </button>
                 </div>
               ))}
-              {itemPreviews.length < 5 && (
+              {itemPreviews.length < 10 && (
                 <div
                   onClick={() => setPhotoMenuOpen(true)}
                   className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
@@ -690,7 +690,7 @@ const NovoItem = () => {
                 <Camera className="h-7 w-7 text-primary/60" />
               </div>
               <span className="text-sm font-bold text-foreground">Adicionar fotos</span>
-              <span className="text-xs text-muted-foreground">Recomendado mínimo 3 fotos · Até 5 fotos</span>
+              <span className="text-xs text-muted-foreground">Recomendado mínimo 3 fotos · Até 10 fotos</span>
             </div>
           )}
         </div>

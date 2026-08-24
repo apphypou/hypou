@@ -141,16 +141,17 @@ const EditarItem = () => {
   const valueCents = parseCurrencyToCents(itemValue);
 
   const addNewPhotoResults = (results: { file: File; previewUrl: string }[]) => {
-    if (results.length === 0) return;
+    const photosToAdd = results.slice(0, Math.max(0, 10 - totalImages));
+    if (photosToAdd.length === 0) return;
     const startIndex = newPhotos.length;
-    setNewPhotos((prev) => [...prev, ...results.map((r) => r.file)]);
-    setNewPreviews((prev) => [...prev, ...results.map((r) => r.previewUrl)]);
+    setNewPhotos((prev) => [...prev, ...photosToAdd.map((r) => r.file)]);
+    setNewPreviews((prev) => [...prev, ...photosToAdd.map((r) => r.previewUrl)]);
     setEditingNewPhotoIndex(startIndex);
   };
 
   const handleNewPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const maxNew = 5 - totalImages;
+    const maxNew = 10 - totalImages;
     const toAdd = files.slice(0, maxNew);
     addNewPhotoResults(toAdd.map((file) => ({ file, previewUrl: URL.createObjectURL(file) })));
     e.target.value = "";
@@ -169,7 +170,7 @@ const EditarItem = () => {
   const handleChoosePhotos = async () => {
     setPhotoMenuOpen(false);
     if (isNativePlatform()) {
-      const results = await choosePhotosFromGallery({ multiple: true, maxFiles: 5 - totalImages });
+      const results = await choosePhotosFromGallery({ multiple: true, maxFiles: 10 - totalImages });
       addNewPhotoResults(results);
       return;
     }
@@ -514,7 +515,7 @@ const EditarItem = () => {
                 </button>
               </div>
             ))}
-            {totalImages < 5 && (
+            {totalImages < 10 && (
               <div
                 onClick={() => setPhotoMenuOpen(true)}
                 className="w-24 h-24 rounded-2xl bg-card border border-foreground/10 border-dashed flex items-center justify-center shrink-0 cursor-pointer hover:bg-card/80 transition-all"
