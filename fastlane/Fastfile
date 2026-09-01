@@ -16,6 +16,11 @@ platform :ios do
       project: "ios/App/App.xcodeproj",
       scheme: "App",
       export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "app.hypou.mobile" => "Hypou App Store"
+        }
+      },
       output_directory: "build/ios-release"
     )
 

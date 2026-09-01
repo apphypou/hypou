@@ -2,6 +2,7 @@ import { Bookmark, PlusCircle, Share2, SlidersHorizontal } from "lucide-react";
 import emptyChestImg from "@/assets/empty-chest.png";
 import { SkeletonSwipeCard } from "@/components/SkeletonCard";
 import ScreenLayout from "@/components/ScreenLayout";
+import OnboardingTour from "@/components/OnboardingTour";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -715,6 +716,8 @@ const Explorar = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {!isGuest && user && <OnboardingTour userId={user.id} />}
 
       {/* Guest prompt dialog */}
       <GuestPromptDialog

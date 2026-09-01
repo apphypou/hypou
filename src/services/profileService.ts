@@ -6,6 +6,7 @@ interface ProfileUpdate {
   location?: string | null;
   avatar_url?: string;
   onboarding_completed?: boolean;
+  product_tour_completed_at?: string | null;
   bio?: string | null;
   latitude?: number | null;
   longitude?: number | null;

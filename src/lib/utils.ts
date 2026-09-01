@@ -25,7 +25,13 @@ const ERROR_MESSAGES: Array<[RegExp, string]> = [
 const PORTUGUESE_MESSAGE = /[ãõáéíóúç]|\b(não|nao|erro|falha|falhou|tente|selecione|senha|e-mail|email|item|foto|vídeo|video|conversa|chamada|usuário|usuario|permissão|permissao|troca|proposta|conta|câmera|camera|galeria|arquivo|áudio|audio|sessão|sessao|disponível|indisponível)\b/i;
 
 export const getErrorMessage = (error: unknown, fallback = "Não foi possível concluir esta ação. Tente novamente.") => {
-  const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+  const message = error instanceof Error
+    ? error.message
+    : typeof error === "string"
+      ? error
+      : typeof error === "object" && error !== null && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "";
   const translated = ERROR_MESSAGES.find(([pattern]) => pattern.test(message));
 
   if (translated) return translated[1];

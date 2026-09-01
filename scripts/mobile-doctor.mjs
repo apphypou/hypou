@@ -15,7 +15,15 @@ const node = run("node", ["-v"]);
 const major = Number(node.replace(/^v/, "").split(".")[0]);
 if (major < 22 || major > 24) fail(`Use Node >=22 <25 for mobile releases. Current: ${node}`);
 
-run("npm", ["--version"]);
+try {
+  run("npm", ["--version"]);
+} catch {
+  try {
+    run("pnpm", ["--version"]);
+  } catch {
+    fail("npm ou pnpm não está disponível");
+  }
+}
 
 const cwd = process.cwd();
 if (cwd.includes("/Documents/")) {

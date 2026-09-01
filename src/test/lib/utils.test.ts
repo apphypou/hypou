@@ -41,13 +41,17 @@ describe("utils", () => {
   it("13 getErrorMessage usa fallback para valor desconhecido", () => {
     expect(getErrorMessage({ code: "unexpected" }, "Não foi possível concluir.")).toBe("Não foi possível concluir.");
   });
-  it("14 traduz os erros técnicos mais comuns", () => {
+  it("14 preserva a mensagem de erro do PostgREST", () => {
+    expect(getErrorMessage({ code: "P0001", message: "Não é possível alterar o valor de um item com proposta ativa" }))
+      .toBe("Não é possível alterar o valor de um item com proposta ativa");
+  });
+  it("15 traduz os erros técnicos mais comuns", () => {
     expect(getErrorMessage(new Error("Invalid login credentials"))).toBe("E-mail ou senha incorretos.");
     expect(getErrorMessage(new Error("permission denied"))).toBe("Você não tem permissão para concluir esta ação.");
     expect(getErrorMessage(new Error("Failed to fetch"))).toBe("Não foi possível conectar. Verifique sua internet e tente novamente.");
     expect(getErrorMessage(new Error("Unauthorized"))).toBe("Sua sessão expirou. Entre novamente para continuar.");
   });
-  it("15 oculta erro técnico desconhecido", () => {
+  it("16 oculta erro técnico desconhecido", () => {
     expect(getErrorMessage(new Error("unhandled_database_exception"), "Não foi possível salvar.")).toBe("Não foi possível salvar.");
   });
 });
