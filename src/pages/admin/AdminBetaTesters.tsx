@@ -10,9 +10,11 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const csvField = (value: string) => `"${value.replace(/"/g, '""')}"`;
+type PlatformFilter = "all" | "ios" | "android";
 
 const AdminBetaTesters = () => {
   const [search, setSearch] = useState("");
+  const [platform, setPlatform] = useState<PlatformFilter>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { toast } = useToast();
   const { data: testers = [], isLoading, refetch } = useQuery({
@@ -29,8 +31,8 @@ const AdminBetaTesters = () => {
 
   const filtered = useMemo(() => testers.filter((tester) => {
     const haystack = `${tester.first_name} ${tester.last_name} ${tester.email}`.toLowerCase();
-    return haystack.includes(search.toLowerCase());
-  }), [search, testers]);
+    return haystack.includes(search.toLowerCase()) && (platform === "all" || tester.platform === platform);
+  }), [platform, search, testers]);
 
   const selected = testers.filter((tester) => selectedIds.includes(tester.id));
   const pending = selected.filter((tester) => !tester.invited_at);
@@ -47,12 +49,12 @@ const AdminBetaTesters = () => {
       return;
     }
 
-    const csv = ["First Name,Last Name,Email", ...exportable.map((tester) => [tester.first_name, tester.last_name, tester.email].map(csvField).join(","))].join("\n");
+    const csv = ["Email", ...exportable.map((tester) => csvField(tester.email))].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "hypou-testflight-testers.csv";
+    link.download = `hypou-${platform === "all" ? "beta" : platform}-testers.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -104,8 +106,13 @@ const AdminBetaTesters = () => {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar nome ou e-mail" className="h-9 rounded-xl pl-9" />
           </div>
+          <select aria-label="Filtrar por plataforma" value={platform} onChange={(event) => setPlatform(event.target.value as PlatformFilter)} className="h-9 rounded-xl border border-input bg-background px-3 text-sm">
+            <option value="all">iOS e Android</option>
+            <option value="ios">iOS</option>
+            <option value="android">Android</option>
+          </select>
           <Button variant="outline" size="sm" onClick={exportPending} className="rounded-xl">
-            <Download className="mr-2 h-4 w-4" />Exportar pendentes
+            <Download className="mr-2 h-4 w-4" />Exportar e-mails
           </Button>
           <Button size="sm" onClick={markAsInvited} disabled={!pending.length} className="rounded-xl">
             <Send className="mr-2 h-4 w-4" />Marcar convidados
@@ -122,13 +129,14 @@ const AdminBetaTesters = () => {
             <Table>
               <TableHeader><TableRow className="bg-muted/30 hover:bg-muted/30">
                 <TableHead className="w-12"><input aria-label="Selecionar todos os testadores filtrados" type="checkbox" checked={filtered.length > 0 && filtered.every((tester) => selectedIds.includes(tester.id))} onChange={toggleAllFiltered} /></TableHead>
-                <TableHead>Nome</TableHead><TableHead>E-mail</TableHead><TableHead>Status</TableHead><TableHead>Cadastro</TableHead>
+                <TableHead>Nome</TableHead><TableHead>E-mail</TableHead><TableHead>Plataforma</TableHead><TableHead>Status</TableHead><TableHead>Cadastro</TableHead>
               </TableRow></TableHeader>
               <TableBody>{filtered.map((tester) => (
                 <TableRow key={tester.id}>
                   <TableCell><input aria-label={`Selecionar ${tester.email}`} type="checkbox" checked={selectedIds.includes(tester.id)} onChange={() => toggleSelected(tester.id)} /></TableCell>
-                  <TableCell className="font-medium">{tester.first_name} {tester.last_name}</TableCell>
+                  <TableCell className="font-medium">{[tester.first_name, tester.last_name].filter(Boolean).join(" ") || "—"}</TableCell>
                   <TableCell>{tester.email}</TableCell>
+                  <TableCell><Badge variant="outline">{tester.platform === "ios" ? "iOS" : "Android"}</Badge></TableCell>
                   <TableCell><Badge variant={tester.invited_at ? "default" : "secondary"}>{tester.invited_at ? "Convidado" : "Pendente"}</Badge></TableCell>
                   <TableCell className="text-muted-foreground">{new Date(tester.created_at).toLocaleDateString("pt-BR")}</TableCell>
                 </TableRow>

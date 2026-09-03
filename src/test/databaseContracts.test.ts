@@ -52,15 +52,16 @@ describe("mobile database contracts", () => {
     expect(rpcNames).toHaveLength(8);
   });
 
-  it("exposes beta tester fields needed by TestFlight export", () => {
+  it("exposes beta tester platform and registration contract", () => {
     type BetaTester = Tables["beta_testers"]["Row"];
-    const tester: Pick<BetaTester, "first_name" | "last_name" | "email" | "invited_at"> = {
-      first_name: "Ana",
-      last_name: "Silva",
+    type RegistrationArgs = Functions["register_beta_tester"]["Args"];
+    const tester: Pick<BetaTester, "email" | "platform" | "invited_at"> = {
       email: "ana@example.com",
+      platform: "android",
       invited_at: null,
     };
+    const args: RegistrationArgs = { p_email: tester.email, p_platform: tester.platform, p_privacy_accepted: true };
 
-    expect(tester.email).toBe("ana@example.com");
+    expect(args.p_platform).toBe("android");
   });
 });
