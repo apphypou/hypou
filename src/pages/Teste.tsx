@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Apple, ArrowRight, CheckCircle2, Mail, MessageCircle, ShieldCheck, Smartphone, Sparkles, Users } from "lucide-react";
+import { Apple, ArrowRight, CheckCircle2, Mail, MessageCircle, ShieldCheck, Smartphone, Sparkles, UserRound, Users } from "lucide-react";
 import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import authBackground from "@/assets/auth-marketplace-bg.webp";
 import NeonButton from "@/components/NeonButton";
 import { supabase } from "@/integrations/supabase/client";
 
 const Teste = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [platform, setPlatform] = useState<"ios" | "android" | "">("");
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -18,13 +19,14 @@ const Teste = () => {
     event.preventDefault();
     setError("");
 
-    if (!email.trim() || !platform || !privacyAccepted) {
-      setError("Informe seu e-mail, selecione seu celular e aceite o aviso de privacidade.");
+    if (!name.trim() || !email.trim() || !platform || !privacyAccepted) {
+      setError("Informe seu nome e e-mail, selecione seu celular e aceite o aviso de privacidade.");
       return;
     }
 
     setIsSubmitting(true);
     const { error: registrationError } = await supabase.rpc("register_beta_tester", {
+      p_name: name,
       p_email: email,
       p_platform: platform,
       p_privacy_accepted: privacyAccepted,
@@ -88,7 +90,7 @@ const Teste = () => {
                 <p className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-primary">Você está na lista</p>
                 <h2 className="mt-3 text-3xl font-extrabold tracking-tight">Cadastro recebido.</h2>
                 <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-white/60">
-                  Entre no grupo para acompanhar o beta e enviar seu feedback. {platform === "ios" ? "O convite do TestFlight" : "O link do teste no Google Play"} chegará no seu e-mail.
+                  Entre no grupo para acompanhar o beta e enviar seu feedback. O convite de acesso chegará no seu e-mail.
                 </p>
                 <a
                   href="https://chat.whatsapp.com/KWTaRcCEzHcHw5xs0b9ilO"
@@ -109,6 +111,20 @@ const Teste = () => {
 
                 <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                   <label className="block text-sm font-medium text-white/85">
+                    Nome
+                    <span className="relative mt-2 block">
+                      <UserRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                      <input
+                        required
+                        autoComplete="name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className="h-14 w-full rounded-2xl border border-white/15 bg-black/20 pl-11 pr-4 text-white shadow-[0_12px_32px_rgba(0,0,0,0.16)] outline-none transition placeholder:text-white/35 focus:border-primary/70 focus:ring-2 focus:ring-primary/20"
+                      />
+                    </span>
+                  </label>
+
+                  <label className="block text-sm font-medium text-white/85">
                     E-mail
                     <span className="relative mt-2 block">
                       <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
@@ -127,9 +143,9 @@ const Teste = () => {
                     <legend className="text-sm font-medium text-white/85">Seu celular</legend>
                     <div className="mt-2 grid grid-cols-2 gap-3">
                       {[
-                        { value: "ios", label: "iPhone", detail: "TestFlight", icon: Apple },
-                        { value: "android", label: "Android", detail: "Google Play", icon: Smartphone },
-                      ].map(({ value, label, detail, icon: Icon }) => (
+                        { value: "ios", label: "iPhone", icon: Apple },
+                        { value: "android", label: "Android", icon: Smartphone },
+                      ].map(({ value, label, icon: Icon }) => (
                         <label key={value} className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-3.5 transition ${platform === value ? "border-primary bg-primary/10" : "border-white/15 bg-black/20 hover:border-white/30"}`}>
                           <input
                             required
@@ -141,7 +157,7 @@ const Teste = () => {
                             className="sr-only"
                           />
                           <Icon className="h-5 w-5 text-primary" />
-                          <span><span className="block text-sm font-semibold text-white">{label}</span><span className="block text-xs text-white/50">{detail}</span></span>
+                          <span className="text-sm font-semibold text-white">{label}</span>
                         </label>
                       ))}
                     </div>
@@ -176,7 +192,7 @@ const Teste = () => {
             )}
 
             <p className="mt-5 text-center text-xs text-white/45">
-              Convites iOS pelo TestFlight e Android pelo Google Play.
+              Convites enviados por e-mail.
             </p>
           </section>
         </div>

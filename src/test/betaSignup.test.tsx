@@ -14,16 +14,18 @@ describe("Cadastro beta", () => {
     rpc.mockReset();
   });
 
-  it("envia e-mail e plataforma somente após aceitar o aviso de privacidade", async () => {
+  it("envia nome, e-mail e plataforma somente após aceitar o aviso de privacidade", async () => {
     rpc.mockResolvedValue({ data: null, error: null });
     render(<BrowserRouter><Teste /></BrowserRouter>);
 
+    fireEvent.change(screen.getByRole("textbox", { name: "Nome" }), { target: { value: "Ana Silva" } });
     fireEvent.change(screen.getByRole("textbox", { name: "E-mail" }), { target: { value: "ana@example.com" } });
     fireEvent.click(screen.getByRole("radio", { name: /android/i }));
     fireEvent.click(screen.getByRole("checkbox"));
     fireEvent.click(screen.getByRole("button", { name: /quero participar/i }));
 
     await waitFor(() => expect(rpc).toHaveBeenCalledWith("register_beta_tester", {
+      p_name: "Ana Silva",
       p_email: "ana@example.com",
       p_platform: "android",
       p_privacy_accepted: true,
@@ -37,6 +39,6 @@ describe("Cadastro beta", () => {
     fireEvent.click(screen.getByRole("button", { name: /quero participar/i }));
 
     expect(rpc).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert")).toHaveTextContent(/selecione seu celular/i);
+    expect(screen.getByRole("alert")).toHaveTextContent(/informe seu nome/i);
   });
 });

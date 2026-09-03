@@ -1394,6 +1394,7 @@ export type Database = {
       register_beta_tester: {
         Args: {
           p_email: string
+          p_name: string
           p_platform: string
           p_privacy_accepted: boolean
         }

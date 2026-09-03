@@ -60,7 +60,7 @@ describe("mobile database contracts", () => {
       platform: "android",
       invited_at: null,
     };
-    const args: RegistrationArgs = { p_email: tester.email, p_platform: tester.platform, p_privacy_accepted: true };
+    const args: RegistrationArgs = { p_name: "Ana Silva", p_email: tester.email, p_platform: tester.platform, p_privacy_accepted: true };
 
     expect(args.p_platform).toBe("android");
   });
