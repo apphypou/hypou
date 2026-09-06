@@ -203,11 +203,13 @@ describe("mobile visual layout", () => {
     const nav = readSource("src/components/BottomNav.tsx");
     const css = readSource("src/index.css");
 
-    expect(actions).toContain('className="mt-3 flex items-center justify-center gap-7 pointer-events-auto"');
+    expect(actions).toContain('className="flex items-center justify-center gap-7 pointer-events-none"');
+    expect(actions).toContain("swipe-action-button pointer-events-auto");
+    expect(css).toContain(".swipe-action-button {");
     expect(actions).toContain("h-14 w-14");
     expect(actions).toContain("h-6 w-6");
-    expect(actions).toContain("border-white/[0.13]");
-    expect(actions).toContain("rgba(26, 30, 31, 0.72)");
+    expect(css).toContain("border: 1px solid rgba(255, 255, 255, 0.15)");
+    expect(css).toContain("inset 0 1px 1px rgba(255, 255, 255, 0.18)");
     expect(actions).toContain('disabled ? "opacity-50" : ""');
     expect(actions).not.toContain("disabled:opacity-50");
     expect(actions).toContain("opacity: likeHighlight");

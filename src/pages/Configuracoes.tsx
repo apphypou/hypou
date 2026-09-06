@@ -1,9 +1,9 @@
-import { ArrowLeft, LogOut, Info, Smartphone, ChevronRight, Lock, Trash2, Ban, Loader2, FileText, Shield, Sparkles, Check, BellOff } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, ChevronRight, Loader2, Check, Trash2 } from "lucide-react";
+import { App } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
+import { useNavigate } from "react-router-dom";
 import ScreenLayout from "@/components/ScreenLayout";
 import BottomNav from "@/components/BottomNav";
-import IconButton from "@/components/IconButton";
-import GlassCard from "@/components/GlassCard";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,17 @@ const Configuracoes = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [appVersion, setAppVersion] = useState("");
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let active = true;
+    App.getInfo().then(({ version, build }) => {
+      if (active) setAppVersion(`${version} (${build})`);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   // Change password state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
@@ -182,123 +193,75 @@ const Configuracoes = () => {
     }
   };
 
-  const menuItems = [
-    {
-      icon: Lock,
-      label: "Alterar Senha",
-      description: "Trocar a senha da sua conta",
-      onClick: () => setPasswordDialogOpen(true),
-    },
-    {
-      icon: Ban,
-      label: "Usuários Bloqueados",
-      description: "Gerenciar bloqueios",
-      onClick: () => setBlockedDialogOpen(true),
-    },
-    {
-      icon: Sparkles,
-      label: "Categorias de Interesse",
-      description: "Editar o que aparece no Explorar",
-      onClick: () => setCategoriesDialogOpen(true),
-    },
-    {
-      icon: BellOff,
-      label: disablePendingResume ? "Reativar lembrete de proposta" : "Desativar lembrete de proposta",
-      description: disablePendingResume
-        ? "Voltar a mostrar 'Monte sua oferta' ao retornar ao Explorar"
-        : "Não mostrar 'Monte sua oferta' ao retornar ao Explorar",
-      onClick: togglePendingResume,
-    },
-    {
-      icon: FileText,
-      label: "Termos de Uso",
-      description: "Leia os termos da plataforma",
-      onClick: () => navigate("/termos"),
-    },
-    {
-      icon: Shield,
-      label: "Política de Privacidade",
-      description: "Como protegemos seus dados",
-      onClick: () => navigate("/privacidade"),
-    },
-    {
-      icon: Info,
-      label: "Sobre o Hypou",
-      description: "Conheça mais sobre a plataforma",
-      onClick: undefined,
-    },
-    {
-      icon: Smartphone,
-      label: "Versão do App",
-      description: "v1.2.0",
-      onClick: undefined,
-    },
+  const groups = [
+    { title: "Conta", items: [
+      { label: "Alterar senha", onClick: () => setPasswordDialogOpen(true) },
+      { label: "Pessoas bloqueadas", onClick: () => setBlockedDialogOpen(true) },
+    ] },
+    { title: "Preferências", items: [
+      { label: "Interesses", onClick: () => setCategoriesDialogOpen(true) },
+    ] },
+    { title: "Informações", items: [
+      { label: "Termos de uso", onClick: () => navigate("/termos") },
+      { label: "Política de privacidade", onClick: () => navigate("/privacidade") },
+      { label: "Sobre o Hypou", onClick: () => setAboutOpen(true) },
+    ] },
   ];
 
   return (
-    <ScreenLayout>
-      <header className="relative z-40 flex w-full items-center gap-3 px-6 pt-6 pb-4">
-        <IconButton icon={ArrowLeft} size="sm" onClick={() => navigate(-1)} />
-        <span className="text-sm font-bold tracking-wider uppercase text-foreground/80">Configurações</span>
+    <ScreenLayout refreshable={false}>
+      <header className="flex shrink-0 items-center gap-2 px-4 py-3">
+        <button type="button" aria-label="Voltar" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-5 w-5" aria-hidden />
+        </button>
+        <h1 className="text-xl font-semibold tracking-tight">Configurações</h1>
       </header>
 
-      <main className="flex-1 w-full px-5 overflow-y-auto no-scrollbar pb-36">
-        <div className="flex flex-col gap-3 mt-2">
-          {menuItems.map((item) => (
-            <GlassCard
-              key={item.label}
-              hoverable={!!item.onClick}
-              className="p-4 flex items-center gap-4"
-              onClick={item.onClick}
-            >
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <item.icon className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-foreground font-semibold text-sm">{item.label}</h3>
-                <p className="text-foreground/40 text-xs">{item.description}</p>
-              </div>
-              {item.onClick && <ChevronRight className="h-4 w-4 text-foreground/30" />}
-            </GlassCard>
-          ))}
-
-          {/* Delete Account */}
-          <GlassCard
-            hoverable
-            className="p-4 flex items-center gap-4 mt-2 border-destructive/20"
-            onClick={() => setDeleteConfirmOpen(true)}
-          >
-            <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
-              <Trash2 className="h-5 w-5 text-destructive" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-destructive font-semibold text-sm">Excluir Conta</h3>
-              <p className="text-foreground/40 text-xs">Apagar permanentemente sua conta</p>
-            </div>
-          </GlassCard>
-
-          {/* Logout */}
-          <GlassCard
-            hoverable
-            className="p-4 flex items-center gap-4 mt-2 border-danger/20"
-            onClick={handleLogout}
-          >
-            <div className="h-10 w-10 rounded-xl bg-danger/10 flex items-center justify-center shrink-0">
-              {loggingOut ? (
-                <Loader2 className="h-5 w-5 text-danger animate-spin" />
-              ) : (
-                <LogOut className="h-5 w-5 text-danger" />
+      <main className="min-h-0 flex-1 w-full px-5 overflow-y-auto pb-[calc(8rem+var(--safe-area-bottom))]">
+        {groups.map((group) => (
+          <section key={group.title} aria-label={group.title} className="mt-5">
+            <h2 className="mb-2 px-4 text-xs font-medium text-foreground/60">{group.title}</h2>
+            <div className="overflow-hidden rounded-2xl bg-foreground/[0.04]">
+              {group.items.map((item, index) => (
+                <button key={item.label} type="button" onClick={item.onClick} className={`flex min-h-14 w-full items-center justify-between gap-3 px-4 py-3 text-left text-[15px] active:bg-foreground/10 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary ${index ? "border-t border-foreground/[0.07]" : ""}`}>
+                  <span>{item.label}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-foreground/40" aria-hidden />
+                </button>
+              ))}
+              {group.title === "Preferências" && (
+                <div className="flex items-center justify-between gap-4 border-t border-foreground/[0.07] px-4 py-4">
+                  <div>
+                    <label htmlFor="proposal-reminder" className="text-[15px]">Lembrete de proposta</label>
+                    <p id="proposal-reminder-description" className="mt-1 max-w-64 text-xs leading-relaxed text-foreground/60">Lembrar de montar uma oferta ao voltar ao Explorar.</p>
+                  </div>
+                  <button id="proposal-reminder" type="button" role="switch" aria-checked={!disablePendingResume} aria-label="Lembrete de proposta" aria-describedby="proposal-reminder-description" onClick={togglePendingResume} className="group flex min-h-11 w-12 shrink-0 items-center rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
+                    <span className={`flex h-7 w-12 items-center rounded-full p-0.5 transition-colors ${disablePendingResume ? "bg-foreground/25" : "bg-primary"}`}>
+                      <span className={`h-6 w-6 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none ${disablePendingResume ? "translate-x-0" : "translate-x-5"}`} />
+                    </span>
+                  </button>
+                </div>
               )}
             </div>
-            <div className="flex-1">
-              <h3 className="text-danger font-semibold text-sm">Sair da Conta</h3>
-              <p className="text-foreground/40 text-xs">Encerrar sessão atual</p>
-            </div>
-          </GlassCard>
-        </div>
+          </section>
+        ))}
+        <button type="button" disabled={loggingOut} onClick={handleLogout} className="mt-6 flex min-h-14 w-full items-center gap-3 rounded-2xl bg-foreground/[0.04] px-4 py-3 text-left text-[15px] disabled:opacity-50">
+          {loggingOut && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+          {loggingOut ? "Saindo…" : "Sair da conta"}
+        </button>
+        <button type="button" onClick={() => setDeleteConfirmOpen(true)} className="mt-3 min-h-11 rounded-lg px-4 py-2 text-sm text-destructive">Excluir conta</button>
+        <p className="mt-5 px-4 text-xs text-foreground/50">Hypou{appVersion ? ` · ${appVersion}` : ""}</p>
       </main>
 
       <BottomNav activeTab="perfil" />
+
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent className="bg-card border-foreground/10">
+          <DialogHeader><DialogTitle>Sobre o Hypou</DialogTitle></DialogHeader>
+          <p className="text-sm leading-relaxed text-foreground/70">Encontre itens, descubra interesses em comum e combine trocas com outras pessoas.</p>
+          <a href="mailto:hypouapp@gmail.com" className="py-2 text-sm text-primary underline underline-offset-4">hypouapp@gmail.com</a>
+          {appVersion && <p className="text-xs text-foreground/50">Versão {appVersion}</p>}
+        </DialogContent>
+      </Dialog>
 
       {/* Change Password Dialog */}
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>

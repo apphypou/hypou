@@ -26,10 +26,11 @@ vi.mock("@/lib/mediaPreload", () => ({ preloadImage: media.preload, preloadVideo
 vi.mock("@/components/SwipeCard/SwipeOverlays", () => ({ SwipeOverlays: () => null }));
 
 const item = { id: "one", name: "Câmera", category: "Eletrônicos", item_images: [], item_videos: [] };
-const release = (offset: number, velocity: number) => {
+const release = (offset: number, velocity: number, offsetY = 0, velocityY = 0) => {
   act(() => {
     (captured.card!.style!.x as ReturnType<typeof motionValue<number>>).set(offset);
-    captured.card!.onDragEnd!({} as PointerEvent, { offset: { x: offset, y: 0 }, velocity: { x: velocity, y: 0 } } as PanInfo);
+    (captured.card!.style!.y as ReturnType<typeof motionValue<number>>).set(offsetY);
+    captured.card!.onDragEnd!({} as PointerEvent, { offset: { x: offset, y: offsetY }, velocity: { x: velocity, y: velocityY } } as PanInfo);
   });
 };
 
@@ -41,7 +42,7 @@ describe("SwipeCard motion", () => {
 
   it("tracks x directly, without drag resistance, and returns short gestures", () => {
     renderWithProviders(<SwipeCard item={item} onSwipeComplete={vi.fn()} />);
-    expect(captured.card!.drag).toBe("x");
+    expect(captured.card!.drag).toBe(true);
     expect(captured.card!.dragConstraints).toBeUndefined();
     expect(captured.card!.dragDirectionLock).toBeUndefined();
     release(32, 70);
@@ -65,11 +66,10 @@ describe("SwipeCard motion", () => {
       expect(options.duration).toBeLessThanOrEqual(0.32);
       const initialSpeed = options.ease[1] / options.ease[0] * Math.abs(target - Number(offset)) / options.duration;
       expect(initialSpeed).toBeCloseTo(Math.max(0, Number(velocity) * Math.sign(target)));
-      expect(captured.card!.transformTemplate!({ x: offset }, `translateX(${offset}px)`)).toBe(`translate(${offset}px, ${Math.abs(Number(offset))}px)`);
-      expect(captured.card!.transformTemplate!({ x: target }, `translateX(${target}px)`)).toBe(`translate(${target}px, ${Math.abs(target)}px)`);
+      expect(captured.card!.transformTemplate).toBeUndefined();
       expect(complete).not.toHaveBeenCalled();
       fireEvent.click(screen.getByRole("button", { name: "Hypou" }));
-      expect(captured.animate).toHaveBeenCalledOnce();
+      expect(captured.animate).toHaveBeenCalledTimes(2);
       options.onComplete();
       expect(complete).toHaveBeenCalledExactlyOnceWith(direction);
     },
@@ -80,7 +80,27 @@ describe("SwipeCard motion", () => {
     fireEvent.click(screen.getByRole("button", { name: button }));
     const [, target] = captured.animate.mock.calls[0];
     expect(Math.sign(target)).toBe(sign);
-    expect(captured.card!.transformTemplate!({ x: target }, `translateX(${target}px)`)).toBe(`translate(${target}px, ${Math.abs(target)}px)`);
+    expect(captured.animate.mock.calls[1][1]).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: button }).closest(".swipe-card-shell")).toBeNull();
+  });
+
+  it.each([[-800, -600], [800, -600], [-800, 600], [800, 600]])("follows release vector %s, %s", (vx, vy) => {
+    renderWithProviders(<SwipeCard item={item} onSwipeComplete={vi.fn()} />);
+    release(Math.sign(vx) * 100, vx, 40, vy);
+    const [, tx, options] = captured.animate.mock.calls[0];
+    const [, ty, yOptions] = captured.animate.mock.calls[1];
+    expect((ty - 40) / (tx - Math.sign(vx) * 100)).toBeCloseTo(vy / vx);
+    expect(Math.sign(ty - 40)).toBe(Math.sign(vy));
+    expect(yOptions.duration).toBe(options.duration);
+  });
+
+  it("returns a vertical-only gesture without voting", () => {
+    const complete = vi.fn();
+    renderWithProviders(<SwipeCard item={item} onSwipeComplete={complete} />);
+    release(0, 0, -120, -800);
+    expect(captured.animate.mock.calls[0][1]).toBe(0);
+    expect(captured.animate.mock.calls[1][1]).toBe(0);
+    expect(complete).not.toHaveBeenCalled();
   });
 
   it("promotes the already mounted next image without replacing its DOM node", () => {
@@ -94,7 +114,7 @@ describe("SwipeCard motion", () => {
     const readyImage = container.querySelector("img.swipe-media-foreground");
     rerender(<SwipeCard key={next.id} item={next} onSwipeComplete={complete} />);
     expect(container.querySelector("img.swipe-media-foreground")).toBe(readyImage);
-    expect(captured.card!.drag).toBe("x");
+    expect(captured.card!.drag).toBe(true);
   });
 
   it("crossfades the stationary backdrop during dragging and reverses on cancellation", async () => {

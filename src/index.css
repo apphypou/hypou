@@ -496,6 +496,19 @@
     -webkit-backdrop-filter: blur(26px) saturate(118%);
   }
 
+  .swipe-action-button {
+    background: linear-gradient(180deg, rgba(40, 45, 46, 0.82), rgba(17, 20, 21, 0.72));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.18), inset 0 -2px 3px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(16px) saturate(118%);
+    -webkit-backdrop-filter: blur(16px) saturate(118%);
+  }
+
+  .swipe-action-button:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 3px;
+  }
+
   body[data-bottom-nav-hidden="true"] .hypou-bottom-nav-wrapper,
   body:has([data-pull-refresh-disabled="true"]) .hypou-bottom-nav-wrapper {
     opacity: 0;

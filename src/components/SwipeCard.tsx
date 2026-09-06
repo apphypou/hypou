@@ -133,6 +133,7 @@ const SwipeCard = memo(
     ) => {
       const navigate = useNavigate();
       const x = useMotionValue(0);
+      const y = useMotionValue(0);
       const rotate = useTransform(x, [-300, 0, 300], [-4, 0, 4]);
       const revealSource = revealMotionX ?? x;
       const revealProgress = useTransform(revealSource, (value) =>
@@ -268,6 +269,7 @@ const SwipeCard = memo(
           suppressImageTapRef.current = true;
           setIsMediaGestureActive(true);
           x.set(0);
+          y.set(0);
           return;
         }
 
@@ -280,7 +282,7 @@ const SwipeCard = memo(
           gesture.panning = true;
           setIsMediaGestureActive(true);
         }
-      }, [isVideoSlide, standby, x]);
+      }, [isVideoSlide, standby, x, y]);
 
       const handleMediaTouchMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
         if (isVideoSlide || standby) return;
@@ -406,11 +408,13 @@ const SwipeCard = memo(
         exitingRef.current = false;
         hapticDirectionRef.current = null;
         x.set(0);
+        y.set(0);
         return () => {
           ++slideRequestRef.current;
           x.stop();
+          y.stop();
         };
-      }, [item?.id, x]);
+      }, [item?.id, x, y]);
 
       useEffect(() => {
         resetMediaZoom();
@@ -446,15 +450,25 @@ const SwipeCard = memo(
       }, []);
 
       const doExit = useCallback(
-        (direction: "like" | "dislike", velocityX?: number) => {
+        (direction: "like" | "dislike", velocity?: PanInfo["velocity"]) => {
           if (disabled || standby || expanded || mediaZoomRef.current.scale > 1.01 || exitingRef.current) return;
           exitingRef.current = true;
           // Clear even wide screens and the rotated corner. Don't wait for a
           // spring to settle offscreen before making the next card interactive.
           const sign = direction === "like" ? 1 : -1;
-          const exitX = sign * (window.innerWidth + window.innerHeight * 0.08 + 32);
-          const distance = Math.abs(exitX - x.get());
-          const speed = Math.max(0, (velocityX ?? sign * 900) * sign);
+          const moving = velocity && Math.hypot(velocity.x, velocity.y) > 100 && velocity.x * sign > 0;
+          const vector = moving ? velocity : velocity ? { x: x.get(), y: y.get() } : { x: sign, y: 1 };
+          const length = Math.hypot(vector.x, vector.y) || 1;
+          const dx = vector.x / length;
+          const dy = vector.y / length;
+          const margin = 64;
+          const distance = Math.max(0, Math.min(
+            dx ? (window.innerWidth + margin - Math.sign(dx) * x.get()) / Math.abs(dx) : Infinity,
+            dy ? (window.innerHeight + margin - Math.sign(dy) * y.get()) / Math.abs(dy) : Infinity,
+          ));
+          const exitX = x.get() + dx * distance;
+          const exitY = y.get() + dy * distance;
+          const speed = velocity ? Math.max(0, velocity.x * dx + velocity.y * dy) : 900;
           const duration = Math.min(0.32, Math.max(0.12, distance / Math.max(speed, 1400)));
           const ease: [number, number, number, number] = [1 / 3, Math.min(1, speed * duration / Math.max(distance, 1) / 3), 2 / 3, 1];
           animate(x, exitX, {
@@ -464,8 +478,9 @@ const SwipeCard = memo(
             ease,
             onComplete: () => onSwipeComplete(direction),
           });
+          animate(y, exitY, { type: "tween", duration, ease });
         },
-        [disabled, standby, expanded, x, onSwipeComplete]
+        [disabled, standby, expanded, x, y, onSwipeComplete]
       );
 
       useImperativeHandle(ref, () => ({
@@ -479,16 +494,17 @@ const SwipeCard = memo(
           const offset = x.get();
 
           if (Math.abs(velocity) > 400 && Math.abs(info.offset.x) > 12) {
-            doExit(velocity > 0 ? "like" : "dislike", velocity);
+            doExit(velocity > 0 ? "like" : "dislike", info.velocity);
           } else if (offset > CARD_SWIPE_THRESHOLD) {
-            doExit("like", velocity);
+            doExit("like", info.velocity);
           } else if (offset < -CARD_SWIPE_THRESHOLD) {
-            doExit("dislike", velocity);
+            doExit("dislike", info.velocity);
           } else {
             animate(x, 0, { type: "spring", stiffness: 650, damping: 45, mass: 0.8, velocity });
+            animate(y, 0, { type: "spring", stiffness: 650, damping: 45, mass: 0.8, velocity: info.velocity.y });
           }
         },
-        [doExit, x, expanded]
+        [doExit, x, y, expanded]
       );
 
       const ownerProfile = item?.profiles as any;
@@ -536,6 +552,7 @@ const SwipeCard = memo(
           }`}
           style={{
             x: standby ? 0 : x,
+            y: standby ? 0 : y,
             rotate: standby || expanded ? 0 : rotate,
             scale: standby ? standbyScale : expanded ? 1 : liftScale,
             boxShadow: standby || expanded ? undefined : "0 18px 36px -12px rgba(0,0,0,0.42)",
@@ -545,11 +562,7 @@ const SwipeCard = memo(
             borderRadius: "1.75rem",
             ...(standby ? { opacity: standbyOpacity } : {}),
           }}
-          transformTemplate={standby || expanded ? undefined : ({ x: offset = 0 }, transform) => {
-            const horizontal = Number.parseFloat(String(offset)) || 0;
-            return transform.replace(/translateX\([^)]*\)/, `translate(${horizontal}px, ${Math.abs(horizontal)}px)`);
-          }}
-          drag={disabled || standby || expanded || isMediaGestureActive || mediaZoom.scale > 1.01 ? false : "x"}
+          drag={!(disabled || standby || expanded || isMediaGestureActive || mediaZoom.scale > 1.01)}
           dragMomentum={false}
           onPointerDownCapture={(event) => {
             if (exitingRef.current) event.stopPropagation();
@@ -895,18 +908,22 @@ const SwipeCard = memo(
                     </span>
                   </button>
 
-                  <SwipeActionButtons
-                    x={x}
-                    disabled={disabled}
-                    standby={standby}
-                    onDislike={() => doExit("dislike")}
-                    onLike={() => doExit("like")}
-                  />
+                  <div className="mt-3 h-14" aria-hidden />
                 </div>
               </div>
             )}
           </div>
         </motion.div>
+        {!standby && !expanded && (
+          <div className="swipe-fixed-actions absolute inset-x-0 bottom-[calc(var(--safe-area-bottom)+4.25rem)] z-[70] pointer-events-none" onPointerDown={(event) => event.stopPropagation()}>
+            <SwipeActionButtons
+              x={x}
+              disabled={disabled || mediaZoom.scale > 1.01}
+              onDislike={() => doExit("dislike")}
+              onLike={() => doExit("like")}
+            />
+          </div>
+        )}
         </>
       );
     }
