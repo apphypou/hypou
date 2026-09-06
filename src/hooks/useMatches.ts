@@ -19,8 +19,8 @@ export const useMatches = () => {
     queryKey: ["matches", user?.id],
     queryFn: () => getMatches(user!.id),
     enabled: !!user,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30_000,
+    refetchOnMount: true,
     refetchOnReconnect: true,
   });
 };
@@ -42,8 +42,8 @@ export const useMatch = (matchId: string | null) => {
     queryKey: ["match", matchId],
     queryFn: () => getMatch(matchId!, user!.id),
     enabled: !!user && !!matchId,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 30_000,
+    refetchOnMount: true,
     refetchOnReconnect: true,
   });
 };

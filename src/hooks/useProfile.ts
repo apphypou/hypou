@@ -50,12 +50,19 @@ export const useProfile = () => {
   const itemsQuery = useQuery({
     queryKey: ["my-items", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("items")
-        .select("*, item_images(*)")
-        .eq("user_id", user!.id)
-        .neq("status", "deleted")
-        .order("created_at", { ascending: false });
+      const [{ data, error }, { data: completedMatches }] = await Promise.all([
+        supabase
+          .from("items")
+          .select("*, item_images(*)")
+          .eq("user_id", user!.id)
+          .neq("status", "deleted")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("matches")
+          .select("id,item_a_id,item_b_id,status")
+          .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
+          .eq("status", "completed"),
+      ]);
       if (error) throw error;
 
       const items = data || [];
@@ -63,12 +70,6 @@ export const useProfile = () => {
 
       const itemIds = new Set(items.map((item) => item.id));
       const completedMatchItemIds = new Set<string>();
-
-      const { data: completedMatches } = await supabase
-        .from("matches")
-        .select("id,item_a_id,item_b_id,status")
-        .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
-        .eq("status", "completed");
 
       const completedMatchIds = (completedMatches || []).map((match: any) => match.id);
       for (const match of completedMatches || []) {
@@ -100,24 +101,24 @@ export const useProfile = () => {
   const statsQuery = useQuery({
     queryKey: ["profile-stats", user?.id],
     queryFn: async () => {
-      // Total proposals (matches)
-      const { count: totalProposals } = await supabase
-        .from("matches")
-        .select("*", { count: "exact", head: true })
-        .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`);
-
-      // Completed trades
-      const { count: totalTrades } = await supabase
-        .from("matches")
-        .select("*", { count: "exact", head: true })
-        .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
-        .eq("status", "completed");
-
-      // Average rating
-      const { data: ratings } = await supabase
-        .from("ratings")
-        .select("score")
-        .eq("rated_id", user!.id);
+      const [proposalsResult, tradesResult, ratingsResult] = await Promise.all([
+        supabase
+          .from("matches")
+          .select("id", { count: "exact", head: true })
+          .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`),
+        supabase
+          .from("matches")
+          .select("id", { count: "exact", head: true })
+          .or(`user_a_id.eq.${user!.id},user_b_id.eq.${user!.id}`)
+          .eq("status", "completed"),
+        supabase
+          .from("ratings")
+          .select("score")
+          .eq("rated_id", user!.id),
+      ]);
+      const totalProposals = proposalsResult.count;
+      const totalTrades = tradesResult.count;
+      const ratings = ratingsResult.data;
 
       let avgRating: number | null = null;
       if (ratings && ratings.length > 0) {
@@ -138,7 +139,9 @@ export const useProfile = () => {
     profile: profileQuery.data,
     items: itemsQuery.data ?? [],
     stats: statsQuery.data,
-    isLoading: profileQuery.isLoading || itemsQuery.isLoading,
+    isLoading: profileQuery.isLoading,
+    isItemsLoading: itemsQuery.isLoading,
+    isStatsLoading: statsQuery.isLoading,
     refetchProfile: profileQuery.refetch,
     refetchItems: itemsQuery.refetch,
   };

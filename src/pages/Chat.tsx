@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { isNewHype } from "@/lib/conversationHype";
 import { getErrorMessage } from "@/lib/utils";
+import { cdnThumb } from "@/lib/imageUrl";
 
 const Chat = () => {
   const [showArchived, setShowArchived] = useState(false);
@@ -218,7 +219,7 @@ const Chat = () => {
                             <div>
                               {conv.other_item.image_url ? (
                                 <img
-                                  src={conv.other_item.image_url}
+                                  src={cdnThumb(conv.other_item.image_url)}
                                   alt={conv.other_item.name || ""}
                                   className="h-20 w-20 rounded-2xl object-cover border border-pink/50 shadow-[0_0_18px_hsl(var(--pink)/0.18)]"
                                 />
@@ -340,7 +341,7 @@ const Chat = () => {
                   >
                     {conv.other_item.image_url ? (
                       <img
-                        src={conv.other_item.image_url}
+                        src={cdnThumb(conv.other_item.image_url)}
                         alt={conv.other_item.name || ""}
                         className="h-14 w-14 rounded-xl border border-foreground/10 object-cover"
                       />

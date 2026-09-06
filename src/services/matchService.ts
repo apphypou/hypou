@@ -76,34 +76,32 @@ export const getMatches = async (userId: string): Promise<MatchWithDetails[]> =>
 
   const uniqueIds = [...new Set(otherUserIds)];
   
-  let profilesMap: Record<string, any> = {};
-  if (uniqueIds.length > 0) {
-    const { data: profiles } = await supabase
+  const matchIds = filteredData.map((m: any) => m.id);
+  const [profilesResult, matchItemsResult] = await Promise.all([
+    uniqueIds.length > 0 ? supabase
       .from("public_profiles" as any)
       .select("user_id, display_name, avatar_url, location")
-      .in("user_id", uniqueIds);
-    
-    ((profiles || []) as any[]).forEach((p) => {
-      profilesMap[p.user_id] = p;
-    });
-  }
-
-  // Load match_items (multi-item proposals) for these matches
-  const matchIds = filteredData.map((m: any) => m.id);
-  const itemsBySideMap: Record<string, { a: any[]; b: any[] }> = {};
-  if (matchIds.length > 0) {
-    const { data: miRows } = await supabase
+      .in("user_id", uniqueIds) : Promise.resolve({ data: [] }),
+    matchIds.length > 0 ? supabase
       .from("match_items" as any)
       .select(`
         match_id, side,
         item:item_id (id, name, market_value, category, location, item_images (image_url, position))
       `)
-      .in("match_id", matchIds);
-    ((miRows || []) as any[]).forEach((row: any) => {
-      const bucket = (itemsBySideMap[row.match_id] = itemsBySideMap[row.match_id] || { a: [], b: [] });
-      if (row.item) bucket[row.side as "a" | "b"].push(row.item);
-    });
-  }
+      .in("match_id", matchIds) : Promise.resolve({ data: [] }),
+  ]);
+
+  const profilesMap: Record<string, any> = {};
+  (((profilesResult as any).data || []) as any[]).forEach((p) => {
+    profilesMap[p.user_id] = p;
+  });
+
+  // Load match_items (multi-item proposals) for these matches
+  const itemsBySideMap: Record<string, { a: any[]; b: any[] }> = {};
+  ((((matchItemsResult as any).data || []) as any[])).forEach((row: any) => {
+    const bucket = (itemsBySideMap[row.match_id] = itemsBySideMap[row.match_id] || { a: [], b: [] });
+    if (row.item) bucket[row.side as "a" | "b"].push(row.item);
+  });
 
   return filteredData.map((m: any) => {
     const isUserA = m.user_a_id === userId;

@@ -27,8 +27,8 @@ const ProtectedRoute = ({ children, requireOnboarding = true }: ProtectedRoutePr
       return data;
     },
     enabled: !!user && requireOnboarding,
-    staleTime: 0,
-    refetchOnMount: "always",
+    staleTime: 5 * 60_000,
+    refetchOnMount: true,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   });

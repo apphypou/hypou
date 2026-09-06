@@ -10,6 +10,9 @@ interface MessageListProps {
   isLoading: boolean;
   currentUserId: string | undefined;
   onDeleteMessage?: (messageId: string) => void;
+  hasOlderMessages?: boolean;
+  isLoadingOlder?: boolean;
+  onLoadOlder?: () => void;
 }
 
 const formatTime = (dateStr: string) => {
@@ -59,7 +62,7 @@ const renderMessageContent = (msg: Message, isMine: boolean, openMedia: (media: 
 };
 
 export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
-  ({ messages, isLoading, currentUserId, onDeleteMessage }, ref) => {
+  ({ messages, isLoading, currentUserId, onDeleteMessage, hasOlderMessages, isLoadingOlder, onLoadOlder }, ref) => {
     const [mediaViewer, setMediaViewer] = useState<MediaViewerItem | null>(null);
     const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -87,7 +90,21 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
               </p>
             </div>
           ) : (
-            messages.map((msg) => {
+            <>
+              {hasOlderMessages && (
+                <div className="flex justify-center pb-2">
+                  <button
+                    type="button"
+                    onClick={onLoadOlder}
+                    disabled={isLoadingOlder}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-foreground/10 bg-card/70 px-4 text-xs font-medium text-foreground/65 disabled:opacity-50"
+                  >
+                    {isLoadingOlder && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Mensagens anteriores
+                  </button>
+                </div>
+              )}
+              {messages.map((msg) => {
               const isMine = msg.sender_id === currentUserId;
               const isSystem = msg.message_type === "system";
               const canDelete = isMine && !isSystem && !msg.deleted_at && !!onDeleteMessage;
@@ -153,7 +170,8 @@ export const MessageList = forwardRef<HTMLDivElement, MessageListProps>(
                   </div>
                 </div>
               );
-            })
+              })}
+            </>
           )}
         </div>
         <MediaViewerDialog media={mediaViewer} onOpenChange={(open) => !open && setMediaViewer(null)} />

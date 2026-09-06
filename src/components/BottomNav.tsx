@@ -5,6 +5,7 @@ import { useTradeBadgeCount } from "@/hooks/useTradeBadgeCount";
 import { motion } from "framer-motion";
 import { Capacitor } from "@capacitor/core";
 import { shouldHideBottomNav } from "@/lib/bottomNavVisibility";
+import { useEffect } from "react";
 
 type TabId = "explorar" | "shorts" | "trocas" | "chat" | "perfil";
 
@@ -32,6 +33,13 @@ const BottomNav = ({ activeTab }: BottomNavProps) => {
   const tradeCount = useTradeBadgeCount();
   const bottomOffset = Capacitor.isNativePlatform() ? "-0.5rem" : "0.75rem";
   const pathname = typeof window === "undefined" ? "" : window.location.pathname;
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      Object.keys(routePrefetchers).forEach(prefetch);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   if (shouldHideBottomNav(pathname, false)) return null;
 

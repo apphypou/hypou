@@ -33,11 +33,12 @@ import { isNativePlatform, pickAvatar } from "@/lib/nativeCamera";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
 import MediaViewerDialog, { type MediaViewerItem } from "@/components/MediaViewerDialog";
 import { useUserRatingsList } from "@/hooks/useRatings";
+import { cdnThumb } from "@/lib/imageUrl";
 
 const MeuPerfil = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { profile, items, stats, isLoading, refetchProfile, refetchItems } = useProfile();
+  const { profile, items, stats, isLoading, isItemsLoading, isStatsLoading, refetchProfile, refetchItems } = useProfile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -203,7 +204,7 @@ const MeuPerfil = () => {
                 <img
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full opacity-90 hover:opacity-100 transition-opacity"
-                  src={profile?.avatar_url || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile?.display_name || "U")}
+                  src={cdnThumb(profile?.avatar_url) || "https://ui-avatars.com/api/?name=" + encodeURIComponent(profile?.display_name || "U")}
                 />
               </div>
               <button
@@ -252,7 +253,7 @@ const MeuPerfil = () => {
                 }`}
               >
                 <span className={`text-xl font-bold mb-0.5 ${stat.highlight ? "text-primary" : "text-foreground"}`}>
-                  {stat.value}
+                  {isStatsLoading ? <Skeleton className="h-6 w-8" /> : stat.value}
                 </span>
                 <span
                   className={`mt-1 text-[10px] font-bold uppercase tracking-[0.12em] ${
@@ -325,7 +326,7 @@ const MeuPerfil = () => {
                       >
                         <div className="h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted border border-foreground/10">
                           {mainImage ? (
-                            <img alt={item.name} className="w-full h-full object-cover opacity-80" src={mainImage.image_url} draggable={false} />
+                            <img alt={item.name} className="w-full h-full object-cover opacity-80" src={cdnThumb(mainImage.image_url)} draggable={false} />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-foreground/20 text-xs">Sem foto</div>
                           )}
@@ -341,6 +342,11 @@ const MeuPerfil = () => {
                   })}
                 </div>
               )
+            ) : isItemsLoading ? (
+                <div className="space-y-3 pb-24">
+                  <Skeleton className="h-28 rounded-2xl" />
+                  <Skeleton className="h-28 rounded-2xl" />
+                </div>
             ) : items.length === 0 ? (
                 <GlassCard className="mb-24 p-5 flex flex-col items-center gap-2.5 text-center">
                   <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -395,7 +401,7 @@ const MeuPerfil = () => {
                             <img
                               alt={item.name}
                               className="w-full h-full object-cover opacity-80"
-                              src={mainImage.image_url}
+                              src={cdnThumb(mainImage.image_url)}
                               draggable={false}
                             />
                           ) : (

@@ -61,6 +61,7 @@ export const getConversationIdForMatch = async (matchId: string): Promise<string
 };
 
 export type ConversationArchiveMode = "main" | "archived" | "all";
+export const CHAT_MESSAGE_PAGE_SIZE = 50;
 
 export const getArchivedConversationIds = async (userId: string): Promise<Set<string>> => {
   const { data, error } = await (supabase as any)
@@ -130,40 +131,47 @@ export const getConversations = async (
   if (matchErr) throw matchErr;
   if (!matches || matches.length === 0) return [];
 
+  const visibleMatches = matches.filter((match: any) =>
+    ["accepted", "completed", "cancelled", "rejected"].includes(match.status)
+  );
+
   // Collect other user IDs and conversation IDs
   const otherUserIds = new Set<string>();
   const conversationIds: string[] = [];
 
-  matches.forEach((m: any) => {
+  visibleMatches.forEach((m: any) => {
     const otherId = m.user_a_id === userId ? m.user_b_id : m.user_a_id;
     otherUserIds.add(otherId);
     const conv = Array.isArray(m.conversations) ? m.conversations[0] : m.conversations;
     if (conv) conversationIds.push(conv.id);
   });
 
-  // Fetch profiles
-  const { data: profiles } = await supabase
-    .from("public_profiles" as any)
-    .select("user_id, display_name, avatar_url")
-    .in("user_id", [...otherUserIds]);
+  const [profilesResult, messagesResult, archivedIds, hypeStatesResult] = await Promise.all([
+    otherUserIds.size > 0 ? supabase
+      .from("public_profiles" as any)
+      .select("user_id, display_name, avatar_url")
+      .in("user_id", [...otherUserIds]) : Promise.resolve({ data: [] }),
+    conversationIds.length > 0 ? supabase
+      .from("messages")
+      .select("*")
+      .in("conversation_id", conversationIds)
+      .order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    archiveMode === "all" ? Promise.resolve(new Set<string>()) : getArchivedConversationIds(userId),
+    archiveMode === "all" ? Promise.resolve({ data: [], error: null }) : (supabase as any)
+      .from("conversation_hype_states")
+      .select("conversation_id, opened_at")
+      .eq("user_id", userId),
+  ]);
 
   const profileMap: Record<string, any> = {};
-  ((profiles || []) as any[]).forEach((p) => { profileMap[p.user_id] = p; });
+  ((((profilesResult as any).data || []) as any[])).forEach((p) => { profileMap[p.user_id] = p; });
 
   // Fetch last visible message for each conversation.
   const lastMessages: Record<string, Message> = {};
   const unreadCounts: Record<string, number> = {};
 
-  if (conversationIds.length > 0) {
-    // Batch: fetch recent messages for all conversations at once
-    const { data: allMessages } = await supabase
-      .from("messages")
-      .select("*")
-      .in("conversation_id", conversationIds)
-      .order("created_at", { ascending: false });
-
-    if (allMessages) {
-      const visibleMessages = (allMessages as Message[]).filter((message) => !message.deleted_at);
+  if ((messagesResult as any).data) {
+      const visibleMessages = ((messagesResult as any).data as Message[]).filter((message) => !message.deleted_at);
       Object.assign(lastMessages, getLatestNonSystemMessagesByConversation(visibleMessages));
 
       for (const msg of visibleMessages) {
@@ -171,13 +179,11 @@ export const getConversations = async (
           unreadCounts[msg.conversation_id] = (unreadCounts[msg.conversation_id] || 0) + 1;
         }
       }
-    }
   }
 
-  const conversations = matches
+  const conversations = visibleMatches
     // Preserve the audit trail after a refusal, cancellation, block, or completed
     // trade. Sending remains controlled by the match status in Conversa.
-    .filter((m: any) => ["accepted", "completed", "cancelled", "rejected"].includes(m.status))
     .map((m: any) => {
       const isUserA = m.user_a_id === userId;
       const otherId = isUserA ? m.user_b_id : m.user_a_id;
@@ -212,11 +218,7 @@ export const getConversations = async (
   const sorted = sortConversationsByActivity(conversations);
   if (archiveMode === "all") return sorted;
 
-  const archivedIds = await getArchivedConversationIds(userId);
-  const { data: hypeStates, error: hypeStatesError } = await (supabase as any)
-    .from("conversation_hype_states")
-    .select("conversation_id, opened_at")
-    .eq("user_id", userId);
+  const { data: hypeStates, error: hypeStatesError } = hypeStatesResult as any;
 
   if (hypeStatesError) throw hypeStatesError;
   const hypeOpenedAtByConversation = new Map(
@@ -237,18 +239,22 @@ export const getConversations = async (
   );
 };
 
-export const getMessages = async (conversationId: string): Promise<Message[]> => {
-  const { data, error } = await supabase
+export const getMessages = async (conversationId: string, before?: string): Promise<Message[]> => {
+  let query = supabase
     .from("messages")
     .select("*")
     .eq("conversation_id", conversationId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .limit(CHAT_MESSAGE_PAGE_SIZE);
+  if (before) query = query.lt("created_at", before);
+  const { data, error } = await query;
 
   if (error) throw error;
-  return Promise.all((data || []).map((message: any) => resolveMessageMedia({
+  const page = await Promise.all((data || []).map((message: any) => resolveMessageMedia({
     ...message,
     message_type: message.message_type as MessageType,
   })));
+  return page.reverse();
 };
 
 export const resolveMessageMedia = async (message: Message): Promise<Message> => {

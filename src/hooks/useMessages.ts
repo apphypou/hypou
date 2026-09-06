@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeInvalidate } from "@/hooks/useRealtimeInvalidate";
@@ -15,6 +15,7 @@ import {
   markConversationHypeOpened,
   unarchiveConversation,
   type ConversationArchiveMode,
+  CHAT_MESSAGE_PAGE_SIZE,
   type Message,
   type MessageType,
 } from "@/services/messageService";
@@ -38,17 +39,39 @@ export const useConversations = (archiveMode: ConversationArchiveMode = "main") 
     queryKey: ["conversations", user?.id, archiveMode],
     queryFn: () => getConversations(user!.id, archiveMode),
     enabled: !!user,
+    staleTime: 30_000,
   });
+};
+
+type MessagePages = InfiniteData<Message[], string | null>;
+
+const upsertMessageInPages = (current: MessagePages | undefined, message: Message): MessagePages => {
+  if (!current) return { pages: [[message]], pageParams: [null] };
+
+  let found = false;
+  const pages = current.pages.map((page) => page.map((existing) => {
+    if (existing.id !== message.id) return existing;
+    found = true;
+    return message;
+  }));
+
+  if (!found) pages[0] = [...(pages[0] || []), message];
+  return { ...current, pages };
 };
 
 export const useMessages = (conversationId: string | null) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const query = useQuery({
+  const query = useInfiniteQuery({
     queryKey: ["messages", conversationId],
-    queryFn: () => getMessages(conversationId!),
+    queryFn: ({ pageParam }) => getMessages(conversationId!, pageParam || undefined),
+    initialPageParam: null as string | null,
+    getNextPageParam: (oldestPage) =>
+      oldestPage.length === CHAT_MESSAGE_PAGE_SIZE ? oldestPage[0]?.created_at || undefined : undefined,
+    select: (data) => [...data.pages].reverse().flat(),
     enabled: !!conversationId && !!user,
+    staleTime: 30_000,
   });
 
   // Mark as read when viewing
@@ -65,13 +88,8 @@ export const useMessages = (conversationId: string | null) => {
     const unsubscribe = subscribeToMessages(conversationId, (raw: any) => {
       if (!raw?.id) return;
       const newMsg: Message = { ...raw, message_type: raw.message_type as MessageType };
-      queryClient.setQueryData<Message[]>(["messages", conversationId], (old) => {
-        if (!old) return [newMsg];
-        if (old.some((m) => m.id === newMsg.id)) {
-          return old.map((m) => (m.id === newMsg.id ? newMsg : m));
-        }
-        return [...old, newMsg];
-      });
+      queryClient.setQueryData<MessagePages>(["messages", conversationId], (old) =>
+        upsertMessageInPages(old, newMsg));
 
       // Also refresh conversations list for last_message update
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
@@ -136,11 +154,8 @@ export const useSendMessage = (conversationId: string | null) => {
     },
     onSuccess: (newMsg) => {
       const msg: Message = { ...newMsg, message_type: newMsg.message_type as MessageType };
-      queryClient.setQueryData<Message[]>(["messages", conversationId], (old) => {
-        if (!old) return [msg];
-        if (old.some((m) => m.id === msg.id)) return old;
-        return [...old, msg];
-      });
+      queryClient.setQueryData<MessagePages>(["messages", conversationId], (old) =>
+        upsertMessageInPages(old, msg));
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
   });

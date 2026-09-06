@@ -10,7 +10,7 @@ import type { MessageType } from "@/services/messageService";
 import { toast } from "@/hooks/use-toast";
 import { createReport, blockUser, isConversationBlocked } from "@/services/reportService";
 import { startCall } from "@/services/callService";
-import { cancelProposal, confirmTrade, getMatch, getMatches } from "@/services/matchService";
+import { cancelProposal, confirmTrade, getMatch } from "@/services/matchService";
 import { describeCallError, getCallRuntimeDiagnostics, preflightCallMedia } from "@/lib/callDiagnostics";
 import { getErrorMessage } from "@/lib/utils";
 import { CheckCircle2, Loader2 } from "lucide-react";
@@ -47,8 +47,7 @@ const useConversationDetails = (conversationId: string | null) => {
       if (conversationError) throw conversationError;
       if (!conv?.match_id) throw new Error("Conversa sem troca vinculada");
 
-      const matches = await getMatches(user.id);
-      const match = matches.find((item) => item.id === conv.match_id) || await getMatch(conv.match_id, user.id);
+      const match = await getMatch(conv.match_id, user.id);
 
       if (!match) throw new Error("Troca da conversa não encontrada");
 
@@ -74,6 +73,7 @@ const useConversationDetails = (conversationId: string | null) => {
       };
     },
     enabled: !!conversationId && !!user,
+    staleTime: 30_000,
   });
 };
 
@@ -93,7 +93,13 @@ const isLikelyPlayableAudio = async (blob: Blob, type: string) => {
 
 const Conversa = () => {
   const { conversationId } = useParams<{ conversationId: string }>();
-  const { data: messages = [], isLoading } = useMessages(conversationId || null);
+  const {
+    data: messages = [],
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMessages(conversationId || null);
   const { data: details, isLoading: detailsLoading } = useConversationDetails(conversationId || null);
   const { mutate: send, isPending: sending } = useSendMessage(conversationId || null);
   const { mutateAsync: uploadMedia } = useUploadChatMedia(conversationId || null);
@@ -238,11 +244,22 @@ const Conversa = () => {
 
   const showSafetyDialog = chatTermsAccepted === false;
 
+  const latestMessageId = messages[messages.length - 1]?.id;
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [latestMessageId]);
+
+  const handleLoadOlderMessages = useCallback(async () => {
+    const container = scrollRef.current;
+    const previousHeight = container?.scrollHeight || 0;
+    await fetchNextPage();
+    requestAnimationFrame(() => {
+      if (container) container.scrollTop += container.scrollHeight - previousHeight;
+    });
+  }, [fetchNextPage]);
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -552,6 +569,9 @@ const Conversa = () => {
         isLoading={isLoading}
         currentUserId={user?.id}
         onDeleteMessage={handleDeleteMessage}
+        hasOlderMessages={!!hasNextPage}
+        isLoadingOlder={isFetchingNextPage}
+        onLoadOlder={handleLoadOlderMessages}
       />
 
       {chatLocked && (
