@@ -18,11 +18,17 @@ export const getPostLoginRedirectDecision = ({
 
   const landedOnEntry = ENTRY_PATHS.has(pathname);
 
-  if (postLoginRedirect) {
+  const safeRedirect = postLoginRedirect?.startsWith("/")
+    && !postLoginRedirect.startsWith("//")
+    && !postLoginRedirect.includes("\\")
+    ? postLoginRedirect
+    : null;
+
+  if (safeRedirect) {
     if (landedOnEntry) {
       return {
         type: "navigate",
-        to: postLoginRedirect,
+        to: safeRedirect,
         clearPostLoginRedirect: true,
       };
     }

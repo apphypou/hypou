@@ -30,11 +30,11 @@ const LandingFooter = () => {
             Contato
           </p>
           <a
-            href="mailto:contato@hypou.app"
+            href="mailto:hypouapp@gmail.com"
             className="flex items-center gap-2 hover:text-primary transition-colors"
           >
             <Mail className="h-4 w-4" />
-            contato@hypou.app
+            hypouapp@gmail.com
           </a>
           <a
             href="https://instagram.com/hypou.app"

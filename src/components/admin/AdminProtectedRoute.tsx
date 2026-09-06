@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { type AdminRole, useAdminRole } from "@/hooks/useAdminRole";
+import AdminMfaGate from "@/components/admin/AdminMfaGate";
 
 const AdminProtectedRoute = ({ children, allowedRoles = ["admin", "moderator"] }: { children: React.ReactNode; allowedRoles?: AdminRole[] }) => {
   const { user, loading: authLoading } = useAuth();
@@ -32,7 +33,7 @@ const AdminProtectedRoute = ({ children, allowedRoles = ["admin", "moderator"] }
     );
   }
 
-  return <>{children}</>;
+  return <AdminMfaGate>{children}</AdminMfaGate>;
 };
 
 export default AdminProtectedRoute;

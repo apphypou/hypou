@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { hasAal2 } from "../_shared/mfa.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,6 +27,7 @@ Deno.serve(async (req) => {
     const callerClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user: caller } } = await callerClient.auth.getUser();
     if (!caller) throw new Error("Unauthorized");
+    if (!hasAal2(authHeader)) throw new Error("MFARequired");
 
     const admin = createClient(url, serviceKey);
     const { data: role } = await admin.from("user_roles").select("role").eq("user_id", caller.id).eq("role", "admin").maybeSingle();
@@ -87,7 +89,7 @@ Deno.serve(async (req) => {
     await admin.from("admin_audit_logs").insert({ actor_id: caller.id, action: "admin_role_changed", target_id: body.userId, metadata: { role: body.role } });
     return Response.json({ ok: true }, { headers: corsHeaders });
   } catch (error) {
-    const status = error instanceof z.ZodError ? 400 : String(error).includes("Unauthorized") ? 401 : 500;
+    const status = error instanceof z.ZodError ? 400 : String(error).includes("Unauthorized") ? 401 : String(error).includes("MFARequired") ? 403 : 500;
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Erro inesperado" }), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

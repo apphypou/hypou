@@ -4,8 +4,11 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
-import { getNativeAuthPathFromUrl } from "@/lib/authRedirect";
+import { consumeOAuthPending, getNativeAuthPathFromUrl } from "@/lib/authRedirect";
 import { getPostLoginRedirectDecision } from "@/lib/authRedirectState";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/utils";
 
 const POST_LOGIN_KEY = "postLoginRedirect";
 
@@ -20,6 +23,8 @@ const POST_LOGIN_KEY = "postLoginRedirect";
 const AuthRedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const handledLaunchUrlRef = useRef(false);
   const handledAuthUrlsRef = useRef(new Set<string>());
 
@@ -41,23 +46,14 @@ const AuthRedirectHandler = () => {
 
       const parsed = new URL(url);
       const query = new URLSearchParams(parsed.search);
-      const hash = new URLSearchParams(parsed.hash.replace(/^#/, ""));
       const code = query.get("code");
-      const accessToken = hash.get("access_token");
-      const refreshToken = hash.get("refresh_token");
+      const callbackError = query.get("error_description");
 
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) throw error;
-      } else if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-        if (error) throw error;
-      } else {
-        return;
-      }
+      if (callbackError) throw new Error(callbackError);
+      if (!code || !consumeOAuthPending()) throw new Error("Fluxo de autenticação inválido ou expirado.");
+
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) throw error;
 
       await Browser.close().catch(() => undefined);
       navigate(route, { replace: true });
@@ -68,12 +64,24 @@ const AuthRedirectHandler = () => {
         handledLaunchUrlRef.current = true;
         const launchUrl = await CapacitorApp.getLaunchUrl();
         if (launchUrl?.url) {
-          void parseAuthCallback(launchUrl.url);
+          void parseAuthCallback(launchUrl.url).catch((error) => {
+            toast({
+              title: "Erro ao entrar",
+              description: getErrorMessage(error, "Não foi possível concluir o login."),
+              variant: "destructive",
+            });
+          });
         }
       }
 
       listener = await CapacitorApp.addListener("appUrlOpen", ({ url }) => {
-        void parseAuthCallback(url);
+        void parseAuthCallback(url).catch((error) => {
+          toast({
+            title: "Erro ao entrar",
+            description: getErrorMessage(error, "Não foi possível concluir o login."),
+            variant: "destructive",
+          });
+        });
       });
 
       if (cancelled) {
@@ -87,7 +95,7 @@ const AuthRedirectHandler = () => {
       cancelled = true;
       void listener?.remove();
     };
-  }, [navigate]);
+  }, [navigate, toast]);
 
   useEffect(() => {
     // If we landed on root with a leftover hash from OAuth, clean it up
@@ -95,32 +103,30 @@ const AuthRedirectHandler = () => {
       // Supabase will parse the hash; we just need to make sure we redirect after.
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      const postLoginRedirect = localStorage.getItem(POST_LOGIN_KEY);
-      const decision = getPostLoginRedirectDecision({
-        event,
-        pathname: location.pathname,
-        postLoginRedirect,
-      });
-
-      if (decision.type === "clear") {
-        localStorage.removeItem(POST_LOGIN_KEY);
-        return;
-      }
-
-      if (decision.type === "navigate") {
-        if (decision.clearPostLoginRedirect) {
-          localStorage.removeItem(POST_LOGIN_KEY);
-        }
-        // Defer to next tick so AuthProvider state is updated
-        setTimeout(() => {
-          navigate(decision.to, { replace: true });
-        }, 0);
-      }
+    if (!user) return;
+    const event = "SIGNED_IN";
+    const postLoginRedirect = localStorage.getItem(POST_LOGIN_KEY);
+    const decision = getPostLoginRedirectDecision({
+      event,
+      pathname: location.pathname,
+      postLoginRedirect,
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+    if (decision.type === "clear") {
+      localStorage.removeItem(POST_LOGIN_KEY);
+      return;
+    }
+
+    if (decision.type === "navigate") {
+      if (decision.clearPostLoginRedirect) {
+        localStorage.removeItem(POST_LOGIN_KEY);
+      }
+      // Defer to next tick so AuthProvider state is updated
+      setTimeout(() => {
+        navigate(decision.to, { replace: true });
+      }, 0);
+    }
+  }, [navigate, location.pathname, user]);
 
   return null;
 };

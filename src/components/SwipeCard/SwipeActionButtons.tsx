@@ -25,57 +25,11 @@ export const SwipeActionButtons = ({
   const dislikeBtnScale = useTransform(x, [-150, 0, 150], [1.18, 1, 0.92]);
   const likeBtnScale = useTransform(x, [-150, 0, 150], [0.92, 1, 1.18]);
 
-  const dislikeBtnBg = useTransform(
-    x,
-    [-60, -18, -6, 6],
-    [
-      "hsl(var(--flop))",
-      "hsl(var(--flop))",
-      "rgba(26, 30, 31, 0.72)",
-      "rgba(26, 30, 31, 0.72)",
-    ]
-  );
-  const likeBtnBg = useTransform(
-    x,
-    [-6, 6, 18, 60],
-    [
-      "rgba(26, 30, 31, 0.72)",
-      "rgba(26, 30, 31, 0.72)",
-      "hsl(var(--hype))",
-      "hsl(var(--hype))",
-    ]
-  );
-
-  const dislikeBtnShadow = useTransform(
-    x,
-    [-60, 0],
-    [
-      "0 0 28px hsl(var(--flop-glow) / 0.62), 0 0 56px hsl(var(--flop-glow) / 0.32)",
-      "0 5px 16px hsl(0 0% 0% / 0.18)",
-    ]
-  );
-  const likeBtnShadow = useTransform(
-    x,
-    [0, 60],
-    [
-      "0 5px 16px hsl(0 0% 0% / 0.18)",
-      "0 0 28px hsl(var(--hype-glow) / 0.62), 0 0 56px hsl(var(--hype-glow) / 0.32)",
-    ]
-  );
-
-  const dislikeIconColor = useTransform(
-    x,
-    [-60, -10, 0],
-    ["hsl(var(--flop-foreground))", "hsl(var(--flop-foreground))", "hsl(var(--flop))"]
-  );
-  const likeIconColor = useTransform(
-    x,
-    [0, 10, 60],
-    ["hsl(var(--hype))", "hsl(0 0% 100%)", "hsl(0 0% 100%)"]
-  );
+  const dislikeHighlight = useTransform(x, [-60, -6], [1, 0]);
+  const likeHighlight = useTransform(x, [6, 60], [0, 1]);
 
   return (
-    <div className="mt-5 flex items-center justify-center gap-7 pointer-events-auto">
+    <div className="mt-3 flex items-center justify-center gap-7 pointer-events-auto">
       <motion.button
         type="button"
         onClick={(e) => {
@@ -87,17 +41,18 @@ export const SwipeActionButtons = ({
         whileTap={{ scale: 0.88 }}
         style={{
           scale: dislikeBtnScale,
-          background: dislikeBtnBg,
-          boxShadow: dislikeBtnShadow,
-          color: dislikeIconColor,
+          background: "rgba(26, 30, 31, 0.72)",
+          color: "hsl(var(--flop))",
         }}
-        className={`h-14 w-14 rounded-full border border-white/[0.13] backdrop-blur-xl flex items-center justify-center transition-colors ${disabledClass}`}
+        className={`relative h-14 w-14 rounded-full border border-white/[0.13] flex items-center justify-center ${disabledClass}`}
       >
+        <motion.span aria-hidden className="absolute inset-0 flex items-center justify-center rounded-full bg-flop text-flop-foreground" style={{ opacity: dislikeHighlight }}>
+          <ThumbsDown className="h-6 w-6" strokeWidth={2.4} />
+        </motion.span>
         <ThumbsDown
           className="h-6 w-6"
           strokeWidth={2.4}
-          fill="currentColor"
-          fillOpacity={0.15}
+          fill="none"
         />
       </motion.button>
       <motion.button
@@ -111,17 +66,18 @@ export const SwipeActionButtons = ({
         whileTap={{ scale: 0.88 }}
         style={{
           scale: likeBtnScale,
-          background: likeBtnBg,
-          boxShadow: likeBtnShadow,
-          color: likeIconColor,
+          background: "rgba(26, 30, 31, 0.72)",
+          color: "hsl(var(--hype))",
         }}
-        className={`h-14 w-14 rounded-full border border-white/[0.13] backdrop-blur-xl flex items-center justify-center ${disabledClass}`}
+        className={`relative h-14 w-14 rounded-full border border-white/[0.13] flex items-center justify-center ${disabledClass}`}
       >
+        <motion.span aria-hidden className="absolute inset-0 flex items-center justify-center rounded-full bg-hype text-white" style={{ opacity: likeHighlight }}>
+          <ThumbsUp className="h-6 w-6" strokeWidth={2.4} />
+        </motion.span>
         <ThumbsUp
           className="h-6 w-6"
           strokeWidth={2.4}
-          fill="currentColor"
-          fillOpacity={0.15}
+          fill="none"
         />
       </motion.button>
     </div>

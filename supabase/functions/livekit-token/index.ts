@@ -49,6 +49,15 @@ Deno.serve(async (req) => {
     const userId = claimsData.claims.sub as string;
     observation.userId = userId;
 
+    const { data: suspension, error: suspensionError } = await admin
+      .from("user_suspensions")
+      .select("user_id")
+      .eq("user_id", userId)
+      .is("lifted_at", null)
+      .maybeSingle();
+    if (suspensionError) return json({ error: "Não foi possível validar a conta" }, 503);
+    if (suspension) return json({ error: "Conta suspensa" }, 403);
+
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
     const { action, conversation_id, kind, call_session_id } = parsed.data;
@@ -93,7 +102,7 @@ Deno.serve(async (req) => {
       const calleeIsActive =
         !presence ||
         (presence.active === true && Date.now() - lastSeen <= 30_000);
-      const { data: created, error: insErr } = await supabase
+      const { data: created, error: insErr } = await admin
         .from("call_sessions")
         .insert({
           conversation_id,

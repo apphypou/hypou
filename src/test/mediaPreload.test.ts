@@ -56,6 +56,42 @@ describe("mediaPreload", () => {
     await expect(promise).resolves.toBeUndefined();
   });
 
+  it("does not let onload resolve ahead of decoding", async () => {
+    let finishDecode!: () => void;
+    let load!: () => void;
+    class MockImage {
+      set onload(handler: () => void) { load = handler; }
+      onerror = null;
+      decode = () => new Promise<void>((resolve) => { finishDecode = resolve; });
+      set src(_value: string) {}
+    }
+    globalThis.Image = MockImage as unknown as typeof Image;
+    const ready = vi.fn();
+    const preload = preloadImage("https://cdn.example.com/slow-decode.jpg").then(ready);
+    load();
+    await Promise.resolve();
+    expect(ready).not.toHaveBeenCalled();
+    finishDecode();
+    await preload;
+    expect(ready).toHaveBeenCalledOnce();
+  });
+
+  it("uses an already completed load when decode rejects", async () => {
+    let rejectDecode!: (error: Error) => void;
+    let load!: () => void;
+    class MockImage {
+      set onload(handler: () => void) { load = handler; }
+      onerror = null;
+      decode = () => new Promise<void>((_, reject) => { rejectDecode = reject; });
+      set src(_value: string) {}
+    }
+    globalThis.Image = MockImage as unknown as typeof Image;
+    const preload = preloadImage("https://cdn.example.com/decode-fallback.jpg");
+    load();
+    rejectDecode(new Error("decode unavailable"));
+    await expect(preload).resolves.toBeUndefined();
+  });
+
   it("waits for a playable video frame before resolving", async () => {
     const video = {
       preload: "",
@@ -100,5 +136,27 @@ describe("mediaPreload", () => {
     ]);
 
     expect(assignedSources).toEqual(["https://cdn.example.com/cached.jpg"]);
+  });
+
+  it("bounds decoded image retention and reuses the matching CORS request", async () => {
+    const assignedSources: string[] = [];
+    const corsModes: Array<string | undefined> = [];
+    class MockImage {
+      crossOrigin?: string;
+      decode = () => Promise.resolve();
+      set src(value: string) {
+        assignedSources.push(value);
+        corsModes.push(this.crossOrigin);
+      }
+    }
+    globalThis.Image = MockImage as unknown as typeof Image;
+    for (let i = 0; i < 17; i++) await preloadImage(`https://cdn.example.com/window-${i}.jpg`, "anonymous");
+    await preloadImage("https://cdn.example.com/window-16.jpg", "anonymous");
+    expect(assignedSources).toHaveLength(17);
+    await preloadImage("https://cdn.example.com/window-0.jpg", "anonymous");
+    expect(assignedSources).toHaveLength(18);
+    expect(corsModes.every(mode => mode === "anonymous")).toBe(true);
+    await preloadImage("https://cdn.example.com/window-16.jpg");
+    expect(corsModes.at(-1)).toBeUndefined();
   });
 });

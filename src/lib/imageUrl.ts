@@ -46,4 +46,4 @@ export const cdnMedium = (url: string | null | undefined) => cdnImage(url, { wid
 export const cdnThumb = (url: string | null | undefined) => cdnImage(url, { width: 240, quality: 70 });
 /** Preset for the blurred background reflection — tiny + low quality. */
 export const cdnBlur = (url: string | null | undefined) =>
-  cdnImage(url, { width: 64, quality: 35, resize: "cover" });
+  cdnImage(url, { width: 64, quality: 35, resize: "contain" });

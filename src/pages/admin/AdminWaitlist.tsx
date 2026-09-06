@@ -14,7 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 const PAGE_SIZE = 25;
 
 function csvCell(value: string | number | null) {
-  const text = value === null ? "" : String(value);
+  let text = value === null ? "" : String(value);
+  if (/^[\t\r\n =+\-@]/.test(text)) text = `'${text}`;
   return `"${text.replace(/"/g, '""')}"`;
 }
 

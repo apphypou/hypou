@@ -5,6 +5,7 @@ describe("media frame focal point", () => {
   it("defaults to centered media", () => {
     expect(getMediaObjectPosition(null)).toBe("50% 50%");
     expect(getMediaObjectPosition({})).toBe("50% 50%");
+    expect(getMediaObjectPosition({ focal_x: null, focal_y: null })).toBe("50% 50%");
   });
 
   it("uses persisted focal point values", () => {

@@ -29,7 +29,16 @@ describe("Android native configuration", () => {
 
     expect(gitignore).toMatch(/^\*\.jks$/m);
     expect(gitignore).toMatch(/^\*\.keystore$/m);
+    expect(gitignore).toMatch(/^keystore\.properties$/m);
     expect(gitignore).toMatch(/^google-services\.json$/m);
+  });
+
+  it("requires an ignored local key for production AAB signing", () => {
+    const appGradle = readSource("android/app/build.gradle");
+
+    expect(appGradle).toContain("keystore.properties");
+    expect(appGradle).toContain("bundleRelease");
+    expect(appGradle).toContain("Release signing missing");
   });
 
   it("declares Android media permissions and the native auth callback", () => {

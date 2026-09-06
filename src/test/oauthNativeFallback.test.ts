@@ -41,7 +41,7 @@ describe("startOAuthSignIn native fallback", () => {
 
   it("uses native social sign in for Google on native platforms", async () => {
     mocks.isNativePlatform.mockReturnValue(true);
-    mocks.nativeSignIn.mockResolvedValue({ handled: true, error: null });
+    mocks.nativeSignIn.mockResolvedValue({ handled: true, authenticated: true, error: null });
 
     const { startOAuthSignIn } = await import("@/lib/oauth");
     const result = await startOAuthSignIn("google", "/explorar");
@@ -49,24 +49,24 @@ describe("startOAuthSignIn native fallback", () => {
     expect(mocks.nativeSignIn).toHaveBeenCalledWith("google");
     expect(mocks.signInWithOAuth).not.toHaveBeenCalled();
     expect(mocks.browserOpen).not.toHaveBeenCalled();
-    expect(result).toEqual({ error: null });
+    expect(result).toEqual({ error: null, authenticated: true });
   });
 
   it("falls back to OAuth browser when native provider is not handled", async () => {
     mocks.isNativePlatform.mockReturnValue(true);
-    mocks.nativeSignIn.mockResolvedValue({ handled: false, error: null });
+    mocks.nativeSignIn.mockResolvedValue({ handled: false, authenticated: false, error: null });
 
     const { startOAuthSignIn } = await import("@/lib/oauth");
     const result = await startOAuthSignIn("google", "/explorar");
 
     expect(mocks.signInWithOAuth).toHaveBeenCalled();
     expect(mocks.browserOpen).toHaveBeenCalledWith({ url: "https://auth.example.test" });
-    expect(result).toEqual({ error: null });
+    expect(result).toEqual({ error: null, authenticated: false });
   });
 
   it("returns native error without opening browser", async () => {
     mocks.isNativePlatform.mockReturnValue(true);
-    mocks.nativeSignIn.mockResolvedValue({ handled: true, error: new Error("Falha no login nativo.") });
+    mocks.nativeSignIn.mockResolvedValue({ handled: true, authenticated: false, error: new Error("Falha no login nativo.") });
 
     const { startOAuthSignIn } = await import("@/lib/oauth");
     const result = await startOAuthSignIn("apple", "/explorar");

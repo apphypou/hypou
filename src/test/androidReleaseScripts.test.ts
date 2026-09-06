@@ -12,6 +12,7 @@ describe("Android mobile workflow", () => {
     expect(pkg.scripts["mobile:sync-android"]).toBe("node scripts/release-android.mjs --sync-only");
     expect(pkg.scripts["android:dev"]).toBe("node scripts/release-android.mjs --run");
     expect(pkg.scripts["android:debug-apk"]).toBe("node scripts/release-android.mjs --debug-apk");
+    expect(pkg.scripts["android:release-aab"]).toBe("node scripts/release-android.mjs --release-aab");
   });
 
   it("keeps iOS as the default doctor and validates Android explicitly", () => {
@@ -35,6 +36,8 @@ describe("Android mobile workflow", () => {
     expect(script).toContain('mode === "--run"');
     expect(script).toContain('mode === "--debug-apk"');
     expect(script).toContain('"assembleDebug"');
+    expect(script).toContain('mode === "--release-aab"');
+    expect(script).toContain('"bundleRelease"');
     expect(script).toContain('ANDROID_AVD_HOME: androidAvdHome');
   });
 });

@@ -1326,6 +1326,10 @@ export type Database = {
         Returns: boolean
       }
       increment_video_view: { Args: { p_video_id: string }; Returns: undefined }
+      join_waitlist: {
+        Args: { p_email: string; p_referred_by?: string | null }
+        Returns: Database["public"]["Tables"]["waitlist"]["Row"]
+      }
       is_conversation_blocked: {
         Args: { p_conversation_id: string }
         Returns: boolean
@@ -1401,13 +1405,30 @@ export type Database = {
         Returns: undefined
       }
       reject_match: { Args: { p_match_id: string }; Returns: boolean }
+      register_device_token: {
+        Args: { p_platform: string; p_token: string }
+        Returns: undefined
+      }
       set_app_presence: { Args: { p_active: boolean }; Returns: undefined }
+      send_message: {
+        Args: {
+          p_content: string
+          p_conversation_id: string
+          p_media_url?: string | null
+          p_message_type?: string
+        }
+        Returns: Database["public"]["Tables"]["messages"]["Row"]
+      }
       soft_delete_item: { Args: { p_item_id: string }; Returns: undefined }
       soft_delete_message: {
         Args: { p_message_id: string }
         Returns: undefined
       }
       toggle_video_like: { Args: { p_video_id: string }; Returns: boolean }
+      unregister_device_token: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

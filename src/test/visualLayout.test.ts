@@ -37,14 +37,14 @@ describe("mobile visual layout", () => {
     expect(source).toContain('className="swipe-media-ambient"');
     expect(source).toContain('className="swipe-media-foreground"');
     expect(source).toContain("getMediaAspectClass");
-    expect(source).toContain('objectPosition: "center center"');
+    expect(source).toContain('objectPosition: imagePosition');
     expect(source).toContain("getMediaScale(currentImageRecord)");
     expect(source).toContain("onLoad={handleImageLoad}");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-foreground");
     expect(css).toContain("object-position: center center;");
     expect(css).toContain("transform: scale(1);");
     expect(css).toContain(".swipe-media-stage--wide .swipe-media-ambient");
-    expect(css).toContain("opacity: 0.62;");
+    expect(css).toContain("filter: blur(24px) saturate(85%) contrast(70%) brightness(80%);");
     expect(css).toContain("object-fit: contain;");
     expect(source).not.toContain('className="w-full h-full object-cover object-center"');
   });
@@ -52,17 +52,18 @@ describe("mobile visual layout", () => {
   it("keeps media dots below the Dynamic Island while videos stay full-bleed", () => {
     const source = readSource("src/components/SwipeCard.tsx");
 
-    expect(source).toContain('style={{ top: "calc(var(--safe-area-top) + 2.85rem)" }}');
+    expect(source).toContain('style={{ top: "calc(var(--safe-area-top) + 0.3rem)" }}');
     expect(source).not.toContain("absolute top-0.5 left-1/2");
     expect(source).toContain("w-full h-full object-cover object-center transition-opacity");
   });
 
-  it("places Explore price beside its truncating item title", () => {
+  it("places Explore price below a two-line title and keeps metadata wrapping", () => {
     const source = readSource("src/components/SwipeCard.tsx");
 
-    expect(source).toContain("swipe-compact-heading-row flex min-w-0 items-end gap-3 border-b");
-    expect(source).toContain("swipe-compact-title min-w-0 flex-1 truncate");
-    expect(source).toContain("swipe-compact-price shrink-0");
+    expect(source).toContain("swipe-compact-heading-row flex min-w-0 flex-col");
+    expect(source).toContain("swipe-compact-title min-w-0 line-clamp-2 break-words");
+    expect(source).toContain("swipe-compact-price break-words");
+    expect(source).toContain("flex flex-wrap items-center");
   });
 
   it("adapts Swipe Card readability when media is bright", () => {
@@ -111,15 +112,14 @@ describe("mobile visual layout", () => {
     expect(card).toContain("min-h-0 flex-1 overflow-y-auto");
   });
 
-  it("uses a Tinder-like downward exit motion for Explore swipes", () => {
+  it("reveals the standby card during Explore gestures", () => {
     const source = readSource("src/components/SwipeCard.tsx");
 
-    expect(source).toContain("const EXIT_Y = 260;");
-    expect(source).toContain("animate(y, EXIT_Y");
-    expect(source).toContain("animate(y, 0");
-    expect(source).toContain("y: standby ? 0 : y");
+    expect(source).not.toContain("const EXIT_Y");
+    expect(source).toContain("dragMomentum={false}");
+    expect(source).toContain("const rotate = useTransform(x");
     expect(source).toContain("const standbyOpacity = useTransform(revealProgress, [0, 1], [0, 1]);");
-    expect(source).toContain("const standbyScale = useTransform(revealProgress, [0, 1], [0.97, 1]);");
+    expect(source).toContain("const standbyScale = useTransform(revealProgress, [0, 1], [0.99, 1]);");
     expect(source).toContain("standby ? { opacity: standbyOpacity } : {}");
   });
 
@@ -147,7 +147,9 @@ describe("mobile visual layout", () => {
     const persistence = explore.slice(explore.indexOf("const recordSwipeInBackground"), explore.indexOf("const handleSwipeComplete"));
 
     expect(explore).not.toContain("afterNextVideo");
-    expect(explore).toContain("preloadImage(afterNextImage ? cdnFull(afterNextImage) : null)");
+    expect(explore).toContain("visibleItems.slice(0, 4)");
+    expect(explore).toContain('preloadImage(cdnFull(image), "anonymous")');
+    expect(explore).toContain('preloadImage(cdnBlur(image), "anonymous")');
     expect(persistence).toContain("queryClient.setQueryData<any[]>");
     expect(persistence).not.toContain("refetchQueries");
     expect(card).toContain('fetchPriority={standby ? "auto" : "high"}');
@@ -170,20 +172,30 @@ describe("mobile visual layout", () => {
     expect(packageSource).toContain('"@capacitor/share"');
   });
 
-  it("uses lighter compact glass at both Explore edges", () => {
+  it("anchors the opaque card's reading gradient to content and fades the fitted photo edges", () => {
     const card = readSource("src/components/SwipeCard.tsx");
     const source = readSource("src/index.css");
 
-    expect(card).toContain("swipe-edge-glass-bottom-compact");
+    expect(card).toContain("swipe-compact-info");
+    expect(card).not.toContain("swipe-edge-glass-bottom-compact");
+    expect(source).toContain("background-color: #101213;");
+    expect(source).not.toContain(".swipe-compact-info::before");
     expect(source).toContain("--swipe-foreground-top-fade");
-    expect(source).toContain("rgba(0, 0, 0, 0.68) 11%");
-    expect(source).toContain("black 16%");
+    expect(source).toContain("black min(32px, 8%)");
+    expect(source).toContain("black max(calc(100% - 32px), 92%)");
+    expect(source).toContain("filter: blur(24px) saturate(85%) contrast(70%) brightness(80%);");
+    expect(source).not.toContain("grayscale(1)");
+    expect(source).not.toContain("#080a0b 100%");
+    expect(source).not.toContain("#080a0b 95%");
+    expect(card).toContain("bottom: expanded ? 0 : compactInfoHeight + 8");
+    expect(card).not.toContain('height: portrait ? "82%" : "100%"');
+    expect(card).toContain("maskSize: imageMaskSize");
     expect(source).toContain("mask-image: var(--swipe-foreground-top-fade);");
     expect(source).toContain("-webkit-mask-image: var(--swipe-foreground-top-fade);");
+    expect(source).not.toContain("mask-composite: intersect;");
     expect(source).toContain("height: min(26%, 238px);");
-    expect(source).toContain("backdrop-filter: blur(10px) saturate(110%);");
-    expect(source).toContain("rgba(9, 14, 22, 0.26)");
-    expect(source).toContain("rgba(0, 0, 0, 0.76) 38%");
+    expect(source).not.toContain("backdrop-filter: blur(10px) saturate(110%);");
+    expect(source).toContain("rgba(0, 0, 0, 0.22), transparent");
   });
 
   it("uses lighter Explore actions and a tuned floating glass navbar", () => {
@@ -191,14 +203,15 @@ describe("mobile visual layout", () => {
     const nav = readSource("src/components/BottomNav.tsx");
     const css = readSource("src/index.css");
 
-    expect(actions).toContain('className="mt-5 flex items-center justify-center gap-7 pointer-events-auto"');
+    expect(actions).toContain('className="mt-3 flex items-center justify-center gap-7 pointer-events-auto"');
     expect(actions).toContain("h-14 w-14");
     expect(actions).toContain("h-6 w-6");
     expect(actions).toContain("border-white/[0.13]");
     expect(actions).toContain("rgba(26, 30, 31, 0.72)");
     expect(actions).toContain('disabled ? "opacity-50" : ""');
     expect(actions).not.toContain("disabled:opacity-50");
-    expect(actions).toContain("[-6, 6, 18, 60]");
+    expect(actions).toContain("opacity: likeHighlight");
+    expect(actions).not.toContain("boxShadow:");
     expect(nav).toContain("hypou-bottom-nav");
     expect(css).toContain(".hypou-bottom-nav");
     expect(css).toContain("backdrop-filter: blur(26px) saturate(118%);");

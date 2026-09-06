@@ -83,6 +83,12 @@ function HostRoutes() {
 export default function App() {
   const isOnline = useOnlineStatus();
 
+  useEffect(() => {
+    const clearPrivateCache = () => queryClient.clear();
+    window.addEventListener("hypou:signed-out", clearPrivateCache);
+    return () => window.removeEventListener("hypou:signed-out", clearPrivateCache);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -90,7 +96,7 @@ export default function App() {
           <Toaster />
           <Sonner />
           {!isOnline && <OfflineScreen />}
-          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <BrowserRouter>
             <HostRoutes />
           </BrowserRouter>
         </TooltipProvider>

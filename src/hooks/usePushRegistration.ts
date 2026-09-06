@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureAndroidNotificationChannel } from "@/lib/androidPush";
 import { createTraceId, logError, logInfo, logWarn } from "@/lib/observability";
+import { rememberDevicePushToken } from "@/lib/devicePushToken";
 
 /**
  * Registers the native device for push and stores the token in `device_tokens`.
@@ -42,18 +43,17 @@ export function usePushRegistration() {
 
         const reg = await PushNotifications.addListener("registration", async (token) => {
           const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
-          const { error } = await supabase
-            .from("device_tokens")
-            .upsert(
-              { user_id: userId, token: token.value, platform },
-              { onConflict: "token" },
-            );
+          const { error } = await supabase.rpc("register_device_token", {
+            p_token: token.value,
+            p_platform: platform,
+          });
 
           if (error) {
             logError("push.token_store_failed", "push_registration", traceId, error, { platform });
             return;
           }
 
+          rememberDevicePushToken(token.value);
           logInfo("push.registration_completed", "push_registration", traceId, { platform });
         });
 

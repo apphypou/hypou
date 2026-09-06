@@ -86,12 +86,15 @@ const Cadastro = () => {
     localStorage.setItem("postLoginRedirect", "/onboarding");
     setSocialLoading(provider);
 
-    const { error } = await startOAuthSignIn(provider, "/onboarding").catch((error) => ({
+    const { error, authenticated } = await startOAuthSignIn(provider, "/onboarding").catch((error) => ({
       error: error instanceof Error ? error : new Error("Falha ao iniciar login social."),
+      authenticated: false,
     }));
 
     setSocialLoading(null);
-    if (error) {
+    if (authenticated) {
+      navigate("/onboarding", { replace: true });
+    } else if (error) {
       toast({
         title: "Erro ao criar conta",
         description: getErrorMessage(error, "Não foi possível criar a conta com esta opção."),

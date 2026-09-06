@@ -5,7 +5,7 @@ import { ensureMobileNode } from "./mobile-node.mjs";
 ensureMobileNode();
 
 const mode = process.argv[2] || "--open";
-const supportedModes = new Set(["--open", "--sync-only", "--run", "--debug-apk"]);
+const supportedModes = new Set(["--open", "--sync-only", "--run", "--debug-apk", "--release-aab"]);
 
 if (!supportedModes.has(mode)) {
   console.error(`FAIL: unsupported Android mode: ${mode}`);
@@ -52,6 +52,9 @@ if (mode === "--sync-only") {
 } else if (mode === "--debug-apk") {
   run("./android/gradlew", ["-p", "android", "assembleDebug"]);
   console.log("OK: android/app/build/outputs/apk/debug/app-debug.apk");
+} else if (mode === "--release-aab") {
+  run("./android/gradlew", ["-p", "android", "bundleRelease"]);
+  console.log("OK: android/app/build/outputs/bundle/release/app-release.aab");
 } else {
   run("open", ["-a", androidStudioPath, "android"]);
 }

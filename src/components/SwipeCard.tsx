@@ -4,6 +4,7 @@ import {
   useCallback,
   useState,
   useEffect,
+  useLayoutEffect,
   useRef,
   memo,
   useMemo,
@@ -33,14 +34,13 @@ import { formatValue, translateCondition } from "@/lib/utils";
 import { cdnFull, cdnBlur, cdnThumb } from "@/lib/imageUrl";
 import { preloadImage, preloadVideo } from "@/lib/mediaPreload";
 import { measureImageTone, type MediaTone } from "@/lib/mediaContrast";
-import { getMediaScale } from "@/lib/mediaFrame";
+import { getMediaObjectPosition, getMediaScale } from "@/lib/mediaFrame";
+import { haptic } from "@/lib/haptics";
 import { CardDetailContent } from "./SwipeCard/CardDetailContent";
 import { SwipeActionButtons } from "./SwipeCard/SwipeActionButtons";
 import { SwipeOverlays } from "./SwipeCard/SwipeOverlays";
 
-const SWIPE_THRESHOLD = 80;
-const EXIT_X = 500;
-const EXIT_Y = 260;
+const CARD_SWIPE_THRESHOLD = 80;
 const MAX_MEDIA_ZOOM = 4;
 
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -133,18 +133,17 @@ const SwipeCard = memo(
     ) => {
       const navigate = useNavigate();
       const x = useMotionValue(0);
-      const y = useMotionValue(0);
-      const rotate = useTransform(x, [-250, 0, 250], [-8, 0, 8]);
+      const rotate = useTransform(x, [-300, 0, 300], [-4, 0, 4]);
       const revealSource = revealMotionX ?? x;
       const revealProgress = useTransform(revealSource, (value) =>
-        Math.min(Math.abs(value) / SWIPE_THRESHOLD, 1)
+        Math.min(Math.abs(value) / (CARD_SWIPE_THRESHOLD * 2), 1)
       );
       const standbyOpacity = useTransform(revealProgress, [0, 1], [0, 1]);
-      const standbyScale = useTransform(revealProgress, [0, 1], [0.97, 1]);
+      const standbyScale = useTransform(revealProgress, [0, 1], [0.99, 1]);
 
       // 3D lift effect — card pops out as it's dragged
       const absX = useTransform(x, (v) => Math.abs(v));
-      const liftScale = useTransform(absX, [0, 250], [1, 1.06]);
+      const liftScale = useTransform(absX, [0, 300], [1, 1.01]);
 
       // Image + video gallery state
       const images = useMemo(() => item?.item_images || [], [item?.item_images]);
@@ -152,9 +151,19 @@ const SwipeCard = memo(
       const hasVideo = videos.length > 0;
       const totalSlides = images.length + (hasVideo ? 1 : 0);
       const [activeImageIndex, setActiveImageIndex] = useState(0);
+      const activeImageIndexRef = useRef(0);
+      const slideRequestRef = useRef(0);
+      const [galleryStatus, setGalleryStatus] = useState<"idle" | "loading" | "error">("idle");
+      const [imageRevision, setImageRevision] = useState(0);
+      const mediaRef = useRef<HTMLDivElement>(null);
+      const compactInfoRef = useRef<HTMLDivElement>(null);
+      const [compactInfoHeight, setCompactInfoHeight] = useState(260);
+      const [mediaSize, setMediaSize] = useState({ width: 0, height: 0, centerY: 0 });
       const isVideoSlide = hasVideo && activeImageIndex === images.length;
       const currentImageRecord = !isVideoSlide ? images[activeImageIndex] : null;
       const currentImage = !isVideoSlide ? images[activeImageIndex]?.image_url : null;
+      const hasCurrentImage = Boolean(currentImage);
+      const backgroundImage = images[0]?.image_url ?? null;
       const currentVideo = isVideoSlide ? videos[0]?.video_url : null;
       const currentVideoPoster = isVideoSlide
         ? videos[0]?.thumbnail_url || images[Math.max(images.length - 1, 0)]?.image_url
@@ -163,8 +172,8 @@ const SwipeCard = memo(
       const [imageRatios, setImageRatios] = useState<Record<string, number>>({});
       const [mediaTone, setMediaTone] = useState<MediaTone>("neutral");
       const videoRef = useRef<HTMLVideoElement>(null);
-      const slideChangeTokenRef = useRef(0);
       const exitingRef = useRef(false);
+      const hapticDirectionRef = useRef<"like" | "dislike" | null>(null);
 
       // Expanded state
       const [expanded, setExpanded] = useState(false);
@@ -199,10 +208,11 @@ const SwipeCard = memo(
       const showSlide = useCallback(
         (nextIndex: number) => {
           if (mediaZoomRef.current.scale > 1.01) return;
-          if (totalSlides <= 1) return;
+          if (!totalSlides) return;
           const normalizedIndex = (nextIndex + totalSlides) % totalSlides;
-          const token = slideChangeTokenRef.current + 1;
-          slideChangeTokenRef.current = token;
+          const request = ++slideRequestRef.current;
+          activeImageIndexRef.current = normalizedIndex;
+          setGalleryStatus("loading");
           const nextImage = normalizedIndex < images.length
             ? images[normalizedIndex]?.image_url
             : null;
@@ -212,16 +222,15 @@ const SwipeCard = memo(
 
           const nextMediaReady = nextVideo
             ? preloadVideo(nextVideo)
-            : preloadImage(nextImage ? cdnFull(nextImage) : null);
-
-          nextMediaReady
-            .catch(() => undefined)
-            .then(() => {
-              if (slideChangeTokenRef.current === token) {
-                setMediaTone("neutral");
-                setActiveImageIndex(normalizedIndex);
-              }
-            });
+            : preloadImage(nextImage ? cdnFull(nextImage) : null, "anonymous");
+          void nextMediaReady.then(() => {
+            if (request !== slideRequestRef.current) return;
+            setActiveImageIndex(normalizedIndex);
+            setImageRevision((revision) => revision + 1);
+            setGalleryStatus("idle");
+          }).catch(() => {
+            if (request === slideRequestRef.current) setGalleryStatus("error");
+          });
         },
         [images, totalSlides, videos]
       );
@@ -234,9 +243,9 @@ const SwipeCard = memo(
           const rect = e.currentTarget.getBoundingClientRect();
           const tapX = e.clientX - rect.left;
           const half = rect.width / 2;
-          showSlide(tapX > half ? activeImageIndex + 1 : activeImageIndex - 1);
+          showSlide(tapX > half ? activeImageIndexRef.current + 1 : activeImageIndexRef.current - 1);
         },
-        [activeImageIndex, expanded, showSlide, totalSlides]
+        [expanded, showSlide, totalSlides]
       );
 
       const toggleExpand = useCallback((e?: React.MouseEvent) => {
@@ -259,7 +268,6 @@ const SwipeCard = memo(
           suppressImageTapRef.current = true;
           setIsMediaGestureActive(true);
           x.set(0);
-          y.set(0);
           return;
         }
 
@@ -272,7 +280,7 @@ const SwipeCard = memo(
           gesture.panning = true;
           setIsMediaGestureActive(true);
         }
-      }, [isVideoSlide, standby, x, y]);
+      }, [isVideoSlide, standby, x]);
 
       const handleMediaTouchMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
         if (isVideoSlide || standby) return;
@@ -336,7 +344,7 @@ const SwipeCard = memo(
 
       const handleImageLoad = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
         const image = event.currentTarget;
-        const source = image.currentSrc || image.src;
+        const source = image.getAttribute("src") || image.currentSrc || image.src;
         if (!source || !image.naturalWidth || !image.naturalHeight) return;
         const ratio = image.naturalWidth / image.naturalHeight;
         setImageRatios((previous) => (
@@ -345,23 +353,64 @@ const SwipeCard = memo(
         setMediaTone(measureImageTone(event.currentTarget));
       }, []);
 
+      const handleBackgroundError = useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+        const fallback = backgroundImage ? cdnFull(backgroundImage) : "";
+        if (fallback && event.currentTarget.getAttribute("src") !== fallback) event.currentTarget.src = fallback;
+      }, [backgroundImage]);
+
       useEffect(() => {
         if (disabled || standby) return;
         const unsubscribe = x.on("change", (latest) => {
           onDragDirectionChange?.(latest);
+          const direction = latest >= CARD_SWIPE_THRESHOLD
+            ? "like"
+            : latest <= -CARD_SWIPE_THRESHOLD
+              ? "dislike"
+              : null;
+          if (direction && direction !== hapticDirectionRef.current) {
+            hapticDirectionRef.current = direction;
+            void haptic("light");
+          } else if (Math.abs(latest) < CARD_SWIPE_THRESHOLD * 0.7) {
+            hapticDirectionRef.current = null;
+          }
         });
         return unsubscribe;
       }, [x, disabled, standby, onDragDirectionChange]);
 
+      useLayoutEffect(() => {
+        const media = mediaRef.current;
+        const info = compactInfoRef.current;
+        if (typeof ResizeObserver === "undefined") return;
+        const measure = () => {
+          if (media) setMediaSize({
+            width: media.clientWidth,
+            height: media.clientHeight,
+            centerY: (media.clientHeight + (expanded ? 0 : 44)) / 2,
+          });
+          if (info) setCompactInfoHeight(info.offsetHeight);
+        };
+        measure();
+        const observer = new ResizeObserver(measure);
+        if (media) observer.observe(media);
+        if (info) observer.observe(info);
+        return () => observer.disconnect();
+      }, [expanded, isVideoSlide, hasCurrentImage]);
+
       useEffect(() => {
+        ++slideRequestRef.current;
+        setGalleryStatus("idle");
         setActiveImageIndex(0);
+        activeImageIndexRef.current = 0;
         setVideoReady(false);
         setMediaTone("neutral");
-        slideChangeTokenRef.current = 0;
         exitingRef.current = false;
+        hapticDirectionRef.current = null;
         x.set(0);
-        y.set(0);
-      }, [item?.id, x, y]);
+        return () => {
+          ++slideRequestRef.current;
+          x.stop();
+        };
+      }, [item?.id, x]);
 
       useEffect(() => {
         resetMediaZoom();
@@ -375,15 +424,17 @@ const SwipeCard = memo(
       useEffect(() => {
         if (standby) return;
 
-        const nextIndex = activeImageIndex + 1;
-        const nextImage = nextIndex < images.length ? images[nextIndex]?.image_url : null;
-        const nextVideo = nextIndex === images.length ? videos[0]?.video_url : null;
-
-        // Keep the next slide instant without requesting every gallery asset at once.
-        preloadImage(currentImage ? cdnBlur(currentImage) : null).catch(() => undefined);
-        if (nextVideo) preloadVideo(nextVideo).catch(() => undefined);
-        else preloadImage(nextImage ? cdnFull(nextImage) : null).catch(() => undefined);
-      }, [activeImageIndex, currentImage, images, standby, videos]);
+        preloadImage(backgroundImage ? cdnBlur(backgroundImage) : null, "anonymous").catch(() => undefined);
+        // Prepare both directions, without retaining every photo of every item.
+        for (const offset of [-1, 1]) {
+          const index = (activeImageIndex + offset + totalSlides) % totalSlides;
+          if (index === images.length && hasVideo) {
+            preloadVideo(videos[0]?.video_url).catch(() => undefined);
+          } else {
+            preloadImage(images[index]?.image_url ? cdnFull(images[index].image_url) : null, "anonymous").catch(() => undefined);
+          }
+        }
+      }, [activeImageIndex, backgroundImage, hasVideo, images, standby, totalSlides, videos]);
 
       const revealVideoWhenFrameIsReady = useCallback((video: HTMLVideoElement) => {
         if ("requestVideoFrameCallback" in video) {
@@ -398,24 +449,23 @@ const SwipeCard = memo(
         (direction: "like" | "dislike", velocityX?: number) => {
           if (disabled || standby || expanded || mediaZoomRef.current.scale > 1.01 || exitingRef.current) return;
           exitingRef.current = true;
-          const exitX = direction === "like" ? EXIT_X : -EXIT_X;
-          const vel = velocityX != null ? velocityX : direction === "like" ? 800 : -800;
-          animate(y, EXIT_Y, {
-            type: "spring",
-            stiffness: 520,
-            damping: 38,
-            velocity: Math.abs(vel) * 0.18,
-          });
+          // Clear even wide screens and the rotated corner. Don't wait for a
+          // spring to settle offscreen before making the next card interactive.
+          const sign = x.get() > 0 ? 1 : -1;
+          const exitX = sign * (window.innerWidth + window.innerHeight * 0.08 + 32);
+          const distance = Math.abs(exitX - x.get());
+          const speed = Math.max(0, (velocityX ?? sign * 900) * sign);
+          const duration = Math.min(0.32, Math.max(0.12, distance / Math.max(speed, 1400)));
+          const ease: [number, number, number, number] = [1 / 3, Math.min(1, speed * duration / Math.max(distance, 1) / 3), 2 / 3, 1];
           animate(x, exitX, {
-            type: "spring",
-            stiffness: 600,
-            damping: 35,
-            velocity: vel,
-            restSpeed: 100,
+            type: "tween",
+            duration,
+            // Match the release velocity at t=0, then accelerate out of view.
+            ease,
             onComplete: () => onSwipeComplete(direction),
           });
         },
-        [disabled, standby, expanded, x, y, onSwipeComplete]
+        [disabled, standby, expanded, x, onSwipeComplete]
       );
 
       useImperativeHandle(ref, () => ({
@@ -426,18 +476,19 @@ const SwipeCard = memo(
         (_: any, info: PanInfo) => {
           if (expanded || mediaZoomRef.current.scale > 1.01) return;
           const velocity = info.velocity.x;
-          const offset = info.offset.x;
+          const offset = x.get();
 
-          if (offset > SWIPE_THRESHOLD || velocity > 400) {
+          if (Math.abs(velocity) > 400 && Math.abs(info.offset.x) > 12) {
+            doExit(velocity > 0 ? "like" : "dislike", velocity);
+          } else if (offset > CARD_SWIPE_THRESHOLD) {
             doExit("like", velocity);
-          } else if (offset < -SWIPE_THRESHOLD || velocity < -400) {
+          } else if (offset < -CARD_SWIPE_THRESHOLD) {
             doExit("dislike", velocity);
           } else {
-            animate(x, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
-            animate(y, 0, { type: "spring", stiffness: 700, damping: 28, mass: 0.8 });
+            animate(x, 0, { type: "spring", stiffness: 650, damping: 45, mass: 0.8, velocity });
           }
         },
-        [doExit, x, y, expanded]
+        [doExit, x, expanded]
       );
 
       const ownerProfile = item?.profiles as any;
@@ -445,10 +496,40 @@ const SwipeCard = memo(
       const compactLocation = formatCompactLocation(item?.location);
       const { data: rating } = useUserRating(ownerProfile?.user_id);
       const currentImageSrc = currentImage ? cdnFull(currentImage) : null;
-      const mediaAspectClass = getMediaAspectClass(currentImageSrc ? imageRatios[currentImageSrc] : undefined);
+      const imageRatio = currentImageSrc ? imageRatios[currentImageSrc] : undefined;
+      const fillPhotoWidth = !expanded && Boolean(imageRatio && mediaSize.width / imageRatio > mediaSize.height);
+      const fittedWidth = imageRatio ? (fillPhotoWidth ? mediaSize.width : Math.min(mediaSize.width, mediaSize.height * imageRatio)) : 0;
+      const fittedHeight = imageRatio ? Math.min(mediaSize.height, fittedWidth / imageRatio) : 0;
+      const imageMaskSize = fittedWidth && fittedHeight ? `${fittedWidth}px ${fittedHeight}px` : "100% 100%";
+      const freeHeight = mediaSize.height - fittedHeight;
+      // Balance the photo between the 44px header controls and product information.
+      const centeredY = fittedHeight && freeHeight > 0
+        ? Math.max(0, Math.min(100, (mediaSize.centerY - fittedHeight / 2) / freeHeight * 100))
+        : 50;
+      const imagePosition = expanded ? getMediaObjectPosition(currentImageRecord) : `50% ${centeredY}%`;
+      const backgroundImageSrc = backgroundImage ? cdnFull(backgroundImage) : null;
+      const backgroundAspectClass = getMediaAspectClass(
+        backgroundImageSrc ? imageRatios[backgroundImageSrc] : undefined
+      );
 
       return (
+        <>
+        {/* Stationary, already decoded backgrounds: only opacity changes during
+            the gesture; the existing blur, framing and scrim stay unchanged. */}
+        {backgroundImage && (
+          <motion.div
+            aria-hidden
+            className="swipe-card-backdrop pointer-events-none absolute inset-0 overflow-hidden rounded-[1.75rem] bg-background"
+            style={{ zIndex: standby ? 1 : 0, opacity: standby ? standbyOpacity : 1, willChange: "opacity" }}
+          >
+            <div className={`swipe-media-stage ${backgroundAspectClass}`}>
+              <img src={cdnBlur(backgroundImage)} onError={handleBackgroundError} alt="" crossOrigin="anonymous" className="swipe-media-ambient" loading="eager" decoding="async" draggable={false} />
+              <div className="swipe-media-ambient-scrim" />
+            </div>
+          </motion.div>
+        )}
         <motion.div
+          aria-hidden={standby || undefined}
           data-media-tone={mediaTone}
           className={`swipe-card-shell absolute inset-0 h-full w-full overflow-hidden rounded-[1.75rem] ${
             standby ? "pointer-events-none" : expanded ? "" : "touch-none"
@@ -462,13 +543,18 @@ const SwipeCard = memo(
             willChange: "transform, opacity",
             transformOrigin: "50% 80%",
             borderRadius: "1.75rem",
-            y: standby ? 0 : y,
             ...(standby ? { opacity: standbyOpacity } : {}),
           }}
-          drag={standby || expanded || isMediaGestureActive || mediaZoom.scale > 1.01 ? false : "x"}
-          dragDirectionLock
-          dragConstraints={{ top: 0, bottom: 0, left: -500, right: 500 }}
-          dragElastic={{ top: 0, bottom: 0, left: 0.65, right: 0.65 }}
+          transformTemplate={standby || expanded ? undefined : ({ x: offset = 0 }, transform) => {
+            // Keep the signed gesture for the action, but render both directions southwest.
+            const distance = Math.abs(Number.parseFloat(String(offset))) || 0;
+            return transform.replace(/translateX\([^)]*\)/, `translate(${-distance}px, ${distance}px)`);
+          }}
+          drag={disabled || standby || expanded || isMediaGestureActive || mediaZoom.scale > 1.01 ? false : "x"}
+          dragMomentum={false}
+          onPointerDownCapture={(event) => {
+            if (exitingRef.current) event.stopPropagation();
+          }}
           onDragEnd={standby || expanded ? undefined : handleDragEnd}
           initial={standby ? false : { scale: 1, opacity: 1 }}
           animate={undefined}
@@ -518,19 +604,29 @@ const SwipeCard = memo(
                   />
                 </>
               ) : currentImage ? (
-                <div className={`swipe-media-stage ${mediaAspectClass}`}>
+                <div className={`swipe-media-stage ${backgroundAspectClass}`}>
                   <img
-                    src={cdnBlur(currentImage)}
+                    src={cdnBlur(backgroundImage)}
+                    onError={handleBackgroundError}
                     alt=""
                     aria-hidden
+                    crossOrigin="anonymous"
                     className="swipe-media-ambient"
                     loading="eager"
                     decoding="async"
                     draggable={false}
                   />
                   <div className="swipe-media-ambient-scrim" aria-hidden />
+                  <div
+                    ref={mediaRef}
+                    className="swipe-photo-viewport absolute inset-x-0 overflow-hidden"
+                    style={{
+                      top: expanded ? 0 : "var(--safe-area-top)",
+                      bottom: expanded ? 0 : compactInfoHeight + 8,
+                    }}
+                  >
                   <img
-                    key={activeImageIndex}
+                    key={`${activeImageIndex}-${imageRevision}`}
                     alt={item.name}
                     className="swipe-media-foreground"
                     src={currentImageSrc || undefined}
@@ -539,13 +635,24 @@ const SwipeCard = memo(
                     loading="eager"
                     decoding="async"
                     style={{
-                      objectPosition: "center center",
+                      objectFit: fillPhotoWidth ? "cover" : "contain",
+                      objectPosition: imagePosition,
+                      transformOrigin: imagePosition,
+                      maskSize: imageMaskSize,
+                      WebkitMaskSize: imageMaskSize,
+                      maskPosition: imagePosition,
+                      WebkitMaskPosition: imagePosition,
                       transform: `translate3d(${mediaZoom.x}px, ${mediaZoom.y}px, 0) scale(${getMediaScale(currentImageRecord) * mediaZoom.scale})`,
                       willChange: "transform",
                     }}
                     onLoad={handleImageLoad}
+                    onError={() => {
+                      activeImageIndexRef.current = activeImageIndex;
+                      setGalleryStatus("error");
+                    }}
                     draggable={false}
                   />
+                  </div>
                 </div>
               ) : (
                 <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -554,16 +661,29 @@ const SwipeCard = memo(
               )}
             </div>
 
+            {!standby && !expanded && galleryStatus !== "idle" && (
+              <div className="absolute inset-x-4 z-30 flex justify-center" style={{ top: "calc(var(--safe-area-top) + 5.5rem)" }}>
+                {galleryStatus === "error" ? (
+                  <button type="button" className="min-h-11 rounded-full bg-black/80 px-4 text-xs text-white"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={() => showSlide(activeImageIndexRef.current)}>
+                    Não foi possível carregar. Tentar novamente
+                  </button>
+                ) : <span role="status" className="rounded-full bg-black/80 px-3 py-2 text-xs text-white">Carregando foto…</span>}
+              </div>
+            )}
+
             {/* Owner mini-profile */}
             {ownerProfile && !expanded && (
               <button
+                disabled={standby}
                 type="button"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/usuario/${ownerProfile.user_id}`);
                 }}
-                className="absolute left-4 z-30 flex items-center gap-1.5 max-w-[45%] pl-1 pr-2.5 py-1 rounded-full bg-scrim/35 backdrop-blur-xl border border-on-media/10 hover:border-on-media/30 active:scale-95 transition-all cursor-pointer"
+                className="swipe-owner-button absolute left-4 z-30 flex items-center gap-1.5 max-w-[calc(50%-4.5rem)] pl-1 pr-2.5 py-1 rounded-full bg-scrim/65 border border-on-media/10 hover:border-on-media/30 active:scale-95 transition-all cursor-pointer"
                 style={{ top: "calc(var(--safe-area-top) + 0.75rem)" }}
               >
                 {ownerProfile.avatar_url ? (
@@ -578,11 +698,7 @@ const SwipeCard = memo(
                   </div>
                 )}
                 <span className="text-on-media text-[11px] font-semibold drop-shadow-md truncate min-w-0">
-                  {(() => {
-                    const full = ownerProfile.display_name || "Usuário";
-                    const first = full.split(" ")[0];
-                    return full.includes(" ") ? `${first}...` : first;
-                  })()}
+                  {(ownerProfile.display_name || "Usuário").trim().split(/\s+/)[0]}
                 </span>
                 {rating && (
                   <div className="flex items-center gap-0.5 shrink-0">
@@ -597,19 +713,33 @@ const SwipeCard = memo(
 
             {/* Slide dots */}
             {!expanded && totalSlides > 1 && (
-              <div
-                className="absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-scrim/30 backdrop-blur-xl border border-on-media/10"
-                style={{ top: "calc(var(--safe-area-top) + 2.85rem)" }}
+              <button
+                type="button"
+                disabled={standby}
+                aria-label={`Fotos do item: ${activeImageIndex + 1} de ${totalSlides}. Próxima foto`}
+                onClick={() => showSlide(activeImageIndexRef.current + 1)}
+                onKeyDown={(event) => {
+                  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                  event.preventDefault();
+                  showSlide(activeImageIndexRef.current + (event.key === "ArrowRight" ? 1 : -1));
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+                className="absolute left-1/2 -translate-x-1/2 z-30 flex h-11 min-w-11 items-center gap-0 px-1"
+                style={{ top: "calc(var(--safe-area-top) + 0.3rem)" }}
               >
+                <span aria-hidden className="pointer-events-none absolute inset-x-0 top-[17px] h-2.5 rounded-full bg-black/40" />
                 {Array.from({ length: totalSlides }).map((_, i) => (
-                  <div
+                  <span
                     key={i}
-                    className={`h-1 rounded-full transition-all duration-200 ${
+                    aria-hidden="true"
+                    className="relative flex h-11 min-w-2.5 items-center justify-center"
+                  >
+                    <span className={`h-1 rounded-full transition-all duration-200 ${
                       i === activeImageIndex ? "w-3.5 bg-on-media" : "w-1 bg-on-media/40"
-                    }`}
-                  />
+                    }`} />
+                  </span>
                 ))}
-              </div>
+              </button>
             )}
 
             {/* Dark glass edge fade */}
@@ -693,16 +823,13 @@ const SwipeCard = memo(
             </AnimatePresence>
 
             {/* ===== COMPACT INFO ===== */}
-            {activeImageIndex === 0 && !expanded && (
+            {!expanded && (
               <div
-                className="absolute bottom-0 inset-x-0 z-30 h-[46%] min-h-[270px] max-h-[360px] overflow-hidden pointer-events-none"
+                ref={compactInfoRef}
+                className="swipe-compact-info absolute bottom-0 inset-x-0 z-30 pointer-events-none"
                 onPointerDown={(e) => e.stopPropagation()}
               >
-                <div
-                  className="swipe-edge-glass swipe-edge-glass-bottom swipe-edge-glass-bottom-compact swipe-edge-glass-fill z-0"
-                  aria-hidden
-                />
-                <div className="absolute inset-x-0 bottom-0 z-10 px-5 pb-[calc(var(--safe-area-bottom)+5.75rem)] pointer-events-none">
+                <div className="relative z-10 px-5 pb-[calc(var(--safe-area-bottom)+4.25rem)] pointer-events-none">
                   {matchedOwnItem && (
                     <div className="flex items-center gap-1.5 mb-2">
                       <Repeat className="h-3 w-3 text-primary shrink-0" />
@@ -734,35 +861,39 @@ const SwipeCard = memo(
 
                   <button
                     type="button"
+                    disabled={standby}
                     onClick={toggleExpand}
                     aria-label="Ver detalhes do item"
                     className="block w-full text-left pointer-events-auto active:scale-[0.99] transition-transform"
                   >
-                    <div className="swipe-compact-heading-row flex min-w-0 items-end gap-3 border-b pb-2">
-                      <h2 className="swipe-compact-title min-w-0 flex-1 truncate text-[24px] font-bold tracking-tight leading-[1.12]">
+                    <div className="swipe-compact-heading-row flex min-w-0 flex-col gap-1.5 pb-2">
+                      <h2 className="swipe-compact-title min-w-0 line-clamp-2 break-words text-[24px] font-bold tracking-tight leading-[1.12]">
                         {item.name}
                       </h2>
-                      <span className="swipe-compact-price shrink-0 text-[19px] font-semibold leading-none tracking-tight">
+                      <span className="swipe-compact-price break-words text-[22px] font-semibold leading-tight tracking-tight">
                         {formatValue(item.market_value)}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 mt-1.5 mb-1.5 overflow-hidden">
-                      <span className="swipe-compact-chip px-2 py-0.5 rounded-full text-[9.5px] font-semibold tracking-wide uppercase shrink-0 backdrop-blur-xl">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5 mb-1.5">
+                      <span className="swipe-compact-chip max-w-full break-words px-2 py-0.5 rounded-full text-[11px] font-medium uppercase">
                         {item.category}
                       </span>
                       {conditionLabel && (
-                        <span className="swipe-compact-chip px-2 py-0.5 rounded-full text-[9.5px] font-semibold uppercase flex items-center gap-1 shrink-0 backdrop-blur-xl">
+                        <span className="swipe-compact-chip px-2 py-0.5 rounded-full text-[11px] font-medium uppercase flex items-center gap-1">
                           <Package className="h-2.5 w-2.5" /> {conditionLabel}
                         </span>
                       )}
                       {compactLocation && (
-                        <span className="swipe-compact-chip max-w-[48%] px-2 py-0.5 rounded-full text-[9.5px] font-semibold uppercase flex items-center gap-1 truncate min-w-0 backdrop-blur-xl">
+                        <span className="swipe-compact-chip max-w-full px-2 py-0.5 rounded-full text-[11px] font-medium uppercase flex items-center gap-1 min-w-0">
                           <MapPin className="h-2.5 w-2.5 shrink-0" />{" "}
                           <span className="truncate">{compactLocation}</span>
                         </span>
                       )}
                     </div>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-black/65 px-2 py-1 text-[11px] font-medium text-white">
+                      Ver detalhes <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                    </span>
                   </button>
 
                   <SwipeActionButtons
@@ -777,6 +908,7 @@ const SwipeCard = memo(
             )}
           </div>
         </motion.div>
+        </>
       );
     }
   )

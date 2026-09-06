@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { getAuthRedirectUrl } from "@/lib/authRedirect";
+import { getAuthRedirectUrl, markOAuthPending } from "@/lib/authRedirect";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
+import { forgetDevicePushToken, getRememberedDevicePushToken } from "@/lib/devicePushToken";
 
 interface AuthContextType {
   user: User | null;
@@ -35,7 +38,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let cancelled = false;
+    let listener: { remove: () => Promise<void> } | undefined;
+    void CapacitorApp.addListener("appStateChange", async ({ isActive }) => {
+      if (!isActive || cancelled) return;
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    }).then((handle) => {
+      listener = handle;
+      if (cancelled) void handle.remove();
+    });
+
+    return () => {
+      cancelled = true;
+      void listener?.remove();
+    };
+  }, []);
+
   const signUp = async (email: string, password: string, displayName: string) => {
+    if (Capacitor.isNativePlatform()) markOAuthPending();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,7 +84,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const pushToken = getRememberedDevicePushToken();
+    if (pushToken) {
+      const { error } = await supabase.rpc("unregister_device_token", { p_token: pushToken });
+      if (!error) forgetDevicePushToken();
+    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    window.dispatchEvent(new Event("hypou:signed-out"));
   };
 
   return (

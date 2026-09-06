@@ -135,15 +135,29 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
-    const sinceIso = new Date(Date.now() - RATE_WINDOW_SECONDS * 1000).toISOString();
-    // Limpa registros antigos do usuário
-    await admin.from("ai_validation_throttle").delete().eq("user_id", userId).lt("created_at", sinceIso);
-    const { count } = await admin
-      .from("ai_validation_throttle")
-      .select("id", { count: "exact", head: true })
+    const { data: suspension, error: suspensionError } = await admin
+      .from("user_suspensions")
+      .select("user_id")
       .eq("user_id", userId)
-      .gte("created_at", sinceIso);
-    if ((count ?? 0) >= RATE_LIMIT) {
+      .is("lifted_at", null)
+      .maybeSingle();
+    if (suspensionError) return unavailableResponse("Validação temporariamente indisponível.");
+    if (suspension) {
+      return new Response(JSON.stringify({ error: "Conta suspensa" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { data: quotaAvailable, error: quotaError } = await admin.rpc("consume_ai_validation_quota", {
+      p_user_id: userId,
+      p_limit: RATE_LIMIT,
+      p_window_seconds: RATE_WINDOW_SECONDS,
+    });
+    if (quotaError) {
+      edgeLog(observation, "error", "price.rate_limit_failed");
+      return unavailableResponse("Validação temporariamente indisponível.");
+    }
+    if (!quotaAvailable) {
       edgeLog(observation, "warn", "price.rate_limited", { limit: RATE_LIMIT });
       await persistEdgeObservation(admin, observation, "warn", "price.rate_limited", {
         action: "price_suggestion",
@@ -158,8 +172,6 @@ Deno.serve(async (req) => {
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(RATE_WINDOW_SECONDS) } }
       );
     }
-    await admin.from("ai_validation_throttle").insert({ user_id: userId });
-
     const rawBody = await req.json();
     const parsed = BodySchema.safeParse(rawBody);
     if (!parsed.success) {

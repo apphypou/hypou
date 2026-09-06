@@ -48,7 +48,7 @@ const Privacidade = () => {
 
           <h2 className="text-foreground text-base font-bold mt-6 mb-2">6. Seus Direitos</h2>
           <p className="text-foreground/80 text-sm leading-relaxed">
-            Conforme a LGPD, você tem direito a: confirmar o tratamento de seus dados; acessar seus dados; corrigir dados incompletos ou desatualizados; solicitar anonimização ou exclusão; revogar consentimento; solicitar portabilidade. Para exercer seus direitos, entre em contato pelo e-mail: privacidade@hypou.app
+            Conforme a LGPD, você tem direito a: confirmar o tratamento de seus dados; acessar seus dados; corrigir dados incompletos ou desatualizados; solicitar anonimização ou exclusão; revogar consentimento; solicitar portabilidade. Para exercer seus direitos, entre em contato pelo e-mail: hypouapp@gmail.com
           </p>
 
           <h2 className="text-foreground text-base font-bold mt-6 mb-2">7. Retenção de Dados</h2>
@@ -68,7 +68,7 @@ const Privacidade = () => {
 
           <h2 className="text-foreground text-base font-bold mt-6 mb-2">10. Contato do Encarregado (DPO)</h2>
           <p className="text-foreground/80 text-sm leading-relaxed">
-            Para questões relacionadas à proteção de dados, entre em contato com nosso Encarregado de Proteção de Dados pelo e-mail: dpo@hypou.app
+            Para questões relacionadas à proteção de dados, entre em contato com nosso Encarregado de Proteção de Dados pelo e-mail: hypouapp@gmail.com
           </p>
         </div>
       </main>

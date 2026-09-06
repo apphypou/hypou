@@ -41,4 +41,14 @@ describe("auth redirect state", () => {
       })
     ).toEqual({ type: "none" });
   });
+
+  it("rejects external post-login redirects", () => {
+    expect(
+      getPostLoginRedirectDecision({
+        event: "SIGNED_IN",
+        pathname: "/login",
+        postLoginRedirect: "//attacker.example",
+      })
+    ).toEqual({ type: "navigate", to: "/explorar", clearPostLoginRedirect: false });
+  });
 });

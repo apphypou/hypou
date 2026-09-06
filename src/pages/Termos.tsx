@@ -68,7 +68,7 @@ const Termos = () => {
 
           <h2 className="text-foreground text-base font-bold mt-6 mb-2">10. Contato</h2>
           <p className="text-foreground/80 text-sm leading-relaxed">
-            Dúvidas sobre estes termos? Entre em contato pelo e-mail: contato@hypou.app
+            Dúvidas sobre estes termos? Entre em contato pelo e-mail: hypouapp@gmail.com
           </p>
         </div>
       </main>

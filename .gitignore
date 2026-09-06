@@ -38,3 +38,4 @@ vite.config.ts.timestamp-*.mjs
 .vite.trace.config.mjs
 ios/App/App/config 2.xml
 supabase/.temp/
+.vercel

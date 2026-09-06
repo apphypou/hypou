@@ -250,14 +250,11 @@
     --swipe-foreground-top-fade: linear-gradient(
       to bottom,
       transparent 0%,
-      rgba(0, 0, 0, 0.18) 5%,
-      rgba(0, 0, 0, 0.68) 11%,
-      black 16%,
-      black 100%
+      black min(32px, 8%),
+      black max(calc(100% - 32px), 92%),
+      transparent 100%
     );
-    background:
-      radial-gradient(120% 70% at 50% 12%, rgba(255, 255, 255, 0.08), transparent 54%),
-      linear-gradient(180deg, rgba(7, 11, 17, 0.32), rgba(4, 7, 11, 0.18) 44%, rgba(4, 7, 11, 0.36));
+    background: #101213;
   }
 
   .swipe-media-ambient {
@@ -268,16 +265,14 @@
     object-fit: cover;
     object-position: center center;
     transform: scale(1.08);
-    filter: blur(20px) saturate(108%);
-    opacity: 0.58;
+    filter: blur(24px) saturate(85%) contrast(70%) brightness(80%);
+    opacity: 1;
   }
 
   .swipe-media-ambient-scrim {
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(180deg, rgba(0, 0, 0, 0.04), transparent 36%, rgba(0, 0, 0, 0.08)),
-      radial-gradient(90% 56% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.12), transparent 35%, rgba(0, 0, 0, 0.12));
   }
 
   .swipe-media-foreground {
@@ -288,9 +283,10 @@
     object-fit: contain;
     object-position: center center;
     transform: scale(1.025);
-    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.24));
     mask-image: var(--swipe-foreground-top-fade);
     -webkit-mask-image: var(--swipe-foreground-top-fade);
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
   }
 
 .swipe-media-stage--wide .swipe-media-foreground {
@@ -300,7 +296,6 @@
 
 .swipe-media-stage--wide .swipe-media-ambient {
   transform: scale(1.1);
-  opacity: 0.62;
 }
 
   .swipe-media-stage--tall .swipe-media-foreground {
@@ -313,6 +308,7 @@
   }
 
   .swipe-card-shell {
+    background-color: #101213;
     --swipe-readable-text: rgba(255, 255, 255, 0.98);
     --swipe-readable-muted: rgba(255, 255, 255, 0.82);
     --swipe-readable-shadow: 0 2px 12px rgba(0, 0, 0, 0.72);
@@ -341,23 +337,23 @@
   .swipe-compact-title,
   .swipe-compact-price {
     color: var(--swipe-readable-text);
-    text-shadow: var(--swipe-readable-shadow);
+    text-shadow: none;
   }
 
   .swipe-compact-heading-row {
     border-color: rgba(255, 255, 255, 0.76);
-    filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.46));
+    filter: none;
   }
 
   .swipe-card-shell[data-media-tone="bright"] .swipe-compact-heading-row {
     border-color: rgba(255, 255, 255, 0.88);
-    filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.72));
+    filter: none;
   }
 
   .swipe-compact-chip {
-    background: var(--swipe-chip-bg);
-    border: 1px solid var(--swipe-chip-border);
-    color: var(--swipe-readable-muted);
+    background: rgba(16, 18, 19, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: rgba(255, 255, 255, 0.94);
     text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
   }
 
@@ -421,23 +417,11 @@
   }
 
   .swipe-edge-glass-top::before {
-    background:
-      radial-gradient(120% 92% at 50% -22%, rgba(0, 0, 0, 0.44) 0%, rgba(0, 0, 0, 0.2) 44%, transparent 100%),
-      linear-gradient(to bottom, rgba(9, 14, 22, 0.26), rgba(9, 14, 22, 0.11) 54%, transparent);
-    backdrop-filter: blur(10px) saturate(110%);
-    -webkit-backdrop-filter: blur(10px) saturate(110%);
-    mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.76) 38%, rgba(0, 0, 0, 0.2) 74%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.76) 38%, rgba(0, 0, 0, 0.2) 74%, transparent 100%);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.22), transparent);
   }
 
   .swipe-edge-glass-top::after {
-    background:
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012) 36%, transparent 74%),
-      radial-gradient(84% 52% at 50% 0%, rgba(255, 255, 255, 0.09), transparent 68%);
-    mix-blend-mode: screen;
-    opacity: 0.2;
-    mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.36) 62%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.36) 62%, transparent 100%);
+    content: none;
   }
 
   .swipe-edge-glass-bottom {
@@ -476,16 +460,22 @@
     -webkit-mask-image: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.38) 62%, transparent 100%);
   }
 
-  .swipe-edge-glass-bottom-compact::before {
-    background:
-      radial-gradient(120% 92% at 50% 122%, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%),
-      linear-gradient(to top, rgba(9, 14, 22, 0.28), rgba(9, 14, 22, 0.11) 52%, transparent);
-    backdrop-filter: blur(8px) saturate(110%);
-    -webkit-backdrop-filter: blur(8px) saturate(110%);
+  /* Extend touch targets without changing the approved visible controls. */
+  .swipe-toolbar-button::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
   }
 
-  .swipe-edge-glass-bottom-compact::after {
-    opacity: 0.24;
+  .swipe-owner-button::after {
+    content: "";
+    position: absolute;
+    inset: -7px 0;
+  }
+
+  .swipe-card-shell button:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 3px;
   }
 
   .hypou-bottom-nav {

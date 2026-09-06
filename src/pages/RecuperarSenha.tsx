@@ -5,7 +5,8 @@ import { HYPOU_LOGO as logoHypou } from "@/config/brand";
 import { supabase } from "@/integrations/supabase/client";
 import NeonButton from "@/components/NeonButton";
 import { useToast } from "@/hooks/use-toast";
-import { getAuthRedirectUrl } from "@/lib/authRedirect";
+import { getAuthRedirectUrl, markOAuthPending } from "@/lib/authRedirect";
+import { Capacitor } from "@capacitor/core";
 import { getErrorMessage } from "@/lib/utils";
 
 const RecuperarSenha = () => {
@@ -18,6 +19,7 @@ const RecuperarSenha = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    if (Capacitor.isNativePlatform()) markOAuthPending();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: getAuthRedirectUrl("/reset-password"),
     });

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasAal2 } from "../_shared/mfa.ts";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const count = (value: { count: number | null }) => value.count || 0;
@@ -52,6 +53,7 @@ Deno.serve(async (req) => {
     const callerClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: { user } } = await callerClient.auth.getUser();
     if (!user) throw new Error("Unauthorized");
+    if (!hasAal2(authHeader)) throw new Error("MFARequired");
 
     const admin = createClient(url, serviceKey);
     const { data: role } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
@@ -174,7 +176,7 @@ Deno.serve(async (req) => {
       },
     }, { headers: corsHeaders });
   } catch (error) {
-    const status = String(error).includes("Unauthorized") ? 401 : 500;
+    const status = String(error).includes("Unauthorized") ? 401 : String(error).includes("MFARequired") ? 403 : 500;
     return Response.json({ error: error instanceof Error ? error.message : "Erro inesperado" }, { status, headers: corsHeaders });
   }
 });

@@ -146,13 +146,13 @@ export const useSendMessage = (conversationId: string | null) => {
   });
 };
 
-export const useUploadChatMedia = () => {
+export const useUploadChatMedia = (conversationId: string | null) => {
   const { user } = useAuth();
 
   return useMutation({
     mutationFn: ({ file, type }: { file: File; type: MessageType }) => {
-      if (!user) throw new Error("Not authenticated");
-      return uploadChatMedia(user.id, file, type);
+      if (!user || !conversationId) throw new Error("Not ready");
+      return uploadChatMedia(conversationId, user.id, file, type);
     },
   });
 };

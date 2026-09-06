@@ -10,7 +10,7 @@ import { getItemById, getRecommendedItems, getPublicExploreItems } from "@/servi
 import { createSwipe } from "@/services/swipeService";
 import { createProposal } from "@/services/matchService";
 import { addFavorite, getFavoriteItemIds, removeFavorite } from "@/services/favoriteService";
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import SelectItemDialog from "@/components/SelectItemDialog";
 import GuestPromptDialog from "@/components/GuestPromptDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +32,7 @@ import { formatValue, getErrorMessage } from "@/lib/utils";
 import { buildPublicItemUrl, shareContent } from "@/lib/share";
 import { shouldRecycleExploreFeed } from "@/lib/exploreFeed";
 import { getOnboardingRouteState } from "@/lib/onboarding";
-import { cdnFull } from "@/lib/imageUrl";
+import { cdnFull, cdnBlur } from "@/lib/imageUrl";
 import { preloadImage } from "@/lib/mediaPreload";
 
 const PENDING_LIKE_KEY = "hypou:pending-like-item";
@@ -276,8 +276,13 @@ const Explorar = () => {
       next.add(itemId);
       return next;
     });
+  }, [focusedItem]);
+
+  // Reset after React promotes the mounted standby card, never while it is
+  // still underneath the departing one (which would expose an empty frame).
+  useLayoutEffect(() => {
     dragDirectionValue.set(0);
-  }, [dragDirectionValue, focusedItem]);
+  }, [currentItem?.id, dragDirectionValue]);
 
   const triggerStreak = useCallback((direction: string) => {
     if (direction === "like") {
@@ -341,7 +346,6 @@ const Explorar = () => {
 
       if (direction === "like") {
         recordSwipeInBackground("like", item.id);
-        haptic("light");
         // Persist so the user can finish the proposal even after navigating to /novo-item
         try {
           sessionStorage.setItem(PENDING_LIKE_KEY, JSON.stringify({
@@ -423,14 +427,15 @@ const Explorar = () => {
     [dragDirectionValue]
   );
 
-  // The next card is rendered behind the active one. Preload only the first media
-  // of the card after it, keeping swipe transitions responsive on slower networks.
-  const afterNextItem = visibleItems[2] ?? null;
-  const afterNextImage = afterNextItem?.item_images?.[0]?.image_url;
-
+  // A small rolling window prepares both the foreground and the tiny ambient
+  // variants. No full galleries or videos are downloaded for the feed ahead.
+  const upcomingImages = visibleItems.slice(0, 4).map((item) => item.item_images?.[0]?.image_url ?? "").join("\n");
   useEffect(() => {
-    preloadImage(afterNextImage ? cdnFull(afterNextImage) : null).catch(() => undefined);
-  }, [afterNextImage]);
+    for (const image of upcomingImages.split("\n").filter(Boolean)) {
+      void preloadImage(cdnFull(image), "anonymous").catch(() => undefined);
+      void preloadImage(cdnBlur(image), "anonymous").catch(() => undefined);
+    }
+  }, [upcomingImages]);
 
   const feedEnded = false;
 
@@ -538,7 +543,7 @@ const Explorar = () => {
                     type="button"
                     onClick={() => void handleToggleFavorite(currentItem.id)}
                     aria-label={favoriteItemIdSet.has(currentItem.id) ? "Remover dos itens salvos" : "Salvar item"}
-                    className="h-9 w-9 rounded-full bg-scrim/45 backdrop-blur-xl border border-on-media/10 flex items-center justify-center active:scale-95 transition-transform"
+                    className="swipe-toolbar-button relative h-9 w-9 rounded-full bg-scrim/65 border border-on-media/10 flex items-center justify-center active:scale-95 transition-transform"
                   >
                     <Bookmark className={`h-3.5 w-3.5 ${favoriteItemIdSet.has(currentItem.id) ? "fill-primary text-primary" : "text-on-media"}`} />
                   </button>
@@ -554,14 +559,14 @@ const Explorar = () => {
                       });
                     }}
                     aria-label="Compartilhar item"
-                    className="h-9 w-9 rounded-full bg-scrim/45 backdrop-blur-xl border border-on-media/10 flex items-center justify-center active:scale-95 transition-transform"
+                    className="swipe-toolbar-button relative h-9 w-9 rounded-full bg-scrim/65 border border-on-media/10 flex items-center justify-center active:scale-95 transition-transform"
                   >
                     <Share2 className="h-3.5 w-3.5 text-on-media" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setFiltersOpen(true)}
-                    className="relative h-9 w-9 rounded-full bg-scrim/45 backdrop-blur-xl border border-on-media/10 flex items-center justify-center active:scale-95 transition-transform"
+                    className="swipe-toolbar-button relative h-9 w-9 rounded-full bg-scrim/65 border border-on-media/10 flex items-center justify-center active:scale-95 transition-transform"
                     aria-label="Configurar interesses"
                   >
                     <SlidersHorizontal className="h-3.5 w-3.5 text-on-media" />

@@ -17,4 +17,9 @@ describe("native auth redirect parsing", () => {
   it("ignores non-Hypou callback URLs", () => {
     expect(getNativeAuthPathFromUrl("https://example.com/explorar")).toBeNull();
   });
+
+  it("removes the one-time OAuth code before navigation", () => {
+    expect(getNativeAuthPathFromUrl("hypou://auth-callback/explorar?code=secret&tab=recentes"))
+      .toBe("/explorar?tab=recentes");
+  });
 });

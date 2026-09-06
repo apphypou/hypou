@@ -19,6 +19,8 @@ const requiredRecentMigrations = [
   "20260713200000",
   "20260713210000",
   "20260714090000",
+  "20260905120000",
+  "20260905130000",
 ];
 const requiredColumns = [
   /"focal_x" numeric DEFAULT 50 NOT NULL/,
@@ -43,6 +45,11 @@ const requiredFunctions = [
   /CREATE OR REPLACE FUNCTION "public"\."confirm_trade_delivery"\("p_match_id" "uuid"\)/,
   /CREATE OR REPLACE FUNCTION "public"\."notify_call_ended"\(\) RETURNS "trigger"/,
   /CREATE OR REPLACE FUNCTION "public"\."expire_ringing_calls"\(\) RETURNS integer/,
+  /CREATE OR REPLACE FUNCTION "public"\."send_message"\(/,
+  /CREATE OR REPLACE FUNCTION "public"\."consume_ai_validation_quota"\(/,
+  /CREATE OR REPLACE FUNCTION "public"\."register_device_token"\(/,
+  /CREATE OR REPLACE FUNCTION "public"\."unregister_device_token"\(/,
+  /CREATE OR REPLACE FUNCTION "public"\."join_waitlist"\(/,
 ];
 const requiredStoragePolicies = [
   "Avatar images are publicly accessible",
@@ -53,12 +60,15 @@ const requiredStoragePolicies = [
   "Users can upload own item videos",
   "Users can upload own chat media",
   "Users can upload own avatar",
+  "Participants can read private chat media",
+  "Participants can upload own private chat media",
+  "Owners can delete private chat media",
 ];
 const requiredPublicPolicies = [
   "Conversation archive rows are visible to participants",
   "Participants can archive their conversations",
   "Participants can unarchive their conversations",
-  "Caller can insert calls",
+  "Participants can send messages",
 ];
 
 const run = (label, cmd, args) => {

@@ -2,11 +2,13 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 import type { Provider } from "@supabase/supabase-js";
 import { GoogleSignIn } from "@capawesome/capacitor-google-sign-in";
 import { supabase } from "@/integrations/supabase/client";
+import { createTraceId, logError, logInfo } from "@/lib/observability";
 
 type NativeProvider = Extract<Provider, "google" | "apple">;
 
 type NativeSocialResult = {
   handled: boolean;
+  authenticated: boolean;
   error: Error | null;
 };
 
@@ -52,6 +54,7 @@ const NativeAppleSignIn = registerPlugin<NativeAppleSignInPlugin>("NativeAppleSi
 const NativeGoogleSignIn = registerPlugin<NativeGoogleSignInPlugin>("NativeGoogleSignIn");
 
 let initialized = false;
+const AUTH_EXCHANGE_TIMEOUT_MS = 20_000;
 
 const googleWebClientId = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID;
 const googleIOSClientId = import.meta.env.VITE_GOOGLE_IOS_CLIENT_ID;
@@ -161,35 +164,76 @@ const signInWithNativeProvider = async (provider: NativeProvider): Promise<Nativ
 
 export const startNativeSocialSignIn = async (provider: NativeProvider): Promise<NativeSocialResult> => {
   if (!Capacitor.isNativePlatform() || !hasNativeConfig(provider)) {
-    return { handled: false, error: null };
+    return { handled: false, authenticated: false, error: null };
   }
+
+  const traceId = createTraceId("native-auth");
+  let stage = "provider";
+  logInfo("auth.native_stage", stage, traceId, { provider, platform: Capacitor.getPlatform() });
 
   try {
     const { accessToken, nonce, token } = await signInWithNativeProvider(provider);
+    stage = "token_received";
+    logInfo("auth.native_stage", stage, traceId, { provider, platform: Capacitor.getPlatform() });
 
     if (!token) {
       return {
         handled: true,
+        authenticated: false,
         error: new Error("Login nativo não retornou token de identidade."),
       };
     }
 
-    const { error } = await supabase.auth.signInWithIdToken({
-      provider,
-      token,
-      ...(accessToken ? { access_token: accessToken } : {}),
-      ...(nonce ? { nonce } : {}),
+    stage = "session_exchange";
+    logInfo("auth.native_stage", stage, traceId, { provider, platform: Capacitor.getPlatform() });
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error("O login demorou mais que o esperado. Verifique sua conexão e tente novamente."));
+      }, AUTH_EXCHANGE_TIMEOUT_MS);
     });
+    const { data, error } = await Promise.race([
+      supabase.auth.signInWithIdToken({
+        provider,
+        token,
+        ...(accessToken ? { access_token: accessToken } : {}),
+        ...(nonce ? { nonce } : {}),
+      }),
+      timeout,
+    ]).finally(() => clearTimeout(timeoutId));
 
-    return { handled: true, error: error ? new Error(error.message) : null };
+    const sessionError = error
+      ? new Error(error.message)
+      : data.session
+        ? null
+        : new Error("O provedor autorizou o acesso, mas a sessão não foi criada. Tente novamente.");
+    if (!sessionError) {
+      logInfo("auth.native_stage", "session_ready", traceId, { provider, platform: Capacitor.getPlatform() });
+    } else {
+      logError("auth.native_failed", stage, traceId, sessionError, {
+        provider,
+        platform: Capacitor.getPlatform(),
+      });
+    }
+    return {
+      handled: true,
+      authenticated: !sessionError,
+      error: sessionError,
+    };
   } catch (error) {
     const nativeError = error as NativeError;
     if (provider === "apple" && nativeError.code === "APPLE_SIGN_IN_UNAVAILABLE") {
-      return { handled: false, error: null };
+      return { handled: false, authenticated: false, error: null };
     }
+
+    logError("auth.native_failed", stage, traceId, error, {
+      provider,
+      platform: Capacitor.getPlatform(),
+    });
 
     return {
       handled: true,
+      authenticated: false,
       error: error instanceof Error ? error : new Error("Falha no login nativo."),
     };
   }

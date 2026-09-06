@@ -270,26 +270,18 @@ const ListaEspera = () => {
 
     setLoading(true);
     try {
-      const { data: posData } = await supabase.rpc("get_waitlist_position");
-      const nextPos = (posData as number) ?? 1;
-
-      const { data, error } = await supabase
-        .from("waitlist" as any)
-        .insert({ email, position: nextPos } as any)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc("join_waitlist", {
+        p_email: email,
+        p_referred_by: new URLSearchParams(window.location.search).get("ref"),
+      });
 
       if (error) {
-        if (error.code === "23505") {
-          toast({ title: "Você já está na lista! 🎉", description: "Avisaremos você por e-mail quando houver novidades." });
-        } else {
-          throw error;
-        }
+        throw error;
       } else {
-        setPosition((data as any).position);
-        setReferralCode((data as any).referral_code);
+        setPosition(data.position);
+        setReferralCode(data.referral_code);
         setRegistered(true);
-        toast({ title: "Você está dentro! 🚀", description: `Posição #${nextPos} garantida.` });
+        toast({ title: "Você está dentro! 🚀", description: `Posição #${data.position} garantida.` });
       }
     } catch (err: any) {
       toast({ title: "Erro", description: getErrorMessage(err), variant: "destructive" });

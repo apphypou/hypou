@@ -96,7 +96,7 @@ const Conversa = () => {
   const { data: messages = [], isLoading } = useMessages(conversationId || null);
   const { data: details, isLoading: detailsLoading } = useConversationDetails(conversationId || null);
   const { mutate: send, isPending: sending } = useSendMessage(conversationId || null);
-  const { mutateAsync: uploadMedia } = useUploadChatMedia();
+  const { mutateAsync: uploadMedia } = useUploadChatMedia(conversationId || null);
   const archiveMutation = useArchiveConversation();
   const { mutate: markHypeOpened } = useMarkConversationHypeOpened();
   const deleteMessageMutation = useDeleteMessage();

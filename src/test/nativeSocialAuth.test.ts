@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   appleAuthorize: vi.fn(),
@@ -45,6 +45,12 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+vi.mock("@/lib/observability", () => ({
+  createTraceId: () => "native-auth-test",
+  logError: vi.fn(),
+  logInfo: vi.fn(),
+}));
+
 describe("native social auth", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -53,6 +59,10 @@ describe("native social auth", () => {
     mocks.isNativePlatform.mockReturnValue(true);
     mocks.getPlatform.mockReturnValue("ios");
     mocks.signInWithIdToken.mockResolvedValue({ data: { session: { access_token: "session" } }, error: null });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("falls back when native Google config is missing", async () => {
@@ -65,7 +75,7 @@ describe("native social auth", () => {
     expect(mocks.googleInitialize).not.toHaveBeenCalled();
     expect(mocks.googleSignIn).not.toHaveBeenCalled();
     expect(mocks.signInWithIdToken).not.toHaveBeenCalled();
-    expect(result).toEqual({ handled: false, error: null });
+    expect(result).toEqual({ handled: false, authenticated: false, error: null });
   });
 
   it("uses the iOS native Google bridge nonce as the raw Supabase nonce", async () => {
@@ -94,7 +104,7 @@ describe("native social auth", () => {
       access_token: "google-access-token",
       nonce: "raw-google-nonce",
     });
-    expect(result).toEqual({ handled: true, error: null });
+    expect(result).toEqual({ handled: true, authenticated: true, error: null });
   });
 
   it("passes a hashed nonce to Google and the raw nonce to Supabase on Android", async () => {
@@ -124,7 +134,7 @@ describe("native social auth", () => {
       access_token: "google-access-token",
     });
     expect(supabasePayload.nonce).not.toBe(googleSignInOptions.nonce);
-    expect(result).toEqual({ handled: true, error: null });
+    expect(result).toEqual({ handled: true, authenticated: true, error: null });
   });
 
   it("signs into Supabase with Apple id token and raw nonce returned by native login", async () => {
@@ -148,7 +158,7 @@ describe("native social auth", () => {
       token: identityToken,
       nonce: "raw-apple-nonce",
     });
-    expect(result).toEqual({ handled: true, error: null });
+    expect(result).toEqual({ handled: true, authenticated: true, error: null });
   });
 
   it("falls back to browser OAuth when native Apple is unavailable on the device", async () => {
@@ -160,7 +170,7 @@ describe("native social auth", () => {
     const result = await startNativeSocialSignIn("apple");
 
     expect(mocks.signInWithIdToken).not.toHaveBeenCalled();
-    expect(result).toEqual({ handled: false, error: null });
+    expect(result).toEqual({ handled: false, authenticated: false, error: null });
   });
 
   it("returns handled false when platform is web", async () => {
@@ -172,7 +182,7 @@ describe("native social auth", () => {
     expect(mocks.appleAuthorize).not.toHaveBeenCalled();
     expect(mocks.googleSignIn).not.toHaveBeenCalled();
     expect(mocks.signInWithIdToken).not.toHaveBeenCalled();
-    expect(result).toEqual({ handled: false, error: null });
+    expect(result).toEqual({ handled: false, authenticated: false, error: null });
   });
 
   it("returns an error when native login does not include an id token", async () => {
@@ -184,5 +194,34 @@ describe("native social auth", () => {
     expect(mocks.signInWithIdToken).not.toHaveBeenCalled();
     expect(result.handled).toBe(true);
     expect(result.error?.message).toBe("Login nativo não retornou token de identidade.");
+  });
+
+  it("stops waiting and shows a useful error when the Supabase exchange hangs", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("VITE_GOOGLE_WEB_CLIENT_ID", "web-client-id.apps.googleusercontent.com");
+    vi.stubEnv("VITE_GOOGLE_IOS_CLIENT_ID", "ios-client-id.apps.googleusercontent.com");
+    mocks.nativeGoogleSignIn.mockResolvedValue({ idToken: "header.payload.signature" });
+    mocks.signInWithIdToken.mockReturnValue(new Promise(() => undefined));
+
+    const { startNativeSocialSignIn } = await import("@/lib/nativeSocialAuth");
+    const resultPromise = startNativeSocialSignIn("google");
+    await vi.advanceTimersByTimeAsync(20_000);
+    const result = await resultPromise;
+
+    expect(result.authenticated).toBe(false);
+    expect(result.error?.message).toContain("demorou mais que o esperado");
+  });
+
+  it("returns an error instead of leaving the login screen stuck when no session is created", async () => {
+    const header = btoa(JSON.stringify({ alg: "none" }));
+    const payload = btoa(JSON.stringify({}));
+    mocks.appleAuthorize.mockResolvedValue({ identityToken: `${header}.${payload}.signature` });
+    mocks.signInWithIdToken.mockResolvedValue({ data: { session: null }, error: null });
+
+    const { startNativeSocialSignIn } = await import("@/lib/nativeSocialAuth");
+    const result = await startNativeSocialSignIn("apple");
+
+    expect(result.authenticated).toBe(false);
+    expect(result.error?.message).toContain("sessão não foi criada");
   });
 });

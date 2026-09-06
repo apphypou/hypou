@@ -8,6 +8,7 @@ import AuthSocialButtons from "@/components/auth/AuthSocialButtons";
 import { useToast } from "@/hooks/use-toast";
 import { startOAuthSignIn } from "@/lib/oauth";
 import { getErrorMessage } from "@/lib/utils";
+import { sanitizeInternalRedirect } from "@/lib/authRedirect";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -45,22 +46,25 @@ const Login = () => {
       });
     } else {
       const params = new URLSearchParams(window.location.search);
-      navigate(params.get("redirect") || "/explorar", { replace: true });
+      navigate(sanitizeInternalRedirect(params.get("redirect")), { replace: true });
     }
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get("redirect") || "/explorar";
+    const redirect = sanitizeInternalRedirect(params.get("redirect"));
     localStorage.setItem("postLoginRedirect", redirect);
     setSocialLoading(provider);
 
-    const { error } = await startOAuthSignIn(provider, "/explorar").catch((error) => ({
+    const { error, authenticated } = await startOAuthSignIn(provider, "/explorar").catch((error) => ({
       error: error instanceof Error ? error : new Error("Falha ao iniciar login social."),
+      authenticated: false,
     }));
 
     setSocialLoading(null);
-    if (error) {
+    if (authenticated) {
+      navigate(redirect, { replace: true });
+    } else if (error) {
       toast({
         title: "Erro ao entrar",
         description: getErrorMessage(error, "Não foi possível entrar com esta conta."),

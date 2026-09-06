@@ -7,6 +7,7 @@ import { shouldShowInMainConversationList } from "@/lib/conversationArchive";
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'system';
 export type ChatMediaKind = "image" | "video" | "audio";
+const PRIVATE_CHAT_MEDIA_PREFIX = "chat-media-private:";
 
 export interface Message {
   id: string;
@@ -244,7 +245,20 @@ export const getMessages = async (conversationId: string): Promise<Message[]> =>
     .order("created_at", { ascending: true });
 
   if (error) throw error;
-  return (data || []).map((m: any) => ({ ...m, message_type: m.message_type as MessageType }));
+  return Promise.all((data || []).map((message: any) => resolveMessageMedia({
+    ...message,
+    message_type: message.message_type as MessageType,
+  })));
+};
+
+export const resolveMessageMedia = async (message: Message): Promise<Message> => {
+  if (!message.media_url?.startsWith(PRIVATE_CHAT_MEDIA_PREFIX)) return message;
+  const path = message.media_url.slice(PRIVATE_CHAT_MEDIA_PREFIX.length);
+  const { data, error } = await supabase.storage
+    .from("chat-media-private")
+    .createSignedUrl(path, 60 * 60);
+  if (error) throw error;
+  return { ...message, media_url: data.signedUrl };
 };
 
 export const sendMessage = async (
@@ -254,21 +268,16 @@ export const sendMessage = async (
   messageType: MessageType = 'text',
   mediaUrl: string | null = null
 ) => {
-  const { data, error } = await supabase
-    .from("messages")
-    .insert({
-      conversation_id: conversationId,
-      sender_id: senderId,
-      content,
-      message_type: messageType,
-      media_url: mediaUrl,
-    })
-    .select()
-    .single();
+  const { data, error } = await supabase.rpc("send_message", {
+    p_conversation_id: conversationId,
+    p_content: content,
+    p_message_type: messageType,
+    p_media_url: mediaUrl,
+  });
 
   if (error) throw error;
   trackProductEventSafely("message_sent", senderId, { type: messageType });
-  return data;
+  return resolveMessageMedia(data as Message);
 };
 
 export const deleteMessage = async (messageId: string, _userId: string) => {
@@ -277,6 +286,7 @@ export const deleteMessage = async (messageId: string, _userId: string) => {
 };
 
 export const uploadChatMedia = async (
+  conversationId: string,
   userId: string,
   file: File,
   type: MessageType
@@ -286,16 +296,15 @@ export const uploadChatMedia = async (
   if (validationError) throw new Error(validationError);
   const finalFile = mediaType === 'image' ? await prepareImageForUpload(file) : file;
   const ext = finalFile.name.split('.').pop() || (type === 'audio' ? 'webm' : 'jpg');
-  const path = `${userId}/${Date.now()}.${ext}`;
+  const path = `${conversationId}/${userId}/${crypto.randomUUID()}.${ext}`;
 
   const { error } = await supabase.storage
-    .from("chat-media")
+    .from("chat-media-private")
     .upload(path, finalFile, { cacheControl: "3600", upsert: false, contentType: finalFile.type });
 
   if (error) throw error;
 
-  const { data } = supabase.storage.from("chat-media").getPublicUrl(path);
-  return data.publicUrl;
+  return `${PRIVATE_CHAT_MEDIA_PREFIX}${path}`;
 };
 
 export const markMessagesAsRead = async (conversationId: string, userId: string) => {
@@ -321,8 +330,9 @@ export const subscribeToMessages = (
         table: "messages",
         filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => {
-        onMessage(payload.new as Message);
+      async (payload) => {
+        if (!payload.new) return;
+        onMessage(await resolveMessageMedia(payload.new as Message));
       }
     )
     .subscribe();

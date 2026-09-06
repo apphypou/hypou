@@ -7,6 +7,7 @@ export type MediaFocalPoint = {
 export const DEFAULT_FOCAL_POINT = { x: 50, y: 50 };
 
 export const clampPercent = (value: unknown, fallback = 50) => {
+  if (value == null) return fallback;
   const number = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(number)) return fallback;
   return Math.min(100, Math.max(0, number));
