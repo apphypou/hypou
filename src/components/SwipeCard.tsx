@@ -451,7 +451,7 @@ const SwipeCard = memo(
           exitingRef.current = true;
           // Clear even wide screens and the rotated corner. Don't wait for a
           // spring to settle offscreen before making the next card interactive.
-          const sign = x.get() > 0 ? 1 : -1;
+          const sign = direction === "like" ? 1 : -1;
           const exitX = sign * (window.innerWidth + window.innerHeight * 0.08 + 32);
           const distance = Math.abs(exitX - x.get());
           const speed = Math.max(0, (velocityX ?? sign * 900) * sign);
@@ -546,9 +546,8 @@ const SwipeCard = memo(
             ...(standby ? { opacity: standbyOpacity } : {}),
           }}
           transformTemplate={standby || expanded ? undefined : ({ x: offset = 0 }, transform) => {
-            // Keep the signed gesture for the action, but render both directions southwest.
-            const distance = Math.abs(Number.parseFloat(String(offset))) || 0;
-            return transform.replace(/translateX\([^)]*\)/, `translate(${-distance}px, ${distance}px)`);
+            const horizontal = Number.parseFloat(String(offset)) || 0;
+            return transform.replace(/translateX\([^)]*\)/, `translate(${horizontal}px, ${Math.abs(horizontal)}px)`);
           }}
           drag={disabled || standby || expanded || isMediaGestureActive || mediaZoom.scale > 1.01 ? false : "x"}
           dragMomentum={false}

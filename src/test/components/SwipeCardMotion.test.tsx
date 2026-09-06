@@ -59,14 +59,14 @@ describe("SwipeCard motion", () => {
       release(Number(offset), Number(velocity));
       const [x, target, options] = captured.animate.mock.calls[0];
       expect(x.get()).toBe(offset);
-      expect(Math.sign(target)).toBe(Number(offset) > 0 ? 1 : -1);
+      expect(Math.sign(target)).toBe(direction === "like" ? 1 : -1);
       expect(Math.abs(target)).toBeGreaterThan(window.innerWidth);
       expect(options.type).toBe("tween");
       expect(options.duration).toBeLessThanOrEqual(0.32);
       const initialSpeed = options.ease[1] / options.ease[0] * Math.abs(target - Number(offset)) / options.duration;
-      expect(initialSpeed).toBeCloseTo(Math.max(0, Number(velocity) * Math.sign(Number(offset))));
-      expect(captured.card!.transformTemplate!({ x: offset }, `translateX(${offset}px)`)).toBe(`translate(${-Math.abs(Number(offset))}px, ${Math.abs(Number(offset))}px)`);
-      expect(captured.card!.transformTemplate!({ x: target }, `translateX(${target}px)`)).toBe(`translate(${-Math.abs(target)}px, ${Math.abs(target)}px)`);
+      expect(initialSpeed).toBeCloseTo(Math.max(0, Number(velocity) * Math.sign(target)));
+      expect(captured.card!.transformTemplate!({ x: offset }, `translateX(${offset}px)`)).toBe(`translate(${offset}px, ${Math.abs(Number(offset))}px)`);
+      expect(captured.card!.transformTemplate!({ x: target }, `translateX(${target}px)`)).toBe(`translate(${target}px, ${Math.abs(target)}px)`);
       expect(complete).not.toHaveBeenCalled();
       fireEvent.click(screen.getByRole("button", { name: "Hypou" }));
       expect(captured.animate).toHaveBeenCalledOnce();
@@ -74,6 +74,14 @@ describe("SwipeCard motion", () => {
       expect(complete).toHaveBeenCalledExactlyOnceWith(direction);
     },
   );
+
+  it.each([["Hypou", 1], ["Flopou", -1]] as const)("sends %s to its own corner from rest", (button, sign) => {
+    renderWithProviders(<SwipeCard item={item} onSwipeComplete={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: button }));
+    const [, target] = captured.animate.mock.calls[0];
+    expect(Math.sign(target)).toBe(sign);
+    expect(captured.card!.transformTemplate!({ x: target }, `translateX(${target}px)`)).toBe(`translate(${target}px, ${Math.abs(target)}px)`);
+  });
 
   it("promotes the already mounted next image without replacing its DOM node", () => {
     const next = { ...item, id: "two", name: "Bicicleta", item_images: [{ image_url: "/bike.png" }] };

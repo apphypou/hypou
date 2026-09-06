@@ -250,8 +250,14 @@
     --swipe-foreground-top-fade: linear-gradient(
       to bottom,
       transparent 0%,
+      rgba(0, 0, 0, 0.156) min(8px, 2%),
+      rgba(0, 0, 0, 0.5) min(16px, 4%),
+      rgba(0, 0, 0, 0.844) min(24px, 6%),
       black min(32px, 8%),
       black max(calc(100% - 32px), 92%),
+      rgba(0, 0, 0, 0.844) max(calc(100% - 24px), 94%),
+      rgba(0, 0, 0, 0.5) max(calc(100% - 16px), 96%),
+      rgba(0, 0, 0, 0.156) max(calc(100% - 8px), 98%),
       transparent 100%
     );
     background: #101213;
