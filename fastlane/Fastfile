@@ -12,19 +12,24 @@ platform :ios do
       )
     end
 
-    build_app(
-      project: "ios/App/App.xcodeproj",
-      scheme: "App",
-      export_method: "app-store",
-      export_options: {
-        provisioningProfiles: {
-          "app.hypou.mobile" => "Hypou App Store"
-        }
-      },
-      output_directory: "build/ios-release"
-    )
+    ipa_path = ENV["HYPOU_IPA_PATH"]
+
+    unless ipa_path
+      build_app(
+        project: "ios/App/App.xcodeproj",
+        scheme: "App",
+        export_method: "app-store",
+        export_options: {
+          provisioningProfiles: {
+            "app.hypou.mobile" => "Hypou App Store"
+          }
+        },
+        output_directory: "build/ios-release"
+      )
+    end
 
     upload_to_testflight(
+      ipa: ipa_path,
       skip_waiting_for_build_processing: true
     )
   end
